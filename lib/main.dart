@@ -23,6 +23,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthenticationCubit>(
           create: (context) => AuthenticationCubit(),
+
         ),
       ],
       child: MaterialApp(
