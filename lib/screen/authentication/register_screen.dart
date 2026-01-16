@@ -57,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(title: const Text(lblRegister)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: P.all24,
+          padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.06),
           child: Column(
             children: [
               _buildUserRoles(),
@@ -88,30 +88,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  /// USER ROLES
+  /// USER ROLES HEADER
   Widget _buildUserRoles() {
     return BlocBuilder<AuthenticationCubit, AuthenticationState>(
       buildWhen: (previous, current) =>
           previous.formState.selectedRegistrationUserRole !=
           current.formState.selectedRegistrationUserRole,
       builder: (context, state) {
-        return SegmentedButton(
-          segments: const [
-            ButtonSegment(
-              value: UserRole.student,
-              label: Text(lblStudent),
-              icon: Icon(Icons.school_outlined),
+        final isStudent =
+            state.formState.selectedRegistrationUserRole == UserRole.student;
+        return Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: isStudent ? Colors.blue.withOpacity(0.1) : Colors.purple.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: isStudent ? Colors.blue : Colors.purple,
+              ),
             ),
-            ButtonSegment(
-              value: UserRole.assistant,
-              label: Text(lblAssistant),
-              icon: Icon(Icons.admin_panel_settings_outlined),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isStudent ? Icons.school : Icons.admin_panel_settings,
+                  color: isStudent ? Colors.blue : Colors.purple,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  isStudent ? "Student Registration" : "Assistant Registration",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isStudent ? Colors.blue : Colors.purple,
+                  ),
+                ),
+              ],
             ),
-          ],
-          selected: {state.formState.selectedRegistrationUserRole},
-          onSelectionChanged: (Set<UserRole> newSelection) {
-            _authenticationCubit.toggleRegisterUserRoles(newSelection.first);
-          },
+          ),
         );
       },
     );
@@ -268,6 +282,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return CustomFilledButton(
       label: lblRegister.toUpperCase(),
       onPressed: () {
+        // Save selected standard to Cubit if it exists
+        if (_selectedStd != null &&
+            _authenticationCubit.state.formState.selectedRegistrationUserRole ==
+                UserRole.student) {
+          _authenticationCubit.updateStudentStandard(_selectedStd!);
+        }
+        
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const RegisterDPINScreen()),

@@ -19,23 +19,27 @@ final class AuthenticationFormState extends Equatable {
   final UserRole selectedUserRole;
   final UserRole selectedRegistrationUserRole;
   final bool isPasswordVisible;
+  final String studentStandard;
 
   const AuthenticationFormState({
     this.selectedUserRole = UserRole.student,
     this.selectedRegistrationUserRole = UserRole.student,
     this.isPasswordVisible = false,
+    this.studentStandard = "10th", // Default to 10th if not selected
   });
 
   AuthenticationFormState copyWith({
     UserRole? selectedUserRole,
     UserRole? selectedRegistrationUserRole,
     bool? isPasswordVisible,
+    String? studentStandard,
   }) {
     return AuthenticationFormState(
       selectedUserRole: selectedUserRole ?? this.selectedUserRole,
       selectedRegistrationUserRole:
           selectedRegistrationUserRole ?? this.selectedRegistrationUserRole,
       isPasswordVisible: isPasswordVisible ?? this.isPasswordVisible,
+      studentStandard: studentStandard ?? this.studentStandard,
     );
   }
 
@@ -44,5 +48,6 @@ final class AuthenticationFormState extends Equatable {
     selectedUserRole,
     isPasswordVisible,
     selectedRegistrationUserRole,
+    studentStandard,
   ];
 }

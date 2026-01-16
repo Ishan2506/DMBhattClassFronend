@@ -27,6 +27,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: appName,
         theme: theme.light(),
         darkTheme: theme.dark(),

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
-import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/role_selection_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 
@@ -18,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
       );
     });
   }

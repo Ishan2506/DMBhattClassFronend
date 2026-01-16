@@ -1,5 +1,9 @@
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_home_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_video_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/dmai_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
 import 'package:flutter/material.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -17,9 +21,9 @@ class _LandingScreenState extends State<LandingScreen> {
   // These will replace the 'body' area when the index changes
   final List<Widget> _pages = [
     const StudentHomeScreen(),
-    const Center(child: Text("Videos")),
-    const Center(child: Text("DMAI")),
-    const Center(child: Text("MORE")),
+    const StudentVideoScreen(),
+    const DMAIScreen(),
+    const MoreScreen(),
   ];
 
   // 3. Method to handle the tap
@@ -33,8 +37,43 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: "D.M Tution Classes",
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent, // Make background transparent to show gradient
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade900, Colors.blue.shade700],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.white,
+            child: Image.asset("assets/app_icons/dm_bhatt_classes_logo.png", height: 24),
+          ),
+        ),
+        title: const Text("Dashboard", style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const CircleAvatar(
+              backgroundColor: Colors.white24,
+              child: Icon(Icons.person, color: Colors.white),
+            ),
+            onPressed: () { // Added empty parentheses and curly brace
+                Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const StudentProfileScreen()),
+                );
+  },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,

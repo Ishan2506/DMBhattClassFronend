@@ -24,6 +24,17 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     );
   }
 
+  /// UPDATE STUDENT STANDARD
+  void updateStudentStandard(String standard) {
+    emit(
+      state.copyWith(
+        formState: state.formState.copyWith(
+          studentStandard: standard,
+        ),
+      ),
+    );
+  }
+
   /// TOGGLE PASSWORD VISIBILITY
   void togglePasswordVisibility() {
     emit(
