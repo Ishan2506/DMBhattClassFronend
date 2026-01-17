@@ -183,7 +183,7 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
               // Guest and Student both go to Student registration
               _authenticationCubit.toggleRegisterUserRoles(UserRole.student);
             }
-
+            
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const RegisterScreen()),

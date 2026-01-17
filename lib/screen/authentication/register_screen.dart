@@ -1,12 +1,17 @@
+import 'dart:io';
+
 import 'package:dm_bhatt_tutions/bloc/authentication/authentication_cubit.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_text_field.dart';
+import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_dpin_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -44,6 +49,219 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> _mediumList = ["English", "Gujarati"];
 
   late AuthenticationCubit _authenticationCubit;
+  List<File> _assistantAadharFiles = [];  
+  File? studentPhoto;
+
+  final ImagePicker _picker = ImagePicker();
+
+  void _openUploadOptions() {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (_) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text("Camera"),
+            onTap: () {
+              Navigator.pop(context);
+              _pickFromCamera();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.folder),
+            title: const Text("Storage"),
+            onTap: () {
+              Navigator.pop(context);
+              _pickFromStorage();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+Future<void> _pickFromCamera() async {
+  final front = await _picker.pickImage(source: ImageSource.camera);
+  if (front == null) return;
+
+  final back = await _picker.pickImage(source: ImageSource.camera);
+  if (back == null) return;
+
+  setState(() {
+    _assistantAadharFiles = [
+      File(front.path),
+      File(back.path),
+    ];
+  });
+}
+  Future<void> _pickFromStorage() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+
+    if (result == null) return;
+
+    final files =
+        result.paths.where((p) => p != null).map((p) => File(p!)).toList();
+
+    // 1 PDF
+    if (files.length == 1 && files.first.path.endsWith('.pdf')) {
+      setState(() {
+        _assistantAadharFiles = files;
+      });
+      return;
+    }
+
+    // 2 Images
+    if (files.length == 2 &&
+        !files.any((f) => f.path.endsWith('.pdf'))) {
+      setState(() {
+        _assistantAadharFiles = files;
+      });
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Select either 1 PDF or 2 images"),
+      ),
+    );
+  }
+
+
+  // Map<String, dynamic> buildRegistrationData({
+  //   required UserRole role,
+  // }) {
+  //   switch (role) {
+
+  //     case UserRole.admin:
+  //       return {
+  //         "role": "admin",
+  //         "phoneNum": _phoneController.text.trim(),
+  //         "name": _nameController.text.trim(),
+  //         "email": _emailController.text.trim(),
+  //       };
+
+  //     case UserRole.assistant:
+  //       return {
+  //         "role": "assistant",
+  //         "phoneNum": _phoneController.text.trim(),
+  //         "name": _nameController.text.trim(),
+  //         "email": _emailController.text.trim(),
+  //         "aadharNum": _aadharController.text.trim(),
+  //         "address": _addressController.text.trim(),
+  //         "aadharFile": _assistantAadharFiles,
+  //       };
+
+  //     case UserRole.student:
+  //       return {
+  //         "role": "student",
+  //         "phoneNum": _phoneController.text.trim(),
+  //         "firstName": _firstNameController.text.trim(),
+  //         "middleName": _middleNameController.text.trim(),
+  //         "lastName": _lastNameController.text.trim(),
+  //         "std": _selectedStd,
+  //         "medium": _selectedMedium,
+  //         "school": _schoolController.text.trim(),
+  //         //"photo": studentPhotoFile,
+  //       };
+
+  //     case UserRole.guest:
+  //       return {
+  //         "role": "guest",
+  //         "phoneNum": _phoneController.text.trim(),
+  //         "firstName": _firstNameController.text.trim(),
+  //         "middleName": _middleNameController.text.trim(),
+  //         "lastName": _lastNameController.text.trim(),
+  //         "schoolName": _schoolController.text.trim(),
+  //         //"photo": guestPhotoFile,
+  //       };
+  //   }
+  // }
+  Future<void> pickStudentPhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera, // or ImageSource.gallery
+      imageQuality: 80, // compress
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        studentPhoto = File(pickedFile.path);
+      });
+    }
+  }
+  RegistrationPayload buildRegistrationPayload({
+    required UserRole role,
+  }) {
+    switch (role) {
+      case UserRole.admin:
+        return RegistrationPayload(
+          role: "admin",
+          fields: {
+            "role": "admin",
+            "phoneNum": _phoneController.text.trim(),
+            "name": _nameController.text.trim(),
+            "email": _emailController.text.trim(),
+          },
+          files: [],
+        );
+
+      case UserRole.assistant:
+        return RegistrationPayload(
+          role: "assistant",
+          fields: {
+            "role": "assistant",
+            "phoneNum": _phoneController.text.trim(),
+            "name": _nameController.text.trim(),
+            "email": _emailController.text.trim(),
+            "aadharNum": _aadharController.text.trim(),
+            "address": _addressController.text.trim(),
+          },
+          files: _assistantAadharFiles, // PDF OR 2 images
+        );
+
+      case UserRole.student:
+        return RegistrationPayload(
+          role: "student",
+          fields: {
+            "role": "student",
+            "phoneNum": _phoneController.text.trim(),
+            "firstName": _firstNameController.text.trim(),
+            "middleName": _middleNameController.text.trim(),
+            "lastName": _lastNameController.text.trim(),
+            "std": _selectedStd ?? "",
+            "medium": _selectedMedium ?? "",
+            "school": _schoolController.text.trim(),
+          },
+          files: [?studentPhoto],
+        );
+
+      case UserRole.guest:
+        return RegistrationPayload(
+          role: "guest",
+          fields: {
+            "role": "guest",
+            "phoneNum": _phoneController.text.trim(),
+            "firstName": _firstNameController.text.trim(),
+            "middleName": _middleNameController.text.trim(),
+            "lastName": _lastNameController.text.trim(),
+            "schoolName": _schoolController.text.trim(),
+          },
+          files: [],
+        );
+    }
+  }
+
+
+
 
   @override
   void initState() {
@@ -208,8 +426,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _buildUploadButton(
           label: "$lblCapturePhotoWithBackground*",
           icon: Icons.camera_alt_outlined,
-          onTap: () {},
+          onTap: () async {
+            await pickStudentPhoto();
+          },
         ),
+
       ],
     );
   }
@@ -248,7 +469,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _buildUploadButton(
           label: "$lblUploadAadharCard*",
           icon: Icons.file_upload_outlined,
-          onTap: () {},
+          onTap: _openUploadOptions,
         ),
         blankVerticalSpace16,
         CustomTextField(
@@ -288,10 +509,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 UserRole.student) {
           _authenticationCubit.updateStudentStandard(_selectedStd!);
         }
-        
+        final registrationData = buildRegistrationPayload(role: _authenticationCubit.state.formState.selectedRegistrationUserRole);
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const RegisterDPINScreen()),
+          MaterialPageRoute(builder: (context) => RegisterDPINScreen(payload: registrationData,)),
         );
         // Handle logic based on _authenticationCubit.state.formState.selectedUserRole
       },
