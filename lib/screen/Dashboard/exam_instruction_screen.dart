@@ -2,10 +2,13 @@ import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_question_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
 class ExamInstructionScreen extends StatelessWidget {
-  const ExamInstructionScreen({super.key});
+  final String subject;
+  
+  const ExamInstructionScreen({super.key, required this.subject});
 
   @override
   Widget build(BuildContext context) {
@@ -13,8 +16,8 @@ class ExamInstructionScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(lblExamInstructions),
+      appBar: const CustomAppBar(
+        title: lblExamInstructions,
       ),
       body: Padding(
         padding: P.all24,
@@ -52,7 +55,7 @@ class ExamInstructionScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ExamQuestionScreen(),
+                    builder: (context) => ExamQuestionScreen(subject: subject),
                   ),
                 );
               },

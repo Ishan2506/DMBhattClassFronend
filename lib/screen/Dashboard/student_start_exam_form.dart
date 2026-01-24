@@ -3,6 +3,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_instruction_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
 class StudentStartExamForm extends StatefulWidget {
@@ -24,8 +25,8 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(lblStartNewExam),
+      appBar: const CustomAppBar(
+        title: lblStartNewExam,
       ),
       body: Padding(
         padding: P.all24,
@@ -77,7 +78,9 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ExamInstructionScreen(),
+                    builder: (context) => ExamInstructionScreen(
+                      subject: _selectedSubject ?? 'Math', // Default fallback
+                    ),
                   ),
                 );
               },

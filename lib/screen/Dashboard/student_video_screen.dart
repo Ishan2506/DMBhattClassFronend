@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 
 class StudentVideoScreen extends StatefulWidget {
   const StudentVideoScreen({super.key});
@@ -89,11 +90,8 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text("DM Bhatt Education", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+      appBar: const CustomAppBar(
+        title: "DM Bhatt Education",
       ),
       body: Column(
         children: [

@@ -9,7 +9,9 @@ class StudentHomeScreen extends StatelessWidget {
   const StudentHomeScreen({super.key});
 
   @override
+  @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -19,7 +21,7 @@ class StudentHomeScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue.shade900, Colors.blue.shade700],
+                colors: [Colors.blue.shade900, Colors.blue.shade700], // Keep brand colors
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -82,7 +84,7 @@ class StudentHomeScreen extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: colorScheme.onSurface, // Dynamic Text
                       ),
                     ),
                   ],
@@ -91,11 +93,11 @@ class StudentHomeScreen extends StatelessWidget {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colorScheme.surfaceContainer, // Dynamic Card
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
+                        color: colorScheme.shadow.withOpacity(0.05),
                         blurRadius: 20,
                         offset: const Offset(0, 5),
                       ),
@@ -104,6 +106,7 @@ class StudentHomeScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       _buildTimeTableItem(
+                        context,
                         "Mathematics",
                         "10:00 AM - 11:30 AM",
                         Icons.calculate_outlined,
@@ -111,9 +114,10 @@ class StudentHomeScreen extends StatelessWidget {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Divider(height: 1, color: Colors.grey.shade100),
+                        child: Divider(height: 1, color: colorScheme.outlineVariant.withOpacity(0.2)),
                       ),
                       _buildTimeTableItem(
+                        context,
                         "Physics",
                         "12:00 PM - 01:30 PM",
                         Icons.science_outlined,
@@ -133,9 +137,9 @@ class StudentHomeScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colorScheme.surfaceContainer, // Dynamic Card
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.blue.shade50),
+                border: Border.all(color: Colors.blue.shade50.withOpacity(0.2)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.blue.withOpacity(0.05),
@@ -149,7 +153,7 @@ class StudentHomeScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: Colors.blue.shade50.withOpacity(0.1), // Subtle blue tint
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -163,7 +167,7 @@ class StudentHomeScreen extends StatelessWidget {
                     lblNextExamWaiting,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
-                      color: Colors.grey.shade700,
+                      color: colorScheme.onSurfaceVariant, // Dynamic Text
                       fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
@@ -209,8 +213,9 @@ class StudentHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeTableItem(
+  Widget _buildTimeTableItem(BuildContext context,
       String subject, String time, IconData icon, Color color) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -233,19 +238,20 @@ class StudentHomeScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
+                    color: colorScheme.onSurface, // Dynamic Text
                   ),
                 ),
                 Text(
                   time,
                   style: GoogleFonts.poppins(
-                    color: Colors.grey.shade600,
+                    color: colorScheme.onSurfaceVariant, // Dynamic Text
                     fontSize: 13,
                   ),
                 ),
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.shade400),
+          Icon(Icons.arrow_forward_ios, size: 14, color: colorScheme.onSurfaceVariant),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_text_field.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/d_pin_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
@@ -30,11 +31,9 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: CustomAppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),

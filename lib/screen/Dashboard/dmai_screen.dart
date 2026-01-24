@@ -184,8 +184,9 @@ class _DMAIScreenState extends State<DMAIScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       body: Column(
         children: [
           // Chat area
@@ -196,11 +197,11 @@ class _DMAIScreenState extends State<DMAIScreen> {
               itemCount: _messages.length + (_isTyping ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == _messages.length && _isTyping) {
-                  return const Align(
+                  return Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
-                      padding: EdgeInsets.only(left: 8, top: 8),
-                      child: Text("Typing...", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      padding: const EdgeInsets.only(left: 8, top: 8),
+                      child: Text("Typing...", style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
                     ),
                   );
                 }
@@ -212,8 +213,8 @@ class _DMAIScreenState extends State<DMAIScreen> {
           // Bottom controls
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              color: colorScheme.surface,
+              border: Border(top: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.2))),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -228,11 +229,11 @@ class _DMAIScreenState extends State<DMAIScreen> {
                       children: [
                         Text("View quick actions",
                             style: GoogleFonts.poppins(
-                                color: const Color(0xFF4C53A5), 
+                                color: colorScheme.primary, 
                                 fontWeight: FontWeight.w600, 
                                 fontSize: 13)),
                         Icon(_showQuickActions ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-                            color: const Color(0xFF4C53A5), size: 18),
+                            color: colorScheme.primary, size: 18),
                       ],
                     ),
                   ),
@@ -250,25 +251,26 @@ class _DMAIScreenState extends State<DMAIScreen> {
                         child: Container(
                           height: 50,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: colorScheme.surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(30),
-                            border: Border.all(color: Colors.grey.shade300),
+                            border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
                           ),
                           child: Row(
                             children: [
                               Expanded(
                                 child: TextField(
                                   controller: _messageController,
+                                  style: TextStyle(color: colorScheme.onSurface),
                                   decoration: InputDecoration(
                                     hintText: "Type a message...",
-                                    hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 14),
+                                    hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant, fontSize: 14),
                                     border: InputBorder.none,
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                                   ),
                                   onSubmitted: _handleSubmitted,
                                 ),
                               ),
-                              const Icon(Icons.mic, color: Colors.grey),
+                              Icon(Icons.mic, color: colorScheme.onSurfaceVariant),
                               const SizedBox(width: 12),
                             ],
                           ),
@@ -277,7 +279,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () => _handleSubmitted(_messageController.text),
-                        child: const Icon(Icons.send, color: Color(0xFF4C53A5), size: 32),
+                        child: Icon(Icons.send, color: colorScheme.primary, size: 32),
                       ),
                     ],
                   ),
@@ -293,6 +295,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
   Widget _buildMessageBubble(Map<String, dynamic> message) {
     final isUser = message['sender'] == 'user';
     final isVideo = message['type'] == 'video';
+    final colorScheme = Theme.of(context).colorScheme;
 
     if (isVideo) {
       final video = message['content'] as Map<String, String>;
@@ -304,13 +307,13 @@ class _DMAIScreenState extends State<DMAIScreen> {
           child: Card(
             elevation: 1,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            color: const Color(0xFFF5F5F5),
+            color: colorScheme.surfaceContainer,
             child: ListTile(
               onTap: () => _launchUrl(video['url']!),
               leading: const Icon(Icons.play_circle_fill, color: Colors.red, size: 36),
-              title: Text(video['title']!, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold)),
-              subtitle: Text(video['description']!, style: GoogleFonts.poppins(fontSize: 11)),
-              trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
+              title: Text(video['title']!, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+              subtitle: Text(video['description']!, style: GoogleFonts.poppins(fontSize: 11, color: colorScheme.onSurfaceVariant)),
+              trailing: Icon(Icons.open_in_new, size: 16, color: colorScheme.onSurfaceVariant),
             ),
           ),
         ),
@@ -323,7 +326,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isUser ? const Color(0xFF4C53A5) : const Color(0xFFEEEEEE),
+          color: isUser ? colorScheme.primary : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
             topRight: const Radius.circular(20),
@@ -335,7 +338,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
         child: Text(
           message['content'],
           style: GoogleFonts.poppins(
-            color: isUser ? Colors.white : Colors.black87, 
+            color: isUser ? colorScheme.onPrimary : colorScheme.onSurface, 
             fontSize: 14,
             height: 1.4
           ),

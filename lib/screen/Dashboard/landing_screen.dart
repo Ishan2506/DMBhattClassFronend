@@ -1,6 +1,6 @@
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_home_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/student_video_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/explore_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/dmai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
@@ -21,7 +21,7 @@ class _LandingScreenState extends State<LandingScreen> {
   // These will replace the 'body' area when the index changes
   final List<Widget> _pages = [
     const StudentHomeScreen(),
-    const StudentVideoScreen(),
+    const ExploreScreen(),
     const DMAIScreen(),
     const MoreScreen(),
   ];
@@ -34,16 +34,25 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
 
+  // Titles corresponding to each page
+  final List<String> _titles = [
+    "Dashboard",
+    "Explore",
+    "DMAI",
+    "More",
+  ];
+
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface, // Dynamic Scaffold Background
       appBar: AppBar(
         backgroundColor: Colors.transparent, // Make background transparent to show gradient
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade900, Colors.blue.shade700],
+              colors: [Colors.blue.shade900, Colors.blue.shade700], // Keeping Brand Header
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -57,7 +66,7 @@ class _LandingScreenState extends State<LandingScreen> {
             child: Image.asset("assets/app_icons/dm_bhatt_classes_logo.png", height: 24),
           ),
         ),
-        title: const Text("Dashboard", style: TextStyle(color: Colors.white)),
+        title: Text(_titles[_selectedIndex], style: const TextStyle(color: Colors.white)),
         centerTitle: true,
         actions: [
           IconButton(
@@ -65,12 +74,12 @@ class _LandingScreenState extends State<LandingScreen> {
               backgroundColor: Colors.white24,
               child: Icon(Icons.person, color: Colors.white),
             ),
-            onPressed: () { // Added empty parentheses and curly brace
+            onPressed: () {
                 Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const StudentProfileScreen()),
                 );
-  },
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -82,22 +91,26 @@ class _LandingScreenState extends State<LandingScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed, // Ensure all labels are visible
+        backgroundColor: colorScheme.surface, // Dynamic BG for BottomNav
+        selectedItemColor: colorScheme.primary, // Dynamic Active Color
+        unselectedItemColor: colorScheme.onSurfaceVariant, // Dynamic Inactive Color
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.videocam_sharp),
-            label: 'Videos',
+            icon: Icon(Icons.grid_view_rounded), // Meaningful Icon for Explore
+            label: 'Explore',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
+            icon: Icon(Icons.smart_toy_outlined), // DMAI Icon
             label: 'DMAI',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
-            label: 'MORE',
+            icon: Icon(Icons.menu),
+            label: 'More',
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter/material.dart';
@@ -203,7 +204,7 @@ String _getMimeType(String path) {
     _textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(lblDPIN)),
+      appBar: const CustomAppBar(title: lblDPIN),
       body: SafeArea(child: _buildDPINBody()),
       bottomNavigationBar: BottomAppBar(
         elevation: 0,

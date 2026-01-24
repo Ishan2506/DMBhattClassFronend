@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
 import 'package:flutter/material.dart';
 
 class ExamQuestionScreen extends StatefulWidget {
-  const ExamQuestionScreen({super.key});
+  final String subject;
+  
+  const ExamQuestionScreen({super.key, required this.subject});
 
   @override
   State<ExamQuestionScreen> createState() => _ExamQuestionScreenState();
@@ -17,6 +22,22 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
   Timer? _timer;
   int _remainingSeconds = 30;
   bool _isTimerActive = true;
+  
+  // Audio Feedback
+  final FlutterTts _flutterTts = FlutterTts();
+  bool _isAudioEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTts();
+    _startTimer();
+  }
+
+  void _initTts() async {
+    await _flutterTts.setLanguage("en-US");
+    await _flutterTts.setPitch(1.0);
+  }
 
   final List<Map<String, dynamic>> _questions = [
     {
@@ -62,12 +83,6 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _startTimer();
-  }
-
-  @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
@@ -85,6 +100,10 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
           setState(() {
             _remainingSeconds--;
           });
+          // Speak when 5 seconds remain
+          if (_remainingSeconds == 5 && _isAudioEnabled) {
+            _flutterTts.speak("5 seconds left");
+          }
         }
       } else {
         timer.cancel();
@@ -106,8 +125,41 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
       _startTimer();
     } else {
       _timer?.cancel();
-      // TODO: Navigate to results screen
+      _navigateToResult();
     }
+  }
+
+  void _navigateToResult() {
+    int correct = 0;
+    int wrong = 0;
+    int skipped = 0;
+
+    for (int i = 0; i < _questions.length; i++) {
+        final userAns = _selectedAnswers[i];
+        final correctAns = _questions[i]['correctAnswer'];
+
+        if (userAns == null) {
+          skipped++;
+        } else if (userAns == correctAns) {
+          correct++;
+        } else {
+          wrong++;
+        }
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ExamResultScreen(
+          totalQuestions: _questions.length,
+          correctAnswers: correct,
+          wrongAnswers: wrong,
+          skippedAnswers: skipped,
+          questions: _questions,
+          selectedAnswers: _selectedAnswers,
+        ),
+      ),
+    );
   }
 
   void _previousQuestion() {
@@ -128,18 +180,29 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('$lblQuestion ${_currentQuestionIndex + 1}/${_questions.length}'),
+      appBar: CustomAppBar(
+        title: '$lblQuestion ${_currentQuestionIndex + 1}/${_questions.length}',
         centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: Row(
               children: [
-                Icon(Icons.timer, color: colorScheme.primary),
+                IconButton(
+                  icon: Icon(
+                    _isAudioEnabled ? Icons.volume_up : Icons.volume_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isAudioEnabled = !_isAudioEnabled;
+                    });
+                  },
+                ),
+                const Icon(Icons.timer, color: Colors.white),
                 const SizedBox(width: 8.0),
                 Text(_isTimerActive ? _formatDuration(_remainingSeconds) : '--:--',
-                    style: textTheme.titleMedium),
+                    style: textTheme.titleMedium?.copyWith(color: Colors.white)),
               ],
             ),
           )
@@ -148,8 +211,8 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
           preferredSize: const Size.fromHeight(6.0),
           child: LinearProgressIndicator(
             value: (_currentQuestionIndex + 1) / _questions.length,
-            backgroundColor: colorScheme.surfaceVariant,
-            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+            backgroundColor: Colors.white30,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             minHeight: 6,
           ),
         ),
@@ -173,16 +236,30 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _previousQuestion,
-                      child: const Text(lblPrevious),
+                      style: OutlinedButton.styleFrom(
+                        shape: const StadiumBorder(),
+                        side: const BorderSide(color: Colors.blueAccent),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text("Previous", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 if (_currentQuestionIndex > 0) const SizedBox(width: 16.0),
                 Expanded(
-                  child: CustomFilledButton(
-                    label: isLastQuestion ? lblSubmit : lblNext,
+                  child: ElevatedButton(
                     onPressed: _selectedAnswers.containsKey(_currentQuestionIndex)
                         ? _nextQuestion
                         : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      shape: const StadiumBorder(),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 4,
+                    ),
+                    child: Text(
+                      isLastQuestion ? lblSubmit : lblNext,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
                   ),
                 ),
               ],
@@ -193,24 +270,49 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     );
   }
 
+
+
+
   List<Widget> _buildAnswerOptions(List<String> answers) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return answers.map((answer) {
-      final bool isSelected = _selectedAnswers[_currentQuestionIndex] == answer;
+      final String? selectedAns = _selectedAnswers[_currentQuestionIndex];
+      // final bool isSelected = selectedAns == answer;
+      final String correctAns = _questions[_currentQuestionIndex]['correctAnswer'];
+
+      Color borderColor = colorScheme.outline;
+      Color? optionColor; // background if needed
+
+      if (selectedAns != null) {
+        if (answer == correctAns) {
+           // Correct Answer -> Green Highlight
+           borderColor = Colors.green;
+           optionColor = Colors.green.withOpacity(0.1);
+        } else if (answer == selectedAns && answer != correctAns) {
+           // Wrong Selection -> Red Highlight
+           borderColor = Colors.red;
+           optionColor = Colors.red.withOpacity(0.1);
+        }
+      }
+
       return Card(
         margin: EdgeInsets.symmetric(vertical: S.s4),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(S.s12),
           side: BorderSide(
-            color: isSelected ? colorScheme.primary : colorScheme.outline,
-            width: isSelected ? S.s2 : S.s1,
+            color: borderColor,
+            width: selectedAns != null && (answer == correctAns || answer == selectedAns) ? S.s2 : S.s1,
           ),
         ),
+        color: optionColor,
         child: InkWell(
           onTap: () {
+            // Uncomment to disable changing answer after selection
+            // if (_selectedAnswers.containsKey(_currentQuestionIndex)) return; 
+            
             setState(() {
               _selectedAnswers[_currentQuestionIndex] = answer;
             });
@@ -220,7 +322,21 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
             padding: P.h16v8,
             child: Row(
               children: [
-                Expanded(child: Text(answer, style: textTheme.bodyMedium)),
+                Expanded(
+                  child: Text(
+                    answer, 
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: selectedAns != null && answer == correctAns 
+                        ? Colors.green 
+                        : (selectedAns == answer && answer != correctAns 
+                            ? Colors.red 
+                            : textTheme.bodyMedium?.color),
+                      fontWeight: selectedAns != null && (answer == correctAns || answer == selectedAns) 
+                        ? FontWeight.bold 
+                        : FontWeight.normal
+                    )
+                  )
+                ),
                 Radio<String>(
                   value: answer,
                   groupValue: _selectedAnswers[_currentQuestionIndex],
@@ -229,6 +345,9 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                       _selectedAnswers[_currentQuestionIndex] = value!;
                     });
                   },
+                  activeColor: answer == correctAns 
+                      ? Colors.green 
+                      : (answer == selectedAns ? Colors.red : colorScheme.primary),
                 ),
               ],
             ),
@@ -238,3 +357,5 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     }).toList();
   }
 }
+
+

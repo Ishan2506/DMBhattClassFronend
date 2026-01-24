@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/bloc/authentication/authentication_cubit.dart';
+import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/splash_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_theme.dart';
 import 'package:dm_bhatt_tutions/utils/text_theme.dart';
@@ -23,16 +24,23 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthenticationCubit>(
           create: (context) => AuthenticationCubit(),
-
+        ),
+        BlocProvider<ThemeCubit>(
+          create: (context) => ThemeCubit(),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: appName,
-        theme: theme.light(),
-        darkTheme: theme.dark(),
-        themeMode: ThemeMode.system,
-        home: SplashScreen(),
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, state) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: appName,
+            theme: theme.light(),
+            darkTheme: theme.dark(),
+            themeMode: state.themeMode,
+            locale: state.locale,
+            home: const SplashScreen(),
+          );
+        },
       ),
     );
   }

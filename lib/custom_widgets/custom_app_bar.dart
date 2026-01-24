@@ -7,6 +7,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool? centerTitle;
   final bool? automaticallyImplyLeading;
   final double height;
+  final PreferredSizeWidget? bottom;
 
   const CustomAppBar({
     super.key,
@@ -16,19 +17,37 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.centerTitle,
     this.automaticallyImplyLeading,
     this.height = kToolbarHeight,
+    this.bottom,
   });
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: title != null ? Text(title!) : null,
+      title: title != null
+          ? Text(title!, style: const TextStyle(color: Colors.white))
+          : null,
       actions: actions,
       leading: leading,
       centerTitle: centerTitle,
       automaticallyImplyLeading: automaticallyImplyLeading ?? true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      iconTheme: const IconThemeData(color: Colors.white),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade900, Colors.blue.shade700],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+      ),
+      bottom: bottom,
     );
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(height);
+  Size get preferredSize =>
+      Size.fromHeight(height + (bottom?.preferredSize.height ?? 0));
 }
+

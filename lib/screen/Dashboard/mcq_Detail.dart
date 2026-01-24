@@ -1,3 +1,4 @@
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -29,15 +30,8 @@ class McqDetailScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("MCQ Review"),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade900, Colors.blue.shade700],
-            ),
-          ),
-        ),
+      appBar: const CustomAppBar(
+        title: "MCQ Review",
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),

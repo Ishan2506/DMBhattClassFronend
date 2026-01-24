@@ -1,3 +1,4 @@
+import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mcq_Detail.dart';
@@ -98,8 +99,8 @@ class StudentProfileScreen extends StatelessWidget {
                     icon: Icons.phone_android,
                     label: "Mobile No",
                     value: mobileNo,
-                    icon2: Icons.email_outlined,
-                    label2: "Email",
+                   icon2: Icons.email_outlined,
+                   label2: "Email",
                     value2: email,
                   ),
                   const Divider(height: 30),
@@ -108,9 +109,63 @@ class StudentProfileScreen extends StatelessWidget {
                     icon: Icons.school_outlined,
                     label: "School Name",
                     value: schoolName,
-                    icon2: Icons.location_on_outlined,
-                    label2: "Location",
-                    value2: "Nehrunagar",
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Reward Points Section
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.amber.shade400, Colors.amber.shade700],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                   BoxShadow(
+                      color: Colors.amber.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                   )
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Total Reward Points",
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "125", // Mock Points
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.stars_rounded, color: Colors.white, size: 36),
                   ),
                 ],
               ),
@@ -152,7 +207,11 @@ class StudentProfileScreen extends StatelessWidget {
               height: 55,
               child: ElevatedButton(
                 onPressed: () {
-                  // Handle Sign out logic
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                    (route) => false,
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4C53A5),
@@ -176,9 +235,9 @@ class StudentProfileScreen extends StatelessWidget {
       {required IconData icon,
       required String label,
       required String value,
-      required IconData icon2,
-      required String label2,
-      required String value2}) {
+      IconData? icon2,
+      String? label2,
+      String? value2}) {
     return Row(
       children: [
         Expanded(
@@ -200,22 +259,30 @@ class StudentProfileScreen extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon2, size: 22, color: Colors.black54),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
+          child: (icon2 != null && label2 != null && value2 != null)
+              ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label2, style: GoogleFonts.poppins(fontSize: 11, color: Colors.black45)),
-                    Text(value2, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                    Icon(icon2, size: 22, color: Colors.black54),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(label2,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 11, color: Colors.black45)),
+                          Text(value2,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87)),
+                        ],
+                      ),
+                    ),
                   ],
-                ),
-              ),
-            ],
-          ),
+                )
+              : const SizedBox(),
         ),
       ],
     );
