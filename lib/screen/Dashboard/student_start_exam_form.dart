@@ -20,7 +20,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
 
   final List<String> _units = ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4'];
   final List<String> _subjects = ['Math', 'Science', 'English'];
-  final List<String> _marks = ['30', '40', '50', '60', '70', '100'];
+  final List<String> _marks =['20','30', '40', '50'];
 
   @override
   Widget build(BuildContext context) {

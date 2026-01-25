@@ -71,7 +71,7 @@ class StudentHomeScreen extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      height: 24,
+                      height: MediaQuery.of(context).size.height * 0.03,
                       width: 4,
                       decoration: BoxDecoration(
                         color: Colors.orange,
@@ -175,7 +175,7 @@ class StudentHomeScreen extends StatelessWidget {
                   blankVerticalSpace24,
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: MediaQuery.of(context).size.height * 0.06,
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.push(

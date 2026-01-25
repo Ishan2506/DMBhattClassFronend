@@ -2,6 +2,7 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mcq_Detail.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/edit_profile_screen.dart';
 
 class StudentProfileScreen extends StatelessWidget {
   const StudentProfileScreen({super.key});
@@ -13,7 +14,7 @@ class StudentProfileScreen extends StatelessWidget {
     final String studentStandard = "10th - English Medium";
     final String schoolName = "St. Xavier's High School";
     final String mobileNo = "9106315912";
-    final String email = "shadevarsh1000@gmail.com";
+   // final String email = "shadevarsh1000@gmail.com";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
@@ -66,19 +67,22 @@ class StudentProfileScreen extends StatelessWidget {
                     child: IconButton(
                       icon: const Icon(Icons.edit, color: Colors.black54, size: 22),
                       onPressed: () {
-                        // Handle Edit Profile
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                        );
                       },
                     ),
                   ),
                   
                   // Profile Image
-                  const CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Color(0xFFE0E0E0),
+                  CircleAvatar(
+                    radius: MediaQuery.of(context).size.width * 0.16,
+                    backgroundColor: const Color(0xFFE0E0E0),
                     child: CircleAvatar(
-                      radius: 55,
+                      radius: MediaQuery.of(context).size.width * 0.15,
                       backgroundColor: Colors.white,
-                      backgroundImage: AssetImage("assets/images/user_placeholder.png"), 
+                      backgroundImage: const AssetImage("assets/images/user_placeholder.png"), 
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -93,17 +97,17 @@ class StudentProfileScreen extends StatelessWidget {
                     label2: "Standard",
                     value2: studentStandard,
                   ),
-                  const Divider(height: 30),
+                  Divider(height: MediaQuery.of(context).size.height * 0.03),
                   _buildInfoRow(
                     context,
                     icon: Icons.phone_android,
                     label: "Mobile No",
                     value: mobileNo,
-                   icon2: Icons.email_outlined,
-                   label2: "Email",
-                    value2: email,
+                  //  icon2: Icons.email_outlined,
+                  //  label2: "Email",
+                  //   value2: email,
                   ),
-                  const Divider(height: 30),
+                  Divider(height: MediaQuery.of(context).size.height * 0.03),
                   _buildInfoRow(
                     context,
                     icon: Icons.school_outlined,
@@ -204,7 +208,7 @@ class StudentProfileScreen extends StatelessWidget {
             // Sign Out Button
             SizedBox(
               width: double.infinity,
-              height: 55,
+              height: MediaQuery.of(context).size.height * 0.07,
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(

@@ -133,8 +133,8 @@ class _DPinScreenState extends State<DPinScreen> {
   Widget _buildDPINPinPut() {
     return Pinput(
       defaultPinTheme: PinTheme(
-        width: S.s56,
-        height: S.s56,
+        width: MediaQuery.of(context).size.width * 0.14,
+        height: MediaQuery.of(context).size.width * 0.14,
         textStyle: Theme.of(context).textTheme.bodyMedium,
         decoration: BoxDecoration(
           border: Border.all(color: isDarkMode ? Colors.white : Colors.black),
@@ -142,8 +142,8 @@ class _DPinScreenState extends State<DPinScreen> {
         ),
       ),
       focusedPinTheme: PinTheme(
-        width: S.s56,
-        height: S.s56,
+        width: MediaQuery.of(context).size.width * 0.14,
+        height: MediaQuery.of(context).size.width * 0.14,
         textStyle: Theme.of(context).textTheme.bodyMedium,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(S.s8),

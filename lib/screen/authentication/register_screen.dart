@@ -1,7 +1,11 @@
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,6 +18,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPasswordVisible = false;
   bool _agreedToTerms = false;
   
+  final _formKey = GlobalKey<FormState>();
+  
+  // Controllers
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _parentPhoneController = TextEditingController();
+  final TextEditingController _schoolNameController = TextEditingController();
+
   // Selection States
   String? _selectedStandard;
   String? _selectedMedium;
@@ -31,6 +44,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
     "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
     "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
   };
+
+  Future<List<String>> _fetchSchools(String query) async {
+    if (_selectedCity == null || query.isEmpty) return [];
+    
+    final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=$query+school+in+$_selectedCity&format=json&limit=5');
+    
+    try {
+      final response = await http.get(url, headers: {
+        'User-Agent': 'DMBhattClasses/1.0', 
+      });
+
+      if (response.statusCode == 200) {
+        final List data = json.decode(response.body);
+        return data.map<String>((e) => e['display_name'] as String).toList();
+      }
+    } catch (e) {
+      debugPrint("Error fetching schools: $e");
+    }
+    return [];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +85,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Column(
+        child: Form(
+          key: _formKey,
+          child: Column(
           children: [
             // Logo
              Container(
@@ -62,8 +98,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
                child: Image.asset(
                 imgDmBhattClassesLogo,
-                height: 80,
-                width: 80,
+                height: MediaQuery.of(context).size.height * 0.1,
+                width: MediaQuery.of(context).size.height * 0.1,
               ),
              ),
             const SizedBox(height: 24),
@@ -86,15 +122,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16),
 
             // Name
-            _buildTextField(hint: "Name", icon: Icons.person_outline),
+            _buildTextField(
+              controller: _nameController,
+              hint: "Name", 
+              icon: Icons.person_outline,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your name';
+                }
+                return null;
+              },
+            ),
             const SizedBox(height: 16),
 
             // Phone
-             _buildTextField(hint: "Phone Number", icon: Icons.phone_outlined, inputType: TextInputType.phone),
+             _buildTextField(
+              controller: _phoneController,
+              hint: "Phone Number", 
+              icon: Icons.phone_outlined, 
+              inputType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter phone number';
+                }
+                if (value.length != 10) {
+                  return 'Phone number must be 10 digits';
+                }
+                return null;
+              },
+            ),
             const SizedBox(height: 16),
 
             // Password
             _buildTextField(
+              controller: _passwordController,
               hint: "Password",
               icon: Icons.lock_outline,
               isPassword: true,
@@ -104,12 +169,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _isPasswordVisible = !_isPasswordVisible;
                 });
               },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter password';
+                }
+                if (value.length < 7) {
+                  return 'Password must be at least 7 characters';
+                }
+                if (!value.contains(RegExp(r'[A-Z]'))) {
+                  return 'Password must contain one uppercase letter';
+                }
+                if (!value.contains(RegExp(r'[a-z]'))) {
+                  return 'Password must contain one lowercase letter';
+                }
+                if (!value.contains(RegExp(r'[0-9]'))) {
+                  return 'Password must contain one number';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
 
             // Parent's Mobile
-            _buildTextField(hint: "Parent's Mobile Number", icon: Icons.family_restroom_outlined, inputType: TextInputType.phone),
+            _buildTextField(
+              controller: _parentPhoneController,
+              hint: "Parent's Mobile Number", 
+              icon: Icons.family_restroom_outlined, 
+              inputType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter parent's mobile number";
+                }
+                if (value.length != 10) {
+                  return 'Phone number must be 10 digits';
+                }
+                return null;
+              },
+            ),
             const SizedBox(height: 16),
+            
+
   // Standard Dropdown
             _buildDropdown(
               hint: "Standard",
@@ -174,7 +277,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
              const SizedBox(height: 16),
 
-            // City Dropdown (Conditional on State)
+            // City Dropdown (Conditional)
              _buildDropdown(
               hint: "City",
               icon: Icons.location_city,
@@ -185,6 +288,99 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _selectedCity = val;
                 });
               },
+            ),
+            const SizedBox(height: 16),
+
+             // School Name Autocomplete
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return Autocomplete<String>(
+                  optionsBuilder: (TextEditingValue textEditingValue) {
+                    if (textEditingValue.text == '') {
+                      return const Iterable<String>.empty();
+                    }
+                    return _fetchSchools(textEditingValue.text);
+                  },
+                  onSelected: (String selection) {
+                    _schoolNameController.text = selection;
+                  },
+                  fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                    // Sync the internal controller with our _schoolNameController if needed, 
+                    // or just use the one provided by Autocomplete. 
+                    // We'll use the one provided but sync initial value or changes if logic demands.
+                    // For simplicity, we just use the UI builder here.
+                    
+                    // Note: Autocomplete creates its own controller. 
+                    // To validate, we can manually update our _schoolNameController or validte this one?
+                    // Better approach: Use onChanged to update our controller.
+                    textEditingController.addListener(() {
+                       _schoolNameController.text = textEditingController.text;
+                    });
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: TextFormField(
+                        controller: textEditingController,
+                        focusNode: focusNode,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter school name';
+                          }
+                          return null;
+                        },
+                        style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold),
+                        decoration: InputDecoration(
+                          hintText: "School Name",
+                          hintStyle: GoogleFonts.poppins(color: Colors.grey),
+                          prefixIcon: const Icon(Icons.school_outlined, color: Colors.black54),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        ),
+                      ),
+                    );
+                  },
+                  optionsViewBuilder: (context, onSelected, options) {
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: Material(
+                        elevation: 4.0,
+                         borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          width: constraints.maxWidth,
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          decoration: BoxDecoration(
+                             color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            itemCount: options.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              final String option = options.elementAt(index);
+                              // Simple display name clean up if it's too long
+                              final displayName = option.split(',')[0]; 
+                              return InkWell(
+                                onTap: () {
+                                  onSelected(option);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Text(displayName, style: GoogleFonts.poppins(color: Colors.black87)),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }
             ),
             const SizedBox(height: 24),
 
@@ -220,14 +416,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
             // Register Button
             SizedBox(
               width: double.infinity,
-              height: 56,
+              height: MediaQuery.of(context).size.height * 0.07,
               child: ElevatedButton(
                 onPressed: () {
-                  // Validate inputs...
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  );
+                  if (_formKey.currentState!.validate()) {
+                    if (!_agreedToTerms) {
+                      CustomToast.showError(context, 'Please agree to Terms and Conditions');
+                      return;
+                    }
+                    // Validate Dropdowns
+                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null) {
+                        CustomToast.showError(context, 'Please select all required fields');
+                      return;
+                     }
+                      if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
+                         CustomToast.showError(context, 'Please select a stream');
+                      return;
+                      }
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade700,
@@ -250,16 +461,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildTextField({
     required String hint, 
     required IconData icon, 
+    TextEditingController? controller,
     bool isPassword = false, 
     bool isVisible = false,
     VoidCallback? onVisibilityChanged,
     TextInputType inputType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -267,9 +482,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade300),
       ),
-      child: TextField(
+      child: TextFormField(
+        controller: controller,
         obscureText: isPassword && !isVisible,
         keyboardType: inputType,
+        inputFormatters: inputFormatters,
+        validator: validator,
         style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), // Black Bold Input
         decoration: InputDecoration(
           hintText: hint,

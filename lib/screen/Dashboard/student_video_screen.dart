@@ -97,7 +97,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
         children: [
           // 1. SUBJECT CIRCLES (Like YouTube Topics)
           Container(
-            height: 100,
+            height: MediaQuery.of(context).size.height * 0.12,
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -114,7 +114,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
                     child: Column(
                       children: [
                         CircleAvatar(
-                          radius: 28,
+                          radius: MediaQuery.of(context).size.width * 0.07,
                           backgroundColor: isSelected ? sub['color'] : Colors.grey.shade200,
                           child: Text(
                             sub['name'][0], // Show first letter
@@ -166,7 +166,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.video_library_outlined, size: 80, color: Colors.red),
+          Icon(Icons.video_library_outlined, size: MediaQuery.of(context).size.width * 0.2, color: Colors.red),
           const SizedBox(height: 20),
           Text(
             "Viewing: $_selectedSubject",
