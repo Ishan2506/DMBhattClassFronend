@@ -75,13 +75,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         setState(() {
            _nameController.text = user['firstName'] ?? "";
            _phoneController.text = user['phoneNum'] ?? "";
+           _cityController.text = user['address']?['city'] ?? "";
            
            if (profile != null) {
               _selectedStandard = profile['std'];
               _selectedMedium = profile['medium'];
               _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
-              
-              // Note: Backend might not store city/state/parentPhone yet, leaving empty or default
+              _parentPhoneController.text = profile['parentPhone'] ?? "";
            }
            _isLoading = false;
         });
@@ -116,7 +116,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'school': _schoolNameController.text,
         'std': _selectedStandard,
         'medium': _selectedMedium,
-        // Add other fields if supported by backend
+        'city': _cityController.text,
+        'parentPhone': _parentPhoneController.text,
       };
 
       final response = await ApiService.updateProfile(token, data);
