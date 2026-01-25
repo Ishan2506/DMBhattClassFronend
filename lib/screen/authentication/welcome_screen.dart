@@ -1,6 +1,7 @@
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/guest_register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -91,7 +92,7 @@ class WelcomeScreen extends StatelessWidget {
                   
                   const SizedBox(height: 16),
                   
-                  // Register Button
+                   // Register Button
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
@@ -116,6 +117,28 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+
+                   // Register as Guest Button
+                  TextButton(
+                    onPressed: () {
+                       Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const GuestRegisterScreen()),
+                      );
+                    }, 
+                    child: Text(
+                      "Register as a guest",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                        decoration: TextDecoration.underline,
+                      ),
+                    )
+                  ),
+                  
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                 ],
               ),

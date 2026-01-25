@@ -7,14 +7,14 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class GuestRegisterScreen extends StatefulWidget {
+  const GuestRegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<GuestRegisterScreen> createState() => _GuestRegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   bool _isPasswordVisible = false;
   bool _agreedToTerms = false;
   
@@ -22,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   
   // Controllers
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _rollNoController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
@@ -78,11 +77,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        // title: Text(
-        //   "Back", 
-        //   style: GoogleFonts.poppins(color: Colors.black54, fontSize: 16),
-        // ),
-        // titleSpacing: 0,
+        title: Text(
+          "Guest Registration", 
+          style: GoogleFonts.poppins(color: Colors.black54, fontSize: 16),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -110,7 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: GoogleFonts.poppins(fontSize: 16, color: Colors.black54),
             ),
             Text(
-              "Welcome",
+              "Welcome Guest",
               style: GoogleFonts.poppins(
                 fontSize: 24, 
                 fontWeight: FontWeight.bold, 
@@ -118,8 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
-          
+ 
             const SizedBox(height: 16),
 
             // Name
@@ -130,21 +128,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your name';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-             // Roll Number
-            _buildTextField(
-              controller: _rollNoController,
-              hint: "Roll Number", 
-              icon: Icons.numbers,
-              inputType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter roll number';
                 }
                 return null;
               },
@@ -228,8 +211,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
             
-
-  // Standard Dropdown
+            // Standard Dropdown
             _buildDropdown(
               hint: "Standard",
               icon: Icons.school_outlined,
@@ -321,14 +303,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _schoolNameController.text = selection;
                   },
                   fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                    // Sync the internal controller with our _schoolNameController if needed, 
-                    // or just use the one provided by Autocomplete. 
-                    // We'll use the one provided but sync initial value or changes if logic demands.
-                    // For simplicity, we just use the UI builder here.
-                    
-                    // Note: Autocomplete creates its own controller. 
-                    // To validate, we can manually update our _schoolNameController or validte this one?
-                    // Better approach: Use onChanged to update our controller.
                     textEditingController.addListener(() {
                        _schoolNameController.text = textEditingController.text;
                     });
@@ -378,7 +352,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             itemCount: options.length,
                             itemBuilder: (BuildContext context, int index) {
                               final String option = options.elementAt(index);
-                              // Simple display name clean up if it's too long
                               final displayName = option.split(',')[0]; 
                               return InkWell(
                                 onTap: () {
@@ -465,7 +438,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   elevation: 2,
                 ),
                 child: Text(
-                  "Register",
+                  "Register as Guest",
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

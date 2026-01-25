@@ -4,9 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/leaderboard_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
+
+  Future<void> _launchUrl() async {
+    const url = 'https://www.youtube.com/@dmbhatteducationchannel';
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +75,34 @@ class MoreScreen extends StatelessWidget {
                 );
               },
             ),
+
+
+
+            // --- Powered By Section ---
+            const SizedBox(height: 32),
+             Center(
+              child: Text(
+                "POWERED BY",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w300,
+                  color: colorScheme.onSurfaceVariant,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPoweredByItem(context, "D. M. BHATT", "DMB"),
+                _buildPoweredByItem(context, "ANKIT SIR", "AS", subtitle: "PHYSICS"),
+                _buildPoweredByItem(context, "RAVI SIR", "RS", subtitle: "MATHS | SCIENCE"),
+                _buildPoweredByItem(context, "HARDIK SIR", "HS", subtitle: "Accountancy"),
+              ],
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -165,6 +202,62 @@ class MoreScreen extends StatelessWidget {
             Icon(Icons.arrow_forward_ios, size: 14, color: colorScheme.onSurfaceVariant),
           ],
         ),
+      ),
+    );
+  }
+
+
+
+  Widget _buildPoweredByItem(BuildContext context, String name, String initials, {String? subtitle}) {
+     final colorScheme = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              // color: colorScheme.surfaceContainerHigh,
+              shape: BoxShape.circle,
+              border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+               image: (name == "D. M. BHATT") ? const DecorationImage(image: AssetImage('assets/app_icons/dm_bhatt_classes_logo.png'), fit: BoxFit.contain) : null,
+            ),
+            alignment: Alignment.center,
+             child: (name == "D. M. BHATT") ? null : Text(
+              initials,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+                fontSize: 16
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            name,
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontSize: 8,
+                color: colorScheme.onSurfaceVariant,
+                height: 1.2,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }
