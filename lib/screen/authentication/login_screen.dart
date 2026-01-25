@@ -160,6 +160,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           phoneNum: _phoneController.text,
                         );
 
+                        if (!mounted) return;
+
                         if (response.statusCode == 200) {
                             CustomToast.showSuccess(context, "Login Successful");
                             Navigator.pushAndRemoveUntil(
@@ -174,7 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
                            CustomToast.showError(context, "Login Failed: ${response.body}");
                         }
                     } catch (e) {
-                      CustomToast.showError(context, "Error: $e");
+                      if (mounted) {
+                        CustomToast.showError(context, "Error: $e");
+                      }
                     }
                   }
                 },
