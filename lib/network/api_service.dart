@@ -5,13 +5,13 @@ import 'package:http_parser/http_parser.dart'; // Make sure http_parser is in pu
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 
 class ApiService {
-  static const String baseUrl = "https://dmbhatt-api.onrender.com/api/auth";
+  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
 
   static Future<http.Response> registerUser({
     required RegistrationPayload payload,
     required String dpin,
   }) async {
-    final uri = Uri.parse("$baseUrl/register");
+    final uri = Uri.parse("$baseUrl/auth/register");
     final request = http.MultipartRequest("POST", uri);
     
     request.headers['Accept'] = 'application/json';
@@ -57,7 +57,7 @@ class ApiService {
     required String loginCode,
     required String phoneNum,
   }) async {
-    final uri = Uri.parse("$baseUrl/login");
+    final uri = Uri.parse("$baseUrl/auth/login");
     final response = await http.post(
       uri,
       headers: {
@@ -71,6 +71,29 @@ class ApiService {
       }),
     );
     return response;
+  }
+
+  static Future<http.Response> getProfile(String token) async {
+    final uri = Uri.parse("$baseUrl/profile");
+    return await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  static Future<http.Response> updateProfile(String token, Map<String, dynamic> data) async {
+    final uri = Uri.parse("$baseUrl/profile");
+    return await http.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
   }
 
   static String _getMimeType(String path) {

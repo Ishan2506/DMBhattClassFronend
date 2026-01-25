@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services for formatters
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -163,6 +165,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (!mounted) return;
 
                         if (response.statusCode == 200) {
+                            final data = jsonDecode(response.body);
+                            final token = data['token'];
+                            
+                            // Save token
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setString('auth_token', token);
+
                             CustomToast.showSuccess(context, "Login Successful");
                             Navigator.pushAndRemoveUntil(
                               context,

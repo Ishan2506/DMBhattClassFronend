@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -17,18 +19,20 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = true;
+  bool _isUpdating = false;
   
-  // Controllers (Pre-filled with mock data)
-  final TextEditingController _nameController = TextEditingController(text: "Devarsh Shah");
-  final TextEditingController _phoneController = TextEditingController(text: "9106315912");
-  final TextEditingController _parentPhoneController = TextEditingController(text: "9876543210");
-  final TextEditingController _cityController = TextEditingController(text: "Ahmedabad");
-  final TextEditingController _schoolNameController = TextEditingController(text: "St. Xavier's High School");
+  // Controllers
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _parentPhoneController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _schoolNameController = TextEditingController();
 
-  // Selection States (Fixed)
-  String? _selectedStandard = "10";
-  String? _selectedMedium = "English";
-  String? _selectedStream; // Null for 10th
+  // Selection States
+  String? _selectedStandard;
+  String? _selectedMedium;
+  String? _selectedStream; 
   String? _selectedState = "Gujarat";
 
   File? _imageFile;
@@ -45,12 +49,94 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
   };
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final response = await ApiService.getProfile(token);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final user = data['user'];
+        final profile = data['profile'];
+
+        setState(() {
+           _nameController.text = user['firstName'] ?? "";
+           _phoneController.text = user['phoneNum'] ?? "";
+           
+           if (profile != null) {
+              _selectedStandard = profile['std'];
+              _selectedMedium = profile['medium'];
+              _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
+              
+              // Note: Backend might not store city/state/parentPhone yet, leaving empty or default
+           }
+           _isLoading = false;
+        });
+      } else {
+        CustomToast.showError(context, "Failed to fetch profile");
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      CustomToast.showError(context, "Error: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _updateProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isUpdating = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        CustomToast.showError(context, "Session expired");
+        setState(() => _isUpdating = false);
+        return;
+      }
+
+      final Map<String, dynamic> data = {
+        'firstName': _nameController.text,
+        'phoneNum': _phoneController.text,
+        'school': _schoolNameController.text,
+        'std': _selectedStandard,
+        'medium': _selectedMedium,
+        // Add other fields if supported by backend
+      };
+
+      final response = await ApiService.updateProfile(token, data);
+
+      if (response.statusCode == 200) {
+        CustomToast.showSuccess(context, 'Profile Updated Successfully');
+        Navigator.pop(context);
+      } else {
+        CustomToast.showError(context, "Update Failed: ${response.body}");
+      }
+    } catch (e) {
+      CustomToast.showError(context, "Error: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdating = false);
+      }
+    }
+  }
+
   Future<List<String>> _fetchSchools(String query) async {
-    // For edit profile, state/city might be pre-filled 'Gujarat'/'Ahmedabad' but logic should hold.
-    // If city logic relies on user selection, ensure _selectedState -> _selectedCity logic is robust.
-    // In current Edit Code, city is a Text Field, which complicates specific API search if "Ahmedabad" isn't strictly selected from a list 
-    // BUT the prompt implies using similar city-wise logic. 
-    // If the user manually edits city text, we use that value.
     final cityToSearch = _cityController.text.isNotEmpty ? _cityController.text : "Ahmedabad";
 
     if (query.isEmpty) return [];
@@ -103,7 +189,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
@@ -175,44 +263,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 icon: Icons.family_restroom_outlined, 
                 inputType: TextInputType.phone,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
-                 validator: (val) => val!.length != 10 ? "Invalid phone" : null,
               ),
               const SizedBox(height: 16),
 
-              
-               // School Name Removed from here (to be added below City)
-
-              // Standard (Disabled)
+              // Standard
               _buildDropdown(
                 hint: "Standard",
                 icon: Icons.school_outlined,
                 value: _selectedStandard,
                 items: _standards,
-                onChanged: null, // Disabled
-                isReadOnly: true,
+                onChanged: (val) => setState(() => _selectedStandard = val),
               ),
               const SizedBox(height: 16),
 
-              // Medium (Disabled)
+              // Medium
               _buildDropdown(
                 hint: "Medium",
                 icon: Icons.language,
                 value: _selectedMedium,
                 items: _mediums,
-                onChanged: null, // Disabled
-                isReadOnly: true,
+                onChanged: (val) => setState(() => _selectedMedium = val),
               ),
                const SizedBox(height: 16),
                
-               // Stream (Disabled - Only if relevant)
+               // Stream (Only if relevant)
                if (_selectedStandard == "11" || _selectedStandard == "12") ...[
                  _buildDropdown(
                   hint: "Stream",
                   icon: Icons.science_outlined,
                   value: _selectedStream,
                   items: _streams,
-                  onChanged: null, // Disabled
-                   isReadOnly: true,
+                  onChanged: (val) => setState(() => _selectedStream = val),
                 ),
                 const SizedBox(height: 16),
                ],
@@ -236,7 +317,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               // City
                _buildTextField(
                 controller: _cityController,
-                hint: "City", // Taking simple text for city logic in edit for simplicity
+                hint: "City",
                 icon: Icons.location_city,
               ),
               const SizedBox(height: 16),
@@ -254,16 +335,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     onSelected: (String selection) {
                       _schoolNameController.text = selection;
                     },
-                    initialValue: TextEditingValue(text: _schoolNameController.text), // Pre-fill
+                    initialValue: TextEditingValue(text: _schoolNameController.text), 
                     fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                      // Sync logic needed? 
-                      // If it's prefilled, the initialValue handles display. 
-                      // User edits update the local textEditingController.
-                      // We need to sync back to _schoolNameController on change.
+                       // Sync back to controller immediately when typing manually
                        textEditingController.addListener(() {
                           _schoolNameController.text = textEditingController.text;
                        });
                       
+                       // If pre-filled value exists, ensure it's shown
+                       if (_schoolNameController.text.isNotEmpty && textEditingController.text.isEmpty) {
+                          textEditingController.text = _schoolNameController.text;
+                       }
+
                       return Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
@@ -332,13 +415,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 width: double.infinity,
                 height: MediaQuery.of(context).size.height * 0.07,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Logic to update profile
-                      CustomToast.showSuccess(context, 'Profile Updated Successfully');
-                      Navigator.pop(context);
-                    }
-                  },
+                  onPressed: _isUpdating ? null : _updateProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade700,
                     shape: RoundedRectangleBorder(
@@ -346,7 +423,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     elevation: 2,
                   ),
-                  child: Text(
+                  child: _isUpdating 
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
                     "Update Profile",
                     style: GoogleFonts.poppins(
                       fontSize: 18,

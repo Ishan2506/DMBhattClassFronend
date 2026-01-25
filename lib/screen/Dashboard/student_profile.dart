@@ -1,21 +1,80 @@
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mcq_Detail.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/edit_profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class StudentProfileScreen extends StatelessWidget {
+class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Mock Data
-    final String studentName = "Devarsh Shah";
-    final String studentStandard = "10th - English Medium";
-    final String schoolName = "St. Xavier's High School";
-    final String mobileNo = "9106315912";
-   // final String email = "shadevarsh1000@gmail.com";
+  State<StudentProfileScreen> createState() => _StudentProfileScreenState();
+}
 
+class _StudentProfileScreenState extends State<StudentProfileScreen> {
+  bool _isLoading = true;
+  String studentName = "";
+  String studentStandard = "";
+  String schoolName = "";
+  String mobileNo = "";
+  // String email = ""; // If needed
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        CustomToast.showError(context, "Session expired, please login again");
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
+      final response = await ApiService.getProfile(token);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final user = data['user'];
+        final profile = data['profile'];
+
+        setState(() {
+          studentName = "${user['firstName']} ${user['middleName'] ?? ''} ${user['lastName'] ?? ''}".trim();
+          mobileNo = user['phoneNum'] ?? "";
+          
+          if (profile != null) {
+             studentStandard = "${profile['std'] ?? 'N/A'} - ${profile['medium'] ?? ''}";
+             schoolName = profile['school'] ?? (profile['schoolName'] ?? 'N/A'); // Handle student vs guest
+          }
+          
+          _isLoading = false;
+        });
+      } else {
+        CustomToast.showError(context, "Failed to load profile");
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      CustomToast.showError(context, "Error: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
@@ -30,7 +89,6 @@ class StudentProfileScreen extends StatelessWidget {
           ),
         ),
         elevation: 0,
-        // CHANGED: Replaced Logo with Back Button
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -39,10 +97,11 @@ class StudentProfileScreen extends StatelessWidget {
             style: GoogleFonts.poppins(
                 color: Colors.white, fontWeight: FontWeight.w600)),
         centerTitle: true,
-        // CHANGED: Removed Edit button from actions
-        actions: const [SizedBox(width: 48)], // To keep title centered
+        actions: const [SizedBox(width: 48)], 
       ),
-      body: SingleChildScrollView(
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -61,16 +120,17 @@ class StudentProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  // NEW: Edit Button moved to the body part (Top Right of Card)
+                  // Edit Button
                   Align(
                     alignment: Alignment.topRight,
                     child: IconButton(
                       icon: const Icon(Icons.edit, color: Colors.black54, size: 22),
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const EditProfileScreen()),
                         );
+                        _fetchProfile(); // Refresh on return
                       },
                     ),
                   ),
@@ -103,9 +163,6 @@ class StudentProfileScreen extends StatelessWidget {
                     icon: Icons.phone_android,
                     label: "Mobile No",
                     value: mobileNo,
-                  //  icon2: Icons.email_outlined,
-                  //  label2: "Email",
-                  //   value2: email,
                   ),
                   Divider(height: MediaQuery.of(context).size.height * 0.03),
                   _buildInfoRow(
@@ -154,7 +211,7 @@ class StudentProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "125", // Mock Points
+                        "125", // Mock Points for now
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 32,
@@ -210,7 +267,10 @@ class StudentProfileScreen extends StatelessWidget {
               width: double.infinity,
               height: MediaQuery.of(context).size.height * 0.07,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.clear(); // Logout
+                  if (!mounted) return;
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const WelcomeScreen()),
