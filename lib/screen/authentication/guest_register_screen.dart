@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 
 class GuestRegisterScreen extends StatefulWidget {
   const GuestRegisterScreen({super.key});
@@ -407,7 +409,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
               width: double.infinity,
               height: MediaQuery.of(context).size.height * 0.07,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     if (!_agreedToTerms) {
                       CustomToast.showError(context, 'Please agree to Terms and Conditions');
@@ -423,10 +425,42 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       return;
                       }
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    // Split Name
+                    final nameParts = _nameController.text.trim().split(' ');
+                    final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
+
+
+                    final payload = RegistrationPayload(
+                      role: 'guest',
+                      fields: {
+                        "firstName": firstName,
+                        "phoneNum": _phoneController.text,
+                        // Guest doesn't need Std/Medium/School in backend registerGuest?
+                        // "const { firstName, middleName, phoneNum, loginCode, schoolName } = req.body;"
+                        // It takes schoolName.
+                        "schoolName": _schoolNameController.text,
+                      },
+                      files: [],
                     );
+
+                    try {
+                      final response = await ApiService.registerUser(
+                        payload: payload, 
+                        dpin: _passwordController.text
+                      );
+
+                      if (response.statusCode == 201 || response.statusCode == 200) {
+                        CustomToast.showSuccess(context, "Guest Registration Successful");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      } else {
+                        CustomToast.showError(context, "Registration Failed: ${response.body}");
+                      }
+                    } catch (e) {
+                      CustomToast.showError(context, "Error: $e");
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(

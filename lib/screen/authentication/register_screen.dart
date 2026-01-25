@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:http/http.dart' as http;
 
 class RegisterScreen extends StatefulWidget {
@@ -434,7 +436,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               width: double.infinity,
               height: MediaQuery.of(context).size.height * 0.07,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     if (!_agreedToTerms) {
                       CustomToast.showError(context, 'Please agree to Terms and Conditions');
@@ -450,10 +452,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return;
                       }
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    // Split Name
+                    final nameParts = _nameController.text.trim().split(' ');
+                    final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
+
+
+                    final payload = RegistrationPayload(
+                      role: 'student',
+                      fields: {
+                        "firstName": firstName,
+                        "rollNo": _rollNoController.text,
+                        "phoneNum": _phoneController.text,
+                        "std": _selectedStandard!,
+                        "medium": _selectedMedium!,
+                        "school": _schoolNameController.text,
+                        // Add parent phone if needed by backend, though backend registerStudent didn't explicitly list it in my check, 
+                        // but it's good to checking backend again? 
+                        // Backend registerStudent takes: firstName, middleName, phoneNum, std, medium, school, loginCode, rollNo.
+                        // It DOES NOT take parentPhone? Or did I miss it?
+                        // "const { firstName, middleName, phoneNum, std, medium, school, loginCode, rollNo } = req.body;"
+                        // Yes, no parentPhone. I'll ignore it or add it if `User` model supports it.  
+                      },
+                      files: [], // No photo since UI removed it
                     );
+
+                    try {
+                      final response = await ApiService.registerUser(
+                        payload: payload, 
+                        dpin: _passwordController.text // Using password as DPIN/LoginCode
+                      );
+                      
+                      if (response.statusCode == 201 || response.statusCode == 200) {
+                         CustomToast.showSuccess(context, "Registration Successful");
+                         Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      } else {
+                         CustomToast.showError(context, "Registration Failed: ${response.body}");
+                      }
+                    } catch (e) {
+                       CustomToast.showError(context, "Error: $e");
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(
