@@ -34,18 +34,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
     try {
       final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
       if (photo != null) {
-        // Show scanning dialog
         if(!mounted) return;
         CustomLoader.show(context);
 
-        // Simulate API delay
         await Future.delayed(const Duration(seconds: 2));
         
         if(!mounted) return;
         CustomLoader.hide(context);
 
-        // Simulate finding the first product as a match
-        // In a real app, you would upload the image to a server for analysis
         final matchedProduct = _products.first; 
         
         setState(() {
@@ -57,11 +53,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
-      // Ensure loader is hidden if error occurs while loading
-      // (Though try-catch block covers the picky part, if loader was shown need to handle that. 
-      // Ideally wrap the loader logic in try-finally or careful flow. 
-      // here loader is shown after pickImage returns).
-       CustomToast.showError(context, "Error capturing image: $e");
+      CustomToast.showError(context, "Error capturing image: $e");
     }
   }
 
@@ -70,7 +62,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     {
       "id": "1",
       "name": "Mahamantra Frame | Hare Rama Hare Krishna",
-      "image": "assets/images/mahamantra_frame.png", // Updated extension
+      "image": "assets/images/mahamantra_frame.png",
       "rating": 4.5,
       "reviews": 12,
       "price": 630,
@@ -82,7 +74,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     {
       "id": "2",
       "name": "Physics Class 10 Diagram Set",
-      "image": "assets/images/diagram_set.png", // Updated extension
+      "image": "assets/images/diagram_set.png",
       "rating": 4.2,
       "reviews": 45,
       "price": 250,
@@ -94,7 +86,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
      {
       "id": "3",
       "name": "Chemistry Phantom Material",
-      "image": "assets/images/phantom_chem.png", // Updated extension
+      "image": "assets/images/phantom_chem.png",
       "rating": 4.8,
       "reviews": 8,
       "price": 899,
@@ -106,7 +98,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     {
       "id": "4",
       "name": "Wall Hanging Hindu Quote Frame",
-      "image": "assets/images/wall_hanging.png", // Updated extension
+      "image": "assets/images/wall_hanging.png",
       "rating": 5.0,
       "reviews": 3,
       "price": 287,
@@ -117,73 +109,67 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
-    // Filter products
-    List<Map<String, dynamic>> displayedProducts = _products
-        .where((p) {
-          final matchesFilter = _selectedFilter == "All" || _selectedFilter == "Material" && p['category'] == "Material" || p['category'] == _selectedFilter; // Adjusted for initial state
-          // Simplified Category Logic: Allow "Material" to act as default or explicit filter
-           bool categoryMatch = false;
-           if (_filters.contains(_selectedFilter)) {
-             categoryMatch = p['category'] == _selectedFilter;
-           } else {
-             categoryMatch = p['category'] == _selectedFilter;
-           }
-           
-          // Actual Logic used in previous code was: p['category'] == _selectedFilter || _selectedFilter == "All"
-          // Let's stick to that but create a more robust search
-          final isCategoryMatch = p['category'] == _selectedFilter || _selectedFilter == "All"; // Assuming "All" might be handled outside or if we add "All" tab
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-          final searchLower = _searchQuery.toLowerCase();
-          final isSearchMatch = _searchQuery.isEmpty || 
-              p['name'].toString().toLowerCase().contains(searchLower) || 
-              p['description'].toString().toLowerCase().contains(searchLower);
-
-          return isCategoryMatch && isSearchMatch;
-        }) 
-        .toList();
-    
-    if(displayedProducts.isEmpty && _products.isNotEmpty) {
-       // Fallback logic
-    }
+    List<Map<String, dynamic>> displayedProducts = _products.where((p) {
+      final isCategoryMatch = p['category'] == _selectedFilter || _selectedFilter == "All";
+      final searchLower = _searchQuery.toLowerCase();
+      final isSearchMatch = _searchQuery.isEmpty || 
+          p['name'].toString().toLowerCase().contains(searchLower) || 
+          p['description'].toString().toLowerCase().contains(searchLower);
+      return isCategoryMatch && isSearchMatch;
+    }).toList();
 
     return Scaffold(
-      backgroundColor: colorScheme.surface, // Dynamic Background
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           // Search Bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              style: TextStyle(color: colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: "Search or ask a question...",
-                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.camera_alt_outlined, color: colorScheme.onSurfaceVariant),
-                  onPressed: _pickImage,
-                  tooltip: "Search by Image",
-                ),
-                filled: true,
-                fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3), // Dynamic Fill
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.2)),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+                style: GoogleFonts.poppins(color: Colors.black87, fontSize: screenWidth * 0.035),
+                decoration: InputDecoration(
+                  hintText: "Search materials, books, etc...",
+                  hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: screenWidth * 0.035),
+                  prefixIcon: Icon(Icons.search_rounded, color: Colors.blue.shade900, size: screenWidth * 0.05),
+                  suffixIcon: Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.camera_alt_rounded, color: Colors.blue.shade900, size: screenWidth * 0.05),
+                      onPressed: _pickImage,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
@@ -191,22 +177,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
           // Filter Chips
           Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              border: Border(bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.2))),
-            ),
+            height: 60,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               itemCount: _filters.length,
               itemBuilder: (context, index) {
                 final filter = _filters[index];
                 final isSelected = filter == _selectedFilter;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: ChoiceChip(
                     label: Text(filter),
                     selected: isSelected,
                     onSelected: (bool selected) {
@@ -214,19 +195,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _selectedFilter = filter;
                       });
                     },
-                    backgroundColor: colorScheme.surface,
-                    selectedColor: colorScheme.primaryContainer,
-                    checkmarkColor: colorScheme.onPrimaryContainer,
-                    labelStyle: TextStyle(
-                      color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    labelStyle: GoogleFonts.poppins(
+                      fontSize: screenWidth * 0.032,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected ? Colors.white : Colors.black87,
                     ),
+                    backgroundColor: Colors.grey.shade100,
+                    selectedColor: Colors.blue.shade900,
+                    elevation: isSelected ? 4 : 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(
-                        color: isSelected ? Colors.transparent : colorScheme.outlineVariant,
-                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide.none,
                     ),
+                    showCheckmark: false,
                   ),
                 );
               },
@@ -236,112 +218,159 @@ class _ExploreScreenState extends State<ExploreScreen> {
           // Product List
           Expanded(
             child: displayedProducts.isEmpty 
-            ? Center(child: Text("No items found for $_selectedFilter", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)))
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
+                  const SizedBox(height: 16),
+                  Text(
+                    "No items found",
+                    style: GoogleFonts.poppins(color: Colors.grey.shade600, fontSize: 16),
+                  ),
+                ],
+              )
             : ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: displayedProducts.length,
-              itemBuilder: (context, index) {
-                final product = displayedProducts[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MaterialDetailScreen(product: product),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    elevation: 0,
-                    color: colorScheme.surfaceContainerLow, // Dynamic Card
-                    margin: const EdgeInsets.only(bottom: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Image
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHighest,
-                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-                            child: Hero(
-                              tag: product['id'],
-                              child: Image.asset(
-                                product['image'],
-                                fit: BoxFit.cover,
-                                errorBuilder: (c,e,s) => Center(child: Icon(Icons.image, color: colorScheme.onSurfaceVariant)),
-                              ),
-                            ),
-                          ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: displayedProducts.length,
+                itemBuilder: (context, index) {
+                  final product = displayedProducts[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        
-                        // Details
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product['name'],
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: colorScheme.onSurface),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Text("${product['rating']}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12, color: colorScheme.onSurface)),
-                                    const Icon(Icons.star, color: Colors.orange, size: 14),
-                                    Text(" (${product['reviews']})", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant, fontSize: 12)),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Text(
-                                      "₹${product['price']}",
-                                      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+                      ],
+                      border: Border.all(color: Colors.grey.shade100),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MaterialDetailScreen(product: product),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Hero(
+                                tag: product['id'],
+                                child: Container(
+                                  width: screenWidth * 0.28,
+                                  height: screenWidth * 0.28,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.asset(
+                                      product['image'],
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (c,e,s) => const Icon(Icons.image, color: Colors.grey),
                                     ),
-                                    const SizedBox(width: 8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      "M.R.P.: ₹${product['originalPrice']}",
+                                      product['name'],
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        color: colorScheme.onSurfaceVariant,
-                                        decoration: TextDecoration.lineThrough,
-                                        decorationColor: colorScheme.onSurfaceVariant
+                                        fontSize: screenWidth * 0.035, 
+                                        fontWeight: FontWeight.w600, 
+                                        color: Colors.black87,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.star_rounded, color: const Color(0xFFFFB300), size: screenWidth * 0.04),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          "${product['rating']}", 
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.bold, 
+                                            fontSize: screenWidth * 0.03, 
+                                            color: Colors.black87
+                                          ),
+                                        ),
+                                        Text(
+                                          " (${product['reviews']})", 
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.grey.shade500, 
+                                            fontSize: screenWidth * 0.03
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "₹${product['price']}",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: screenWidth * 0.045, 
+                                            fontWeight: FontWeight.bold, 
+                                            color: Colors.blue.shade900
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          "₹${product['originalPrice']}",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: screenWidth * 0.028,
+                                            color: Colors.grey.shade400,
+                                            decoration: TextDecoration.lineThrough,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.shade50,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        "Save ${product['discount']}%",
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.green.shade700, 
+                                          fontSize: 10, 
+                                          fontWeight: FontWeight.w600
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                                Text(
-                                  "Save ${product['discount']}%",
-                                  style: GoogleFonts.poppins(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w500),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "FREE delivery Wed, 28 Jan",
-                                  style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
           ),
         ],
       ),

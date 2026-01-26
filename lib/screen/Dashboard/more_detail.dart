@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
+import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,14 +18,13 @@ class MoreScreen extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      backgroundColor: colorScheme.surface, // Dynamic Scaffold Background
+      backgroundColor: colorScheme.surface,
     
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -34,9 +34,9 @@ class MoreScreen extends StatelessWidget {
               child: Text(
                 "Reports",
                 style: GoogleFonts.poppins(
-                  fontSize: 18,
+                  fontSize: screenWidth * 0.045, // Responsive Font Size
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface, // Dynamic Text
+                  color: colorScheme.onSurface,
                 ),
               ),
             ),
@@ -79,47 +79,54 @@ class MoreScreen extends StatelessWidget {
 
 
             // --- Powered By Section ---
-            const SizedBox(height: 32),
-             Center(
-              child: Text(
-                "POWERED BY",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w300,
-                  color: colorScheme.onSurfaceVariant,
-                  letterSpacing: 2,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildPoweredByItem(context, "D. M. BHATT", "partner_dm_bhatt.png"),
-                _buildPoweredByItem(context, "HARDIK SIR", "partner_hardik_sir.png", subtitle: "Accountancy"),
-                _buildPoweredByItem(context, "ANKIT SIR", "partner_ankit_sir.png"),
-                // Placeholder for 4th logo to maintain spacing
-                 Expanded(child: Container()), 
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
+    //         const SizedBox(height: 32),
+    //          Center(
+    //           child: Text(
+    //             "POWERED BY",
+    //             style: GoogleFonts.poppins(
+    //               fontSize: 14,
+    //               fontWeight: FontWeight.w300,
+    //               color: colorScheme.onSurfaceVariant,
+    //               letterSpacing: 2,
+    //             ),
+    //           ),
+    //         ),
+    //         const SizedBox(height: 16),
+    //          Padding(
+    //           padding: const EdgeInsets.symmetric(horizontal: 20),
+    //           child: Container(
+    //                // blend mode 'multiply' makes white transparent
+    //                child: ColorFiltered(
+    //                   colorFilter: const ColorFilter.mode(
+    //                     Colors.white,
+    //                     BlendMode.darken,
+    //                   ),
+    //                   child: Image.asset(
+    //                     imgPoweredByNew, 
+    //                     color: const Color(0xFFF5F5F5),
+    //                     colorBlendMode: BlendMode.multiply, 
+    //                   ),
+    //                ),
+    //             ),
+    //         ),
+    //         const SizedBox(height: 20),
+            ],
+          ),
+       ),
     );
   }
 
   Widget _buildReportItem(BuildContext context, {required String title, required VoidCallback onTap}) {
     final colorScheme = Theme.of(context).colorScheme;
+    final screenWidth = MediaQuery.of(context).size.width;
     return InkWell(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: 18),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow, // Dynamic background
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -128,12 +135,12 @@ class MoreScreen extends StatelessWidget {
             Text(
               title,
               style: GoogleFonts.poppins(
-                fontSize: 15,
+                fontSize: screenWidth * 0.038, // Responsive Font Size
                 fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface, // Dynamic Text
+                color: colorScheme.onSurface,
               ),
             ),
-             Icon(Icons.arrow_forward_ios, size: 14, color: colorScheme.onSurfaceVariant),
+             Icon(Icons.arrow_forward_ios, size: screenWidth * 0.035, color: colorScheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -145,12 +152,13 @@ class MoreScreen extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4, bottom: 12, top: 24),
       child: Builder(
         builder: (context) {
+          final sWidth = MediaQuery.of(context).size.width;
           return Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 18,
+              fontSize: sWidth * 0.045, // Responsive Font Size
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface, // Dynamic Text
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           );
         }
