@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/app_theme.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class McqScreen extends StatefulWidget {
   const McqScreen({super.key});
@@ -130,7 +134,13 @@ class _McqScreenState extends State<McqScreen> {
     _nextQuestion();
   }
 
-  void _submit() {
+  bool _isSubmitting = false;
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    
+    setState(() => _isSubmitting = true);
+
     // Calculate Score
     int score = 0;
     _selectedAnswers.forEach((qId, optIdx) {
@@ -140,23 +150,63 @@ class _McqScreenState extends State<McqScreen> {
       }
     });
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text("Quiz Finished", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text("You scored $score out of $_totalQuestions", style: GoogleFonts.poppins()),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx); // Close dialog
-              Navigator.pop(context); // Close screen
-            },
-            child: Text("OK", style: GoogleFonts.poppins()),
-          )
-        ],
-      ),
-    );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token != null) {
+         final response = await ApiService.submitExamResult(
+           token: token,
+           title: "MCQ Quiz", // Or dynamic title
+           obtainedMarks: score,
+           totalMarks: _totalQuestions, // Assuming 1 mark per question
+           isOnline: true,
+         );
+
+         if (response.statusCode == 201) {
+            final data = jsonDecode(response.body);
+            final earnedPoints = data['earnedPoints'];
+             
+             if (mounted) {
+               showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (ctx) => AlertDialog(
+                  title: Text("Quiz Finished", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("You scored $score out of $_totalQuestions", style: GoogleFonts.poppins()),
+                      const SizedBox(height: 10),
+                      if (earnedPoints > 0)
+                        Text("You earned $earnedPoints Reward Points!", style: GoogleFonts.poppins(color: Colors.green, fontWeight: FontWeight.bold))
+                      else 
+                        Text("Keep practicing to earn points!", style: GoogleFonts.poppins(color: Colors.orange)),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx); // Close dialog
+                        Navigator.pop(context); // Close screen
+                      },
+                      child: Text("OK", style: GoogleFonts.poppins()),
+                    )
+                  ],
+                ),
+              );
+             }
+         } else {
+            if(mounted) CustomToast.showError(context, "Failed to submit result");
+         }
+      } else {
+         if(mounted) CustomToast.showError(context, "Session expired");
+      }
+    } catch (e) {
+      if(mounted) CustomToast.showError(context, "Error: $e");
+    } finally {
+      if(mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override

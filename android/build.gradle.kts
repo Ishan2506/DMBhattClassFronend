@@ -17,6 +17,16 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+
+    // Fix for plugins not specifying namespace (AGP 8.0+)
+    project.afterEvaluate {
+        if (project.extensions.findByName("android") != null) {
+            val android = project.extensions.findByName("android") as? com.android.build.gradle.BaseExtension
+            if (android != null && android.namespace == null) {
+                android.namespace = project.group.toString()
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

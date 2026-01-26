@@ -96,6 +96,40 @@ class ApiService {
     );
   }
 
+  static Future<http.Response> getDashboardData(String token) async {
+    final uri = Uri.parse("$baseUrl/dashboard");
+    return await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  static Future<http.Response> submitExamResult({
+    required String token,
+    required String title,
+    required int obtainedMarks,
+    required int totalMarks,
+    bool isOnline = true,
+  }) async {
+    final uri = Uri.parse("$baseUrl/exam/submit");
+    return await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'title': title,
+        'obtainedMarks': obtainedMarks,
+        'totalMarks': totalMarks,
+        'isOnline': isOnline,
+      }),
+    );
+  }
+
   static String _getMimeType(String path) {
     final ext = path.split('.').last.toLowerCase();
     const mimeTypes = {
