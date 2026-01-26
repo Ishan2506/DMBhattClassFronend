@@ -10,11 +10,7 @@ class MaterialDetailScreen extends StatelessWidget {
   const MaterialDetailScreen({super.key, required this.product});
 
   @override
-<<<<<<< HEAD
-=======
 
-  @override
->>>>>>> b1af9f75f0e6e8a77946d6f379cb9e8fac116453
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;

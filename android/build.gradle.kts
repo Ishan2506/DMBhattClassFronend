@@ -19,12 +19,20 @@ subprojects {
     project.evaluationDependsOn(":app")
 
     // Fix for plugins not specifying namespace (AGP 8.0+)
-    project.afterEvaluate {
+    val configureNamespace = {
         if (project.extensions.findByName("android") != null) {
             val android = project.extensions.findByName("android") as? com.android.build.gradle.BaseExtension
             if (android != null && android.namespace == null) {
                 android.namespace = project.group.toString()
             }
+        }
+    }
+
+    if (project.state.executed) {
+        configureNamespace()
+    } else {
+        project.afterEvaluate {
+            configureNamespace()
         }
     }
 }

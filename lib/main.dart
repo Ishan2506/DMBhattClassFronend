@@ -4,25 +4,24 @@ import 'package:dm_bhatt_tutions/screen/authentication/splash_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_theme.dart';
 import 'package:dm_bhatt_tutions/utils/text_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+// import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 
 import 'constant/app_constant.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _secureScreen();
+  // await _secureScreen();
   runApp(const MyApp());
 }
 
-Future<void> _secureScreen() async {
-  try {
-    await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-  } catch (e) {
-    debugPrint("Error securing screen: $e");
-  }
-}
+// Future<void> _secureScreen() async {
+//   try {
+//     await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+//   } catch (e) {
+//     debugPrint("Error securing screen: $e");
+//   }
+// }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
