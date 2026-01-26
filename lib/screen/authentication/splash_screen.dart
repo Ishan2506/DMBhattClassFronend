@@ -21,32 +21,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-<<<<<<< Updated upstream
-    _checkLoginStatus();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    // Artificial delay for branding (optional, keeping 2s for consistency)
-    await Future.delayed(const Duration(seconds: 2));
-    
-    if (!mounted) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-
-    if (token != null && token.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LandingScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-      );
-    }
-=======
-    
+    // Initialize Animation
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -70,16 +45,31 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
 
     _controller.forward();
+    
+    // Start Login Check independently
+    _checkLoginStatus();
+  }
 
-    Timer(const Duration(seconds: 4), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-        );
-      }
-    });
->>>>>>> Stashed changes
+  Future<void> _checkLoginStatus() async {
+    // Wait for animation + extra time (total ~4 seconds)
+    await Future.delayed(const Duration(seconds: 4));
+    
+    if (!mounted) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (token != null && token.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LandingScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+      );
+    }
   }
 
   @override
@@ -91,17 +81,35 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Ensure background matches logo context if needed
+      backgroundColor: Theme.of(context).colorScheme.surface, // Dynamic background
       body: Center(
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Image.asset(
-              imgAppLogo,
-              width: S.s250, // Slightly larger for impact
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SlideTransition(
+              position: _slideAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Column(
+                  children: [
+                    Image.asset(
+                      imgAppLogo,
+                      width: S.s250, 
+                    ),
+                    const SizedBox(height: 16),
+                    // Theme-aware text
+                  //  Text(
+                     // "Student App", // Context provided by user request
+                     // style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                     //   color: Theme.of(context).colorScheme.onSurface,
+                       // fontWeight: FontWeight.bold,
+                  //    ),
+                  //  ),
+                  ],
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

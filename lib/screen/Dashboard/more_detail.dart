@@ -96,9 +96,9 @@ class MoreScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildPoweredByItem(context, "D. M. BHATT", "assets/images/partner_dm_bhatt.png"),
-                _buildPoweredByItem(context, "HARDIK SIR", "assets/images/partner_hardik_sir.png", subtitle: "Accountancy"),
-                _buildPoweredByItem(context, "ANKIT SIR", "assets/images/partner_ankit_sir.png"),
+                _buildPoweredByItem(context, "D. M. BHATT", "partner_dm_bhatt.png"),
+                _buildPoweredByItem(context, "HARDIK SIR", "partner_hardik_sir.png", subtitle: "Accountancy"),
+                _buildPoweredByItem(context, "ANKIT SIR", "partner_ankit_sir.png"),
                 // Placeholder for 4th logo to maintain spacing
                  Expanded(child: Container()), 
               ],
