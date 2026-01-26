@@ -23,6 +23,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String mobileNo = "";
   // String email = ""; // If needed
 
+  List<dynamic> _examResults = [];
+  int _totalPoints = 0;
+
   @override
   void initState() {
     super.initState();
@@ -45,10 +48,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         return;
       }
 
-      final response = await ApiService.getProfile(token);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      // Fetch Profile
+      final profileResponse = await ApiService.getProfile(token);
+      if (profileResponse.statusCode == 200) {
+        final data = jsonDecode(profileResponse.body);
         final user = data['user'];
         final profile = data['profile'];
 
@@ -58,15 +61,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           
           if (profile != null) {
              studentStandard = "${profile['std'] ?? 'N/A'} - ${profile['medium'] ?? ''}";
-             schoolName = profile['school'] ?? (profile['schoolName'] ?? 'N/A'); // Handle student vs guest
+             schoolName = profile['school'] ?? (profile['schoolName'] ?? 'N/A'); 
           }
-          
-          _isLoading = false;
         });
-      } else {
-        CustomToast.showError(context, "Failed to load profile");
-        setState(() => _isLoading = false);
       }
+
+      // Fetch Dashboard Data (Points & Exams)
+      final dashboardResponse = await ApiService.getDashboardData(token);
+      if (dashboardResponse.statusCode == 200) {
+         final data = jsonDecode(dashboardResponse.body);
+         setState(() {
+            _totalPoints = data['totalRewardPoints'] ?? 0;
+            _examResults = data['examResults'] ?? [];
+         });
+      }
+
+      setState(() => _isLoading = false);
+
     } catch (e) {
       CustomToast.showError(context, "Error: $e");
       setState(() => _isLoading = false);
@@ -211,7 +222,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "125", // Mock Points for now
+                        "$_totalPoints",
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 32,
@@ -238,27 +249,30 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             _buildSectionHeader("Academic Performance"),
             const SizedBox(height: 10),
 
-            _buildMarksCard(
-              context,
-              title: "Offline Test Exam",
-              marks: "85/100",
-              color: Colors.orange,
-              onTap: () {},
-            ),
-            const SizedBox(height: 10),
-            _buildMarksCard(
-              context,
-              title: "Online MCQ Exam",
-              marks: "42/50",
-              color: Colors.green,
-              isOnline: true,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const McqDetailScreen()),
-                );
-              },
-            ),
+            if (_examResults.isEmpty) 
+               Padding(
+                 padding: const EdgeInsets.all(20.0),
+                 child: Text("No exam results found", style: GoogleFonts.poppins(color: Colors.grey)),
+               )
+            else
+               ..._examResults.map((exam) => Padding(
+                 padding: const EdgeInsets.only(bottom: 10),
+                 child: _buildMarksCard(
+                    context,
+                    title: exam['title'] ?? 'Exam',
+                    marks: "${exam['obtainedMarks']}/${exam['totalMarks']}",
+                    color: (exam['obtainedMarks'] / exam['totalMarks']) >= 0.4 ? Colors.green : Colors.red,
+                    isOnline: exam['isOnline'] ?? false,
+                    onTap: () {
+                       if (exam['isOnline'] == true) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const McqDetailScreen()),
+                          );
+                       }
+                    },
+                  ),
+               )).toList(),
 
             const SizedBox(height: 30),
 
