@@ -71,6 +71,8 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
     super.dispose();
   }
 
+  @override
+  Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -139,7 +141,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
   Widget _buildAchieverCard(BuildContext context, AchieverModel achiever) {
     final screenWidth = MediaQuery.of(context).size.width;
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -165,7 +167,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
           ),
           
           Padding(
-            padding: EdgeInsets.all(screenWidth * 0.04),
+            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenWidth * 0.02),
             child: Row(
               children: [
                 // Avatar Placeholder
@@ -204,7 +206,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
                         achiever.name,
                         maxLines: 1,

@@ -18,11 +18,13 @@ class MoreScreen extends StatelessWidget {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
-
+    
     return Scaffold(
       backgroundColor: colorScheme.surface,
-    
       body: SingleChildScrollView(
         padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(

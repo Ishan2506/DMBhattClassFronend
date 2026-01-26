@@ -109,6 +109,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
   ];
 
+  @override
+  Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
