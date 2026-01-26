@@ -29,6 +29,7 @@ class S {
   static const double s180 = 180;
   static const double s190 = 190;
   static const double s200 = 200;
+  static const double s250 = 250;
 
 // You can follow the pattern for every single number if needed:
 // static const double s121 = 121; ... up to 150

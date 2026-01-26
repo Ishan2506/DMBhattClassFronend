@@ -96,10 +96,11 @@ class MoreScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildPoweredByItem(context, "D. M. BHATT", "DMB"),
-                _buildPoweredByItem(context, "ANKIT SIR", "AS", subtitle: "PHYSICS"),
-                _buildPoweredByItem(context, "RAVI SIR", "RS", subtitle: "MATHS | SCIENCE"),
-                _buildPoweredByItem(context, "HARDIK SIR", "HS", subtitle: "Accountancy"),
+                _buildPoweredByItem(context, "D. M. BHATT", "assets/images/partner_dm_bhatt.png"),
+                _buildPoweredByItem(context, "HARDIK SIR", "assets/images/partner_hardik_sir.png", subtitle: "Accountancy"),
+                _buildPoweredByItem(context, "ANKIT SIR", "assets/images/partner_ankit_sir.png"),
+                // Placeholder for 4th logo to maintain spacing
+                 Expanded(child: Container()), 
               ],
             ),
             const SizedBox(height: 20),
@@ -208,47 +209,58 @@ class MoreScreen extends StatelessWidget {
 
 
 
-  Widget _buildPoweredByItem(BuildContext context, String name, String initials, {String? subtitle}) {
+  Widget _buildPoweredByItem(BuildContext context, String name, String imagePath, {String? subtitle}) {
      final colorScheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 56, // Slightly larger for better visibility
+            height: 56,
+            padding: const EdgeInsets.all(8), // Padding inside the circle
             decoration: BoxDecoration(
-              // color: colorScheme.surfaceContainerHigh,
+              color: Colors.white, // White background for logos
               shape: BoxShape.circle,
-              border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
-               image: (name == "D. M. BHATT") ? const DecorationImage(image: AssetImage('assets/app_icons/dm_bhatt_classes_logo.png'), fit: BoxFit.contain) : null,
+              border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             alignment: Alignment.center,
-             child: (name == "D. M. BHATT") ? null : Text(
-              initials,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
-                fontSize: 16
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.contain,
+                 errorBuilder: (context, error, stackTrace) {
+                  return Text(
+                    name.substring(0, 1),
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: colorScheme.primary),
+                  );
+                },
               ),
-            ),
           ),
           const SizedBox(height: 8),
           Text(
             name,
             style: GoogleFonts.poppins(
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
             ),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
             Text(
               subtitle,
               style: GoogleFonts.poppins(
-                fontSize: 8,
+                fontSize: 9,
                 color: colorScheme.onSurfaceVariant,
                 height: 1.2,
               ),
