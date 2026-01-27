@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
@@ -122,6 +123,7 @@ Future<void> registerUser({
   required String dpin,
 }) async {
   try {
+    CustomLoader.show(context);
     // ✅ FIX 1: Pass role as a Query Parameter so the Backend sees it immediately
     // This solves the 'req.body is empty' issue in Node.js
     final uri = Uri.parse(
@@ -172,6 +174,9 @@ Future<void> registerUser({
     debugPrint("Status Code: ${response.statusCode}");
     debugPrint("Response Body: ${response.body}");
 
+    if (!mounted) return;
+    CustomLoader.hide(context);
+
     if (response.statusCode == 201 || response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Success!")));
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LandingScreen()));
@@ -183,6 +188,10 @@ Future<void> registerUser({
     }
   } catch (e) {
     debugPrint("Register Error: $e");
+    if (mounted) {
+      CustomLoader.hide(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
   }
 }
 
@@ -209,14 +218,8 @@ String _getMimeType(String path) {
       bottomNavigationBar: BottomAppBar(
         elevation: 0,
         color: Colors.transparent,
-        child: CustomFilledButton(label: lblSubmit, isLoading: isLoading,onPressed: () async {
-          setState(() {
-                isLoading = true; // 🔹 start loading
-              });
+        child: CustomFilledButton(label: lblSubmit, isLoading: false, onPressed: () async {
           await registerUser(payload: widget.payload, dpin: DPIN);
-          setState(() {
-                isLoading = false; // 🔹 stop loading
-              });
         }
         ),
       ),

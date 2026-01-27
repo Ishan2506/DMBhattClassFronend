@@ -76,6 +76,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final theme = Theme.of(context);
 
     return Column(
       children: [
@@ -97,14 +98,14 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                 style: GoogleFonts.poppins(
                   fontSize: screenWidth * 0.045,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: theme.textTheme.titleLarge?.color, // Adapted to theme
                 ),
               ),
             ],
           ),
         ),
         SizedBox(
-          height: screenHeight * 0.22, // Responsive Height
+          height: screenHeight * 0.18, // Reduced height (was 0.22)
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: (int page) {
@@ -141,19 +142,22 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
 
   Widget _buildAchieverCard(BuildContext context, AchieverModel achiever) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade100),
       ),
       child: Stack(
         children: [
@@ -162,13 +166,13 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
             right: -20,
             top: -20,
             child: CircleAvatar(
-              radius: screenWidth * 0.12,
+              radius: screenWidth * 0.1, // Reduced decoration radius
               backgroundColor: achiever.color.withOpacity(0.1),
             ),
           ),
           
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenWidth * 0.02),
+            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenWidth * 0.015), // Reduced vertical padding
             child: Row(
               children: [
                 // Avatar Placeholder
@@ -179,9 +183,9 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                     border: Border.all(color: achiever.color, width: 2),
                   ),
                   child: CircleAvatar(
-                    radius: screenWidth * 0.1,
-                    backgroundColor: Colors.grey.shade200,
-                    child: Icon(Icons.person, size: screenWidth * 0.1, color: Colors.grey.shade400),
+                    radius: screenWidth * 0.08, // Reduced avatar radius
+                    backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                    child: Icon(Icons.person, size: screenWidth * 0.08, color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
                   ),
                 ),
                 SizedBox(width: screenWidth * 0.04),
@@ -202,20 +206,20 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                           "${achiever.subject} • ${achiever.rank}",
                           style: GoogleFonts.poppins(
                             color: Colors.white,
-                            fontSize: screenWidth * 0.025,
+                            fontSize: screenWidth * 0.022, // Slightly reduced font size
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2), // Reduced spacing
                       Text(
                         achiever.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.poppins(
-                          fontSize: screenWidth * 0.04,
+                          fontSize: screenWidth * 0.035, // Reduced font size
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                       RichText(
@@ -224,7 +228,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                             TextSpan(
                               text: achiever.marks,
                               style: GoogleFonts.poppins(
-                                fontSize: screenWidth * 0.06,
+                                fontSize: screenWidth * 0.05, // Reduced font size
                                 fontWeight: FontWeight.bold,
                                 color: achiever.color,
                               ),
@@ -232,9 +236,9 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                             TextSpan(
                               text: " Marks",
                               style: GoogleFonts.poppins(
-                                fontSize: screenWidth * 0.03,
+                                fontSize: screenWidth * 0.028, // Slightly reduced font size
                                 fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade600,
+                                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                               ),
                             ),
                           ],

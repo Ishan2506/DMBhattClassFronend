@@ -14,9 +14,11 @@ class MaterialDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      // backgroundColor: Colors.white, // Removed to allow theme background
       appBar: AppBar(
         backgroundColor: Colors.blue.shade900,
         elevation: 0,
@@ -44,10 +46,10 @@ class MaterialDetailScreen extends StatelessWidget {
                 width: double.infinity,
                 height: screenHeight * 0.4,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? Colors.grey.shade900 : Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -77,13 +79,13 @@ class MaterialDetailScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: isDark ? Colors.blue.shade900.withOpacity(0.3) : Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         product['category']?.toUpperCase() ?? "MATERIAL",
                         style: GoogleFonts.poppins(
-                          color: Colors.blue.shade900,
+                          color: isDark ? Colors.blue.shade200 : Colors.blue.shade900,
                           fontWeight: FontWeight.bold,
                           fontSize: screenWidth * 0.025,
                           letterSpacing: 0.5,
@@ -98,7 +100,7 @@ class MaterialDetailScreen extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: screenWidth * 0.055, 
                         fontWeight: FontWeight.bold, 
-                        color: Colors.black87,
+                        color: theme.textTheme.bodyLarge?.color,
                         height: 1.2,
                       ),
                     ),
@@ -119,7 +121,11 @@ class MaterialDetailScreen extends StatelessWidget {
                               const SizedBox(width: 4),
                               Text(
                                 "${product['rating']}", 
-                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: screenWidth * 0.035),
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: screenWidth * 0.035,
+                                  color: theme.textTheme.bodyMedium?.color
+                                ),
                               ),
                             ],
                           ),
@@ -127,7 +133,11 @@ class MaterialDetailScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         Text(
                           "${product['reviews']} customer reviews", 
-                          style: GoogleFonts.poppins(color: Colors.blue.shade700, fontSize: screenWidth * 0.032, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.poppins(
+                            color: Colors.blue.shade700, 
+                            fontSize: screenWidth * 0.032, 
+                            fontWeight: FontWeight.w500
+                          ),
                         ),
                       ],
                     ),
@@ -146,7 +156,7 @@ class MaterialDetailScreen extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: screenWidth * 0.08, 
                             fontWeight: FontWeight.bold, 
-                            color: Colors.blue.shade900
+                            color: isDark ? Colors.blue.shade200 : Colors.blue.shade900
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -199,12 +209,15 @@ class MaterialDetailScreen extends StatelessWidget {
                             child: ElevatedButton(
                               onPressed: () {},
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.blue.shade900,
+                                backgroundColor: isDark ? Colors.transparent : Colors.white,
+                                foregroundColor: isDark ? Colors.blue.shade200 : Colors.blue.shade900,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(color: Colors.blue.shade900, width: 2),
+                                  side: BorderSide(
+                                    color: isDark ? Colors.blue.shade200 : Colors.blue.shade900, 
+                                    width: 2
+                                  ),
                                 ),
                               ),
                               child: Text(
@@ -244,7 +257,11 @@ class MaterialDetailScreen extends StatelessWidget {
                     // Description
                     Text(
                       "About this item",
-                      style: GoogleFonts.poppins(fontSize: screenWidth * 0.045, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: GoogleFonts.poppins(
+                        fontSize: screenWidth * 0.045, 
+                        fontWeight: FontWeight.bold, 
+                        color: theme.textTheme.bodyLarge?.color
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -252,7 +269,7 @@ class MaterialDetailScreen extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: screenWidth * 0.038, 
                         height: 1.6, 
-                        color: Colors.black54,
+                        color: isDark ? Colors.grey.shade300 : Colors.black54,
                       ),
                     ),
                     const SizedBox(height: 40),
@@ -268,6 +285,8 @@ class MaterialDetailScreen extends StatelessWidget {
 
   Widget _buildInfoRow(BuildContext context, IconData icon, String text) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Icon(icon, size: screenWidth * 0.05, color: Colors.blue.shade700),
@@ -277,7 +296,7 @@ class MaterialDetailScreen extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: screenWidth * 0.035,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: isDark ? Colors.grey.shade300 : Colors.black87,
           ),
         ),
       ],

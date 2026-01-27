@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'dart:convert';
@@ -477,11 +478,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
 
                     try {
+                      CustomLoader.show(context); // Show Loader
                       final response = await ApiService.registerUser(
                         payload: payload, 
                         dpin: _passwordController.text // Using password as DPIN/LoginCode
                       );
                       
+                      if (!mounted) return;
+                      CustomLoader.hide(context); // Hide Loader
+
                       if (response.statusCode == 201 || response.statusCode == 200) {
                          CustomToast.showSuccess(context, "Registration Successful");
                          Navigator.push(
@@ -492,7 +497,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                          CustomToast.showError(context, "Registration Failed: ${response.body}");
                       }
                     } catch (e) {
-                       CustomToast.showError(context, "Error: $e");
+                       if (mounted) {
+                         CustomLoader.hide(context);
+                         CustomToast.showError(context, "Error: $e");
+                       }
                     }
                   }
                 },

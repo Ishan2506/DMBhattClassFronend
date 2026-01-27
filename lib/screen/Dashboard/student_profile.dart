@@ -86,8 +86,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: theme.scaffoldBackgroundColor, // Dynamic background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
@@ -120,11 +123,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor, // Dynamic Card Color
                 borderRadius: BorderRadius.circular(15),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.05), // Adjusted Shadow
                       blurRadius: 10,
                       spreadRadius: 2)
                 ],
@@ -135,7 +138,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   Align(
                     alignment: Alignment.topRight,
                     child: IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.black54, size: 22),
+                      icon: Icon(Icons.edit, color: theme.iconTheme.color?.withOpacity(0.7) ?? Colors.grey, size: 22),
                       onPressed: () async {
                         await Navigator.push(
                           context,
@@ -149,10 +152,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   // Profile Image
                   CircleAvatar(
                     radius: MediaQuery.of(context).size.width * 0.16,
-                    backgroundColor: const Color(0xFFE0E0E0),
+                    backgroundColor: isDark ? Colors.grey.shade800 : const Color(0xFFE0E0E0),
                     child: CircleAvatar(
                       radius: MediaQuery.of(context).size.width * 0.15,
-                      backgroundColor: Colors.white,
+                      backgroundColor: theme.cardColor,
                       backgroundImage: const AssetImage("assets/images/user_placeholder.png"), 
                     ),
                   ),
@@ -168,14 +171,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     label2: "Standard",
                     value2: studentStandard,
                   ),
-                  Divider(height: MediaQuery.of(context).size.height * 0.03),
+                  Divider(height: MediaQuery.of(context).size.height * 0.03, color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
                   _buildInfoRow(
                     context,
                     icon: Icons.phone_android,
                     label: "Mobile No",
                     value: mobileNo,
                   ),
-                  Divider(height: MediaQuery.of(context).size.height * 0.03),
+                  Divider(height: MediaQuery.of(context).size.height * 0.03, color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
                   _buildInfoRow(
                     context,
                     icon: Icons.school_outlined,
@@ -246,7 +249,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             const SizedBox(height: 20),
 
             // Marks Section
-            _buildSectionHeader("Academic Performance"),
+            _buildSectionHeader("Academic Performance", theme),
             const SizedBox(height: 10),
 
             if (_examResults.isEmpty) 
@@ -299,7 +302,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 child: Text("Sign out",
                     style: GoogleFonts.poppins(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white)),
               ),
             ),
@@ -316,20 +319,26 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       IconData? icon2,
       String? label2,
       String? value2}) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final iconColor = isDark ? Colors.grey.shade400 : Colors.black54;
+    final labelColor = isDark ? Colors.grey.shade500 : Colors.black45;
+    final valueColor = theme.textTheme.bodyLarge?.color;
+
     return Row(
       children: [
         Expanded(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 22, color: Colors.black54),
+              Icon(icon, size: 22, color: iconColor),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: GoogleFonts.poppins(fontSize: 11, color: Colors.black45)),
-                    Text(value, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                    Text(label, style: GoogleFonts.poppins(fontSize: 11, color: labelColor)),
+                    Text(value, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: valueColor)),
                   ],
                 ),
               ),
@@ -341,7 +350,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(icon2, size: 22, color: Colors.black54),
+                    Icon(icon2, size: 22, color: iconColor),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -349,12 +358,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         children: [
                           Text(label2,
                               style: GoogleFonts.poppins(
-                                  fontSize: 11, color: Colors.black45)),
+                                  fontSize: 11, color: labelColor)),
                           Text(value2,
                               style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.black87)),
+                                  color: valueColor)),
                         ],
                       ),
                     ),
@@ -366,12 +375,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, ThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title,
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: theme.textTheme.titleLarge?.color)),
         const Icon(Icons.stars, color: Colors.orangeAccent),
       ],
     );
@@ -379,14 +388,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   Widget _buildMarksCard(BuildContext context,
       {required String title, required String marks, required Color color, bool isOnline = false, required VoidCallback onTap}) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -394,13 +406,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, color: Colors.black54)),
+                Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, color: isDark ? Colors.grey.shade400 : Colors.black54)),
                 const SizedBox(height: 4),
                 Text(marks, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
               ],
             ),
             if (isOnline)
-              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey)
+               Icon(Icons.arrow_forward_ios, size: 16, color: isDark ? Colors.grey.shade600 : Colors.grey)
           ],
         ),
       ),
