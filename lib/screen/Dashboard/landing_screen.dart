@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/ai_chat_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_home_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/explore_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/dmai_screen.dart';
@@ -22,7 +23,8 @@ class _LandingScreenState extends State<LandingScreen> {
   final List<Widget> _pages = [
     const StudentHomeScreen(),
     const ExploreScreen(),
-    const DMAIScreen(),
+    //const DMAIScreen(),
+    AIChatScreen(),
     const MoreScreen(),
   ];
 
