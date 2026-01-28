@@ -8,17 +8,18 @@ class CustomLoader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        width: 80,
-        height: 80,
-        padding: const EdgeInsets.all(12),
+        width: 100, // Slightly larger for better visibility
+        height: 100,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 15,
               spreadRadius: 2,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -27,18 +28,18 @@ class CustomLoader extends StatelessWidget {
           children: [
             // Logo
             Image.asset(
-              imgDmBhattClassesLogo,
-              width: 40,
-              height: 40,
+              imgAppLogo, // Using App Logo (Padhaku)
+              width: 50,
+              height: 50,
               fit: BoxFit.contain,
             ),
             // Loader Ring
             SizedBox(
-              width: 60,
-              height: 60,
+              width: 100,
+              height: 100,
               child: CircularProgressIndicator(
                 strokeWidth: 4,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade800), // App Blue
               ),
             ),
           ],

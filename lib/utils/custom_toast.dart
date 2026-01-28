@@ -19,22 +19,34 @@ class CustomToast {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: color,
-        margin: const EdgeInsets.all(16),
+        backgroundColor: color, // Slightly darkened base color
+        elevation: 6,
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Colors.white24, width: 1), // Subtle border
         ),
         content: Row(
+          mainAxisSize: MainAxisSize.min, // Wrap content
           children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
+            Container(
+               padding: const EdgeInsets.all(4),
+               decoration: BoxDecoration(
+                 color: Colors.white.withOpacity(0.2),
+                 shape: BoxShape.circle,
+               ),
+               child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
                 message,
                 style: GoogleFonts.poppins(
                   color: Colors.white,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   fontSize: 14,
+                  height: 1.4,
                 ),
               ),
             ),

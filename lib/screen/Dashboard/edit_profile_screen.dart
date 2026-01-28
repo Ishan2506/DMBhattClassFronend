@@ -175,16 +175,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor, // Dynamic
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black54),
+          icon: Icon(Icons.arrow_back_ios, color: theme.iconTheme.color),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Edit Profile",
-          style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(color: theme.textTheme.titleLarge?.color, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -205,12 +208,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: isDark ? Colors.grey.shade800 : Colors.blue.shade50,
                         shape: BoxShape.circle,
                       ),
                       child: CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.white,
+                        backgroundColor: theme.cardColor,
                         backgroundImage: _imageFile != null 
                             ? FileImage(_imageFile!) 
                             : const AssetImage("assets/images/user_placeholder.png") as ImageProvider,
@@ -239,6 +242,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // Name
               _buildTextField(
+                context,
                 controller: _nameController,
                 hint: "Name", 
                 icon: Icons.person_outline,
@@ -248,6 +252,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // Phone
               _buildTextField(
+                context,
                 controller: _phoneController,
                 hint: "Phone Number", 
                 icon: Icons.phone_outlined, 
@@ -259,6 +264,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // Parent's Mobile
               _buildTextField(
+                context,
                 controller: _parentPhoneController,
                 hint: "Parent's Mobile Number", 
                 icon: Icons.family_restroom_outlined, 
@@ -269,6 +275,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // Standard
               _buildDropdown(
+                context,
                 hint: "Standard",
                 icon: Icons.school_outlined,
                 value: _selectedStandard,
@@ -279,6 +286,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // Medium
               _buildDropdown(
+                context,
                 hint: "Medium",
                 icon: Icons.language,
                 value: _selectedMedium,
@@ -290,6 +298,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                // Stream (Only if relevant)
                if (_selectedStandard == "11" || _selectedStandard == "12") ...[
                  _buildDropdown(
+                  context,
                   hint: "Stream",
                   icon: Icons.science_outlined,
                   value: _selectedStream,
@@ -302,6 +311,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                // State 
               _buildDropdown(
+                context,
                 hint: "State",
                 icon: Icons.map_outlined,
                 value: _selectedState,
@@ -317,6 +327,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // City
                _buildTextField(
+                context,
                 controller: _cityController,
                 hint: "City",
                 icon: Icons.location_city,
@@ -350,19 +361,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                       return Container(
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
                         ),
                         child: TextFormField(
                           controller: textEditingController,
                           focusNode: focusNode,
                            validator: (val) => val == null || val.isEmpty ? "Required" : null,
-                          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), 
+                          style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
                           decoration: InputDecoration(
                             hintText: "School Name",
-                            hintStyle: GoogleFonts.poppins(color: Colors.grey),
-                            prefixIcon: const Icon(Icons.school_outlined, color: Colors.black54),
+                            hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey),
+                            prefixIcon: Icon(Icons.school_outlined, color: isDark ? Colors.grey : Colors.black54),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           ),
@@ -379,7 +390,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             width: constraints.maxWidth,
                             constraints: const BoxConstraints(maxHeight: 200),
                             decoration: BoxDecoration(
-                               color: Colors.white,
+                               color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(16),
                             ),
                             child: ListView.builder(
@@ -395,7 +406,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
-                                    child: Text(displayName, style: GoogleFonts.poppins(color: Colors.black87)),
+                                    child: Text(displayName, style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color)),
                                   ),
                                 );
                               },
@@ -443,7 +454,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(BuildContext context, {
     required String hint, 
     required IconData icon, 
     TextEditingController? controller,
@@ -454,11 +465,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
       ),
       child: TextFormField(
         controller: controller,
@@ -466,11 +480,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
-        style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), 
+        style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey),
-          prefixIcon: Icon(icon, color: Colors.black54),
+          hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey),
+          prefixIcon: Icon(icon, color: isDark ? Colors.grey : Colors.black54),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
@@ -478,7 +492,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildDropdown({
+  Widget _buildDropdown(BuildContext context, {
     required String hint,
     required IconData icon,
     required String? value,
@@ -486,38 +500,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required Function(String?)? onChanged,
     bool isReadOnly = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: isReadOnly ? Colors.grey.shade200 : Colors.grey.shade50,
+        color: isReadOnly 
+          ? (isDark ? Colors.grey.shade800 : Colors.grey.shade200) 
+          : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           isExpanded: true,
           hint: Row(
             children: [
-              Icon(icon, color: Colors.black54),
+              Icon(icon, color: isDark ? Colors.grey : Colors.black54),
               const SizedBox(width: 12),
-              Text(hint, style: GoogleFonts.poppins(color: Colors.grey)),
+              Text(hint, style: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey)),
             ],
           ),
           value: value,
-          icon: isReadOnly ? const SizedBox() : const Icon(Icons.keyboard_arrow_down, color: Colors.black54), // Hide icon if read-only
-          dropdownColor: Colors.white, 
-          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold),
+          icon: isReadOnly ? const SizedBox() : Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.grey : Colors.black54), // Hide icon if read-only
+          dropdownColor: theme.cardColor, 
+          style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold),
           selectedItemBuilder: (BuildContext context) {
             return items.map<Widget>((String item) {
               return Align(
                  alignment: Alignment.centerLeft,
                  child: Row(
                    children: [
-                     Icon(icon, color: Colors.black54), 
+                     Icon(icon, color: isDark ? Colors.grey : Colors.black54), 
                      const SizedBox(width: 12),
                      Text(
                        item,
-                       style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), 
+                       style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
                      ),
                    ],
                  ),

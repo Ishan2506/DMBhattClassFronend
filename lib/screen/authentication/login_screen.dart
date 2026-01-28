@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
@@ -140,29 +141,16 @@ class _LoginScreenState extends State<LoginScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+                    CustomLoader.show(context); // Show Loader
                     try {
                         final response = await ApiService.loginUser(
-                          role: 'student', // Defaulting to student, or need role selector? 
-                          // Wait, Login Screen doesn't have Role selector anymore.
-                          // Assuming 'student' for now as per previous context or we check 'student' then 'guest'? 
-                          // Or maybe we can try 'student' first. 
-                          // Actually, the user asked for "Login register and register as guest API integration".
-                          // The Guest Register creates a role 'guest'.
-                          // Login screen has no role selector.
-                          // I'll default to 'student' but this might fail for guests.
-                          // Ideally I should ask user or restore role selector.
-                          // For now I'll stick to 'student' or maybe try both? No that's bad.
-                          // I'll default to 'student' and 'guest' if I can or just 'student'. 
-                          // Let's assume 'student' for typical use case or restore Role selector?
-                          // The user REMOVED the role selector.
-                          // I will add a way to select role OR just use 'student'.
-                          // Let's use 'student'. If it fails with 'User not found', maybe try 'guest' logic is too complex for frontend.
-                          // I'll just use 'student' for now.
+                          role: 'student', 
                           loginCode: _passwordController.text,
                           phoneNum: _phoneController.text,
                         );
 
                         if (!mounted) return;
+                        CustomLoader.hide(context); // Hide Loader
 
                         if (response.statusCode == 200) {
                             final data = jsonDecode(response.body);
@@ -180,12 +168,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               (route) => false,
                             );
                         } else {
-                           // Try Guest Login if Student fails?
-                           // Or just show error.
                            CustomToast.showError(context, "Login Failed: ${response.body}");
                         }
                     } catch (e) {
                       if (mounted) {
+                        CustomLoader.hide(context); // Hide Loader on Error
                         CustomToast.showError(context, "Error: $e");
                       }
                     }

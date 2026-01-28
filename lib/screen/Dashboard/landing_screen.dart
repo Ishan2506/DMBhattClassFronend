@@ -7,6 +7,9 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
 import 'package:flutter/material.dart';
 
+import 'package:dm_bhatt_tutions/screen/Dashboard/social_media_ad_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
 
@@ -33,6 +36,43 @@ class _LandingScreenState extends State<LandingScreen> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndShowAd();
+  }
+
+  Future<void> _checkAndShowAd() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Get current date string (YYYY-MM-DD)
+    final String todayDate = DateTime.now().toIso8601String().split('T')[0];
+    final String? lastAdDate = prefs.getString('social_ad_date');
+    
+    // If the date has changed, reset the counter
+    if (lastAdDate != todayDate) {
+      await prefs.setInt('social_ad_count', 0);
+      await prefs.setString('social_ad_date', todayDate);
+    }
+
+    int activeCount = prefs.getInt('social_ad_count') ?? 0;
+
+    if (activeCount < 3) {
+      if (!mounted) return;
+      // Show dialog after slight delay ensuring context is ready
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: true, // Allow clicking outside to close
+            builder: (context) => const SocialMediaAdDialog(),
+          );
+          prefs.setInt('social_ad_count', activeCount + 1);
+        }
+      });
+    }
   }
 
 
