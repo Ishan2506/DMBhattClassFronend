@@ -8,6 +8,7 @@ import 'package:flutter/services.dart'; // Import services for formatters
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_phone_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -121,7 +122,12 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 16),
 
              TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => const ForgotPasswordPhoneScreen())
+                );
+              },
               child: Text(
                 "Forgot your password?",
                 style: GoogleFonts.poppins(
@@ -189,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Text(
                   "Login",
                   style: GoogleFonts.poppins(
-                    fontSize: 18,
+                    fontSize: MediaQuery.of(context).size.width * 0.045,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -228,9 +234,14 @@ class _LoginScreenState extends State<LoginScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
+        style: GoogleFonts.poppins(
+          color: Colors.black, // Explicitly Black
+          fontWeight: FontWeight.w600, // Bold
+          fontSize: 16,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey),
+          hintStyle: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.normal),
           prefixIcon: Icon(icon, color: Colors.black54),
           suffixIcon: isPassword 
               ? IconButton(

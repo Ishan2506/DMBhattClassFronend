@@ -5,6 +5,7 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_dashboard_widgets.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StudentHomeScreen extends StatelessWidget {
@@ -220,6 +221,90 @@ class StudentHomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          blankVerticalSpace32,
+
+          // 5 Min Test Section
+           Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.purple.shade700, Colors.deepPurple.shade900],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purple.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                   Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "5 Min Rapid Test",
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.045, 
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Study for 5 mins & take a quick quiz!",
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.032,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                         const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                             Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const FiveMinTestSelectionScreen(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.purple.shade800,
+                             shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          ),
+                          child: Text("Start Now", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                   ),
+                   Container(
+                     height: 100,
+                     width: 90,
+                     clipBehavior: Clip.hardEdge,
+                     decoration: const BoxDecoration(), // Just for clip
+                     child: Image.asset(
+                       'assets/images/app_logo.png', 
+                       fit: BoxFit.fitWidth,
+                       alignment: Alignment.topCenter, // Alignment top to crop bottom text
+                       errorBuilder: (context, error, stackTrace) => 
+                          Icon(Icons.timer_outlined, size: 60, color: Colors.white.withOpacity(0.8)),
+                     ),
+                   ),
                 ],
               ),
             ),

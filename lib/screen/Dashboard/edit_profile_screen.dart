@@ -24,6 +24,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   
   // Controllers
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
@@ -74,6 +75,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         setState(() {
            _nameController.text = user['firstName'] ?? "";
+           _emailController.text = user['email'] ?? "";
            _phoneController.text = user['phoneNum'] ?? "";
            _cityController.text = user['address']?['city'] ?? "";
            
@@ -112,6 +114,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final Map<String, dynamic> data = {
         'firstName': _nameController.text,
+        'email': _emailController.text,
         'phoneNum': _phoneController.text,
         'school': _schoolNameController.text,
         'std': _selectedStandard,
@@ -247,6 +250,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 hint: "Name", 
                 icon: Icons.person_outline,
                 validator: (val) => val!.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Email
+              _buildTextField(
+                context,
+                controller: _emailController,
+                hint: "Email ID", 
+                icon: Icons.email_outlined,
+                inputType: TextInputType.emailAddress,
+                validator: (val) {
+                   if (val == null || val.isEmpty) return "Required";
+                   if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val)) return "Invalid Email";
+                   return null;
+                },
               ),
               const SizedBox(height: 16),
 

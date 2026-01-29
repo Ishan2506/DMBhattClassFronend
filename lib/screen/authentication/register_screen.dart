@@ -26,6 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _rollNoController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
@@ -148,6 +149,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter roll number';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+             // Email
+            _buildTextField(
+              controller: _emailController,
+              hint: "Email ID", 
+              icon: Icons.email_outlined,
+              inputType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter email';
+                }
+                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                  return 'Please enter a valid email';
                 }
                 return null;
               },
@@ -463,6 +482,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       fields: {
                         "firstName": firstName,
                         "rollNo": _rollNoController.text,
+                        "email": _emailController.text,
                         "phoneNum": _phoneController.text,
                         "std": _selectedStandard!,
                         "medium": _selectedMedium!,
@@ -489,7 +509,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       if (response.statusCode == 201 || response.statusCode == 200) {
                          CustomToast.showSuccess(context, "Registration Successful");
-                         Navigator.push(
+                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (context) => const LoginScreen()),
                         );

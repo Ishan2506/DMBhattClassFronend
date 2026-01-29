@@ -150,7 +150,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
       "originalPrice": 500,
       "discount": 50,
       "description": "Complete set of physics diagrams for class 10 students. Laminated for durability.",
-      "category": "Diagram"
+      "category": "Diagram",
+      "subject" : "Science",
     },
      {
       "id": "3",
@@ -210,7 +211,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Row(
+                  Row(
                     children: [
                       Expanded(
                         child: TextField(
@@ -242,26 +243,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             ),
                             contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20), // Smaller padding
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // Camera Button (Floating Style)
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          padding: const EdgeInsets.all(12), // Slightly smaller padding for balance
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade700,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.blue.shade700.withOpacity(0.4),
-                                blurRadius: 12,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 24),
                         ),
                       ),
                     ],
@@ -478,4 +459,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
-}
+} // Rebuild

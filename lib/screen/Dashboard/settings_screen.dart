@@ -1,9 +1,12 @@
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/update_password_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -13,18 +16,9 @@ class SettingsScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          "Settings",
-          style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
-        ),
+      appBar: const CustomAppBar(
+        title: "Settings",
         centerTitle: true,
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
       ),
       body: SingleChildScrollView(
          padding: const EdgeInsets.all(16),
@@ -61,12 +55,19 @@ class SettingsScreen extends StatelessWidget {
                     title: "Update Password",
                     value: "",
                     icon: Icons.lock_reset,
-                    onTap: () {
+                      onTap: () {
                        Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const UpdatePasswordScreen()),
                       );
                     },
+                  ),
+                  _buildSettingsItem(
+                    context,
+                    title: "Sign Out",
+                    value: "",
+                    icon: Icons.logout,
+                    onTap: () => _handleSignOut(context),
                   ),
                 ],
               );
@@ -126,21 +127,47 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showThemeSelector(BuildContext context) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Select Theme", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+               Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade900, Colors.blue.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Text(
+                  "Select Theme", 
+                  style: GoogleFonts.poppins(
+                    fontSize: 18, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white
+                  )
+                ),
+              ),
               const SizedBox(height: 16),
-              _buildRadioOption(context, "Light Mode", ThemeMode.light),
-              _buildRadioOption(context, "Dark Mode", ThemeMode.dark),
-              _buildRadioOption(context, "System Default", ThemeMode.system),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    _buildRadioOption(context, "Light Mode", ThemeMode.light),
+                    _buildRadioOption(context, "Dark Mode", ThemeMode.dark),
+                    _buildRadioOption(context, "System Default", ThemeMode.system),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         );
@@ -165,21 +192,47 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showLanguageSelector(BuildContext context) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Select Language", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade900, Colors.blue.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Text(
+                  "Select Language", 
+                  style: GoogleFonts.poppins(
+                    fontSize: 18, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white
+                  )
+                ),
+              ),
               const SizedBox(height: 16),
-              _buildLangOption(context, "English", const Locale('en')),
-              _buildLangOption(context, "Hindi", const Locale('hi')),
-              _buildLangOption(context, "Gujarati", const Locale('gu')),
+              Padding(
+                 padding: const EdgeInsets.symmetric(horizontal: 16),
+                 child: Column(
+                  children: [
+                    _buildLangOption(context, "English", const Locale('en')),
+                    _buildLangOption(context, "Hindi", const Locale('hi')),
+                    _buildLangOption(context, "Gujarati", const Locale('gu')),
+                  ],
+                 ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         );
@@ -200,6 +253,43 @@ class SettingsScreen extends StatelessWidget {
           Navigator.pop(context);
         }
       },
+    );
+  }
+
+  Future<void> _handleSignOut(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text("Sign Out", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text("Are you sure you want to sign out?", style: GoogleFonts.poppins()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel", style: GoogleFonts.poppins(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              
+              // Clear session
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+              
+              // Navigate to Welcome Screen
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                  (route) => false,
+                );
+                CustomToast.showSuccess(context, "Signed out successfully");
+              }
+            },
+            child: Text("Sign Out", style: GoogleFonts.poppins(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }
