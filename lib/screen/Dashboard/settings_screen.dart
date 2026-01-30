@@ -1,6 +1,7 @@
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/update_password_screen.dart';
+import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
@@ -14,10 +15,12 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: const CustomAppBar(
-        title: "Settings",
+      appBar: CustomAppBar(
+        title: l10n.settings,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -25,9 +28,13 @@ class SettingsScreen extends StatelessWidget {
          child: BlocBuilder<ThemeCubit, ThemeState>(
             builder: (context, state) {
               String themeText;
-              if (state.themeMode == ThemeMode.light) themeText = "Light";
-              else if (state.themeMode == ThemeMode.dark) themeText = "Dark";
-              else themeText = "System";
+              if (state.themeMode == ThemeMode.light) {
+                themeText = l10n.locale.languageCode == 'hi' ? "प्रकाश" : (l10n.locale.languageCode == 'gu' ? "પ્રકાશ" : "Light");
+              } else if (state.themeMode == ThemeMode.dark) {
+                themeText = l10n.locale.languageCode == 'hi' ? "डार्क" : (l10n.locale.languageCode == 'gu' ? "ડાર્ક" : "Dark");
+              } else {
+                themeText = l10n.locale.languageCode == 'hi' ? "सिस्टम" : (l10n.locale.languageCode == 'gu' ? "સિસ્ટમ" : "System");
+              }
 
               String langText;
               if (state.locale.languageCode == 'gu') langText = "Gujarati";
@@ -38,21 +45,21 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                    _buildSettingsItem(
                     context,
-                    title: "Theme Mode",
+                    title: l10n.themeMode,
                     value: themeText,
                     icon: Icons.dark_mode_outlined,
                     onTap: () => _showThemeSelector(context),
                   ),
                   _buildSettingsItem(
                     context,
-                    title: "Language",
+                    title: l10n.language,
                     value: langText,
                     icon: Icons.language,
                     onTap: () => _showLanguageSelector(context),
                   ),
                   _buildSettingsItem(
                     context,
-                    title: "Update Password",
+                    title: l10n.locale.languageCode == 'hi' ? "पासवर्ड अपडेट करें" : (l10n.locale.languageCode == 'gu' ? "પાસવર્ડ અપડેટ કરો" : "Update Password"),
                     value: "",
                     icon: Icons.lock_reset,
                       onTap: () {
@@ -64,7 +71,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   _buildSettingsItem(
                     context,
-                    title: "Sign Out",
+                    title: l10n.signOut,
                     value: "",
                     icon: Icons.logout,
                     onTap: () => _handleSignOut(context),
@@ -127,6 +134,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showThemeSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) {
@@ -148,7 +156,7 @@ class SettingsScreen extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Text(
-                  "Select Theme", 
+                  l10n.locale.languageCode == 'hi' ? "थीम चुनें" : (l10n.locale.languageCode == 'gu' ? "થીમ પસંદ કરો" : "Select Theme"), 
                   style: GoogleFonts.poppins(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold,
@@ -161,9 +169,9 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    _buildRadioOption(context, "Light Mode", ThemeMode.light),
-                    _buildRadioOption(context, "Dark Mode", ThemeMode.dark),
-                    _buildRadioOption(context, "System Default", ThemeMode.system),
+                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "लाइट मोड" : (l10n.locale.languageCode == 'gu' ? "લાઇટ મોડ" : "Light Mode"), ThemeMode.light),
+                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "डार्क मोड" : (l10n.locale.languageCode == 'gu' ? "ડાર્ક મોડ" : "Dark Mode"), ThemeMode.dark),
+                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "सिस्टम डिफ़ॉल्ट" : (l10n.locale.languageCode == 'gu' ? "સિસ્ટમ ડિફોલ્ટ" : "System Default"), ThemeMode.system),
                   ],
                 ),
               ),
@@ -192,6 +200,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showLanguageSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) {
@@ -213,7 +222,7 @@ class SettingsScreen extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Text(
-                  "Select Language", 
+                  l10n.locale.languageCode == 'hi' ? "भाषा चुनें" : (l10n.locale.languageCode == 'gu' ? "ભાષા પસંદ કરો" : "Select Language"), 
                   style: GoogleFonts.poppins(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold,
@@ -257,18 +266,25 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _handleSignOut(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text("Sign Out", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text("Are you sure you want to sign out?", style: GoogleFonts.poppins()),
+        title: Text(l10n.signOut, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text(
+          l10n.locale.languageCode == 'hi' ? "क्या आप वाकई साइन आउट करना चाहते हैं?" : (l10n.locale.languageCode == 'gu' ? "શું તમે ખરેખર સાઇન આઉટ કરવા માંગો છો?" : "Are you sure you want to sign out?"), 
+          style: GoogleFonts.poppins()
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: GoogleFonts.poppins(color: Colors.grey)),
+            child: Text(
+              l10n.locale.languageCode == 'hi' ? "रद्द करें" : (l10n.locale.languageCode == 'gu' ? "રદ કરો" : "Cancel"), 
+              style: GoogleFonts.poppins(color: Colors.black54, fontWeight: FontWeight.w600)
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () async {
               Navigator.pop(context); // Close dialog
               
@@ -283,10 +299,21 @@ class SettingsScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => const WelcomeScreen()),
                   (route) => false,
                 );
-                CustomToast.showSuccess(context, "Signed out successfully");
+                CustomToast.showSuccess(
+                  context, 
+                  l10n.locale.languageCode == 'hi' ? "सफलतापूर्वक साइन आउट किया गया" : (l10n.locale.languageCode == 'gu' ? "સફળતાપૂર્વક સાઇન આઉટ થયું" : "Signed out successfully")
+                );
               }
             },
-            child: Text("Sign Out", style: GoogleFonts.poppins(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: Text(
+              l10n.signOut, 
+              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)
+            ),
           ),
         ],
       ),

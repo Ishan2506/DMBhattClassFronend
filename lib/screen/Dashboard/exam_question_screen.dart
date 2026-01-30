@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
-import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
@@ -175,13 +175,14 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final question = _questions[_currentQuestionIndex];
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(
-        title: '$lblQuestion ${_currentQuestionIndex + 1}/${_questions.length}',
+        title: '${l10n.question} ${_currentQuestionIndex + 1}/${_questions.length}',
         centerTitle: true,
         actions: [
           Padding(
@@ -207,154 +208,205 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
             ),
           )
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(6.0),
-          child: LinearProgressIndicator(
-            value: (_currentQuestionIndex + 1) / _questions.length,
-            backgroundColor: Colors.white30,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-            minHeight: 6,
-          ),
-        ),
       ),
-      body: Padding(
-        padding: P.all24,
+      body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              question['question'],
-              style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const Spacer(),
-            ..._buildAnswerOptions(question['answers']),
-            const Spacer(),
-            Row(
-              children: [
-                if (_currentQuestionIndex > 0)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _previousQuestion,
-                      style: OutlinedButton.styleFrom(
-                        shape: const StadiumBorder(),
-                        side: const BorderSide(color: Colors.blueAccent),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+            // Question X of Y Chip
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      "${l10n.question} ${_currentQuestionIndex + 1} ${l10n.locale.languageCode == 'en' ? 'of' : (l10n.locale.languageCode == 'hi' ? 'में से' : 'માંથી')} ${_questions.length}",
+                      style: textTheme.labelLarge?.copyWith(
+                        color: Colors.blue[800],
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: const Text("Previous", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
                     ),
                   ),
-                if (_currentQuestionIndex > 0) const SizedBox(width: 16.0),
-                Expanded(
-                  child: ElevatedButton(
+                ],
+              ),
+            ),
+
+            // Question Card with Gradient
+            Container(
+              margin: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue[700]!, Colors.blue[900]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Text(
+                question['question'],
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+
+            // Options List
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: _buildAnswerOptions(question['answers']),
+                ),
+              ),
+            ),
+
+            // Bottom Navigation
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: _currentQuestionIndex < _questions.length - 1 ? _nextQuestion : null,
+                    child: Text(
+                      l10n.skip,
+                      style: textTheme.titleMedium?.copyWith(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
                     onPressed: _selectedAnswers.containsKey(_currentQuestionIndex)
                         ? _nextQuestion
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      shape: const StadiumBorder(),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 4,
+                      backgroundColor: const Color(0xFF4A6495), // Matching the image's button color
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
                     ),
-                    child: Text(
-                      isLastQuestion ? lblSubmit : lblNext,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isLastQuestion ? l10n.submit : l10n.next,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            )
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-
-
-
   List<Widget> _buildAnswerOptions(List<String> answers) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
-    return answers.map((answer) {
+    return List.generate(answers.length, (index) {
+      final answer = answers[index];
+      final optionLabel = String.fromCharCode(65 + index); // A, B, C, D
       final String? selectedAns = _selectedAnswers[_currentQuestionIndex];
-      // final bool isSelected = selectedAns == answer;
-      final String correctAns = _questions[_currentQuestionIndex]['correctAnswer'];
+      final bool isSelected = selectedAns == answer;
 
-      Color borderColor = colorScheme.outline;
-      Color? optionColor; // background if needed
-
-      if (selectedAns != null) {
-        if (answer == correctAns) {
-           // Correct Answer -> Green Highlight
-           borderColor = Colors.green;
-           optionColor = Colors.green.withOpacity(0.1);
-        } else if (answer == selectedAns && answer != correctAns) {
-           // Wrong Selection -> Red Highlight
-           borderColor = Colors.red;
-           optionColor = Colors.red.withOpacity(0.1);
-        }
-      }
-
-      return Card(
-        margin: EdgeInsets.symmetric(vertical: S.s4),
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(S.s12),
-          side: BorderSide(
-            color: borderColor,
-            width: selectedAns != null && (answer == correctAns || answer == selectedAns) ? S.s2 : S.s1,
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? Colors.blue.withOpacity(0.5) : Colors.grey[200]!,
+            width: isSelected ? 2 : 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        color: optionColor,
         child: InkWell(
           onTap: () {
-            // Uncomment to disable changing answer after selection
-            // if (_selectedAnswers.containsKey(_currentQuestionIndex)) return; 
-            
             setState(() {
               _selectedAnswers[_currentQuestionIndex] = answer;
             });
           },
-          borderRadius: BorderRadius.circular(S.s12),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: P.h16v8,
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    optionLabel,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    answer, 
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: selectedAns != null && answer == correctAns 
-                        ? Colors.green 
-                        : (selectedAns == answer && answer != correctAns 
-                            ? Colors.red 
-                            : textTheme.bodyMedium?.color),
-                      fontWeight: selectedAns != null && (answer == correctAns || answer == selectedAns) 
-                        ? FontWeight.bold 
-                        : FontWeight.normal
-                    )
-                  )
-                ),
-                Radio<String>(
-                  value: answer,
-                  groupValue: _selectedAnswers[_currentQuestionIndex],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedAnswers[_currentQuestionIndex] = value!;
-                    });
-                  },
-                  activeColor: answer == correctAns 
-                      ? Colors.green 
-                      : (answer == selectedAns ? Colors.red : colorScheme.primary),
+                    answer,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: isSelected ? Colors.blue[900] : Colors.black87,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
         ),
       );
-    }).toList();
+    });
   }
 }
 
