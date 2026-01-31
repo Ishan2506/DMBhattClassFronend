@@ -172,4 +172,58 @@ class ApiService {
     };
     return mimeTypes[ext] ?? 'application/octet-stream';
   }
+  static Future<http.Response> forgetPassword({
+    required String phone,
+  }) async {
+    final uri = Uri.parse("$baseUrl/auth/forget-password");
+    
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'phoneNum': phone,
+      }),
+    );
+    return response;
+  }
+
+  static Future<http.Response> verifyOtp({
+    required String phone,
+    required String otp,
+  }) async {
+    final uri = Uri.parse("$baseUrl/auth/verify-otp");
+    
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'phoneNum': phone,
+        'otp': otp,
+      }),
+    );
+    return response;
+  }
+
+  static Future<http.Response> resetPassword({
+    required String phone,
+    required String newPassword,
+  }) async {
+    final uri = Uri.parse("$baseUrl/auth/reset-password");
+    
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'phoneNum': phone,
+        'newPassword': newPassword,
+      }),
+    );
+    return response;
+  }
 }

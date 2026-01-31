@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pinput/pinput.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/reset_password_screen.dart';
-
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+
 
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 
@@ -131,10 +133,18 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
               child: ElevatedButton(
                 onPressed: () {
                    if (_pinController.text.length == 4) {
-                     Navigator.push(
-                       context,
-                       MaterialPageRoute(builder: (context) => const ResetPasswordScreen()),
-                     );
+                     ApiService.verifyOtp(phone: widget.phone, otp: _pinController.text).then((response) {
+                        if (response.statusCode == 200) {
+                           Navigator.push(
+                             context,
+                             MaterialPageRoute(builder: (context) => ResetPasswordScreen(phone: widget.phone)),
+                           );
+                        } else {
+                           CustomToast.showError(context, "Invalid OTP");
+                        }
+                     }).catchError((e) {
+                        CustomToast.showError(context, "Error: $e");
+                     });
                    } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                          const SnackBar(content: Text("Please enter full 4-digit code")),
