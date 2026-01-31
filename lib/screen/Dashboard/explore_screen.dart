@@ -1,4 +1,7 @@
 import 'dart:async'; // Added Timer import
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -31,6 +34,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.initState();
     _pageController = PageController(viewportFraction: 0.75);
     _startAutoSlide();
+    _fetchProducts();
   }
 
   void _startAutoSlide() {
@@ -124,11 +128,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _products = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchProducts();
-  }
+
 
   Future<void> _fetchProducts() async {
     try {
@@ -205,34 +205,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               color: Colors.grey.shade400,
                               fontSize: 16,
                             ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Hero(
-                                tag: product['id'],
-                                child: Container(
-                                  width: screenWidth * 0.28,
-                                  height: screenWidth * 0.28,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      product['image'],
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (c,e,s) => const Icon(Icons.image, color: Colors.grey),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(
@@ -240,7 +212,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 width: 1,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20), // Smaller padding
+                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                           ),
                         ),
                       ),
@@ -319,19 +291,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
             // Product List
             Expanded(
               child: displayedProducts.isEmpty 
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
-                    const SizedBox(height: 16),
-                    Text(
-                      "No items found",
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey.shade600, 
-                        fontSize: 16
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No items found",
+                        style: GoogleFonts.poppins(
+                          color: Colors.grey.shade600, 
+                          fontSize: 16
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 )
               : Listener(
                  onPointerDown: (_) {

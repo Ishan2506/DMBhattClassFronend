@@ -28,7 +28,7 @@ class CustomLoader extends StatelessWidget {
           children: [
             // Logo
             Image.asset(
-              imgAppLogo, // Using App Logo (Padhaku)
+              imgLoaderBot, // Using App Logo (Padhaku)
               width: 50,
               height: 50,
               fit: BoxFit.contain,
