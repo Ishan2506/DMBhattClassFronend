@@ -1,6 +1,8 @@
-import 'dart:async'; // Added Timer import
-import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,9 +37,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.initState();
     _pageController = PageController(viewportFraction: 0.75);
     _fetchProducts();
-    // Start slider only after products are fetched or if empty initially, checked in _startAutoSlide
-    _startAutoSlide();
-    _fetchProducts();
   }
 
   void _startAutoSlide() {
@@ -65,78 +64,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.dispose();
   }
 
-  // Future<void> _pickImage() async {
-  //   try {
-  //     final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
-  //     if (photo != null) {
-  //       if (!mounted) return;
-  //       CustomLoader.show(context);
-
-  //       final inputImage = InputImage.fromFilePath(photo.path);
-  //       final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-
-  //       try {
-  //         final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
-  //         final String extractedText = recognizedText.text.toLowerCase();
-
-  //         // Search logic: Check if any product name is contained in the extracted text
-  //         // or if the extracted text contains keywords from the product name.
-  //         Map<String, dynamic>? bestMatch;
-  //         int maxMatches = 0;
-
-  //         for (final product in _products) {
-  //            final productName = product['name'].toString().toLowerCase();
-  //            final productKeywords = productName.split(' ').where((w) => w.length > 3).toList();
-             
-  //            int matches = 0;
-  //            for(final keyword in productKeywords) {
-  //               if (extractedText.contains(keyword)) {
-  //                  matches++;
-  //               }
-  //            }
-             
-  //            if (matches > maxMatches) {
-  //               maxMatches = matches;
-  //               bestMatch = product;
-  //            }
-  //         }
-          
-  //         if (!mounted) return;
-  //         CustomLoader.hide(context);
-
-  //         if (bestMatch != null) {
-  //            setState(() {
-  //             _searchQuery = bestMatch!['name'];
-  //             _searchController.text = bestMatch!['name'];
-  //           });
-  //           CustomToast.showSuccess(context, "Found: ${bestMatch!['name']}");
-  //         } else {
-  //            CustomToast.showError(context, "No product found");
-  //         }
-
-  //       } catch (e) {
-  //          debugPrint("ML Kit Error: $e");
-  //          if (mounted) CustomLoader.hide(context);
-  //          if (mounted) CustomToast.showError(context, "Failed to recognize text");
-  //       } finally {
-  //          textRecognizer.close();
-  //       }
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error picking image: $e");
-  //     if (mounted) CustomToast.showError(context, "Error capturing image: $e");
-  //   }
-  // }
-
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _products = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchProducts();
-  }
-
   Future<void> _fetchProducts() async {
     try {
       final response = await ApiService.getExploreProducts();
@@ -162,8 +89,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       } else {
         if (mounted) {
           setState(() => _isLoading = false);
-          // Assuming CustomToast exists in project, otherwise replace with ScaffoldMessenger
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to load products")));
+          CustomToast.showError(context, "Failed to load products");
         }
       }
     } catch (e) {
@@ -174,13 +100,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _timer?.cancel();
-    _pageController.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -215,52 +135,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (value) => setState(() => _searchQuery = value),
-                          style: GoogleFonts.poppins(color: isDark ? Colors.white : Colors.black87),
-                          decoration: InputDecoration(
-                            hintText: "Search...",
-                            hintStyle: GoogleFonts.poppins(
-                              color: Colors.grey.shade400,
-                              fontSize: 16,
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Hero(
-                                tag: product['id'],
-                                child: Container(
-                                  width: screenWidth * 0.28,
-                                  height: screenWidth * 0.28,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      product['image'],
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (c,e,s) => const Icon(Icons.image, color: Colors.grey),
-                                    ),
-                                  ),
-                                ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey.shade800 : Colors.white,
+                             borderRadius: BorderRadius.circular(16),
+                             boxShadow: [
+                               BoxShadow(
+                                 color: Colors.black.withOpacity(0.05),
+                                 blurRadius: 10,
+                                 offset: const Offset(0, 4),
+                               )
+                             ]
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) => setState(() => _searchQuery = value),
+                            style: GoogleFonts.poppins(color: isDark ? Colors.white : Colors.black87),
+                            decoration: InputDecoration(
+                              hintText: "Search...",
+                              hintStyle: GoogleFonts.poppins(
+                                color: Colors.grey.shade400,
+                                fontSize: 16,
                               ),
+                             border: InputBorder.none,
+                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                             prefixIcon: Icon(Icons.search, color: Colors.grey.shade400,)
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: Colors.blue.shade700,
-                                width: 1,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20), // Smaller padding
                           ),
                         ),
                       ),
@@ -342,19 +242,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
             // Product List
             Expanded(
               child: displayedProducts.isEmpty 
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
-                    const SizedBox(height: 16),
-                    Text(
-                      "No items found",
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey.shade600, 
-                        fontSize: 16
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No items found",
+                        style: GoogleFonts.poppins(
+                          color: Colors.grey.shade600, 
+                          fontSize: 16
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 )
               : Listener(
                  onPointerDown: (_) {
@@ -419,10 +321,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                       Center(
                                         child: Hero(
                                           tag: product['id'],
-                                          child: Image.asset(
+                                          child: Image.network(
                                             product['image'],
                                             fit: BoxFit.contain,
                                             width: screenWidth * 0.5,
+                                            errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 50, color: Colors.grey.shade400,),
                                           ),
                                         ),
                                       ),
