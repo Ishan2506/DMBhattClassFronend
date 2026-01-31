@@ -6,7 +6,6 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -63,68 +62,68 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
-      if (photo != null) {
-        if (!mounted) return;
-        CustomLoader.show(context);
+  // Future<void> _pickImage() async {
+  //   try {
+  //     final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+  //     if (photo != null) {
+  //       if (!mounted) return;
+  //       CustomLoader.show(context);
 
-        final inputImage = InputImage.fromFilePath(photo.path);
-        final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  //       final inputImage = InputImage.fromFilePath(photo.path);
+  //       final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
 
-        try {
-          final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
-          final String extractedText = recognizedText.text.toLowerCase();
+  //       try {
+  //         final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+  //         final String extractedText = recognizedText.text.toLowerCase();
 
-          // Search logic: Check if any product name is contained in the extracted text
-          // or if the extracted text contains keywords from the product name.
-          Map<String, dynamic>? bestMatch;
-          int maxMatches = 0;
+  //         // Search logic: Check if any product name is contained in the extracted text
+  //         // or if the extracted text contains keywords from the product name.
+  //         Map<String, dynamic>? bestMatch;
+  //         int maxMatches = 0;
 
-          for (final product in _products) {
-             final productName = product['name'].toString().toLowerCase();
-             final productKeywords = productName.split(' ').where((w) => w.length > 3).toList();
+  //         for (final product in _products) {
+  //            final productName = product['name'].toString().toLowerCase();
+  //            final productKeywords = productName.split(' ').where((w) => w.length > 3).toList();
              
-             int matches = 0;
-             for(final keyword in productKeywords) {
-                if (extractedText.contains(keyword)) {
-                   matches++;
-                }
-             }
+  //            int matches = 0;
+  //            for(final keyword in productKeywords) {
+  //               if (extractedText.contains(keyword)) {
+  //                  matches++;
+  //               }
+  //            }
              
-             if (matches > maxMatches) {
-                maxMatches = matches;
-                bestMatch = product;
-             }
-          }
+  //            if (matches > maxMatches) {
+  //               maxMatches = matches;
+  //               bestMatch = product;
+  //            }
+  //         }
           
-          if (!mounted) return;
-          CustomLoader.hide(context);
+  //         if (!mounted) return;
+  //         CustomLoader.hide(context);
 
-          if (bestMatch != null) {
-             setState(() {
-              _searchQuery = bestMatch!['name'];
-              _searchController.text = bestMatch!['name'];
-            });
-            CustomToast.showSuccess(context, "Found: ${bestMatch!['name']}");
-          } else {
-             CustomToast.showError(context, "No product found");
-          }
+  //         if (bestMatch != null) {
+  //            setState(() {
+  //             _searchQuery = bestMatch!['name'];
+  //             _searchController.text = bestMatch!['name'];
+  //           });
+  //           CustomToast.showSuccess(context, "Found: ${bestMatch!['name']}");
+  //         } else {
+  //            CustomToast.showError(context, "No product found");
+  //         }
 
-        } catch (e) {
-           debugPrint("ML Kit Error: $e");
-           if (mounted) CustomLoader.hide(context);
-           if (mounted) CustomToast.showError(context, "Failed to recognize text");
-        } finally {
-           textRecognizer.close();
-        }
-      }
-    } catch (e) {
-      debugPrint("Error picking image: $e");
-      if (mounted) CustomToast.showError(context, "Error capturing image: $e");
-    }
-  }
+  //       } catch (e) {
+  //          debugPrint("ML Kit Error: $e");
+  //          if (mounted) CustomLoader.hide(context);
+  //          if (mounted) CustomToast.showError(context, "Failed to recognize text");
+  //       } finally {
+  //          textRecognizer.close();
+  //       }
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error picking image: $e");
+  //     if (mounted) CustomToast.showError(context, "Error capturing image: $e");
+  //   }
+  // }
 
   // Mock Data
   final List<Map<String, dynamic>> _products = [
@@ -247,7 +246,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       const SizedBox(width: 16),
                       // Camera Button (Floating Style)
                       GestureDetector(
-                        onTap: _pickImage,
                         child: Container(
                           padding: const EdgeInsets.all(12), // Slightly smaller padding for balance
                           decoration: BoxDecoration(
