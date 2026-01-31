@@ -1,11 +1,5 @@
-import 'dart:convert';
-import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'dart:async'; // Added Timer import
-import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
-import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
-import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
