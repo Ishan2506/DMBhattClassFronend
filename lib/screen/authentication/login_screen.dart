@@ -167,6 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             // Save token
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setString('auth_token', token);
+                            await prefs.setString('user_password', _passwordController.text); // Saving password for PDF encryption
 
                             CustomToast.showSuccess(context, "Login Successful");
                             Navigator.pushAndRemoveUntil(

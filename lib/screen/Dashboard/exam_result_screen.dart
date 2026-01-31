@@ -1,9 +1,14 @@
+import 'dart:typed_data';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class ExamResultScreen extends StatelessWidget {
   final int totalQuestions;
@@ -12,6 +17,8 @@ class ExamResultScreen extends StatelessWidget {
   final int skippedAnswers;
   final List<Map<String, dynamic>> questions;
   final Map<int, String> selectedAnswers;
+  final String? subject;
+  final String? unit;
 
   const ExamResultScreen({
     super.key,
@@ -21,7 +28,148 @@ class ExamResultScreen extends StatelessWidget {
     required this.skippedAnswers,
     required this.questions,
     required this.selectedAnswers,
+    this.subject,
+    this.unit,
   });
+
+  Future<void> _generatePdf(BuildContext context) async {
+    final pdf = pw.Document();
+    
+    // Load custom font if needed, or use standard fonts
+    // For simplicity using standard fonts first, can upgrade to custom if needed
+    final font = await PdfGoogleFonts.poppinsRegular();
+    final fontBold = await PdfGoogleFonts.poppinsBold();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat.a4,
+          theme: pw.ThemeData.withFont(
+            base: font,
+            bold: fontBold,
+          ),
+          buildForeground: (context) {
+            return pw.Center(
+              child: pw.Transform.rotate(
+                angle: -0.5,
+                child: pw.Text(
+                  "DMBhatt",
+                  style: pw.TextStyle(
+                    font: fontBold,
+                    fontSize: 100,
+                    color: PdfColors.grey200,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        build: (pw.Context context) {
+          return [
+            // Header
+            pw.Header(
+              level: 0,
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text("Result Summary", style: pw.TextStyle(font: fontBold, fontSize: 24)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        "${unit ?? 'Unit Test'} , ${subject ?? 'Subject'}",
+                        style: pw.TextStyle(font: font, fontSize: 16, color: PdfColors.grey700),
+                      ),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text("DMBhatt Tuitions", style: pw.TextStyle(font: fontBold, fontSize: 14)),
+                      pw.Text("Date: ${DateTime.now().toString().split(' ')[0]}", style: pw.TextStyle(font: font, fontSize: 10)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.Divider(),
+            pw.SizedBox(height: 20),
+
+            // Score Summary
+            pw.Container(
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey400),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                children: [
+                  _buildPdfStat("Total", "$totalQuestions", fontBold),
+                  _buildPdfStat("Correct", "$correctAnswers", fontBold, color: PdfColors.green),
+                  _buildPdfStat("Wrong", "$wrongAnswers", fontBold, color: PdfColors.red),
+                  _buildPdfStat("Skipped", "$skippedAnswers", fontBold, color: PdfColors.orange),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 20),
+
+            // Questions
+            ...List.generate(questions.length, (index) {
+              final question = questions[index];
+              final userAns = selectedAnswers[index];
+              final correctAns = question['correctAnswer'];
+              final isCorrect = userAns == correctAns;
+              final isSkipped = userAns == null;
+
+              return pw.Container(
+                margin: const pw.EdgeInsets.only(bottom: 16),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                     pw.Text(
+                       "Q${index + 1}: ${question['question']}",
+                       style: pw.TextStyle(font: fontBold, fontSize: 12),
+                     ),
+                     pw.SizedBox(height: 4),
+                     pw.Text(
+                       "Your Answer: ${userAns ?? 'Skipped'}",
+                       style: pw.TextStyle(
+                         font: font, 
+                         fontSize: 10,
+                         color: isCorrect ? PdfColors.green : (isSkipped ? PdfColors.orange : PdfColors.red),
+                       ),
+                     ),
+                     if (!isCorrect)
+                       pw.Text(
+                         "Correct Answer: $correctAns",
+                         style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green),
+                       ),
+                     pw.Divider(color: PdfColors.grey200),
+                  ],
+                ),
+              );
+            }),
+          ];
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'DMBhatt_Result_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+  }
+  
+  pw.Widget _buildPdfStat(String label, String value, pw.Font font, {PdfColor color = PdfColors.black}) {
+    return pw.Column(
+      children: [
+        pw.Text(value, style: pw.TextStyle(font: font, fontSize: 18, color: color)),
+        pw.Text(label, style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey600)),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +182,22 @@ class ExamResultScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA), // Softer background
-      appBar: const CustomAppBar(
+      appBar: CustomAppBar(
         title: "Exam Result",
         automaticallyImplyLeading: false, // Prevent going back to exam
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_rounded, color: Colors.white),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const LandingScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -302,6 +463,7 @@ class ExamResultScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Downloading PDF...")),
                   );
+                  _generatePdf(context);
                 },
               ),
               const SizedBox(height: 16),

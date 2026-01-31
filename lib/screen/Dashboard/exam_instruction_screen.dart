@@ -49,16 +49,48 @@ class ExamInstructionScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             blankVerticalSpace32,
-            CustomFilledButton(
-              label: lblProceedToExam,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ExamQuestionScreen(subject: subject),
+            Container(
+              width: double.infinity,
+              height: S.s48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade900, Colors.blue.shade700],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(S.s12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade900.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                );
-              },
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ExamQuestionScreen(subject: subject),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(S.s12)),
+                ),
+                child: Text(
+                  lblProceedToExam,
+                  style: const TextStyle(
+                      letterSpacing: 0.5,
+                      fontSize: S.s16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
           ],
         ),

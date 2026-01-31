@@ -157,6 +157,8 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
           skippedAnswers: skipped,
           questions: _questions,
           selectedAnswers: _selectedAnswers,
+          subject: widget.subject,
+          unit: "Full Exam", // Or handle dynamic unit if available
         ),
       ),
     );

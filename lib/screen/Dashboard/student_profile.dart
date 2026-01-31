@@ -151,15 +151,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   
                   // Profile Image
                   CircleAvatar(
-                    radius: MediaQuery.of(context).size.width * 0.16,
+                    radius: MediaQuery.of(context).size.width * 0.12,
                     backgroundColor: isDark ? Colors.grey.shade800 : const Color(0xFFE0E0E0),
                     child: CircleAvatar(
-                      radius: MediaQuery.of(context).size.width * 0.15,
+                      radius: MediaQuery.of(context).size.width * 0.12,
                       backgroundColor: theme.cardColor,
                       backgroundImage: const AssetImage("assets/images/user_placeholder.png"), 
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 25),
 
                   // Info Grid
                   _buildInfoRow(
@@ -283,27 +283,45 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             SizedBox(
               width: double.infinity,
               height: MediaQuery.of(context).size.height * 0.07,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.clear(); // Logout
-                  if (!mounted) return;
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                    (route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4C53A5),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30)),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade900, Colors.blue.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.shade900.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: Text("Sign out",
-                    style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white)),
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear(); // Logout
+                    if (!mounted) return;
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: Text("Sign out",
+                      style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white)),
+                ),
               ),
             ),
           ],

@@ -51,25 +51,57 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
               onChanged: (value) => setState(() => _selectedUnit = value),
             ),
             const Spacer(),
-            CustomFilledButton(
-              label: "Next",
-              onPressed: () {
-                if (_selectedSubject != null && _selectedUnit != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FiveMinTestInstructionScreen(
-                        subject: _selectedSubject!,
-                        unit: _selectedUnit!,
+            Container(
+              width: double.infinity,
+              height: S.s48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade900, Colors.blue.shade700],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(S.s12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade900.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_selectedSubject != null && _selectedUnit != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FiveMinTestInstructionScreen(
+                          subject: _selectedSubject!,
+                          unit: _selectedUnit!,
+                        ),
                       ),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Please select all fields")),
-                  );
-                }
-              },
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please select all fields")),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(S.s12)),
+                ),
+                child: const Text(
+                  "Next",
+                  style: TextStyle(
+                      letterSpacing: 0.5,
+                      fontSize: S.s16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
           ],
         ),
@@ -110,16 +142,48 @@ class FiveMinTestInstructionScreen extends StatelessWidget {
              _buildInstructionItem("The quiz contains 5 questions (MCQ/True-False)."),
              _buildInstructionItem("Do your best!"),
             const Spacer(),
-            CustomFilledButton(
-              label: "Start Study Timer",
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FiveMinStudyScreen(subject: subject, unit: unit),
+            Container(
+              width: double.infinity,
+              height: S.s48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade900, Colors.blue.shade700],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(S.s12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade900.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                );
-              },
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FiveMinStudyScreen(subject: subject, unit: unit),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(S.s12)),
+                ),
+                child: const Text(
+                  "Start Study Timer",
+                  style: TextStyle(
+                      letterSpacing: 0.5,
+                      fontSize: S.s16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
           ],
         ),
@@ -204,12 +268,15 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
             child: TextButton(
               onPressed: () {
                 _timer?.cancel();
-                Navigator.pushReplacement(
-                   context,
-                   MaterialPageRoute(
-                     builder: (context) => const FiveMinQuizScreen(),
-                   ),
-                 );
+                 Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FiveMinQuizScreen(
+                        subject: widget.subject,
+                        unit: widget.unit,
+                      ),
+                    ),
+                  );
               },
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
@@ -268,16 +335,57 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
           
           Padding(
              padding: const EdgeInsets.all(24),
-             child: CustomFilledButton(
-               label: "Start Quiz (5 Questions)",
-               onPressed: _canProceed ? () {
-                 Navigator.pushReplacement(
-                   context,
-                   MaterialPageRoute(
-                     builder: (context) => const FiveMinQuizScreen(),
-                   ),
-                 );
-               } : null, // Disabled until timer ends
+              child: Container(
+               width: double.infinity,
+               height: S.s48,
+               decoration: BoxDecoration(
+                 gradient: _canProceed 
+                   ? LinearGradient(
+                       colors: [Colors.blue.shade900, Colors.blue.shade700],
+                       begin: Alignment.topLeft,
+                       end: Alignment.bottomRight,
+                     )
+                   : null, // No gradient when disabled
+                 color: _canProceed ? null : Colors.grey.shade300, // Grey color when disabled
+                 borderRadius: BorderRadius.circular(S.s12),
+                 boxShadow: _canProceed 
+                   ? [
+                       BoxShadow(
+                         color: Colors.blue.shade900.withOpacity(0.3),
+                         blurRadius: 8,
+                         offset: const Offset(0, 4),
+                       ),
+                     ]
+                   : null,
+               ),
+               child: ElevatedButton(
+                 onPressed: _canProceed ? () {
+                   Navigator.pushReplacement(
+                     context,
+                     MaterialPageRoute(
+                       builder: (context) => FiveMinQuizScreen(
+                         subject: widget.subject,
+                         unit: widget.unit,
+                       ),
+                     ),
+                   );
+                 } : null, // Functionally disabled
+                 style: ElevatedButton.styleFrom(
+                   backgroundColor: Colors.transparent,
+                   shadowColor: Colors.transparent,
+                   disabledBackgroundColor: Colors.transparent, // Ensure container color shows
+                   shape: RoundedRectangleBorder(
+                       borderRadius: BorderRadius.circular(S.s12)),
+                 ),
+                 child: Text(
+                   "Start Quiz (5 Questions)",
+                   style: TextStyle(
+                       letterSpacing: 0.5,
+                       fontSize: S.s16,
+                       color: _canProceed ? Colors.white : Colors.grey.shade600,
+                       fontWeight: FontWeight.bold),
+                 ),
+               ),
              ),
           ),
         ],
@@ -288,7 +396,10 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
 
 // --- Screen 4: Quiz ---
 class FiveMinQuizScreen extends StatefulWidget {
-  const FiveMinQuizScreen({super.key});
+  final String subject;
+  final String unit;
+  
+  const FiveMinQuizScreen({super.key, required this.subject, required this.unit});
 
   @override
   State<FiveMinQuizScreen> createState() => _FiveMinQuizScreenState();
@@ -384,6 +495,8 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
           skippedAnswers: skipped,
           questions: _questions,
           selectedAnswers: _selectedAnswers,
+          subject: widget.subject,
+          unit: widget.unit,
         ),
       ),
     );

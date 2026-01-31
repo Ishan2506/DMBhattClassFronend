@@ -185,289 +185,308 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: theme.scaffoldBackgroundColor, // Dynamic
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: theme.iconTheme.color),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Edit Profile",
-          style: GoogleFonts.poppins(color: theme.textTheme.titleLarge?.color, fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Profile Image
-              Center(
-                child: Stack(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey.shade800 : Colors.blue.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: theme.cardColor,
-                        backgroundImage: _imageFile != null 
-                            ? FileImage(_imageFile!) 
-                            : const AssetImage("assets/images/user_placeholder.png") as ImageProvider,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade700,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Name
-              _buildTextField(
-                context,
-                controller: _nameController,
-                hint: "Name", 
-                icon: Icons.person_outline,
-                validator: (val) => val!.isEmpty ? "Required" : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Email
-              _buildTextField(
-                context,
-                controller: _emailController,
-                hint: "Email ID", 
-                icon: Icons.email_outlined,
-                inputType: TextInputType.emailAddress,
-                validator: (val) {
-                   if (val == null || val.isEmpty) return "Required";
-                   if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val)) return "Invalid Email";
-                   return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Phone
-              _buildTextField(
-                context,
-                controller: _phoneController,
-                hint: "Phone Number", 
-                icon: Icons.phone_outlined, 
-                inputType: TextInputType.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
-                validator: (val) => val!.length != 10 ? "Invalid phone" : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Parent's Mobile
-              _buildTextField(
-                context,
-                controller: _parentPhoneController,
-                hint: "Parent's Mobile Number", 
-                icon: Icons.family_restroom_outlined, 
-                inputType: TextInputType.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
-              ),
-              const SizedBox(height: 16),
-
-              // Standard
-              _buildDropdown(
-                context,
-                hint: "Standard",
-                icon: Icons.school_outlined,
-                value: _selectedStandard,
-                items: _standards,
-                onChanged: (val) => setState(() => _selectedStandard = val),
-              ),
-              const SizedBox(height: 16),
-
-              // Medium
-              _buildDropdown(
-                context,
-                hint: "Medium",
-                icon: Icons.language,
-                value: _selectedMedium,
-                items: _mediums,
-                onChanged: (val) => setState(() => _selectedMedium = val),
-              ),
-               const SizedBox(height: 16),
-               
-               // Stream (Only if relevant)
-               if (_selectedStandard == "11" || _selectedStandard == "12") ...[
-                 _buildDropdown(
-                  context,
-                  hint: "Stream",
-                  icon: Icons.science_outlined,
-                  value: _selectedStream,
-                  items: _streams,
-                  onChanged: (val) => setState(() => _selectedStream = val),
-                ),
-                const SizedBox(height: 16),
-               ],
-
-
-               // State 
-              _buildDropdown(
-                context,
-                hint: "State",
-                icon: Icons.map_outlined,
-                value: _selectedState,
-                items: _stateCityMap.keys.toList(),
-                onChanged: (val) {
-                  setState(() {
-                    _selectedState = val;
-                   // _selectedCity = null; 
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // City
-               _buildTextField(
-                context,
-                controller: _cityController,
-                hint: "City",
-                icon: Icons.location_city,
-              ),
-              const SizedBox(height: 16),
-
-              // School Name Autocomplete
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Autocomplete<String>(
-                    optionsBuilder: (TextEditingValue textEditingValue) {
-                      if (textEditingValue.text == '') {
-                        return const Iterable<String>.empty();
-                      }
-                      return _fetchSchools(textEditingValue.text);
-                    },
-                    onSelected: (String selection) {
-                      _schoolNameController.text = selection;
-                    },
-                    initialValue: TextEditingValue(text: _schoolNameController.text), 
-                    fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                       // Sync back to controller immediately when typing manually
-                       textEditingController.addListener(() {
-                          _schoolNameController.text = textEditingController.text;
-                       });
-                      
-                       // If pre-filled value exists, ensure it's shown
-                       if (_schoolNameController.text.isNotEmpty && textEditingController.text.isEmpty) {
-                          textEditingController.text = _schoolNameController.text;
-                       }
-
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
-                        ),
-                        child: TextFormField(
-                          controller: textEditingController,
-                          focusNode: focusNode,
-                           validator: (val) => val == null || val.isEmpty ? "Required" : null,
-                          style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
-                          decoration: InputDecoration(
-                            hintText: "School Name",
-                            hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey),
-                            prefixIcon: Icon(Icons.school_outlined, color: isDark ? Colors.grey : Colors.black54),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                          ),
-                        ),
-                      );
-                    },
-                    optionsViewBuilder: (context, onSelected, options) {
-                      return Align(
-                        alignment: Alignment.topLeft,
-                        child: Material(
-                          elevation: 4.0,
-                           borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            width: constraints.maxWidth,
-                            constraints: const BoxConstraints(maxHeight: 200),
-                            decoration: BoxDecoration(
-                               color: theme.cardColor,
-                                borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: ListView.builder(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: options.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final String option = options.elementAt(index);
-                                final displayName = option.split(',')[0]; 
-                                return InkWell(
-                                  onTap: () {
-                                    onSelected(option);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Text(displayName, style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color)),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }
-              ),
-
-
-              const SizedBox(height: 32),
-
-              // Update Button
-              SizedBox(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height * 0.07,
-                child: ElevatedButton(
-                  onPressed: _isUpdating ? null : _updateProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: _isUpdating 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                    "Update Profile",
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade900, Colors.blue.shade700],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
+        elevation: 0,
+      ),
+      body: Stack(
+        children: [
+          _isLoading 
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Profile Image
+                  Center(
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey.shade800 : Colors.blue.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: theme.cardColor,
+                            backgroundImage: _imageFile != null 
+                                ? FileImage(_imageFile!) 
+                                : const AssetImage("assets/images/user_placeholder.png") as ImageProvider,
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade700,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+    
+                  // Name
+                  _buildTextField(
+                    context,
+                    controller: _nameController,
+                    hint: "Name", 
+                    icon: Icons.person_outline,
+                    validator: (val) => val!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 16),
+    
+                  // Email
+                  _buildTextField(
+                    context,
+                    controller: _emailController,
+                    hint: "Email ID", 
+                    icon: Icons.email_outlined,
+                    inputType: TextInputType.emailAddress,
+                    validator: (val) {
+                       if (val == null || val.isEmpty) return "Required";
+                       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val)) return "Invalid Email";
+                       return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+    
+                  // Phone
+                  _buildTextField(
+                    context,
+                    controller: _phoneController,
+                    hint: "Phone Number", 
+                    icon: Icons.phone_outlined, 
+                    inputType: TextInputType.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                    validator: (val) => val!.length != 10 ? "Invalid phone" : null,
+                  ),
+                  const SizedBox(height: 16),
+    
+                  // Parent's Mobile
+                  _buildTextField(
+                    context,
+                    controller: _parentPhoneController,
+                    hint: "Parent's Mobile Number", 
+                    icon: Icons.family_restroom_outlined, 
+                    inputType: TextInputType.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                  ),
+                  const SizedBox(height: 16),
+    
+                  // Standard
+                  _buildDropdown(
+                    context,
+                    hint: "Standard",
+                    icon: Icons.school_outlined,
+                    value: _selectedStandard,
+                    items: _standards,
+                    onChanged: (val) => setState(() => _selectedStandard = val),
+                  ),
+                  const SizedBox(height: 16),
+    
+                  // Medium
+                  _buildDropdown(
+                    context,
+                    hint: "Medium",
+                    icon: Icons.language,
+                    value: _selectedMedium,
+                    items: _mediums,
+                    onChanged: (val) => setState(() => _selectedMedium = val),
+                  ),
+                   const SizedBox(height: 16),
+                   
+                   // Stream (Only if relevant)
+                   if (_selectedStandard == "11" || _selectedStandard == "12") ...[
+                     _buildDropdown(
+                      context,
+                      hint: "Stream",
+                      icon: Icons.science_outlined,
+                      value: _selectedStream,
+                      items: _streams,
+                      onChanged: (val) => setState(() => _selectedStream = val),
+                    ),
+                    const SizedBox(height: 16),
+                   ],
+    
+    
+                   // State 
+                  _buildDropdown(
+                    context,
+                    hint: "State",
+                    icon: Icons.map_outlined,
+                    value: _selectedState,
+                    items: _stateCityMap.keys.toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedState = val;
+                       // _selectedCity = null; 
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+    
+                  // City
+                   _buildTextField(
+                    context,
+                    controller: _cityController,
+                    hint: "City",
+                    icon: Icons.location_city,
+                  ),
+                  const SizedBox(height: 16),
+    
+                  // School Name Autocomplete
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Autocomplete<String>(
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          if (textEditingValue.text == '') {
+                            return const Iterable<String>.empty();
+                          }
+                          return _fetchSchools(textEditingValue.text);
+                        },
+                        onSelected: (String selection) {
+                          _schoolNameController.text = selection;
+                        },
+                        initialValue: TextEditingValue(text: _schoolNameController.text), 
+                        fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                           // Sync back to controller immediately when typing manually
+                           textEditingController.addListener(() {
+                              _schoolNameController.text = textEditingController.text;
+                           });
+                          
+                           // If pre-filled value exists, ensure it's shown
+                           if (_schoolNameController.text.isNotEmpty && textEditingController.text.isEmpty) {
+                              textEditingController.text = _schoolNameController.text;
+                           }
+    
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                            ),
+                            child: TextFormField(
+                              controller: textEditingController,
+                              focusNode: focusNode,
+                               validator: (val) => val == null || val.isEmpty ? "Required" : null,
+                              style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
+                              decoration: InputDecoration(
+                                hintText: "School Name",
+                                hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey),
+                                prefixIcon: Icon(Icons.school_outlined, color: isDark ? Colors.grey : Colors.black54),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              ),
+                            ),
+                          );
+                        },
+                        optionsViewBuilder: (context, onSelected, options) {
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Material(
+                              elevation: 4.0,
+                               borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                width: constraints.maxWidth,
+                                constraints: const BoxConstraints(maxHeight: 200),
+                                decoration: BoxDecoration(
+                                   color: theme.cardColor,
+                                    borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  itemCount: options.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    final String option = options.elementAt(index);
+                                    final displayName = option.split(',')[0]; 
+                                    return InkWell(
+                                      onTap: () {
+                                        onSelected(option);
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Text(displayName, style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color)),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }
+                  ),
+    
+    
+                  const SizedBox(height: 32),
+    
+                  // Update Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.07,
+                    child: ElevatedButton(
+                      onPressed: _isUpdating ? null : _updateProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: Text(
+                        "Update Profile",
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          if (_isUpdating)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+        ],
       ),
     );
   }

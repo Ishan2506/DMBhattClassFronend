@@ -126,17 +126,18 @@ class LeaderboardScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                              Icon(Icons.stars, size: 16, color: Colors.amber.shade700),
                              const SizedBox(width: 4),
                              Text(
-                              "${item['points']}",
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: Colors.amber.shade800
-                              ),
-                            ),
+                               "${item['points']}",
+                               style: GoogleFonts.poppins(
+                                 fontWeight: FontWeight.bold,
+                                 fontSize: 13,
+                                 color: Colors.amber.shade800
+                               ),
+                             ),
                           ],
                         ),
                       )

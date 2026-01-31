@@ -49,6 +49,13 @@ dependencies:
   google_generative_ai: ^0.4.0
   # flutter_windowmanager: ^0.2.0
   shared_preferences: ^2.2.1
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  path_provider: ^2.1.5
+  image_gallery_saver: ^2.0.3
+  dio: ^5.4.0
+  share_plus: ^7.2.1
+  font_awesome_flutter: ^10.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
