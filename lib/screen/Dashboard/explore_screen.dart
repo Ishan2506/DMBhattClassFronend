@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'dart:async'; // Added Timer import
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -125,58 +127,44 @@ class _ExploreScreenState extends State<ExploreScreen> {
   //   }
   // }
 
-  // Mock Data
-  final List<Map<String, dynamic>> _products = [
-    {
-      "id": "1",
-      "name": "Mahamantra Frame | Hare Rama Hare Krishna",
-      "image": "assets/images/mahamantra_frame.png",
-      "rating": 4.5,
-      "reviews": 12,
-      "price": 630,
-      "originalPrice": 1400,
-      "discount": 55,
-      "description": "High quality wooden frame with gold plated text. Perfect for home decor and pooja room.",
-      "category": "Material"
-    },
-    {
-      "id": "2",
-      "name": "Physics Class 10 Diagram Set",
-      "image": "assets/images/diagram_set.png",
-      "rating": 4.2,
-      "reviews": 45,
-      "price": 250,
-      "originalPrice": 500,
-      "discount": 50,
-      "description": "Complete set of physics diagrams for class 10 students. Laminated for durability.",
-      "category": "Diagram",
-      "subject" : "Science",
-    },
-     {
-      "id": "3",
-      "name": "Chemistry Phantom Material",
-      "image": "assets/images/phantom_chem.png",
-      "rating": 4.8,
-      "reviews": 8,
-      "price": 899,
-      "originalPrice": 1999,
-      "discount": 55,
-      "description": "Special study material for chemistry enthusiasts. Includes 3D models.",
-      "category": "Phantom material"
-    },
-    {
-      "id": "4",
-      "name": "Wall Hanging Hindu Quote Frame",
-      "image": "assets/images/wall_hanging.png",
-      "rating": 5.0,
-      "reviews": 3,
-      "price": 287,
-      "originalPrice": 699,
-      "discount": 59,
-      "description": "Beautiful wall hanging with inspirational Hindu quotes. Size 6x20 inches.",
-      "category": "Material"
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _products = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
+  }
+
+  Future<void> _fetchProducts() async {
+    try {
+      final response = await ApiService.getExploreProducts();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _products = data.map((item) => {
+            "id": item['_id'] ?? "",
+            "name": item['name'] ?? "",
+            "description": item['description'] ?? "",
+            "category": item['category'] ?? "Material",
+            "price": item['price'] ?? 0,
+            "originalPrice": item['originalPrice'] ?? 0,
+            "discount": item['discount'] ?? 0,
+            "rating": 4.5, // Default or fetch if available
+            "reviews": 0,  // Default
+            "image": item['image'] ?? "", // Cloudinary URL
+          }).toList().cast<Map<String, dynamic>>();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+        CustomToast.showError(context, "Failed to load products");
+      }
+    } catch (e) {
+       setState(() => _isLoading = false);
+       debugPrint("Error fetching products: $e");
     }
-  ];
+  }
 
 
   @override
@@ -223,14 +211,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               color: Colors.grey.shade400,
                               fontSize: 16,
                             ),
-                            prefixIcon: Icon(Icons.search, color: Colors.grey.shade400, size: 24),
-                            filled: true,
-                            fillColor: isDark ? Colors.grey.shade900 : Colors.white,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade200,
-                                width: 1,
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Hero(
+                                tag: product['id'],
+                                child: Container(
+                                  width: screenWidth * 0.28,
+                                  height: screenWidth * 0.28,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      product['image'],
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (c,e,s) => const Icon(Icons.image, color: Colors.grey),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
