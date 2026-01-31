@@ -1,8 +1,6 @@
 import 'dart:async'; // Added Timer import
-import 'dart:convert';
-import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -29,10 +27,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Timer? _timer;
   int _currentPage = 0;
 
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _products = [];
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController(viewportFraction: 0.75);
+    _fetchProducts();
+    // Start slider only after products are fetched or if empty initially, checked in _startAutoSlide
     _startAutoSlide();
     _fetchProducts();
   }
@@ -128,38 +131,56 @@ class _ExploreScreenState extends State<ExploreScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _products = [];
 
-
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
+  }
 
   Future<void> _fetchProducts() async {
     try {
       final response = await ApiService.getExploreProducts();
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _products = data.map((item) => {
-            "id": item['_id'] ?? "",
-            "name": item['name'] ?? "",
-            "description": item['description'] ?? "",
-            "category": item['category'] ?? "Material",
-            "price": item['price'] ?? 0,
-            "originalPrice": item['originalPrice'] ?? 0,
-            "discount": item['discount'] ?? 0,
-            "rating": 4.5, // Default or fetch if available
-            "reviews": 0,  // Default
-            "image": item['image'] ?? "", // Cloudinary URL
-          }).toList().cast<Map<String, dynamic>>();
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _products = data.map((item) => {
+              "id": item['_id'] ?? "",
+              "name": item['name'] ?? "",
+              "description": item['description'] ?? "",
+              "category": item['category'] ?? "Material",
+              "price": item['price'] ?? 0,
+              "originalPrice": item['originalPrice'] ?? 0,
+              "discount": item['discount'] ?? 0,
+              "rating": 4.5,
+              "reviews": 0,
+              "image": item['image'] ?? "",
+            }).toList().cast<Map<String, dynamic>>();
+            _isLoading = false;
+          });
+        }
       } else {
-        setState(() => _isLoading = false);
-        CustomToast.showError(context, "Failed to load products");
+        if (mounted) {
+          setState(() => _isLoading = false);
+          // Assuming CustomToast exists in project, otherwise replace with ScaffoldMessenger
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to load products")));
+        }
       }
     } catch (e) {
-       setState(() => _isLoading = false);
-       debugPrint("Error fetching products: $e");
+      if (mounted) {
+        setState(() => _isLoading = false);
+        debugPrint("Error fetching products: $e");
+      }
     }
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,17 +191,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
     // Filter Products
     List<Map<String, dynamic>> displayedProducts = _products.where((p) {
       final searchLower = _searchQuery.toLowerCase();
-      final isSearchMatch = _searchQuery.isEmpty || 
-          p['name'].toString().toLowerCase().contains(searchLower) || 
+      final isSearchMatch = _searchQuery.isEmpty ||
+          p['name'].toString().toLowerCase().contains(searchLower) ||
           p['description'].toString().toLowerCase().contains(searchLower);
-      
+
       final isCategoryMatch = _selectedCategory == "All" || p['category'] == _selectedCategory;
-      
+
       return isSearchMatch && isCategoryMatch;
     }).toList();
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F4F8), // Light Blue-Grey Background
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F4F8),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,7 +209,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
             // Header & Search
             Container(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-              // Removed heavy decoration to match minimal "Fency" style
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -205,6 +225,34 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               color: Colors.grey.shade400,
                               fontSize: 16,
                             ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Hero(
+                                tag: product['id'],
+                                child: Container(
+                                  width: screenWidth * 0.28,
+                                  height: screenWidth * 0.28,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      product['image'],
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (c,e,s) => const Icon(Icons.image, color: Colors.grey),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(
@@ -212,15 +260,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 width: 1,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20), // Smaller padding
                           ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       // Camera Button (Floating Style)
                       GestureDetector(
+                        onTap: () {
+                           // _pickImage(); // Uncomment if/when ML Kit logic is restored
+                        },
                         child: Container(
-                          padding: const EdgeInsets.all(12), // Slightly smaller padding for balance
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.blue.shade700,
                             shape: BoxShape.circle,
@@ -243,7 +294,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
             const SizedBox(height: 16),
 
-             // Category List (Re-introduced)
+            // Category List
             SizedBox(
               height: 40,
               child: ListView.builder(
@@ -256,18 +307,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                         _selectedCategory = category;
-                         _currentPage = 0; // Reset page on category change
-                         if (_pageController.hasClients) {
-                           _pageController.jumpToPage(0);
-                         }
+                        _selectedCategory = category;
+                        _currentPage = 0;
+                        if (_pageController.hasClients) {
+                          _pageController.jumpToPage(0);
+                        }
                       });
                     },
                     child: Container(
                       margin: const EdgeInsets.only(right: 12),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? isDark ? Colors.white : Colors.black87 : Colors.transparent,
+                        color: isSelected ? (isDark ? Colors.white : Colors.black87) : Colors.transparent,
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
                           color: isSelected ? Colors.transparent : Colors.grey.shade400,
@@ -276,7 +327,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       child: Text(
                         category,
                         style: GoogleFonts.poppins(
-                          color: isSelected ? isDark ? Colors.black : Colors.white : isDark ? Colors.white70 : Colors.black54,
+                          color: isSelected ? (isDark ? Colors.black : Colors.white) : (isDark ? Colors.white70 : Colors.black54),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -291,21 +342,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
             // Product List
             Expanded(
               child: displayedProducts.isEmpty 
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
-                      const SizedBox(height: 16),
-                      Text(
-                        "No items found",
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey.shade600, 
-                          fontSize: 16
-                        ),
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    Text(
+                      "No items found",
+                      style: GoogleFonts.poppins(
+                        color: Colors.grey.shade600, 
+                        fontSize: 16
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 )
               : Listener(
                  onPointerDown: (_) {
@@ -451,4 +500,5 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
-} // Rebuild
+}
+
