@@ -5,6 +5,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/explore_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/dmai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
+import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/social_media_ad_dialog.dart';
@@ -76,17 +77,19 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
 
-  // Titles corresponding to each page
-  final List<String> _titles = [
-    "Dashboard",
-    "Explore",
-    "DMAI",
-    "More",
-  ];
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+
+    // Titles corresponding to each page
+    final List<String> titles = [
+      l10n.dashboard,
+      l10n.explore,
+      l10n.dmai,
+      l10n.more,
+    ];
+
     return Scaffold(
       backgroundColor: colorScheme.surface, // Dynamic Scaffold Background
       appBar: AppBar(
@@ -108,7 +111,7 @@ class _LandingScreenState extends State<LandingScreen> {
             child: Image.asset("assets/app_icons/dm_bhatt_classes_logo.png", height: 24),
           ),
         ),
-        title: Text(_titles[_selectedIndex], style: const TextStyle(color: Colors.white)),
+        title: Text(titles[_selectedIndex], style: const TextStyle(color: Colors.white)),
         centerTitle: true,
         actions: [
           IconButton(
@@ -137,22 +140,22 @@ class _LandingScreenState extends State<LandingScreen> {
         backgroundColor: colorScheme.surface, // Dynamic BG for BottomNav
         selectedItemColor: colorScheme.primary, // Dynamic Active Color
         unselectedItemColor: colorScheme.onSurfaceVariant, // Dynamic Inactive Color
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Home',
+            icon: const Icon(Icons.home_rounded),
+            label: l10n.home,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view_rounded), // Meaningful Icon for Explore
-            label: 'Explore',
+            icon: const Icon(Icons.grid_view_rounded), // Meaningful Icon for Explore
+            label: l10n.explore,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.smart_toy_outlined), // DMAI Icon
-            label: 'DMAI',
+            icon: const Icon(Icons.smart_toy_outlined), // DMAI Icon
+            label: l10n.dmai,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: 'More',
+            icon: const Icon(Icons.menu),
+            label: l10n.more,
           ),
         ],
       ),

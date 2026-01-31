@@ -2,12 +2,14 @@ import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
+import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services for formatters
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_phone_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -64,11 +67,11 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 32),
             
             Text(
-              "Hey there,",
+              l10n.heyThere,
               style: GoogleFonts.poppins(fontSize: 16, color: Colors.black54),
             ),
             Text(
-              "Welcome Back",
+              l10n.welcomeBack,
               style: GoogleFonts.poppins(
                 fontSize: 24, 
                 fontWeight: FontWeight.bold, 
@@ -80,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Phone Number Field
              _buildTextField(
               controller: _phoneController,
-              hint: "Phone Number", 
+              hint: l10n.phoneNumber, 
               icon: Icons.phone_outlined, 
               inputType: TextInputType.phone,
               inputFormatters: [
@@ -102,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Password Field
             _buildTextField(
               controller: _passwordController,
-              hint: "Password",
+              hint: l10n.password,
               icon: Icons.lock_outline,
               isPassword: true,
               isVisible: _isPasswordVisible,
@@ -121,9 +124,14 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 16),
 
              TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => const ForgotPasswordPhoneScreen())
+                );
+              },
               child: Text(
-                "Forgot your password?",
+                l10n.forgotPasswordQuestion,
                 style: GoogleFonts.poppins(
                   color: Colors.black54,
                   fontWeight: FontWeight.w500,
@@ -187,9 +195,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   elevation: 2,
                 ),
                 child: Text(
-                  "Login",
+                  l10n.login,
                   style: GoogleFonts.poppins(
-                    fontSize: 18,
+                    fontSize: MediaQuery.of(context).size.width * 0.045,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -228,9 +236,14 @@ class _LoginScreenState extends State<LoginScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
+        style: GoogleFonts.poppins(
+          color: Colors.black, // Explicitly Black
+          fontWeight: FontWeight.w600, // Bold
+          fontSize: 16,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey),
+          hintStyle: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.normal),
           prefixIcon: Icon(icon, color: Colors.black54),
           suffixIcon: isPassword 
               ? IconButton(

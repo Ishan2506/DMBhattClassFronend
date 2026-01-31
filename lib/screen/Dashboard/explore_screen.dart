@@ -149,7 +149,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
       "originalPrice": 500,
       "discount": 50,
       "description": "Complete set of physics diagrams for class 10 students. Laminated for durability.",
-      "category": "Diagram"
+      "category": "Diagram",
+      "subject" : "Science",
     },
      {
       "id": "3",
@@ -209,7 +210,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Row(
+                  Row(
                     children: [
                       Expanded(
                         child: TextField(
@@ -476,4 +477,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
-}
+} // Rebuild

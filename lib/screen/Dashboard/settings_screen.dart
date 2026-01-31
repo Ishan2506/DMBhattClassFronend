@@ -1,9 +1,13 @@
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/update_password_screen.dart';
+import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -11,29 +15,26 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          "Settings",
-          style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
-        ),
+      appBar: CustomAppBar(
+        title: l10n.settings,
         centerTitle: true,
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
       ),
       body: SingleChildScrollView(
          padding: const EdgeInsets.all(16),
          child: BlocBuilder<ThemeCubit, ThemeState>(
             builder: (context, state) {
               String themeText;
-              if (state.themeMode == ThemeMode.light) themeText = "Light";
-              else if (state.themeMode == ThemeMode.dark) themeText = "Dark";
-              else themeText = "System";
+              if (state.themeMode == ThemeMode.light) {
+                themeText = l10n.locale.languageCode == 'hi' ? "प्रकाश" : (l10n.locale.languageCode == 'gu' ? "પ્રકાશ" : "Light");
+              } else if (state.themeMode == ThemeMode.dark) {
+                themeText = l10n.locale.languageCode == 'hi' ? "डार्क" : (l10n.locale.languageCode == 'gu' ? "ડાર્ક" : "Dark");
+              } else {
+                themeText = l10n.locale.languageCode == 'hi' ? "सिस्टम" : (l10n.locale.languageCode == 'gu' ? "સિસ્ટમ" : "System");
+              }
 
               String langText;
               if (state.locale.languageCode == 'gu') langText = "Gujarati";
@@ -44,29 +45,36 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                    _buildSettingsItem(
                     context,
-                    title: "Theme Mode",
+                    title: l10n.themeMode,
                     value: themeText,
                     icon: Icons.dark_mode_outlined,
                     onTap: () => _showThemeSelector(context),
                   ),
                   _buildSettingsItem(
                     context,
-                    title: "Language",
+                    title: l10n.language,
                     value: langText,
                     icon: Icons.language,
                     onTap: () => _showLanguageSelector(context),
                   ),
                   _buildSettingsItem(
                     context,
-                    title: "Update Password",
+                    title: l10n.locale.languageCode == 'hi' ? "पासवर्ड अपडेट करें" : (l10n.locale.languageCode == 'gu' ? "પાસવર્ડ અપડેટ કરો" : "Update Password"),
                     value: "",
                     icon: Icons.lock_reset,
-                    onTap: () {
+                      onTap: () {
                        Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const UpdatePasswordScreen()),
                       );
                     },
+                  ),
+                  _buildSettingsItem(
+                    context,
+                    title: l10n.signOut,
+                    value: "",
+                    icon: Icons.logout,
+                    onTap: () => _handleSignOut(context),
                   ),
                 ],
               );
@@ -126,21 +134,48 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showThemeSelector(BuildContext context) {
-    showModalBottomSheet(
+    final l10n = AppLocalizations.of(context);
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Select Theme", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+               Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade900, Colors.blue.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Text(
+                  l10n.locale.languageCode == 'hi' ? "थीम चुनें" : (l10n.locale.languageCode == 'gu' ? "થીમ પસંદ કરો" : "Select Theme"), 
+                  style: GoogleFonts.poppins(
+                    fontSize: 18, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white
+                  )
+                ),
+              ),
               const SizedBox(height: 16),
-              _buildRadioOption(context, "Light Mode", ThemeMode.light),
-              _buildRadioOption(context, "Dark Mode", ThemeMode.dark),
-              _buildRadioOption(context, "System Default", ThemeMode.system),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "लाइट मोड" : (l10n.locale.languageCode == 'gu' ? "લાઇટ મોડ" : "Light Mode"), ThemeMode.light),
+                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "डार्क मोड" : (l10n.locale.languageCode == 'gu' ? "ડાર્ક મોડ" : "Dark Mode"), ThemeMode.dark),
+                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "सिस्टम डिफ़ॉल्ट" : (l10n.locale.languageCode == 'gu' ? "સિસ્ટમ ડિફોલ્ટ" : "System Default"), ThemeMode.system),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         );
@@ -165,21 +200,48 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showLanguageSelector(BuildContext context) {
-    showModalBottomSheet(
+    final l10n = AppLocalizations.of(context);
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Select Language", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade900, Colors.blue.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Text(
+                  l10n.locale.languageCode == 'hi' ? "भाषा चुनें" : (l10n.locale.languageCode == 'gu' ? "ભાષા પસંદ કરો" : "Select Language"), 
+                  style: GoogleFonts.poppins(
+                    fontSize: 18, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white
+                  )
+                ),
+              ),
               const SizedBox(height: 16),
-              _buildLangOption(context, "English", const Locale('en')),
-              _buildLangOption(context, "Hindi", const Locale('hi')),
-              _buildLangOption(context, "Gujarati", const Locale('gu')),
+              Padding(
+                 padding: const EdgeInsets.symmetric(horizontal: 16),
+                 child: Column(
+                  children: [
+                    _buildLangOption(context, "English", const Locale('en')),
+                    _buildLangOption(context, "Hindi", const Locale('hi')),
+                    _buildLangOption(context, "Gujarati", const Locale('gu')),
+                  ],
+                 ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         );
@@ -200,6 +262,61 @@ class SettingsScreen extends StatelessWidget {
           Navigator.pop(context);
         }
       },
+    );
+  }
+
+  Future<void> _handleSignOut(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(l10n.signOut, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text(
+          l10n.locale.languageCode == 'hi' ? "क्या आप वाकई साइन आउट करना चाहते हैं?" : (l10n.locale.languageCode == 'gu' ? "શું તમે ખરેખર સાઇન આઉટ કરવા માંગો છો?" : "Are you sure you want to sign out?"), 
+          style: GoogleFonts.poppins()
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n.locale.languageCode == 'hi' ? "रद्द करें" : (l10n.locale.languageCode == 'gu' ? "રદ કરો" : "Cancel"), 
+              style: GoogleFonts.poppins(color: Colors.black54, fontWeight: FontWeight.w600)
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              
+              // Clear session
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+              
+              // Navigate to Welcome Screen
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                  (route) => false,
+                );
+                CustomToast.showSuccess(
+                  context, 
+                  l10n.locale.languageCode == 'hi' ? "सफलतापूर्वक साइन आउट किया गया" : (l10n.locale.languageCode == 'gu' ? "સફળતાપૂર્વક સાઇન આઉટ થયું" : "Signed out successfully")
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: Text(
+              l10n.signOut, 
+              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

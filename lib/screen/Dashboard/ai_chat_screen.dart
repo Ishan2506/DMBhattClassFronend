@@ -21,10 +21,10 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   void _addWelcomeMessage() {
     _messages.add(ChatMessage(
-      text: "👋 Hi! I'm your tuition AI helper. Ask me:\n\n"
-          "• 'Std 11 Account Chapter 2 video'\n"
-          "• 'Explain depreciation with example'\n"
-          "• 'Balance sheet format Std 12'",
+      text: "👋 Hello friend! I'm your DMAI Teacher. I'm here to make learning fun and easy! Ask me things like:\n\n"
+          "• 'Show me a video for Std 11 Account Ch 2'\n"
+          "• 'Explain depreciation to me simply'\n"
+          "• 'Help me with Balance Sheet format'",
       isUser: false,
     ));
   }
@@ -52,7 +52,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
     setState(() {
       _isLoading = true;
-      _messages.add(ChatMessage(text: "Thinking...", isUser: false));
+      _messages.add(ChatMessage(text: "Let me think... 🤔", isUser: false));
     });
     _scrollToBottom();
 
@@ -60,7 +60,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       final response = await _aiService.processStudentQuery(query);
       if (mounted) {
         setState(() {
-          _messages.removeWhere((msg) => msg.text == "Thinking...");
+          _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
           _messages.add(ChatMessage(text: response, isUser: false));
           _isLoading = false;
         });
@@ -69,9 +69,9 @@ class _AIChatScreenState extends State<AIChatScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _messages.removeWhere((msg) => msg.text == "Thinking...");
+          _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
           _messages.add(ChatMessage(
-            text: "⚠️ Error: ${e.toString()}\nPlease check your API keys.",
+            text: "Oops! I ran into a little problem: ${e.toString()}",
             isUser: false,
           ));
           _isLoading = false;
@@ -88,65 +88,89 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: Text("AI Tuition Helper", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () {
-              setState(() => _messages.clear());
-              _addWelcomeMessage();
-            },
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-          )
-        ],
-      ),
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      // AppBar removed as requested
       body: Column(
         children: [
-          // Test Buttons (Remove in production)
-          Container(
-            padding: EdgeInsets.all(8),
-            color: Colors.blue[50],
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildTestButton("Std 11 Account Ch2 video"),
-                  _buildTestButton("What is depreciation?"),
-                  _buildTestButton("Balance sheet format"),
-                  _buildTestButton("SRK next movie?"),
-                ],
-              ),
-            ),
-          ),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               itemCount: _messages.length,
               itemBuilder: (context, index) => _buildMessageBubble(_messages[index]),
             ),
           ),
+          
           if (_isLoading)
             Padding(
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.only(left: 16, bottom: 8),
               child: Row(
                 children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blue),
-                  ),
-                  SizedBox(width: 12),
-                  Text("AI is typing...", style: TextStyle(color: Colors.grey[600])),
+                   CircleAvatar(
+                     radius: 16,
+                     backgroundImage: AssetImage('assets/images/dmai_helper_lady.png'),
+                     backgroundColor: Colors.white,
+                   ),
+                   SizedBox(width: 10),
+                   Container(
+                     padding: EdgeInsets.all(12),
+                     decoration: BoxDecoration(
+                       color: Colors.white,
+                       borderRadius: BorderRadius.circular(20),
+                     ),
+                     child: Row(
+                       mainAxisSize: MainAxisSize.min,
+                       children: [
+                         SizedBox(
+                           width: 16,
+                           height: 16,
+                           child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5C6BC0)),
+                         ),
+                         SizedBox(width: 10),
+                         Text("Thinking...", style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                       ],
+                     ),
+                   )
                 ],
               ),
             ),
+
+          // Suggestions Area & Refresh Button
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            color: Colors.transparent,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                   // Refresh Button moved here
+                   Padding(
+                     padding: EdgeInsets.only(right: 8),
+                     child: IconButton(
+                       icon: Icon(Icons.refresh_rounded, color: Color(0xFF5C6BC0)),
+                       onPressed: () {
+                          setState(() => _messages.clear());
+                          _addWelcomeMessage();
+                       },
+                       tooltip: "Restart Chat",
+                       style: IconButton.styleFrom(
+                         backgroundColor: Colors.white,
+                         padding: EdgeInsets.all(8),
+                       ),
+                     ),
+                   ),
+                  _buildTestButton("📺 Std 11 Account Ch2"),
+                  _buildTestButton("❓ How to study?"),
+                  _buildTestButton("📝 Balance sheet"),
+                ],
+              ),
+            ),
+          ),
+
           _buildInputField(),
         ],
       ),
@@ -157,89 +181,143 @@ class _AIChatScreenState extends State<AIChatScreen> {
     return Padding(
       padding: EdgeInsets.only(right: 8),
       child: ElevatedButton(
-        onPressed: () => _sendTestQuery(testQuery),
+        onPressed: () => _sendTestQuery(testQuery.replaceAll(RegExp(r'[^\w\s\d]'), '').trim()), // Clean query for button action if needed, or send as is
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue[600],
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF5C6BC0),
+          elevation: 2,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          side: BorderSide(color: Color(0xFF5C6BC0), width: 1.5),
         ),
-        child: Text(testQuery, style: TextStyle(fontSize: 12)),
+        child: Text(testQuery, style: TextStyle(fontWeight: FontWeight.w600)),
       ),
     );
   }
 
   Widget _buildMessageBubble(ChatMessage message) {
     final isUser = message.isUser;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 4),
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
-        ),
-        decoration: BoxDecoration(
-          color: isUser ? Colors.blue[600] : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 2),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isUser) ...[
+            CircleAvatar(
+              radius: 18,
+              backgroundImage: AssetImage('assets/images/dmai_helper_lady.png'),
+              backgroundColor: Colors.white,
             ),
+            SizedBox(width: 8),
           ],
-        ),
-        child: Text(
-          message.text,
-          style: TextStyle(
-            color: isUser ? Colors.white : Colors.black87,
-            fontSize: 16,
-            height: 1.4,
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: BoxDecoration(
+                color: isUser 
+                    ? Color(0xFF5C6BC0) 
+                    : (isDark ? Color(0xFF1E1E1E) : Colors.white),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                  bottomLeft: isUser ? Radius.circular(20) : Radius.circular(5),
+                  bottomRight: isUser ? Radius.circular(5) : Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                    blurRadius: 5,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                message.text,
+                style: TextStyle(
+                  color: isUser 
+                      ? Colors.white 
+                      : (isDark ? Colors.white.withOpacity(0.9) : Colors.black87),
+                  fontSize: 16,
+                  height: 1.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           ),
-        ),
+          if (isUser) ...[
+             SizedBox(width: 8),
+             CircleAvatar(
+               radius: 16,
+               backgroundColor: Colors.transparent, // Transparent to let image show fully if needed
+               backgroundImage: AssetImage('assets/images/user_placeholder.png'),
+             ),
+          ],
+        ],
       ),
     );
   }
 
   Widget _buildInputField() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 24), // Extra padding at bottom for iOS home bar etc
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))],
+        color: isDark ? Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.08), 
+            blurRadius: 10, 
+            offset: Offset(0, -5)
+          )
+        ],
       ),
       child: Row(
         children: [
           Expanded(
             child: TextField(
               controller: _controller,
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, color: isDark ? Colors.white : Colors.black87),
               decoration: InputDecoration(
-                hintText: "Ask about studies or videos...",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                hintText: "Ask me anything...",
+                hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
                 filled: true,
-                fillColor: Colors.grey[50],
+                fillColor: isDark ? Color(0xFF2C2C2C) : Color(0xFFF5F6FA),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               ),
               onSubmitted: (_) => _sendMessage(),
-              maxLines: null,
+              textInputAction: TextInputAction.send,
             ),
           ),
           SizedBox(width: 12),
-          FloatingActionButton(
-            onPressed: _isLoading ? null : _sendMessage,
-            mini: true,
-            backgroundColor: Colors.blue[700],
-            foregroundColor: Colors.white,
-            child: Icon(Icons.send),
+          Material(
+            color: Color(0xFF5C6BC0),
+            borderRadius: BorderRadius.circular(50),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(50),
+              onTap: _isLoading ? null : _sendMessage,
+              child: Container(
+                width: 50,
+                height: 50,
+                alignment: Alignment.center,
+                child: _isLoading 
+                  ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Icon(Icons.send_rounded, color: Colors.white),
+              ),
+            ),
           ),
         ],
       ),

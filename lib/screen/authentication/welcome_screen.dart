@@ -2,6 +2,7 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/guest_register_screen.dart';
+import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,6 +11,7 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -44,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                   
                   Text(
-                    "Welcome to DM Bhatt Classes",
+                    l10n.welcomeToDmBhatt,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 24,
@@ -54,7 +56,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                    const SizedBox(height: 8),
                   Text(
-                    "Your path to academic excellence starts here.",
+                    l10n.academicPath,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
@@ -82,7 +84,7 @@ class WelcomeScreen extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: Text(
-                      "Login",
+                      l10n.login,
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -110,7 +112,7 @@ class WelcomeScreen extends StatelessWidget {
                       elevation: 2,
                     ),
                     child: Text(
-                      "Register",
+                      l10n.register,
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -129,7 +131,7 @@ class WelcomeScreen extends StatelessWidget {
                       );
                     }, 
                     child: Text(
-                      "Register as a guest",
+                      l10n.registerGuest,
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

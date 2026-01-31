@@ -1,21 +1,23 @@
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_start_exam_form.dart';
+import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_dashboard_widgets.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StudentHomeScreen extends StatelessWidget {
   const StudentHomeScreen({super.key});
 
   @override
-  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       child: Column(
@@ -97,7 +99,7 @@ class StudentHomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      "Daily Time Table",
+                      l10n.dailyTimeTable,
                       style: GoogleFonts.poppins(
                         fontSize: screenWidth * 0.045, // Responsive Font Size
                         fontWeight: FontWeight.w600,
@@ -181,7 +183,7 @@ class StudentHomeScreen extends StatelessWidget {
                   ),
                   blankVerticalSpace16,
                   Text(
-                    lblNextExamWaiting,
+                    l10n.nextExamWaiting,
                     style: GoogleFonts.poppins(
                       fontSize: screenWidth * 0.04, // Responsive Font Size
                       color: colorScheme.onSurfaceVariant,
@@ -211,7 +213,7 @@ class StudentHomeScreen extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        lblStartExam.toUpperCase(),
+                        l10n.startExam.toUpperCase(),
                         style: GoogleFonts.poppins(
                           fontSize: screenWidth * 0.035, // Responsive Font Size
                           fontWeight: FontWeight.bold,
@@ -220,6 +222,90 @@ class StudentHomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          blankVerticalSpace32,
+
+          // 5 Min Test Section
+           Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.purple.shade700, Colors.deepPurple.shade900],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purple.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                   Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.locale.languageCode == 'en' ? "5 Min Rapid Test" : (l10n.locale.languageCode == 'hi' ? "5 मिनट रैपिड टेस्ट" : "5 મિનિટ રેપિડ ટેસ્ટ"),
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.045, 
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.locale.languageCode == 'en' ? "Study for 5 mins & take a quick quiz!" : (l10n.locale.languageCode == 'hi' ? "5 मिनट तक अध्ययन करें और एक त्वरित प्रश्नोत्तरी लें!" : "5 મિનિટ માટે અભ્યાસ કરો અને ઝડપી ક્વિઝ લો!"),
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.032,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                         const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                             Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const FiveMinTestSelectionScreen(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.purple.shade800,
+                             shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          ),
+                          child: Text(l10n.locale.languageCode == 'en' ? "Start Now" : (l10n.locale.languageCode == 'hi' ? "अभी शुरू करें" : "હમણાં શરૂ કરો"), style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                   ),
+                   Container(
+                     height: 100,
+                     width: 90,
+                     clipBehavior: Clip.hardEdge,
+                     decoration: const BoxDecoration(), // Just for clip
+                     child: Image.asset(
+                       'assets/images/app_logo.png', 
+                       fit: BoxFit.fitWidth,
+                       alignment: Alignment.topCenter, // Alignment top to crop bottom text
+                       errorBuilder: (context, error, stackTrace) => 
+                          Icon(Icons.timer_outlined, size: 60, color: Colors.white.withOpacity(0.8)),
+                     ),
+                   ),
                 ],
               ),
             ),

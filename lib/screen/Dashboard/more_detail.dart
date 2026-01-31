@@ -1,6 +1,6 @@
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
-import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/settings_screen.dart';
+import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -62,6 +62,8 @@ class MoreScreen extends StatelessWidget {
               },
             ),
             
+
+
             // --- Settings Section ---
             const SizedBox(height: 16),
             _buildSectionHeader("Settings"),
@@ -112,6 +114,7 @@ class MoreScreen extends StatelessWidget {
     //             ),
     //         ),
     //         const SizedBox(height: 20),
+
             ],
           ),
        ),

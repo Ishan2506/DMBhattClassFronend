@@ -130,6 +130,32 @@ class ApiService {
     );
   }
 
+  static Future<http.Response> getBoardPapers({
+    required String token,
+    required String medium,
+    required String std,
+    String? stream,
+    required String year,
+  }) async {
+    // Construct query parameters
+    final queryParams = {
+      'medium': medium,
+      'std': std,
+      'year': year,
+      if (stream != null) 'stream': stream,
+    };
+    
+    final uri = Uri.parse("$baseUrl/materials/board-papers").replace(queryParameters: queryParams);
+    
+    return await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
   static String _getMimeType(String path) {
     final ext = path.split('.').last.toLowerCase();
     const mimeTypes = {
