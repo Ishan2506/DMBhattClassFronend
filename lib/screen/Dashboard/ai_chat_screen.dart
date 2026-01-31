@@ -56,29 +56,29 @@ class _AIChatScreenState extends State<AIChatScreen> {
     });
     _scrollToBottom();
 
-    try {
-      final response = await _aiService.processStudentQuery(query);
-      if (mounted) {
-        setState(() {
-          _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
-          _messages.add(ChatMessage(text: response, isUser: false));
-          _isLoading = false;
-        });
-        _scrollToBottom();
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
-          _messages.add(ChatMessage(
-            text: "Oops! I ran into a little problem: ${e.toString()}",
-            isUser: false,
-          ));
-          _isLoading = false;
-        });
-        _scrollToBottom();
-      }
-    }
+    // try {
+    //   final response = await _aiService.processStudentQuery(query);
+    //   if (mounted) {
+    //     setState(() {
+    //       _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
+    //       _messages.add(ChatMessage(text: response, isUser: false));
+    //       _isLoading = false;
+    //     });
+    //     _scrollToBottom();
+    //   }
+    // } catch (e) {
+    //   if (mounted) {
+    //     setState(() {
+    //       _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
+    //       _messages.add(ChatMessage(
+    //         text: "Oops! I ran into a little problem: ${e.toString()}",
+    //         isUser: false,
+    //       ));
+    //       _isLoading = false;
+    //     });
+    //     _scrollToBottom();
+    //   }
+    // }
   }
 
   void _sendTestQuery(String testQuery) {
