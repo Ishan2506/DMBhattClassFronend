@@ -226,4 +226,24 @@ class ApiService {
     );
     return response;
   }
+  static Future<http.Response> updatePassword({
+    required String token,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final uri = Uri.parse("$baseUrl/auth/update-password");
+    
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      }),
+    );
+    return response;
+  }
 }

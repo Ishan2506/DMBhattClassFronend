@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UpdatePasswordScreen extends StatefulWidget {
   const UpdatePasswordScreen({super.key});
@@ -64,11 +67,34 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      // Logic to update password logic here
-                      CustomToast.showSuccess(context, "Password Updated Successfully");
-                      Navigator.pop(context);
+                      try {
+                        final prefs = await SharedPreferences.getInstance();
+                        final String? token = prefs.getString('token'); // or 'accessToken', usually 'token' based on LoginScreen
+
+                        if (token == null) {
+                           CustomToast.showError(context, "Authentication Error. Please login again.");
+                           return;
+                        }
+
+                        final response = await ApiService.updatePassword(
+                          token: token,
+                          oldPassword: _oldPasswordController.text,
+                          newPassword: _newPasswordController.text,
+                        );
+
+                        if (response.statusCode == 200) {
+                          CustomToast.showSuccess(context, "Password Updated Successfully");
+                          if (mounted) Navigator.pop(context);
+                        } else {
+                           final body = jsonDecode(response.body);
+                           CustomToast.showError(context, body['message'] ?? "Failed to update password");
+                        }
+                      } catch (e) {
+                         print(e);
+                         CustomToast.showError(context, "An error occurred");
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
