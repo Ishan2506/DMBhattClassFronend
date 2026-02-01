@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+//import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -69,7 +69,8 @@ class EventGalleryScreen extends StatelessWidget {
             actions: [
                IconButton(
                  icon: const Icon(Icons.download, color: Colors.white),
-                 onPressed: () => _saveImage(context, imagePath),
+                 onPressed: (){},
+                 //onPressed: () => _saveImage(context, imagePath),
                ),
             ],
           ),
@@ -83,27 +84,27 @@ class EventGalleryScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _saveImage(BuildContext context, String assetPath) async {
-    try {
-      // Logic to save asset image to gallery
-      // 1. Get bytes from asset
-      final byteData = await rootBundle.load(assetPath);
-      final bytes = byteData.buffer.asUint8List();
+  // Future<void> _saveImage(BuildContext context, String assetPath) async {
+  //   try {
+  //     // Logic to save asset image to gallery
+  //     // 1. Get bytes from asset
+  //     final byteData = await rootBundle.load(assetPath);
+  //     final bytes = byteData.buffer.asUint8List();
 
-      // 2. Save to gallery
-      final result = await ImageGallerySaver.saveImage(
-        bytes,
-        quality: 100,
-        name: "dmbhatt_event_${DateTime.now().millisecondsSinceEpoch}",
-      );
+  //     // 2. Save to gallery
+  //     final result = await ImageGallerySaver.saveImage(
+  //       bytes,
+  //       quality: 100,
+  //       name: "dmbhatt_event_${DateTime.now().millisecondsSinceEpoch}",
+  //     );
 
-      if (result['isSuccess'] == true) {
-         if(context.mounted) CustomToast.showSuccess(context, "Image saved to gallery");
-      } else {
-         if(context.mounted) CustomToast.showError(context, "Failed to save image");
-      }
-    } catch (e) {
-      if(context.mounted) CustomToast.showError(context, "Error: $e");
-    }
-  }
+  //     if (result['isSuccess'] == true) {
+  //        if(context.mounted) CustomToast.showSuccess(context, "Image saved to gallery");
+  //     } else {
+  //        if(context.mounted) CustomToast.showError(context, "Failed to save image");
+  //     }
+  //   } catch (e) {
+  //     if(context.mounted) CustomToast.showError(context, "Error: $e");
+  //   }
+  // }
 }
