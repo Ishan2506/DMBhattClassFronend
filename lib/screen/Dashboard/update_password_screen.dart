@@ -25,8 +25,9 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: const CustomAppBar(
         title: "Update Password",
         centerTitle: true,
@@ -38,6 +39,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
           child: Column(
             children: [
               _buildPasswordField(
+                context,
                 controller: _oldPasswordController,
                 hint: "Old Password",
                 isVisible: _isOldVisible,
@@ -45,6 +47,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
               ),
               const SizedBox(height: 16),
               _buildPasswordField(
+                context,
                 controller: _newPasswordController,
                 hint: "New Password",
                 isVisible: _isNewVisible,
@@ -53,6 +56,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
               ),
               const SizedBox(height: 16),
               _buildPasswordField(
+                context,
                 controller: _confirmPasswordController,
                 hint: "Confirm Password",
                 isVisible: _isConfirmVisible,
@@ -71,7 +75,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                     if (_formKey.currentState!.validate()) {
                       try {
                         final prefs = await SharedPreferences.getInstance();
-                        final String? token = prefs.getString('token'); // or 'accessToken', usually 'token' based on LoginScreen
+                        final String? token = prefs.getString('token'); 
 
                         if (token == null) {
                            CustomToast.showError(context, "Authentication Error. Please login again.");
@@ -98,12 +102,12 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
+                    backgroundColor: colorScheme.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
                   child: Text(
                     "Update Password",
-                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
                   ),
                 ),
               ),
@@ -114,30 +118,32 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
     );
   }
 
-  Widget _buildPasswordField({
+  Widget _buildPasswordField(
+    BuildContext context, {
     required TextEditingController controller,
     required String hint,
     required bool isVisible,
     required VoidCallback onVisibilityChanged,
     String? Function(String?)? validator,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: TextFormField(
         controller: controller,
         obscureText: !isVisible,
         validator: validator ?? (val) => val!.isEmpty ? "Required" : null,
-        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+        style: GoogleFonts.poppins(fontWeight: FontWeight.w500, color: colorScheme.onSurface),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey),
-          prefixIcon: const Icon(Icons.lock_outline, color: Colors.black54),
+          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+          prefixIcon: Icon(Icons.lock_outline, color: colorScheme.onSurfaceVariant),
           suffixIcon: IconButton(
-            icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+            icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: colorScheme.onSurfaceVariant),
             onPressed: onVisibilityChanged,
           ),
           border: InputBorder.none,

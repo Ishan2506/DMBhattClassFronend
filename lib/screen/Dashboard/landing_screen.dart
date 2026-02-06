@@ -110,7 +110,7 @@ class _LandingScreenState extends State<LandingScreen> {
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
             backgroundColor: Colors.white,
-            child: Image.asset("assets/app_icons/dm_bhatt_classes_logo.png", height: 24),
+            child: Image.asset("assets/images/robot_logo.png", height: 30),
           ),
         ),
         title: Text(titles[_selectedIndex], style: const TextStyle(color: Colors.white)),

@@ -1,3 +1,4 @@
+import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_start_exam_form.dart';
@@ -78,77 +79,77 @@ class StudentHomeScreen extends StatelessWidget {
             
             // YouTube Ad
             const YouTubeChannelAd(),
-            const SizedBox(height: 24),
-
+           // const SizedBox(height: 18),
+            blankVerticalSpace24,
 
           // Daily Time Table Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      height: MediaQuery.of(context).size.height * 0.03,
-                      width: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.dailyTimeTable,
-                      style: GoogleFonts.poppins(
-                        fontSize: screenWidth * 0.045, // Responsive Font Size
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                blankVerticalSpace16,
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainer, // Dynamic Card
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.shadow.withOpacity(0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildTimeTableItem(
-                        context,
-                        "Mathematics",
-                        "10:00 AM - 11:30 AM",
-                        Icons.calculate_outlined,
-                        Colors.blue,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Divider(height: 1, color: colorScheme.outlineVariant.withOpacity(0.2)),
-                      ),
-                      _buildTimeTableItem(
-                        context,
-                        "Physics",
-                        "12:00 PM - 01:30 PM",
-                        Icons.science_outlined,
-                        Colors.purple,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          blankVerticalSpace32,
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 20),
+          //   child: Column(
+          //     crossAxisAlignment: CrossAxisAlignment.start,
+          //     children: [
+          //       Row(
+          //         children: [
+          //           Container(
+          //             height: MediaQuery.of(context).size.height * 0.03,
+          //             width: 4,
+          //             decoration: BoxDecoration(
+          //               color: Colors.orange,
+          //               borderRadius: BorderRadius.circular(2),
+          //             ),
+          //           ),
+          //           const SizedBox(width: 8),
+          //           Text(
+          //             l10n.dailyTimeTable,
+          //             style: GoogleFonts.poppins(
+          //               fontSize: screenWidth * 0.045, // Responsive Font Size
+          //               fontWeight: FontWeight.w600,
+          //               color: colorScheme.onSurface,
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //       blankVerticalSpace16,
+          //       Container(
+          //         width: double.infinity,
+          //         decoration: BoxDecoration(
+          //           color: colorScheme.surfaceContainer, // Dynamic Card
+          //           borderRadius: BorderRadius.circular(20),
+          //           boxShadow: [
+          //             BoxShadow(
+          //               color: colorScheme.shadow.withOpacity(0.05),
+          //               blurRadius: 20,
+          //               offset: const Offset(0, 5),
+          //             ),
+          //           ],
+          //         ),
+          //         child: Column(
+          //           children: [
+          //             _buildTimeTableItem(
+          //               context,
+          //               "Mathematics",
+          //               "10:00 AM - 11:30 AM",
+          //               Icons.calculate_outlined,
+          //               Colors.blue,
+          //             ),
+          //             Padding(
+          //               padding: const EdgeInsets.symmetric(horizontal: 16),
+          //               child: Divider(height: 1, color: colorScheme.outlineVariant.withOpacity(0.2)),
+          //             ),
+          //             _buildTimeTableItem(
+          //               context,
+          //               "Physics",
+          //               "12:00 PM - 01:30 PM",
+          //               Icons.science_outlined,
+          //               Colors.purple,
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // blankVerticalSpace32,
 
           // Start Exam Section
           Padding(
@@ -212,12 +213,15 @@ class StudentHomeScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: Text(
-                        l10n.startExam.toUpperCase(),
-                        style: GoogleFonts.poppins(
-                          fontSize: screenWidth * 0.035, // Responsive Font Size
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          l10n.startExam.toUpperCase(),
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.035, // Responsive Font Size
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
                         ),
                       ),
                     ),
@@ -226,7 +230,7 @@ class StudentHomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          blankVerticalSpace32,
+          blankVerticalSpace24,
 
           // 5 Min Test Section
            Padding(
@@ -310,6 +314,11 @@ class StudentHomeScreen extends StatelessWidget {
               ),
             ),
           ),
+          blankVerticalSpace24,
+
+          // Meet Our Influencer Section
+
+          
           SizedBox(height: screenHeight * 0.05),
         ],
       ),

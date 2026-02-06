@@ -2,6 +2,7 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({super.key});
@@ -64,11 +65,11 @@ class AboutUsScreen extends StatelessWidget {
             ),
             
             const SizedBox(height: 40),
-            
-            // Powered By Section
+
+            // Meet Our Influencer Section
             Center(
               child: Text(
-                "POWERED BY",
+                "MEET OUR INFLUENCER",
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -77,95 +78,70 @@ class AboutUsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildPoweredByItem(
-                  context, 
-                  "D. M. Bhatt", 
-                  imgDmBhattLogo,
-                  subtitle: "Group Tuition",
+            const SizedBox(height: 16),
+            Center(
+              child: GestureDetector(
+                onTap: () async {
+                  const url = 'https://www.instagram.com/dmbhattsir/';
+                  if (await canLaunchUrl(Uri.parse(url))) {
+                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 4),
+                        image: const DecorationImage(
+                          image: AssetImage(imgInfluencer),
+                          fit: BoxFit.cover,
+                        ),
+                        boxShadow: [
+                           BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "D.M. Bhatt Sir",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.link, size: 16, color: Colors.blue.shade600),
+                        const SizedBox(width: 4),
+                        Text(
+                          "Follow on Instagram",
+                          style: GoogleFonts.poppins(
+                             fontSize: 14,
+                             color: Colors.blue.shade600,
+                             fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                _buildPoweredByItem(
-                  context, 
-                  "Hardik Sir", 
-                  imgHardikLogo, 
-                  subtitle: "Accountancy",
-                ),
-                _buildPoweredByItem(
-                  context, 
-                  "Ankit Sir", 
-                  imgAnkitLogo,
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 30),
+            
+            const SizedBox(height: 40),
+            
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPoweredByItem(BuildContext context, String name, String imagePath, {String? subtitle}) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 70, 
-            height: 70,
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            alignment: Alignment.center,
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.contain,
-                 errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.broken_image, color: colorScheme.error);
-                },
-              ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            name,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: GoogleFonts.poppins(
-                fontSize: 10,
-                color: colorScheme.onSurfaceVariant,
-                height: 1.2,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ],
       ),
     );
   }

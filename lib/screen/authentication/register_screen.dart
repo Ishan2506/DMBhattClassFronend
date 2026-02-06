@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/payment_screen.dart';
 import 'package:http/http.dart' as http;
 
 class RegisterScreen extends StatefulWidget {
@@ -450,15 +451,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       CustomToast.showError(context, l10n.locale.languageCode == 'hi' ? 'कृपया नियम और शर्तों से सहमत हों' : (l10n.locale.languageCode == 'gu' ? 'કૃપા કરીને નિયમો અને શરતો સાથે સંમત થાઓ' : 'Please agree to Terms and Conditions'));
                       return;
                     }
-                    // Validate Dropdowns
-                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null) {
+                    if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null) {
                         CustomToast.showError(context, l10n.locale.languageCode == 'hi' ? 'कृपया सभी आवश्यक फ़ील्ड चुनें' : (l10n.locale.languageCode == 'gu' ? 'કૃપા કરીને બધા જરૂરી ક્ષેત્રો પસંદ કરો' : 'Please select all required fields'));
                       return;
-                     }
-                      if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
-                         CustomToast.showError(context, l10n.locale.languageCode == 'hi' ? 'कृपया स्ट्रीम चुनें' : (l10n.locale.languageCode == 'gu' ? 'કૃપા કરીને સ્ટ્રીમ પસંદ કરો' : 'Please select a stream'));
+                    }
+                    if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
+                          CustomToast.showError(context, l10n.locale.languageCode == 'hi' ? 'कृपया स्ट्रीम चुनें' : (l10n.locale.languageCode == 'gu' ? 'કૃપા કરીને સ્ટ્રીમ પસંદ કરો' : 'Please select a stream'));
                       return;
-                      }
+                    }
 
                     // Split Name
                     final nameParts = _nameController.text.trim().split(' ');
@@ -475,41 +475,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         "std": _selectedStandard!,
                         "medium": _selectedMedium!,
                         "school": _schoolNameController.text,
-                        // Add parent phone if needed by backend, though backend registerStudent didn't explicitly list it in my check, 
-                        // but it's good to checking backend again? 
-                        // Backend registerStudent takes: firstName, middleName, phoneNum, std, medium, school, loginCode, rollNo.
-                        // It DOES NOT take parentPhone? Or did I miss it?
-                        // "const { firstName, middleName, phoneNum, std, medium, school, loginCode, rollNo } = req.body;"
-                        // Yes, no parentPhone. I'll ignore it or add it if `User` model supports it.  
                       },
-                      files: [], // No photo since UI removed it
+                      files: [], 
                     );
 
-                    try {
-                      CustomLoader.show(context); // Show Loader
-                      final response = await ApiService.registerUser(
-                        payload: payload, 
-                        dpin: _passwordController.text // Using password as DPIN/LoginCode
-                      );
-                      
-                      if (!mounted) return;
-                      CustomLoader.hide(context); // Hide Loader
-
-                      if (response.statusCode == 201 || response.statusCode == 200) {
-                         CustomToast.showSuccess(context, l10n.locale.languageCode == 'hi' ? "पंजीकरण सफल" : (l10n.locale.languageCode == 'gu' ? "નોંધણી સફળ" : "Registration Successful"));
-                         Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        );
-                      } else {
-                         CustomToast.showError(context, (l10n.locale.languageCode == 'hi' ? "पंजीकरण विफल: " : (l10n.locale.languageCode == 'gu' ? "નોંધણી નિષ્ફળ: " : "Registration Failed: ")) + response.body);
-                      }
-                    } catch (e) {
-                       if (mounted) {
-                         CustomLoader.hide(context);
-                         CustomToast.showError(context, "Error: $e");
-                       }
-                    }
+                    // Navigate to Payment Screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentScreen(
+                          payload: payload,
+                          password: _passwordController.text,
+                        ),
+                      ),
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(

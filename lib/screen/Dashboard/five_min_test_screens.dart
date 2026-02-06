@@ -175,13 +175,16 @@ class FiveMinTestInstructionScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(S.s12)),
                 ),
-                child: const Text(
-                  "Start Study Timer",
-                  style: TextStyle(
-                      letterSpacing: 0.5,
-                      fontSize: S.s16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    "Start Study Timer",
+                    style: TextStyle(
+                        letterSpacing: 0.5,
+                        fontSize: S.s16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
@@ -377,14 +380,17 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                    shape: RoundedRectangleBorder(
                        borderRadius: BorderRadius.circular(S.s12)),
                  ),
-                 child: Text(
-                   "Start Quiz (5 Questions)",
-                   style: TextStyle(
-                       letterSpacing: 0.5,
-                       fontSize: S.s16,
-                       color: _canProceed ? Colors.white : Colors.grey.shade600,
-                       fontWeight: FontWeight.bold),
-                 ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      "Start Quiz (5 Questions)",
+                      style: TextStyle(
+                          letterSpacing: 0.5,
+                          fontSize: S.s16,
+                          color: _canProceed ? Colors.white : Colors.grey.shade600,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
                ),
              ),
           ),

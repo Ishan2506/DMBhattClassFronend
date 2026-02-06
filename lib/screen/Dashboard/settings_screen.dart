@@ -267,21 +267,24 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _handleSignOut(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: colorScheme.surfaceContainer,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.signOut, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(l10n.signOut, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
         content: Text(
           l10n.locale.languageCode == 'hi' ? "क्या आप वाकई साइन आउट करना चाहते हैं?" : (l10n.locale.languageCode == 'gu' ? "શું તમે ખરેખર સાઇન આઉટ કરવા માંગો છો?" : "Are you sure you want to sign out?"), 
-          style: GoogleFonts.poppins()
+          style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               l10n.locale.languageCode == 'hi' ? "रद्द करें" : (l10n.locale.languageCode == 'gu' ? "રદ કરો" : "Cancel"), 
-              style: GoogleFonts.poppins(color: Colors.black54, fontWeight: FontWeight.w600)
+              style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.w600)
             ),
           ),
           ElevatedButton(
@@ -306,13 +309,13 @@ class SettingsScreen extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade700,
+              backgroundColor: colorScheme.primary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
             child: Text(
               l10n.signOut, 
-              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)
+              style: GoogleFonts.poppins(color: colorScheme.onPrimary, fontWeight: FontWeight.bold)
             ),
           ),
         ],

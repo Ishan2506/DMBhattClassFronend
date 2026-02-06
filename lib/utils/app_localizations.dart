@@ -13,7 +13,7 @@ class AppLocalizations {
     'en': {
       'dashboard': 'Dashboard',
       'explore': 'Explore',
-      'dmai': 'DMAI',
+      'dmai': 'AI',
       'more': 'More',
       'home': 'Home',
       'daily_time_table': 'Daily Time Table',
@@ -94,7 +94,7 @@ class AppLocalizations {
     'hi': {
       'dashboard': 'डैशबोर्ड',
       'explore': 'खोजें',
-      'dmai': 'डीएम एआई',
+      'dmai': 'एआई',
       'more': 'अधिक',
       'home': 'होम',
       'daily_time_table': 'दैनिक समय सारिणी',
@@ -175,7 +175,7 @@ class AppLocalizations {
     'gu': {
       'dashboard': 'ડેશબોર્ડ',
       'explore': 'અન્વેષણ',
-      'dmai': 'ડીએમ એઆઈ',
+      'dmai': 'એઆઈ',
       'more': 'વધુ',
       'home': 'હોમ',
       'daily_time_table': 'દૈનિક સમયપત્રક',
