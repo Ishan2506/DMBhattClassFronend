@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
 import 'package:flutter/material.dart';
@@ -19,93 +21,160 @@ class FiveMinTestSelectionScreen extends StatefulWidget {
 class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen> {
   String? _selectedUnit;
   String? _selectedSubject;
-  // Standard can be assumed or added if needed, sticking to StartExamForm pattern
   
-  final List<String> _subjects = ['Math', 'Science', 'English', 'Account'];
-  final List<String> _units = ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4'];
+  List<dynamic> _allTests = [];
+  List<String> _subjects = [];
+  List<String> _units = [];
+  
+  bool _isLoading = true;
+  dynamic _selectedTest; // The full test object from API
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTests();
+  }
+
+  Future<void> _fetchTests() async {
+    try {
+      final response = await ApiService.getAllFiveMinTests();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        if (mounted) {
+           setState(() {
+            _allTests = data;
+            // Extract unique subjects
+            _subjects = _allTests.map((e) => e['subject'].toString()).toSet().toList();
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+        debugPrint("Failed to fetch 5 min tests: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+      debugPrint("Error fetching 5 min tests: $e");
+    }
+  }
+
+  void _onSubjectChanged(String? subject) {
+    setState(() {
+      _selectedSubject = subject;
+      _selectedUnit = null;
+      _selectedTest = null;
+      if (subject != null) {
+        _units = _allTests
+            .where((t) => t['subject'] == subject)
+            .map((t) => t['unit'].toString())
+            .toSet()
+            .toList();
+      } else {
+        _units = [];
+      }
+    });
+  }
+
+  void _onUnitChanged(String? unit) {
+    setState(() {
+      _selectedUnit = unit;
+      if (unit != null && _selectedSubject != null) {
+        try {
+          _selectedTest = _allTests.firstWhere(
+            (t) => t['subject'] == _selectedSubject && t['unit'] == unit
+          );
+        } catch (e) {
+          _selectedTest = null;
+        }
+      } else {
+        _selectedTest = null;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(title: "5 Min Test - Select"),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            CustomDropdown<String>(
-              labelText: "Subject",
-              hintText: "Select Subject",
-              value: _selectedSubject,
-              items: _subjects,
-              itemLabelBuilder: (String item) => item,
-              onChanged: (value) => setState(() => _selectedSubject = value),
-            ),
-            const SizedBox(height: 16),
-            CustomDropdown<String>(
-              labelText: "Unit / Chapter",
-              hintText: "Select Unit",
-              value: _selectedUnit,
-              items: _units,
-              itemLabelBuilder: (String item) => item,
-              onChanged: (value) => setState(() => _selectedUnit = value),
-            ),
-            const Spacer(),
-            Container(
-              width: double.infinity,
-              height: S.s48,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade900, Colors.blue.shade700],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator()) 
+        : _allTests.isEmpty 
+           ? const Center(child: Text("No tests available."))
+           : Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                CustomDropdown<String>(
+                  labelText: "Subject",
+                  hintText: "Select Subject",
+                  value: _selectedSubject,
+                  items: _subjects,
+                  itemLabelBuilder: (String item) => item,
+                  onChanged: _onSubjectChanged,
                 ),
-                borderRadius: BorderRadius.circular(S.s12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.shade900.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_selectedSubject != null && _selectedUnit != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FiveMinTestInstructionScreen(
-                          subject: _selectedSubject!,
-                          unit: _selectedUnit!,
-                        ),
+                const SizedBox(height: 16),
+                CustomDropdown<String>(
+                  labelText: "Unit / Chapter",
+                  hintText: "Select Unit",
+                  value: _selectedUnit,
+                  items: _units,
+                  itemLabelBuilder: (String item) => item,
+                  onChanged: _onUnitChanged,
+                ),
+                const Spacer(),
+                Container(
+                  width: double.infinity,
+                  height: S.s48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade900, Colors.blue.shade700],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(S.s12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.shade900.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please select all fields")),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(S.s12)),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _selectedTest != null 
+                        ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FiveMinTestInstructionScreen(
+                                  subject: _selectedSubject!,
+                                  unit: _selectedUnit!,
+                                  testData: _selectedTest,
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(S.s12)),
+                    ),
+                    child: const Text(
+                      "Next",
+                      style: TextStyle(
+                          letterSpacing: 0.5,
+                          fontSize: S.s16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
-                child: const Text(
-                  "Next",
-                  style: TextStyle(
-                      letterSpacing: 0.5,
-                      fontSize: S.s16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 }
@@ -114,8 +183,9 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
 class FiveMinTestInstructionScreen extends StatelessWidget {
   final String subject;
   final String unit;
+  final dynamic testData; // Full object containing overview and questions
 
-  const FiveMinTestInstructionScreen({super.key, required this.subject, required this.unit});
+  const FiveMinTestInstructionScreen({super.key, required this.subject, required this.unit, required this.testData});
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +209,7 @@ class FiveMinTestInstructionScreen extends StatelessWidget {
             const SizedBox(height: 32),
              _buildInstructionItem("You will have 5 minutes to study the overview."),
              _buildInstructionItem("After 5 minutes, the 'Start Quiz' button will unlock."),
-             _buildInstructionItem("The quiz contains 5 questions (MCQ/True-False)."),
+             _buildInstructionItem("The quiz contains ${(testData['questions'] as List).length} questions."),
              _buildInstructionItem("Do your best!"),
             const Spacer(),
             Container(
@@ -165,7 +235,11 @@ class FiveMinTestInstructionScreen extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => FiveMinStudyScreen(subject: subject, unit: unit),
+                      builder: (context) => FiveMinStudyScreen(
+                          subject: subject, 
+                          unit: unit,
+                          testData: testData,
+                      ),
                     ),
                   );
                 },
@@ -212,8 +286,9 @@ class FiveMinTestInstructionScreen extends StatelessWidget {
 class FiveMinStudyScreen extends StatefulWidget {
   final String subject;
   final String unit;
+  final dynamic testData;
 
-  const FiveMinStudyScreen({super.key, required this.subject, required this.unit});
+  const FiveMinStudyScreen({super.key, required this.subject, required this.unit, required this.testData});
 
   @override
   State<FiveMinStudyScreen> createState() => _FiveMinStudyScreenState();
@@ -277,6 +352,7 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                       builder: (context) => FiveMinQuizScreen(
                         subject: widget.subject,
                         unit: widget.unit,
+                        testData: widget.testData,
                       ),
                     ),
                   );
@@ -322,15 +398,9 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Here is the summary of ${widget.unit} for ${widget.subject}. \n\n"
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\n"
-                    "• Key Concept 1: Description of key concept.\n"
-                    "• Key Concept 2: Formulas and definitions.\n"
-                    "• Key Concept 3: Important dates and events.\n\n"
-                     "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                    widget.testData['overview'] ?? "No overview available.",
                     style: GoogleFonts.poppins(fontSize: 15, height: 1.6),
                   ),
-                  // Placeholder for more content
                 ],
               ),
             ),
@@ -369,6 +439,7 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                        builder: (context) => FiveMinQuizScreen(
                          subject: widget.subject,
                          unit: widget.unit,
+                         testData: widget.testData,
                        ),
                      ),
                    );
@@ -380,17 +451,14 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                    shape: RoundedRectangleBorder(
                        borderRadius: BorderRadius.circular(S.s12)),
                  ),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      "Start Quiz (5 Questions)",
-                      style: TextStyle(
-                          letterSpacing: 0.5,
-                          fontSize: S.s16,
-                          color: _canProceed ? Colors.white : Colors.grey.shade600,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                 child: Text(
+                   "Start Quiz (${(widget.testData['questions'] as List).length} Questions)",
+                   style: TextStyle(
+                       letterSpacing: 0.5,
+                       fontSize: S.s16,
+                       color: _canProceed ? Colors.white : Colors.grey.shade600,
+                       fontWeight: FontWeight.bold),
+                 ),
                ),
              ),
           ),
@@ -404,8 +472,9 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
 class FiveMinQuizScreen extends StatefulWidget {
   final String subject;
   final String unit;
+  final dynamic testData;
   
-  const FiveMinQuizScreen({super.key, required this.subject, required this.unit});
+  const FiveMinQuizScreen({super.key, required this.subject, required this.unit, required this.testData});
 
   @override
   State<FiveMinQuizScreen> createState() => _FiveMinQuizScreenState();
@@ -414,44 +483,14 @@ class FiveMinQuizScreen extends StatefulWidget {
 class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
   int _currentQuestionIndex = 0;
   final Map<int, String> _selectedAnswers = {}; // Track user answers
+  List<dynamic> _questions = [];
 
-  final List<Map<String, dynamic>> _questions = [
-    {
-      'question': 'The overview mentioned Key Concept 1. Is this True?',
-      'type': 'TF', // True/False
-      'options': ['True', 'False'],
-      'answer': 'True',
-      'correctAnswer': 'True' // Added for consistency with result screen
-    },
-    {
-       'question': 'What represents Key Concept 2?',
-       'type': 'MCQ',
-       'options': ['Formulas', 'History', 'Geography', 'Sports'],
-       'answer': 'Formulas',
-       'correctAnswer': 'Formulas'
-    },
-    {
-      'question': 'Is studying for 5 minutes helpful?',
-      'type': 'TF',
-      'options': ['True', 'False'],
-      'answer': 'True',
-      'correctAnswer': 'True'
-    },
-     {
-       'question': 'Which screen comes after Instruction?',
-       'type': 'MCQ',
-       'options': ['Result', 'Overview', 'Home', 'Settings'],
-       'answer': 'Overview',
-       'correctAnswer': 'Overview'
-    },
-    {
-      'question': 'We are testing the "5 Min Test" feature.',
-      'type': 'TF',
-      'options': ['True', 'False'],
-      'answer': 'True',
-      'correctAnswer': 'True'
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Safely cast or assume structure
+    _questions = widget.testData['questions'] ?? [];
+  }
 
   void _selectAnswer(String option) {
     setState(() {
@@ -479,16 +518,46 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
     int correct = 0;
     int wrong = 0;
     int skipped = 0;
+    
+    // Prepare questions list for Result Screen format
+    // Result screen usually expects List<Map<String,dynamic>> with 'question', 'answers', 'correctAnswer' etc.
+    // Our question model: { question: "", optionA: "", optionB: "", optionC: "", optionD: "", correctAnswer: "" }
+    // Need to map it.
+
+    List<Map<String, dynamic>> mappedQuestions = [];
 
     for (int i = 0; i < _questions.length; i++) {
+       final q = _questions[i];
+       
+       // Construct options list based on type
+       List<String> options = [];
+       if (q['type'] == 'MCQ' || q['type'] == null) {
+          if (q['optionA'] != null) options.add(q['optionA']);
+          if (q['optionB'] != null) options.add(q['optionB']);
+          if (q['optionC'] != null) options.add(q['optionC']);
+          if (q['optionD'] != null) options.add(q['optionD']);
+       } else {
+         // TF
+          if (q['optionA'] != null) options.add(q['optionA']);
+          if (q['optionB'] != null) options.add(q['optionB']);
+       }
+
        final userAnswer = _selectedAnswers[i];
+       final correctAnswer = q['correctAnswer'];
+
        if (userAnswer == null) {
          skipped++;
-       } else if (userAnswer == _questions[i]['correctAnswer']) {
+       } else if (userAnswer == correctAnswer) {
          correct++;
        } else {
          wrong++;
        }
+       
+       mappedQuestions.add({
+         'question': q['question'],
+         'answers': options,
+         'correctAnswer': correctAnswer
+       });
     }
 
     Navigator.pushReplacement(
@@ -499,7 +568,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
           correctAnswers: correct,
           wrongAnswers: wrong,
           skippedAnswers: skipped,
-          questions: _questions,
+          questions: mappedQuestions,
           selectedAnswers: _selectedAnswers,
           subject: widget.subject,
           unit: widget.unit,
@@ -510,9 +579,25 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_questions.isEmpty) {
+      return const Scaffold(body: Center(child: Text("No questions in this test.")));
+    }
+    
     final question = _questions[_currentQuestionIndex];
     final progress = (_currentQuestionIndex + 1) / _questions.length;
     final selectedOption = _selectedAnswers[_currentQuestionIndex];
+    
+    // Build options list dynamically
+    List<String> options = [];
+    if (question['type'] == 'MCQ' || question['type'] == null) {
+        if (question['optionA'] != null) options.add(question['optionA']);
+        if (question['optionB'] != null) options.add(question['optionB']);
+        if (question['optionC'] != null) options.add(question['optionC']);
+        if (question['optionD'] != null) options.add(question['optionD']);
+    } else {
+        if (question['optionA'] != null) options.add(question['optionA']);
+        if (question['optionB'] != null) options.add(question['optionB']);
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -578,7 +663,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
                 child: Column(
                   children: [
                     Text(
-                      question['question'],
+                      question['question'] ?? "",
                       style: GoogleFonts.poppins(
                         fontSize: 18, // Adjusted font size
                         fontWeight: FontWeight.w600,
@@ -595,10 +680,10 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
               // Options
               Expanded(
                 child: ListView.separated(
-                  itemCount: (question['options'] as List<String>).length,
+                  itemCount: options.length,
                   separatorBuilder: (context, index) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    final option = (question['options'] as List<String>)[index];
+                    final option = options[index];
                     final isSelected = selectedOption == option;
 
                     return InkWell(

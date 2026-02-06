@@ -7,8 +7,9 @@ import 'package:flutter/material.dart';
 
 class ExamInstructionScreen extends StatelessWidget {
   final String subject;
+  final String examId;
   
-  const ExamInstructionScreen({super.key, required this.subject});
+  const ExamInstructionScreen({super.key, required this.subject, required this.examId});
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +73,7 @@ class ExamInstructionScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ExamQuestionScreen(subject: subject),
+                      builder: (context) => ExamQuestionScreen(subject: subject, examId: examId),
                     ),
                   );
                 },

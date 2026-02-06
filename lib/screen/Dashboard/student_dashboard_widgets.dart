@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -30,24 +32,61 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   Timer? _timer;
-
-  // Mock Data based on the user's image
-  final List<AchieverModel> _achievers = [
-    AchieverModel(name: "Hanshika M Dave", marks: "98/100", subject: "English", rank: "1st", color: Colors.blue.shade800),
-    AchieverModel(name: "Ansh K Shah", marks: "97/100", subject: "English", rank: "2nd", color: Colors.red.shade800),
-    AchieverModel(name: "Nency V Shah", marks: "96/100", subject: "English", rank: "3rd", color: Colors.teal.shade800),
-    AchieverModel(name: "Dhruv P Chauhan", marks: "96/100", subject: "English", rank: "3rd", color: Colors.orange.shade800),
-    AchieverModel(name: "Palak G Diyodra", marks: "94/100", subject: "English", rank: "4th", color: Colors.purple.shade800),
-  ];
+  List<AchieverModel> _achievers = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _startAutoScroll();
+    _fetchRankers();
+  }
+
+  Future<void> _fetchRankers() async {
+    try {
+      final response = await ApiService.getAllTopRankers();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _achievers = data.map((json) {
+              Color cardColor = Colors.blue.shade800;
+              int index = data.indexOf(json);
+              
+              if (index % 4 == 0) cardColor = Colors.blue.shade800;
+              else if (index % 4 == 1) cardColor = Colors.red.shade800;
+              else if (index % 4 == 2) cardColor = Colors.teal.shade800;
+              else cardColor = Colors.orange.shade800;
+
+              return AchieverModel(
+                name: json['studentName'] ?? '',
+                marks: "${json['percentage']}/100", 
+                subject: json['subject'] ?? '',
+                rank: json['rank'] ?? '',
+                color: cardColor,
+              );
+            }).toList();
+            _isLoading = false;
+          });
+          if (_achievers.isNotEmpty) {
+            _startAutoScroll();
+          }
+        }
+      } else {
+        if (mounted) {
+           setState(() => _isLoading = false);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching rankers: $e");
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _startAutoScroll() {
     _timer = Timer.periodic(const Duration(seconds: 3), (Timer timer) {
+      if (_achievers.isEmpty) return;
       if (_currentPage < _achievers.length - 1) {
         _currentPage++;
       } else {
@@ -71,12 +110,19 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final theme = Theme.of(context);
+
+    if (_isLoading && _achievers.isEmpty) {
+      return const SizedBox.shrink(); // Or a loading indicator
+    }
+
+    if (_achievers.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       children: [
@@ -196,7 +242,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
+                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: achiever.color,
@@ -351,4 +397,3 @@ class YouTubeChannelAd extends StatelessWidget {
     );
   }
 }
-
