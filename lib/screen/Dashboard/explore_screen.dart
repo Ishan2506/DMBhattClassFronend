@@ -173,11 +173,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade700,
+                            color: theme.colorScheme.primary,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.blue.shade700.withOpacity(0.4),
+                                color: theme.colorScheme.primary.withOpacity(0.4),
                                 blurRadius: 12,
                                 offset: const Offset(0, 6),
                               ),

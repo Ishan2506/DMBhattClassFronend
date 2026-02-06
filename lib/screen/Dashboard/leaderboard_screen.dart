@@ -28,7 +28,10 @@ class LeaderboardScreen extends StatelessWidget {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade900, Colors.blue.shade700],
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -47,7 +50,10 @@ class LeaderboardScreen extends StatelessWidget {
              padding: const EdgeInsets.only(bottom: 24, left: 16, right: 16, top: 20),
              decoration: BoxDecoration(
                gradient: LinearGradient(
-              colors: [Colors.blue.shade900, Colors.blue.shade700],
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -61,11 +67,11 @@ class LeaderboardScreen extends StatelessWidget {
                crossAxisAlignment: CrossAxisAlignment.end,
                children: [
                  // 2nd Place
-                 _buildTopRanker(leaderboardData[1], 2, 80, Colors.grey.shade300),
+                 _buildTopRanker(context, leaderboardData[1], 2, 80, Colors.grey.shade300),
                  // 1st Place (Center, larger)
-                 _buildTopRanker(leaderboardData[0], 1, 100, Colors.amber),
+                 _buildTopRanker(context, leaderboardData[0], 1, 100, Colors.amber),
                  // 3rd Place
-                 _buildTopRanker(leaderboardData[2], 3, 80, Colors.brown.shade300),
+                 _buildTopRanker(context, leaderboardData[2], 3, 80, Colors.brown.shade300),
                ],
              ),
           ),
@@ -82,9 +88,9 @@ class LeaderboardScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isUser ? Colors.blue.shade50 : Colors.white,
+                    color: isUser ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2) : Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: isUser ? Border.all(color: Colors.blue.shade200) : null,
+                    border: isUser ? Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)) : null,
                     boxShadow: [
                       BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 5, offset: const Offset(0, 2)),
                     ]
@@ -101,11 +107,11 @@ class LeaderboardScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 16),
                       CircleAvatar(
-                        backgroundColor: Colors.blue.shade100,
+                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                         radius: 20,
                         child: Text(
                           item['name'][0],
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.blue.shade800),
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -152,7 +158,7 @@ class LeaderboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTopRanker(Map<String, dynamic> data, int rank, double size, Color color) {
+  Widget _buildTopRanker(BuildContext context, Map<String, dynamic> data, int rank, double size, Color color) {
     return Column(
       children: [
          Stack(
@@ -172,7 +178,7 @@ class LeaderboardScreen extends StatelessWidget {
                  backgroundColor: Colors.white,
                  child: Text(
                     data['name'][0],
-                    style: GoogleFonts.poppins(fontSize: size * 0.4, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+                    style: GoogleFonts.poppins(fontSize: size * 0.4, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
                  ),
                ),
              ),

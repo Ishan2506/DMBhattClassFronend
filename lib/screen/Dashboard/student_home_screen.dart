@@ -32,7 +32,10 @@ class StudentHomeScreen extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue.shade900, Colors.blue.shade700],
+                colors: [
+                  colorScheme.primary,
+                  colorScheme.primary.withOpacity(0.8),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -42,7 +45,7 @@ class StudentHomeScreen extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.blue.shade200.withOpacity(0.5),
+                  color: colorScheme.primary.withOpacity(0.5),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
@@ -159,10 +162,10 @@ class StudentHomeScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainer, // Dynamic Card
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.blue.shade50.withOpacity(0.2)),
+                border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withOpacity(0.05),
+                    color: colorScheme.primary.withOpacity(0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -173,13 +176,13 @@ class StudentHomeScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50.withOpacity(0.1), // Subtle blue tint
+                      color: colorScheme.primary.withOpacity(0.1), // Subtle theme tint
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.quiz_outlined,
                       size: 32,
-                      color: Colors.blue.shade700,
+                      color: colorScheme.primary,
                     ),
                   ),
                   blankVerticalSpace16,
@@ -206,7 +209,7 @@ class StudentHomeScreen extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade700,
+                        backgroundColor: colorScheme.primary,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -239,14 +242,17 @@ class StudentHomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.purple.shade700, Colors.deepPurple.shade900],
+                  colors: [
+                     colorScheme.primary,
+                     colorScheme.primary.withOpacity(0.7)
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purple.withOpacity(0.3),
+                    color: colorScheme.primary.withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 8),
                   ),
@@ -285,8 +291,8 @@ class StudentHomeScreen extends StatelessWidget {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.purple.shade800,
+                            backgroundColor: colorScheme.surface,
+                            foregroundColor: colorScheme.primary,
                              shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

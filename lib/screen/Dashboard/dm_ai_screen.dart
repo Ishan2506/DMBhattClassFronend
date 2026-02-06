@@ -229,11 +229,11 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: Colors.blue.shade100, width: 2),
+                                color: colorScheme.primary.withOpacity(0.3), width: 2),
                           ),
                           child: CircleAvatar(
                             radius: 35,
-                            backgroundColor: Colors.blue.shade50,
+                            backgroundColor: colorScheme.primary.withOpacity(0.1),
                             backgroundImage: const AssetImage(imgLoaderBot),
                           ),
                         ),
@@ -243,7 +243,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.blue.shade800,
+                            color: colorScheme.primary,
                           ),
                         ),
                         Text(
@@ -280,7 +280,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                 children: [
                    const CircularProgressIndicator(strokeWidth: 2),
                    const SizedBox(width: 8),
-                   Text("Searching video...", style: GoogleFonts.poppins(fontSize: 12, color: Colors.blue)),
+                   Text("Searching video...", style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.primary)),
                 ],
               ),
             ),
@@ -318,7 +318,10 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(30),
-                     // border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(
+                        color: colorScheme.primary,
+                        width: 1.5
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -360,12 +363,12 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                   width: 48,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF3B5B98), // Matching deep blue
+                    color: colorScheme.primary, // Matching deep blue
                     boxShadow: [
                       BoxShadow(
-                        // color: const Color(0xFF3B5B98).withOpacity(0.3),
-                        // blurRadius: 8,
-                        // offset: const Offset(0, 4),
+                        color: colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       )
                     ]
                   ),

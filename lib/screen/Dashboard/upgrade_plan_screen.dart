@@ -4,10 +4,9 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'dart:convert'; // Added for jsonDecode
-import 'package:dm_bhatt_tutions/network/api_service.dart'; // Added for API
-import 'package:shared_preferences/shared_preferences.dart'; // Added for Token
-
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 class UpgradePlanScreen extends StatefulWidget {
   const UpgradePlanScreen({super.key});
 
@@ -35,19 +34,17 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   
   // Simulated available points (In real app, fetch from user profile)
   final int _availablePoints = 6000; 
-
-  bool _isLoading = true; // Added loading state
-  DateTime? _registrationDate; // Added to store real date
-  bool _isEligible = false; // Added to store eligibility status
-  DateTime? _eligibleDate; // Added to store calculated eligible date
+  
+  String? _currentStandard;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserRegistrationDate();
+    _fetchUserProfile();
   }
 
-  Future<void> _fetchUserRegistrationDate() async {
+  Future<void> _fetchUserProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
@@ -64,30 +61,15 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final user = data['user'];
+        final profile = data['profile'];
         
-        // Assuming 'createdAt' is the field. Adjust if backend differs.
-        final String? createdAtStr = user['createdAt']; 
-        
-        if (createdAtStr != null) {
-          _registrationDate = DateTime.parse(createdAtStr);
-        } else {
-           // Fallback if date is missing (e.g. old users)
-           _registrationDate = DateTime.now(); 
-        }
-
-        _calculateEligibility();
-
-      } else {
-        if (mounted) {
-           CustomToast.showError(context, "Failed to load profile. Please try again.");
-           Navigator.pop(context);
+        if (profile != null) {
+          _currentStandard = profile['std'];
         }
       }
     } catch (e) {
       if (mounted) {
-         CustomToast.showError(context, "Error fetching data: $e");
-         Navigator.pop(context);
+         CustomToast.showError(context, "Error fetching profile: $e");
       }
     } finally {
       if (mounted) {
@@ -98,17 +80,11 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     }
   }
 
-  void _calculateEligibility() {
-     if (_registrationDate == null) return;
-
-     // Logic: Eligible after 1st March of the NEXT year
-     // Example: Registered Sept 2025 -> Eligible March 1st, 2026.
-     _eligibleDate = DateTime(_registrationDate!.year + 1, 3, 1);
-     final DateTime now = DateTime.now();
-
-     setState(() {
-       _isEligible = now.isAfter(_eligibleDate!);
-     });
+  List<String> get _filteredStandards {
+    if (_currentStandard == null) return _standards;
+    int current = int.tryParse(_currentStandard!) ?? 0;
+    // Filter standards strictly greater than current standard
+    return _standards.where((s) => (int.tryParse(s) ?? 0) > current).toList();
   }
 
 // ... existing methods (_calculateAmount, etc.) ...
@@ -261,63 +237,20 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     if (_isLoading) {
        return Scaffold(
          backgroundColor: colorScheme.surface,
          appBar: CustomAppBar(title: "Upgrade Plan", centerTitle: true),
          body: const Center(child: CustomLoader()),
        );
-    }
-    
-    // Safety check just in case valid date wasn't found
-    if (_eligibleDate == null) {
-       return Scaffold(
-         body: Center(child: Text("Unable to verify eligibility.", style: GoogleFonts.poppins())),
-       );
-    }
-
-    return Scaffold(
+    }    return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
         title: "Upgrade Plan",
         centerTitle: true,
       ),
-      body: !_isEligible 
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.lock_clock, size: 80, color: colorScheme.secondary),
-                    const SizedBox(height: 24),
-                    Text(
-                      "Upgrade Not Available Yet",
-                      style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "You can upgrade your plan after ${_formatDate(_eligibleDate!)}.",
-                      style: GoogleFonts.poppins(fontSize: 16, color: colorScheme.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                     ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                      ),
-                      child: Text("Go Back", style: GoogleFonts.poppins(color: colorScheme.onPrimary, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          : SingleChildScrollView(
+      body: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +275,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                    _buildDropdown(
                     label: "Standard",
                     value: _selectedStandard,
-                    items: _standards,
+                    items: _filteredStandards, // Use filtered list
                     onChanged: (val) {
                       setState(() {
                         _selectedStandard = val;
@@ -423,8 +356,10 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                       child: TextField(
                         controller: _promoCodeController,
                         decoration: InputDecoration(
-                          hintText: "Enter Code",
-                          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+                          hintText: _selectedStandard != null 
+                              ? "Use DMBHATT$_selectedStandard" 
+                              : "Use DMBHATT8", // Dynamic Hint
+                          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
@@ -436,11 +371,11 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   ElevatedButton(
                     onPressed: _applyPromoCode,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.inverseSurface,
+                      backgroundColor: colorScheme.primary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     ),
-                    child: Text("Apply", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
+                    child: Text("Apply", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -475,11 +410,11 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   ElevatedButton(
                     onPressed: _applyRewardPoints,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.inverseSurface,
+                      backgroundColor: colorScheme.primary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     ),
-                    child: Text("Use", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
+                    child: Text("Use", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -502,7 +437,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: colorScheme.onPrimary,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -573,8 +508,6 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       ),
     );
   }
-
-  String _formatDate(DateTime date) {
-    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
-  }
 }
+
+

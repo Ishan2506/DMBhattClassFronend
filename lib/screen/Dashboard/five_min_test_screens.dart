@@ -7,6 +7,8 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 
 // --- Screen 1: Selection ---
 class FiveMinTestSelectionScreen extends StatefulWidget {
@@ -19,15 +21,35 @@ class FiveMinTestSelectionScreen extends StatefulWidget {
 class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen> {
   String? _selectedUnit;
   String? _selectedSubject;
-  // Standard can be assumed or added if needed, sticking to StartExamForm pattern
+  final TextEditingController _titleController = TextEditingController();
   
   final List<String> _subjects = ['Math', 'Science', 'English', 'Account'];
   final List<String> _units = ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4'];
 
   @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: const CustomAppBar(title: "5 Min Test - Select"),
+      appBar: CustomAppBar(
+        title: "5 Min Test - Select",
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const StudentFiveMinHistoryScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -50,20 +72,30 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
               itemLabelBuilder: (String item) => item,
               onChanged: (value) => setState(() => _selectedUnit = value),
             ),
+            const SizedBox(height: 16),
+            // Title Field
+            TextFormField(
+              controller: _titleController,
+              decoration: InputDecoration(
+                labelText: "Exam Title",
+                hintText: "Enter a unique title",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(S.s12)),
+              ),
+            ),
             const Spacer(),
             Container(
               width: double.infinity,
               height: S.s48,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue.shade900, Colors.blue.shade700],
+                  colors: [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.7)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(S.s12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.shade900.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -71,7 +103,15 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
               ),
               child: ElevatedButton(
                 onPressed: () {
-                  if (_selectedSubject != null && _selectedUnit != null) {
+                  final title = _titleController.text.trim();
+                  if (_selectedSubject != null && _selectedUnit != null && title.isNotEmpty) {
+                    if (ExamHistoryData().isQuizExamTaken(title)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("You have already taken a 5-min test with this title!")),
+                      );
+                      return;
+                    }
+                  
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -83,7 +123,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please select all fields")),
+                      const SnackBar(content: Text("Please select all fields and enter a title")),
                     );
                   }
                 },
@@ -147,14 +187,14 @@ class FiveMinTestInstructionScreen extends StatelessWidget {
               height: S.s48,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue.shade900, Colors.blue.shade700],
+                  colors: [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.7)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(S.s12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.shade900.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -342,9 +382,9 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                width: double.infinity,
                height: S.s48,
                decoration: BoxDecoration(
-                 gradient: _canProceed 
+                 gradient: _canProceed
                    ? LinearGradient(
-                       colors: [Colors.blue.shade900, Colors.blue.shade700],
+                       colors: [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.7)],
                        begin: Alignment.topLeft,
                        end: Alignment.bottomRight,
                      )
@@ -354,7 +394,7 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                  boxShadow: _canProceed 
                    ? [
                        BoxShadow(
-                         color: Colors.blue.shade900.withOpacity(0.3),
+                         color: theme.colorScheme.primary.withOpacity(0.3),
                          blurRadius: 8,
                          offset: const Offset(0, 4),
                        ),
@@ -510,6 +550,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final question = _questions[_currentQuestionIndex];
     final progress = (_currentQuestionIndex + 1) / _questions.length;
     final selectedOption = _selectedAnswers[_currentQuestionIndex];
@@ -523,8 +564,8 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
           preferredSize: const Size.fromHeight(6),
           child: LinearProgressIndicator(
             value: progress,
-            backgroundColor: Colors.blue.shade100,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.amber), // Amber progress for visibility
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary), // Dynamic progress
             minHeight: 6,
           ),
         ),
@@ -541,17 +582,17 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: theme.colorScheme.primaryContainer.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.blue.shade100),
+                    border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
                   ),
                   child: Text(
-                    "Question ${_currentQuestionIndex + 1} of ${_questions.length}",
-                    style: GoogleFonts.poppins(
-                      color: Colors.blue.shade800,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
+                      "Question ${_currentQuestionIndex + 1} of ${_questions.length}",
+                      style: GoogleFonts.poppins(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
                   ),
                 ),
               ),
@@ -562,14 +603,14 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.blue.shade800, Colors.indigo.shade900], // Consistent with App Theme
+                    colors: [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.8)], // Consistent with App Theme
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.indigo.withOpacity(0.3),
+                      color: theme.colorScheme.primary.withOpacity(0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -608,10 +649,10 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.blue.shade50 : Colors.white,
+                          color: isSelected ? theme.colorScheme.primary.withOpacity(0.1) : theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isSelected ? Colors.blue.shade700 : Colors.grey.shade200,
+                            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.3),
                             width: isSelected ? 2 : 1
                           ),
                           boxShadow: [
@@ -630,7 +671,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
                               height: 32,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.blue.shade700 : Colors.grey.shade100,
+                                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
@@ -648,12 +689,12 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
-                                  color: isSelected ? Colors.blue.shade900 : Colors.black87,
+                                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                                 ),
                               ),
                             ),
                             if (isSelected)
-                               Icon(Icons.check_circle, color: Colors.blue.shade700),
+                               Icon(Icons.check_circle, color: theme.colorScheme.primary),
                           ],
                         ),
                       ),

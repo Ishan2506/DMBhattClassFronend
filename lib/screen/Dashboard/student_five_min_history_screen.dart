@@ -1,3 +1,4 @@
+
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,45 +12,25 @@ import 'dart:io';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
-
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 
-class StudentExamHistoryScreen extends StatelessWidget {
-  const StudentExamHistoryScreen({super.key});
+class StudentFiveMinHistoryScreen extends StatelessWidget {
+  const StudentFiveMinHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Fetch Data from Singleton
-    final regularExams = ExamHistoryData().regularExams;
+    // Fetch Data from Singleton (Only Quiz Exams)
     final quizExams = ExamHistoryData().quizExams;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: CustomAppBar(
-          title: "Exam History",
-          bottom: TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            tabs: [
-              Tab(child: Text("Regular Exams", style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
-              Tab(child: Text("5 Min Quiz", style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildExamList(context, regularExams),
-            _buildExamList(context, quizExams),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: const CustomAppBar(
+        title: "5 Min Test History",
       ),
+      body: _buildExamList(context, quizExams),
     );
   }
 
@@ -59,7 +40,7 @@ class StudentExamHistoryScreen extends StatelessWidget {
     if (exams.isEmpty) {
       return Center(
         child: Text(
-          "No exams found",
+          "No 5-min tests found",
           style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
         ),
       );
@@ -84,7 +65,7 @@ class StudentExamHistoryScreen extends StatelessWidget {
                 color: colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.assignment, color: colorScheme.primary),
+              child: Icon(Icons.timer, color: colorScheme.primary), // Changed icon to timer
             ),
             title: Text(
               exam['title'],
@@ -124,6 +105,7 @@ class StudentExamHistoryScreen extends StatelessWidget {
   }
 }
 
+// Reusing ExamPdfViewer Logic (Duplicated for standalone capability as requested "generate like this class")
 class ExamPdfViewer extends StatelessWidget {
   final Map<String, dynamic> exam;
   const ExamPdfViewer({super.key, required this.exam});
@@ -253,12 +235,12 @@ class ExamPdfViewer extends StatelessWidget {
                   pw.SizedBox(height: 20),
                   pw.Text("Questions:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(height: 10),
-                  // Mock Questions
-                  _buildQuestionItem(1, "Explain the laws of motion."),
-                  _buildQuestionItem(2, "What is photosynthesis?"),
-                  _buildQuestionItem(3, "Solve: 2x + 5 = 15"),
-                  _buildQuestionItem(4, "Define Kinetic Energy."),
-                  _buildQuestionItem(5, "Write a short note on Indian Constitution."),
+                  // Mock Questions (Generic for now, as history doesn't store full Q&A detailed list in this simple mock)
+                  _buildQuestionItem(1, "Question 1 content placeholder..."),
+                  _buildQuestionItem(2, "Question 2 content placeholder..."),
+                  _buildQuestionItem(3, "Question 3 content placeholder..."),
+                  _buildQuestionItem(4, "Question 4 content placeholder..."),
+                  _buildQuestionItem(5, "Question 5 content placeholder..."),
                 ],
               ),
             ],

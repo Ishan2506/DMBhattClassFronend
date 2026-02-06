@@ -64,7 +64,7 @@ class MaterialDetailScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: theme.colorScheme.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -72,7 +72,7 @@ class MaterialDetailScreen extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
+                          color: theme.colorScheme.primary,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -92,6 +92,7 @@ class MaterialDetailScreen extends StatelessWidget {
                     const SizedBox(height: 12),
 
                     // Price Section
+                    // Price Section
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -100,7 +101,7 @@ class MaterialDetailScreen extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
+                            color: theme.colorScheme.primary, // Use theme color
                           ),
                         ),
                          const SizedBox(width: 12),
@@ -171,42 +172,11 @@ class MaterialDetailScreen extends StatelessWidget {
                       context: context,
                       label: "Download PDF",
                       icon: Icons.file_download_outlined,
-                      color: Colors.indigo.shade600,
+                      color: theme.colorScheme.primary, // Use theme color
                       isPrimary: true,
                       onPressed: () {
                          ScaffoldMessenger.of(context).showSnackBar(
                            const SnackBar(content: Text("Downloading PDF...")),
-                         );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // 2. Buy Online
-                    _buildActionButton(
-                      context: context,
-                      label: "Buy Online",
-                      icon: Icons.shopping_cart_checkout_rounded,
-                      color: Colors.green.shade600,
-                      isPrimary: false,
-                      onPressed: () {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(content: Text("Proceeding to Online Checkout...")),
-                         );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // 3. Find Nearby Shop
-                    _buildActionButton(
-                      context: context,
-                      label: "Buy from Nearby Shop",
-                      icon: Icons.store_mall_directory_outlined,
-                      color: Colors.orange.shade800,
-                      isPrimary: false,
-                      isOutlined: true,
-                      onPressed: () {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(content: Text("Locating nearby shops...")),
                          );
                       },
                     ),

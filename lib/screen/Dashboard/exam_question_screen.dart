@@ -178,6 +178,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final question = _questions[_currentQuestionIndex];
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
 
@@ -223,14 +224,14 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
                     ),
                     child: Text(
                       "${l10n.question} ${_currentQuestionIndex + 1} ${l10n.locale.languageCode == 'en' ? 'of' : (l10n.locale.languageCode == 'hi' ? 'में से' : 'માંથી')} ${_questions.length}",
                       style: textTheme.labelLarge?.copyWith(
-                        color: Colors.blue[800],
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -245,14 +246,17 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue[700]!, Colors.blue[900]!],
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withOpacity(0.8)
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withOpacity(0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -310,8 +314,8 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                         ? _nextQuestion
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A6495), // Matching the image's button color
-                      foregroundColor: Colors.white,
+                      backgroundColor: theme.colorScheme.primaryContainer, 
+                      foregroundColor: theme.colorScheme.onPrimaryContainer,
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -341,6 +345,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
 
   List<Widget> _buildAnswerOptions(List<String> answers) {
     final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
     return List.generate(answers.length, (index) {
@@ -355,7 +360,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? Colors.blue.withOpacity(0.5) : Colors.grey[200]!,
+            color: isSelected ? theme.colorScheme.primary.withOpacity(0.5) : Colors.grey[200]!,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -398,7 +403,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                   child: Text(
                     answer,
                     style: textTheme.titleMedium?.copyWith(
-                      color: isSelected ? Colors.blue[900] : Colors.black87,
+                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),

@@ -97,6 +97,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
 
   // --- BUILD QUICK ACTIONS CHIPS ---
   Widget _buildQuickActions() {
+    final colorScheme = Theme.of(context).colorScheme;
     final userStd = _authenticationCubit.state.formState.studentStandard;
     
     // Get videos matching the student's current standard
@@ -122,12 +123,12 @@ class _DMAIScreenState extends State<DMAIScreen> {
                 suggestions[index],
                 style: GoogleFonts.poppins(
                   fontSize: 12, 
-                  color: const Color(0xFF4C53A5),
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.w500
                 ),
               ),
-              backgroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFF4C53A5), width: 1),
+              backgroundColor: colorScheme.surface,
+              side: BorderSide(color: colorScheme.primary, width: 1),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               onPressed: () {
                 _handleSubmitted(suggestions[index]);
@@ -238,11 +239,11 @@ class _DMAIScreenState extends State<DMAIScreen> {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.blue.shade100, width: 2),
+                    border: Border.all(color: colorScheme.primary.withOpacity(0.3), width: 2),
                   ),
                   child: CircleAvatar(
                     radius: 35,
-                    backgroundColor: Colors.blue.shade50,
+                    backgroundColor: colorScheme.primary.withOpacity(0.1),
                     backgroundImage: const AssetImage(imgLoaderBot), // Using bot image as specified "AI"
                   ),
                 ),
@@ -318,12 +319,12 @@ class _DMAIScreenState extends State<DMAIScreen> {
                          const SizedBox(width: 6),
                         Text("Suggested Topics",
                             style: GoogleFonts.poppins(
-                                color: Colors.blue.shade700, 
+                                color: colorScheme.primary, 
                                 fontWeight: FontWeight.w600, 
                                 fontSize: 13)),
                         const Spacer(),
                         Icon(_showQuickActions ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-                            color: Colors.blue.shade300, size: 18),
+                            color: colorScheme.primary.withOpacity(0.5), size: 18),
                       ],
                     ),
                   ),
@@ -361,7 +362,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.mic, color: Colors.blue),
+                                icon: Icon(Icons.mic, color: colorScheme.primary),
                                 onPressed: () {
                                   // Mic functionality (could be added later)
                                 },
@@ -400,11 +401,12 @@ class _DMAIScreenState extends State<DMAIScreen> {
   }
 
   Widget _buildMessageBubble(Map<String, dynamic> message) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isUser = message['sender'] == 'user';
     final isVideo = message['type'] == 'video';
     
     // Using simple blue theme for user, white/grey for bot
-    final userBubbleColor = Colors.blue.shade600;
+    final userBubbleColor = colorScheme.primary;
     final botBubbleColor = Colors.white;
     const userTextColor = Colors.white;
     final botTextColor = Colors.grey.shade800;

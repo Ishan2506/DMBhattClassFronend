@@ -178,7 +178,11 @@ class ExamResultScreen extends StatelessWidget {
     final bool hasReward = rewardPoints > 0;
     
     // Theme Colors
-    final gradientColors = [Colors.blue.shade900, Colors.blue.shade700];
+    final theme = Theme.of(context);
+    final gradientColors = [
+      theme.colorScheme.primary,
+      theme.colorScheme.primary.withOpacity(0.8),
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA), // Softer background
@@ -217,7 +221,7 @@ class ExamResultScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24), // More rounded
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.shade900.withOpacity(0.3),
+                      color: theme.colorScheme.primary.withOpacity(0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -291,7 +295,7 @@ class ExamResultScreen extends StatelessWidget {
                       "Your Score",
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: Colors.blue.shade100,
+                        color: theme.colorScheme.onPrimary.withOpacity(0.8),
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -320,7 +324,7 @@ class ExamResultScreen extends StatelessWidget {
                   Container(
                     width: 4, 
                     height: 24, 
-                    decoration: BoxDecoration(color: Colors.blue.shade900, borderRadius: BorderRadius.circular(2)),
+                    decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(2)),
                   ),
                   const SizedBox(width: 8),
                   Text(

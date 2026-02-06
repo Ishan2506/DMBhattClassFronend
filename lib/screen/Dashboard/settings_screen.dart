@@ -43,12 +43,19 @@ class SettingsScreen extends StatelessWidget {
 
               return Column(
                 children: [
-                   _buildSettingsItem(
+                  _buildSettingsItem(
                     context,
                     title: l10n.themeMode,
                     value: themeText,
                     icon: Icons.dark_mode_outlined,
                     onTap: () => _showThemeSelector(context),
+                  ),
+                  _buildSettingsItem(
+                    context,
+                    title: "Theme Style",
+                    value: state.selectedStyle.name.toUpperCase(),
+                    icon: Icons.palette_outlined,
+                    onTap: () => _showStyleSelector(context),
                   ),
                   _buildSettingsItem(
                     context,
@@ -149,7 +156,10 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.blue.shade900, Colors.blue.shade700],
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -179,6 +189,79 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
         );
+      },
+    );
+  }
+
+  void _showStyleSelector(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+               Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Text(
+                  "Select Theme Style", 
+                  style: GoogleFonts.poppins(
+                    fontSize: 18, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white
+                  )
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      _buildStyleOption(context, "Classic", AppThemeStyle.classic),
+                      _buildStyleOption(context, "Ocean (Teal)", AppThemeStyle.ocean),
+                      _buildStyleOption(context, "Sunset (Orange)", AppThemeStyle.sunset),
+                      _buildStyleOption(context, "Forest (Green)", AppThemeStyle.forest),
+                      _buildStyleOption(context, "Lavender (Purple)", AppThemeStyle.lavender),
+                      _buildStyleOption(context, "Midnight (Deep Blue)", AppThemeStyle.midnight),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStyleOption(BuildContext context, String label, AppThemeStyle style) {
+    final currentStyle = context.read<ThemeCubit>().state.selectedStyle;
+    return RadioListTile<AppThemeStyle>(
+      title: Text(label, style: GoogleFonts.poppins()),
+      value: style,
+      groupValue: currentStyle,
+      activeColor: Theme.of(context).colorScheme.primary,
+      onChanged: (val) {
+        if (val != null) {
+          context.read<ThemeCubit>().changeStyle(val);
+          Navigator.pop(context);
+        }
       },
     );
   }
@@ -215,7 +298,10 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.blue.shade900, Colors.blue.shade700],
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),

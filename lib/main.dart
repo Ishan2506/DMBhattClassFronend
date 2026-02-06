@@ -3,6 +3,7 @@ import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/splash_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_theme.dart';
 import 'package:dm_bhatt_tutions/utils/text_theme.dart';
+import 'package:dm_bhatt_tutions/utils/app_theme_extensions.dart'; // Import extension
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:flutter_windowmanager/flutter_windowmanager.dart';
@@ -42,11 +43,15 @@ class MyApp extends StatelessWidget {
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, state) {
+          // Determine the style name from enum
+          final styleName = state.selectedStyle.name;
+          
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: appName,
-            theme: theme.light(),
-            darkTheme: theme.dark(),
+            // Use extension method to get theme based on style and brightness
+            theme: theme.getThemeForStyle(styleName, false), // Light
+            darkTheme: theme.getThemeForStyle(styleName, true), // Dark
             themeMode: state.themeMode,
             locale: state.locale,
             home: const SplashScreen(),
