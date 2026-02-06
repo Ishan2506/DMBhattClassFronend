@@ -1,12 +1,14 @@
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
-import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_instruction_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class StudentStartExamForm extends StatefulWidget {
   const StudentStartExamForm({super.key});
@@ -16,14 +18,120 @@ class StudentStartExamForm extends StatefulWidget {
 }
 
 class _StudentStartExamFormState extends State<StudentStartExamForm> {
-  String? _selectedUnit;
+  List<dynamic> _allExams = [];
+  bool _isLoading = true;
+
+  // Dropdown Selections
   String? _selectedSubject;
+  String? _selectedExamName; // Previously "Unit"
   String? _selectedMarks;
   final TextEditingController _titleController = TextEditingController();
 
-  final List<String> _units = ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4'];
-  final List<String> _subjects = ['Math', 'Science', 'English'];
-  final List<String> _marks =['20','30', '40', '50'];
+  // Dropdown Options
+  List<String> _subjects = [];
+  List<String> _examNames = [];
+  List<String> _marksOptions = [];
+
+  String? _selectedExamId;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExams();
+  }
+
+  Future<void> _fetchExams() async {
+    try {
+      final response = await ApiService.getAllExams();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allExams = data;
+          // Extract unique subjects
+          _subjects = _allExams
+              .map((e) => e['subject'].toString())
+              .toSet()
+              .toList();
+          _isLoading = false;
+        });
+      } else {
+        // Handle error
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      print("Error fetching exams: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _onSubjectChanged(String? subject) {
+    setState(() {
+      _selectedSubject = subject;
+      _selectedExamName = null;
+      _selectedMarks = null;
+      _selectedExamId = null;
+
+      if (subject != null) {
+        // Filter exams for this subject to get exam names
+        _examNames = _allExams
+            .where((e) => e['subject'] == subject)
+            .map((e) => e['name'].toString())
+            .toSet()
+            .toList();
+      } else {
+        _examNames = [];
+      }
+      _marksOptions = [];
+    });
+  }
+
+  void _onExamNameChanged(String? name) {
+    setState(() {
+      _selectedExamName = name;
+      _selectedMarks = null;
+      _selectedExamId = null;
+
+      if (name != null) {
+        // Filter exams for this subject and name to get marks
+        // In theory there should be only one, but we handle multiple just in case
+        final matchingExams = _allExams.where((e) =>
+            e['subject'] == _selectedSubject && e['name'] == name);
+
+        _marksOptions = matchingExams
+            .map((e) => e['totalMarks'].toString())
+            .toSet()
+            .toList();
+        
+        // If there's only one match (likely), auto-select it or wait for user?
+        // Let's populate the marks dropdown.
+        if (_marksOptions.length == 1) {
+           _selectedMarks = _marksOptions.first;
+           _onMarksChanged(_selectedMarks);
+        }
+      } else {
+        _marksOptions = [];
+      }
+    });
+  }
+
+  void _onMarksChanged(String? marks) {
+    setState(() {
+      _selectedMarks = marks;
+      if (marks != null && _selectedSubject != null && _selectedExamName != null) {
+         // Find the exact exam ID
+         try {
+           final exam = _allExams.firstWhere((e) => 
+             e['subject'] == _selectedSubject &&
+             e['name'] == _selectedExamName &&
+             e['totalMarks'].toString() == marks
+           );
+           _selectedExamId = exam['_id'];
+         } catch (e) {
+           _selectedExamId = null;
+         }
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -48,125 +156,91 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
           ),
         ],
       ),
-      body: Padding(
-        padding: P.all24,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            CustomDropdown<String>(
-              labelText: lblSubject,
-              hintText: lblSelectSubject,
-              value: _selectedSubject,
-              items: _subjects,
-              itemLabelBuilder: (String item) => item,
-              onChanged: (value) {
-                setState(() {
-                  _selectedSubject = value;
-                });
-              },
-            ),
-            blankVerticalSpace16,
-            CustomDropdown<String>(
-              labelText: lblUnit,
-              hintText: lblSelectUnit,
-              value: _selectedUnit,
-              items: _units,
-              itemLabelBuilder: (String item) => item,
-              onChanged: (value) {
-                setState(() {
-                  _selectedUnit = value;
-                });
-              },
-            ),
-            blankVerticalSpace16,
-            CustomDropdown<String>(
-              labelText: lblMarks,
-              hintText: lblSelectMarks,
-              value: _selectedMarks,
-              items: _marks,
-              itemLabelBuilder: (String item) => item,
-              onChanged: (value) {
-                setState(() {
-                  _selectedMarks = value;
-                });
-              },
-            ),
-            blankVerticalSpace16,
-             // Title Field
-            TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: "Exam Title",
-                hintText: "Enter a unique title",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(S.s12)),
-              ),
-            ),
-            const Spacer(),
-            Container(
-              width: double.infinity,
-              height: S.s48,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(S.s12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: P.all24,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CustomDropdown<String>(
+                    labelText: lblSubject,
+                    hintText: lblSelectSubject,
+                    value: _selectedSubject,
+                    items: _subjects,
+                    itemLabelBuilder: (String item) => item,
+                    onChanged: _onSubjectChanged,
+                  ),
+                  blankVerticalSpace16,
+                  CustomDropdown<String>(
+                    labelText: "Exam Name", // Reusing "Unit" logic but renaming to Exam Name matches model better, or keep 'Unit' label if preferred
+                    hintText: "Select Exam Name",
+                    value: _selectedExamName,
+                    items: _examNames,
+                    itemLabelBuilder: (String item) => item,
+                    onChanged: _onExamNameChanged,
+                  ),
+                  blankVerticalSpace16,
+                  CustomDropdown<String>(
+                    labelText: lblMarks,
+                    hintText: lblSelectMarks,
+                    value: _selectedMarks,
+                    items: _marksOptions,
+                    itemLabelBuilder: (String item) => item,
+                    onChanged: _onMarksChanged,
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: double.infinity,
+                    height: S.s48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.shade900, Colors.blue.shade700],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(S.s12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.shade900.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _selectedExamId == null
+                          ? null
+                          : () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ExamInstructionScreen(
+                                    subject: _selectedSubject ?? 'Math',
+                                    examId: _selectedExamId!, 
+                                  ),
+                                ),
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(S.s12)),
+                      ),
+                      child: Text(
+                        lblStartExam,
+                        style: const TextStyle(
+                            letterSpacing: 0.5,
+                            fontSize: S.s16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              child: ElevatedButton(
-                onPressed: () {
-                  final title = _titleController.text.trim();
-                  if (_selectedSubject == null || _selectedUnit == null || _selectedMarks == null || title.isEmpty) {
-                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please fill all fields")),
-                    );
-                    return;
-                  }
-
-                  if (ExamHistoryData().isRegularExamTaken(title)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("You have already taken an exam with this title!")),
-                    );
-                    return;
-                  }
-                  
-                  // In a real app, you might save the intention to start this exam here or pass the title
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ExamInstructionScreen(
-                        subject: _selectedSubject ?? 'Math', // Default fallback
-                        // Pass title if needed by ExamInstructionScreen, typically via constructor
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(S.s12)),
-                ),
-                child: Text(
-                  lblStartExam,
-                  style: const TextStyle(
-                      letterSpacing: 0.5,
-                      fontSize: S.s16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

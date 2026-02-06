@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
@@ -9,8 +11,9 @@ import 'package:flutter/material.dart';
 
 class ExamQuestionScreen extends StatefulWidget {
   final String subject;
+  final String examId;
   
-  const ExamQuestionScreen({super.key, required this.subject});
+  const ExamQuestionScreen({super.key, required this.subject, required this.examId});
 
   @override
   State<ExamQuestionScreen> createState() => _ExamQuestionScreenState();
@@ -20,18 +23,21 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
   int _currentQuestionIndex = 0;
   final Map<int, String> _selectedAnswers = {};
   Timer? _timer;
-  int _remainingSeconds = 30;
+  int _remainingSeconds = 30; // Will be set from API if available
   bool _isTimerActive = true;
   
   // Audio Feedback
   final FlutterTts _flutterTts = FlutterTts();
   bool _isAudioEnabled = true;
 
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _questions = [];
+
   @override
   void initState() {
     super.initState();
     _initTts();
-    _startTimer();
+    _fetchExamDetails();
   }
 
   void _initTts() async {
@@ -39,48 +45,42 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     await _flutterTts.setPitch(1.0);
   }
 
-  final List<Map<String, dynamic>> _questions = [
-    {
-      'question': lblQuestion1,
-      'answers': [lblAnswer1_1, lblAnswer1_2, lblAnswer1_3, lblAnswer1_4],
-      'correctAnswer': lblAnswer1_1,
-    },
-    {
-      'question': lblQuestion2,
-      'answers': [lblAnswer2_1, lblAnswer2_2, lblAnswer2_3, lblAnswer2_4],
-      'correctAnswer': lblAnswer2_2,
-    },
-    {
-      'question': lblQuestion3,
-      'answers': [lblAnswer3_1, lblAnswer3_2, lblAnswer3_3, lblAnswer3_4],
-      'correctAnswer': lblAnswer3_3,
-    },
-    {
-      'question': lblQuestion4,
-      'answers': [lblAnswer4_1, lblAnswer4_2, lblAnswer4_3, lblAnswer4_4],
-      'correctAnswer': lblAnswer4_2,
-    },
-    {
-      'question': lblQuestion5,
-      'answers': [lblAnswer5_1, lblAnswer5_2, lblAnswer5_3, lblAnswer5_4],
-      'correctAnswer': lblAnswer5_2,
-    },
-    {
-      'question': lblQuestion6,
-      'answers': [lblAnswer6_1, lblAnswer6_2, lblAnswer6_3, lblAnswer6_4],
-      'correctAnswer': lblAnswer6_4,
-    },
-    {
-      'question': lblQuestion7,
-      'answers': [lblAnswer7_1, lblAnswer7_2, lblAnswer7_3, lblAnswer7_4],
-      'correctAnswer': lblAnswer7_1,
-    },
-    {
-      'question': lblQuestion8,
-      'answers': [lblAnswer8_1, lblAnswer8_2, lblAnswer8_3, lblAnswer8_4],
-      'correctAnswer': lblAnswer8_3,
-    },
-  ];
+  Future<void> _fetchExamDetails() async {
+    try {
+      final response = await ApiService.getExamById(widget.examId);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final questionsData = data['questions'] as List;
+        
+        if (mounted) {
+          setState(() {
+            _questions = questionsData.map((q) {
+                // Parse options which might be List<dynamic> of objects {key, text}
+                // or might need adaptation based on backend response structure.
+                
+                final optionsList = (q['options'] as List).map((o) => o['text'].toString()).toList();
+                
+                return {
+                  'question': q['questionText'],
+                  'answers': optionsList, 
+                  'correctAnswer': q['correctAnswer'], 
+                  'correctAnswerKey': q['correctAnswer'], 
+                  'optionsRaw': q['options']
+                };
+            }).toList();
+            _isLoading = false;
+          });
+          _startTimer();
+        }
+      } else {
+        // Handle error
+         if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching exam questions: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -90,6 +90,8 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
 
   void _startTimer() {
     _timer?.cancel();
+    if (_questions.isEmpty) return;
+
     setState(() {
       _remainingSeconds = 30; // 30 seconds for each question
       _isTimerActive = true;
@@ -136,11 +138,23 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
 
     for (int i = 0; i < _questions.length; i++) {
         final userAns = _selectedAnswers[i];
-        final correctAns = _questions[i]['correctAnswer'];
+        
+        final q = _questions[i];
+        final correctKey = q['correctAnswerKey']; // 'A'
+        final optionsRaw = q['optionsRaw'] as List; // [{key:'A', text:'...'}, ...]
+        
+        String? correctText;
+        try {
+            final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
+            correctText = correctOption['text'];
+        } catch (e) {
+            // Fallback
+            correctText = q['correctAnswer']; 
+        }
 
         if (userAns == null) {
           skipped++;
-        } else if (userAns == correctAns) {
+        } else if (userAns == correctText) {
           correct++;
         } else {
           wrong++;
@@ -158,7 +172,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
           questions: _questions,
           selectedAnswers: _selectedAnswers,
           subject: widget.subject,
-          unit: "Full Exam", // Or handle dynamic unit if available
+          unit: "Full Exam", 
         ),
       ),
     );
@@ -179,6 +193,18 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_questions.isEmpty) {
+       return Scaffold(
+         appBar: const CustomAppBar(title: "Exam"),
+         body: Center(child: Text("No questions found for this exam."))
+       );
+    }
+
     final question = _questions[_currentQuestionIndex];
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
 
@@ -241,40 +267,45 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
             ),
 
             // Question Card with Gradient
-            Container(
-              margin: const EdgeInsets.all(24),
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withOpacity(0.8)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+            Expanded( 
+              flex: 2,
+              child: Container(
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: Text(
-                question['question'],
-                style: textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  height: 1.4,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Text(
+                      question['question'],
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
               ),
             ),
 
             // Options List
             Expanded(
+              flex: 3,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
@@ -299,7 +330,8 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton(
+                   // SKIP Button
+                   TextButton(
                     onPressed: _currentQuestionIndex < _questions.length - 1 ? _nextQuestion : null,
                     child: Text(
                       l10n.skip,
@@ -309,13 +341,15 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                       ),
                     ),
                   ),
+                  
+                  // NEXT/SUBMIT Button
                   ElevatedButton(
                     onPressed: _selectedAnswers.containsKey(_currentQuestionIndex)
-                        ? _nextQuestion
+                        ? _nextQuestion // This goes to next or submit
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primaryContainer, 
-                      foregroundColor: theme.colorScheme.onPrimaryContainer,
+                      backgroundColor: theme.colorScheme.primary, 
+                      foregroundColor: theme.colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -343,13 +377,12 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     );
   }
 
-  List<Widget> _buildAnswerOptions(List<String> answers) {
+  List<Widget> _buildAnswerOptions(List<dynamic> answers) { 
     final textTheme = Theme.of(context).textTheme;
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
 
     return List.generate(answers.length, (index) {
-      final answer = answers[index];
+      final answer = answers[index].toString();
       final optionLabel = String.fromCharCode(65 + index); // A, B, C, D
       final String? selectedAns = _selectedAnswers[_currentQuestionIndex];
       final bool isSelected = selectedAns == answer;
@@ -416,5 +449,3 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     });
   }
 }
-
-

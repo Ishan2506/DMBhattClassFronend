@@ -246,4 +246,24 @@ class ApiService {
     );
     return response;
   }
+
+  static Future<http.Response> getAllTopRankers() async {
+    final uri = Uri.parse("$baseUrl/topRanker/all");
+    return await http.get(uri);
+  }
+
+  static Future<http.Response> getAllExams() async {
+    final uri = Uri.parse("$baseUrl/exam/all");
+    return await http.get(uri);
+  }
+
+  static Future<http.Response> getExamById(String examId) async {
+    final uri = Uri.parse("$baseUrl/exam/$examId");
+    return await http.get(uri);
+  }
+
+  static Future<http.Response> getAllFiveMinTests() async {
+    final uri = Uri.parse("$baseUrl/fiveMinTest/all");
+    return await http.get(uri);
+  }
 }
