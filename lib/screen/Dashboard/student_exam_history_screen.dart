@@ -11,11 +11,57 @@ import 'dart:io';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
-
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:intl/intl.dart';
 
-class StudentExamHistoryScreen extends StatelessWidget {
+class StudentExamHistoryScreen extends StatefulWidget {
   const StudentExamHistoryScreen({super.key});
+
+  @override
+  State<StudentExamHistoryScreen> createState() => _StudentExamHistoryScreenState();
+}
+
+class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
+  bool _isLoading = true;
+  List<dynamic> _regularExams = [];
+  List<dynamic> _fiveMinQuizzes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistory();
+  }
+
+  Future<void> _fetchHistory() async {
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token != null) {
+        final response = await ApiService.getDashboardData(token);
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final List<dynamic> results = data['examResults'] ?? [];
+          
+          setState(() {
+            _regularExams = results.where((e) => e['isOnline'] == true).toList();
+            // Assuming five min quizzes might be filtered differently later, 
+            // but for now isOnline=true covers our regular online exams.
+            // If there's a specific flag for five min quiz, we'd use it here.
+            _fiveMinQuizzes = results.where((e) => e['isOnline'] == false).toList(); 
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching history: $e");
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +89,19 @@ class StudentExamHistoryScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _buildExamList(context, regularExams),
-            _buildExamList(context, quizExams),
-          ],
-        ),
+        body: _isLoading 
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  _buildExamList(context, _regularExams),
+                  _buildExamList(context, _fiveMinQuizzes),
+                ],
+              ),
       ),
     );
   }
 
-  Widget _buildExamList(BuildContext context, List<Map<String, dynamic>> exams) {
+  Widget _buildExamList(BuildContext context, List<dynamic> exams) {
     final colorScheme = Theme.of(context).colorScheme;
 
     if (exams.isEmpty) {
@@ -70,6 +118,10 @@ class StudentExamHistoryScreen extends StatelessWidget {
       itemCount: exams.length,
       itemBuilder: (context, index) {
         final exam = exams[index];
+        final DateTime date = exam['date'] != null ? DateTime.parse(exam['date']) : DateTime.now();
+        final String formattedDate = DateFormat('MMM dd, yyyy').format(date);
+        final String marks = "${exam['obtainedMarks']}/${exam['totalMarks']}";
+
         return Card(
           elevation: 0,
           color: colorScheme.surfaceContainer,
@@ -87,11 +139,11 @@ class StudentExamHistoryScreen extends StatelessWidget {
               child: Icon(Icons.assignment, color: colorScheme.primary),
             ),
             title: Text(
-              exam['title'],
+              exam['title'] ?? 'Exam',
               style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
             ),
             subtitle: Text(
-              "Date: ${exam['date']}",
+              "Date: $formattedDate",
               style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
             ),
             trailing: Column(
@@ -103,7 +155,7 @@ class StudentExamHistoryScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(fontSize: 10, color: colorScheme.onSurfaceVariant),
                 ),
                 Text(
-                  exam['marks'],
+                  marks,
                   style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: colorScheme.primary, fontSize: 14),
                 ),
               ],

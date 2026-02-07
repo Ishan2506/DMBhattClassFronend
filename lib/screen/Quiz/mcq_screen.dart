@@ -157,6 +157,7 @@ class _McqScreenState extends State<McqScreen> {
       if (token != null) {
          final response = await ApiService.submitExamResult(
            token: token,
+           examId: "mcq_general", // Dummy ID for general quizzes
            title: "MCQ Quiz", // Or dynamic title
            obtainedMarks: score,
            totalMarks: _totalQuestions, // Assuming 1 mark per question

@@ -173,8 +173,8 @@ class ExamResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Reward Logic: 5 points if full marks
-    final int rewardPoints = (correctAnswers == totalQuestions) ? 5 : 0;
+    // Reward Logic: 1 reward point for every 10 marks
+    final int rewardPoints = correctAnswers ~/ 10;
     final bool hasReward = rewardPoints > 0;
     
     // Theme Colors
