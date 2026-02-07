@@ -16,6 +16,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -127,6 +128,18 @@ class _StudentActivitiesScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const _HistoryMenuScreen()),
+                );
+              },
+            ),
+            _MoreScreenItem(
+              title: "Mind Games",
+              value: "",
+              icon: Icons.games_outlined,
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MindGamesScreen()),
                 );
               },
             ),

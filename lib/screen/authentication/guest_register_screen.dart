@@ -37,9 +37,12 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   String? _selectedStream;
   String? _selectedState;
   String? _selectedCity;
+  String? _selectedInstitute;
 
   // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  final List<String> _institutes = ["D.M.BHATT Institute", "Other"];
+
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
   
@@ -291,89 +294,110 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-             // School Name Autocomplete
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return Autocomplete<String>(
-                  optionsBuilder: (TextEditingValue textEditingValue) {
-                    if (textEditingValue.text == '') {
-                      return const Iterable<String>.empty();
-                    }
-                    return _fetchSchools(textEditingValue.text);
-                  },
-                  onSelected: (String selection) {
-                    _schoolNameController.text = selection;
-                  },
-                  fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                    textEditingController.addListener(() {
-                       _schoolNameController.text = textEditingController.text;
-                    });
-
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: TextFormField(
-                        controller: textEditingController,
-                        focusNode: focusNode,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            final l10n = AppLocalizations.of(context);
-                            return l10n.locale.languageCode == 'hi' ? "कृपया स्कूल का नाम दर्ज करें" : (l10n.locale.languageCode == 'gu' ? "કૃપા કરીને શાળાનું નામ દાખલ કરો" : 'Please enter school name');
-                          }
-                          return null;
-                        },
-                        style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold),
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context).schoolName,
-                          hintStyle: GoogleFonts.poppins(color: Colors.grey),
-                          prefixIcon: const Icon(Icons.school_outlined, color: Colors.black54),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        ),
-                      ),
-                    );
-                  },
-                  optionsViewBuilder: (context, onSelected, options) {
-                    return Align(
-                      alignment: Alignment.topLeft,
-                      child: Material(
-                        elevation: 4.0,
-                         borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          width: constraints.maxWidth,
-                          constraints: const BoxConstraints(maxHeight: 200),
-                          decoration: BoxDecoration(
-                             color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            itemCount: options.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              final String option = options.elementAt(index);
-                              final displayName = option.split(',')[0]; 
-                              return InkWell(
-                                onTap: () {
-                                  onSelected(option);
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Text(displayName, style: GoogleFonts.poppins(color: Colors.black87)),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }
+            // Institute Dropdown
+            _buildDropdown(
+              hint: AppLocalizations.of(context).locale.languageCode == 'hi' ? "संस्थान का नाम" : (AppLocalizations.of(context).locale.languageCode == 'gu' ? "સંસ્થાનું નામ" : "Institute Name"),
+              icon: Icons.business,
+              value: _selectedInstitute,
+              items: _institutes,
+              onChanged: (val) {
+                setState(() {
+                  _selectedInstitute = val;
+                  if (val == "D.M.BHATT Institute") {
+                    _schoolNameController.text = "D.M.BHATT Institute";
+                  } else {
+                    _schoolNameController.text = "";
+                  }
+                });
+              },
             ),
+            const SizedBox(height: 16),
+
+             // School Name Autocomplete
+            if (_selectedInstitute == "Other") ...[
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return Autocomplete<String>(
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text == '') {
+                        return const Iterable<String>.empty();
+                      }
+                      return _fetchSchools(textEditingValue.text);
+                    },
+                    onSelected: (String selection) {
+                      _schoolNameController.text = selection;
+                    },
+                    fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                      textEditingController.addListener(() {
+                         _schoolNameController.text = textEditingController.text;
+                      });
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: TextFormField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter school name';
+                            }
+                            return null;
+                          },
+                          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold),
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(context).schoolName,
+                            hintStyle: GoogleFonts.poppins(color: Colors.grey),
+                            prefixIcon: const Icon(Icons.school_outlined, color: Colors.black54),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          ),
+                        ),
+                      );
+                    },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          elevation: 4.0,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: constraints.maxWidth,
+                            constraints: const BoxConstraints(maxHeight: 200),
+                            decoration: BoxDecoration(
+                               color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              itemCount: options.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final String option = options.elementAt(index);
+                                final displayName = option.split(',')[0]; 
+                                return InkWell(
+                                  onTap: () {
+                                    onSelected(option);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Text(displayName, style: GoogleFonts.poppins(color: Colors.black87)),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              ),
+              const SizedBox(height: 24),
+            ],
             const SizedBox(height: 24),
 
             // Terms Checkbox
@@ -418,7 +442,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       return;
                     }
                     // Validate Dropdowns
-                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null) {
+                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedInstitute == null) {
                         final l10n = AppLocalizations.of(context);
                         CustomToast.showError(context, l10n.locale.languageCode == 'hi' ? 'कृपया सभी आवश्यक फ़ील्ड चुनें' : (l10n.locale.languageCode == 'gu' ? 'કૃપા કરીને બધા જરૂરી ક્ષેત્રો પસંદ કરો' : 'Please select all required fields'));
                       return;

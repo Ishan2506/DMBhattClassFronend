@@ -35,12 +35,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _selectedMedium;
   String? _selectedStream; 
   String? _selectedState = "Gujarat";
+  String? _selectedInstitute;
 
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
    // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  final List<String> _institutes = ["D.M.BHATT Institute", "Other"];
+
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
   
@@ -83,6 +86,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _selectedStandard = profile['std'];
               _selectedMedium = profile['medium'];
               _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
+              
+              if (_schoolNameController.text == "D.M.BHATT Institute") {
+                _selectedInstitute = "D.M.BHATT Institute";
+              } else if (_schoolNameController.text.isNotEmpty) {
+                _selectedInstitute = "Other";
+              }
+              
               _parentPhoneController.text = profile['parentPhone'] ?? "";
            }
            _isLoading = false;
@@ -366,90 +376,117 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   const SizedBox(height: 16),
     
-                  // School Name Autocomplete
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Autocomplete<String>(
-                        optionsBuilder: (TextEditingValue textEditingValue) {
-                          if (textEditingValue.text == '') {
-                            return const Iterable<String>.empty();
+                  // Institute Dropdown
+                  _buildDropdown(
+                    context,
+                    hint: "Institute Name",
+                    icon: Icons.business,
+                    value: _selectedInstitute,
+                    items: _institutes,
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedInstitute = val;
+                        if (val == "D.M.BHATT Institute") {
+                          _schoolNameController.text = "D.M.BHATT Institute";
+                        } else {
+                          // Keep existing text if switching to Other, or clear it?
+                          // Better to clear if it was "D.M.BHATT Institute" before
+                          if (_schoolNameController.text == "D.M.BHATT Institute") {
+                            _schoolNameController.text = "";
                           }
-                          return _fetchSchools(textEditingValue.text);
-                        },
-                        onSelected: (String selection) {
-                          _schoolNameController.text = selection;
-                        },
-                        initialValue: TextEditingValue(text: _schoolNameController.text), 
-                        fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                           // Sync back to controller immediately when typing manually
-                           textEditingController.addListener(() {
-                              _schoolNameController.text = textEditingController.text;
-                           });
-                          
-                           // If pre-filled value exists, ensure it's shown
-                           if (_schoolNameController.text.isNotEmpty && textEditingController.text.isEmpty) {
-                              textEditingController.text = _schoolNameController.text;
-                           }
-    
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
-                            ),
-                            child: TextFormField(
-                              controller: textEditingController,
-                              focusNode: focusNode,
-                               validator: (val) => val == null || val.isEmpty ? "Required" : null,
-                              style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
-                              decoration: InputDecoration(
-                                hintText: "School Name",
-                                hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey),
-                                prefixIcon: Icon(Icons.school_outlined, color: isDark ? Colors.grey : Colors.black54),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                              ),
-                            ),
-                          );
-                        },
-                        optionsViewBuilder: (context, onSelected, options) {
-                          return Align(
-                            alignment: Alignment.topLeft,
-                            child: Material(
-                              elevation: 4.0,
-                               borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                width: constraints.maxWidth,
-                                constraints: const BoxConstraints(maxHeight: 200),
-                                decoration: BoxDecoration(
-                                   color: theme.cardColor,
-                                    borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: ListView.builder(
-                                  padding: EdgeInsets.zero,
-                                  shrinkWrap: true,
-                                  itemCount: options.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    final String option = options.elementAt(index);
-                                    final displayName = option.split(',')[0]; 
-                                    return InkWell(
-                                      onTap: () {
-                                        onSelected(option);
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Text(displayName, style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color)),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    }
+                        }
+                      });
+                    },
                   ),
+                  const SizedBox(height: 16),
+
+                  // School Name Autocomplete (Visible only if Other is selected)
+                  if (_selectedInstitute == "Other") ...[
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Autocomplete<String>(
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text == '') {
+                              return const Iterable<String>.empty();
+                            }
+                            return _fetchSchools(textEditingValue.text);
+                          },
+                          onSelected: (String selection) {
+                            _schoolNameController.text = selection;
+                          },
+                          initialValue: TextEditingValue(text: _schoolNameController.text), 
+                          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                             // Sync back to controller immediately when typing manually
+                             textEditingController.addListener(() {
+                                 _schoolNameController.text = textEditingController.text;
+                             });
+                            
+                             // If pre-filled value exists, ensure it's shown
+                             if (_schoolNameController.text.isNotEmpty && textEditingController.text.isEmpty && _schoolNameController.text != "D.M.BHATT Institute") {
+                                 textEditingController.text = _schoolNameController.text;
+                             }
+      
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                              ),
+                              child: TextFormField(
+                                controller: textEditingController,
+                                focusNode: focusNode,
+                                 validator: (val) => val == null || val.isEmpty ? "Required" : null,
+                                style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
+                                decoration: InputDecoration(
+                                  hintText: "School Name",
+                                  hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey),
+                                  prefixIcon: Icon(Icons.school_outlined, color: isDark ? Colors.grey : Colors.black54),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                ),
+                              ),
+                            );
+                          },
+                          optionsViewBuilder: (context, onSelected, options) {
+                            return Align(
+                              alignment: Alignment.topLeft,
+                              child: Material(
+                                elevation: 4.0,
+                                 borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  width: constraints.maxWidth,
+                                  constraints: const BoxConstraints(maxHeight: 200),
+                                  decoration: BoxDecoration(
+                                     color: theme.cardColor,
+                                      borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    itemBuilder: (BuildContext context, int index) {
+                                      final String option = options.elementAt(index);
+                                      final displayName = option.split(',')[0]; 
+                                      return InkWell(
+                                        onTap: () {
+                                          onSelected(option);
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Text(displayName, style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color)),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }
+                    ),
+                    const SizedBox(height: 16),
+                  ],
     
     
                   const SizedBox(height: 32),
