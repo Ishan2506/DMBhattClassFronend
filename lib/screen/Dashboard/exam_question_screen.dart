@@ -8,6 +8,7 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ExamQuestionScreen extends StatefulWidget {
   final String subject;
@@ -161,21 +162,53 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
         }
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExamResultScreen(
-          totalQuestions: _questions.length,
-          correctAnswers: correct,
-          wrongAnswers: wrong,
-          skippedAnswers: skipped,
-          questions: _questions,
-          selectedAnswers: _selectedAnswers,
-          subject: widget.subject,
-          unit: "Full Exam", 
-        ),
-      ),
-    );
+    Future<void> submitAndNavigate() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('auth_token');
+        if (token != null) {
+          final response = await ApiService.submitExamResult(
+            token: token,
+            examId: widget.examId,
+            title: widget.subject,
+            obtainedMarks: correct,
+            totalMarks: _questions.length,
+          );
+          
+          if (response.statusCode != 201) {
+             debugPrint("Submit failed: ${response.body}");
+             if (mounted) {
+               // Show toast or some feedback if it failed
+               ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(content: Text("Failed to save result to server: ${response.statusCode}")),
+               );
+             }
+          }
+        }
+      } catch (e) {
+        debugPrint("Error submitting result: $e");
+      }
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ExamResultScreen(
+              totalQuestions: _questions.length,
+              correctAnswers: correct,
+              wrongAnswers: wrong,
+              skippedAnswers: skipped,
+              questions: _questions,
+              selectedAnswers: _selectedAnswers,
+              subject: widget.subject,
+              unit: "Full Exam",
+            ),
+          ),
+        );
+      }
+    }
+
+    submitAndNavigate();
   }
 
   void _previousQuestion() {

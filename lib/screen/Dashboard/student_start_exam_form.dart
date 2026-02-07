@@ -23,13 +23,13 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
 
   // Dropdown Selections
   String? _selectedSubject;
-  String? _selectedExamName; // Previously "Unit"
+  String? _selectedUnit;
   String? _selectedMarks;
   final TextEditingController _titleController = TextEditingController();
 
   // Dropdown Options
   List<String> _subjects = [];
-  List<String> _examNames = [];
+  List<String> _units = [];
   List<String> _marksOptions = [];
 
   String? _selectedExamId;
@@ -67,43 +67,40 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   void _onSubjectChanged(String? subject) {
     setState(() {
       _selectedSubject = subject;
-      _selectedExamName = null;
+      _selectedUnit = null;
       _selectedMarks = null;
       _selectedExamId = null;
 
       if (subject != null) {
-        // Filter exams for this subject to get exam names
-        _examNames = _allExams
+        // Filter exams for this subject to get units
+        _units = _allExams
             .where((e) => e['subject'] == subject)
-            .map((e) => e['name'].toString())
+            .map((e) => e['unit']?.toString() ?? 'Default Unit')
             .toSet()
             .toList();
       } else {
-        _examNames = [];
+        _units = [];
       }
       _marksOptions = [];
     });
   }
 
-  void _onExamNameChanged(String? name) {
+  void _onUnitChanged(String? unit) {
     setState(() {
-      _selectedExamName = name;
+      _selectedUnit = unit;
       _selectedMarks = null;
       _selectedExamId = null;
 
-      if (name != null) {
-        // Filter exams for this subject and name to get marks
-        // In theory there should be only one, but we handle multiple just in case
+      if (unit != null) {
+        // Filter exams for this subject and unit to get marks
         final matchingExams = _allExams.where((e) =>
-            e['subject'] == _selectedSubject && e['name'] == name);
+            e['subject'] == _selectedSubject && (e['unit']?.toString() ?? 'Default Unit') == unit);
 
         _marksOptions = matchingExams
             .map((e) => e['totalMarks'].toString())
             .toSet()
             .toList();
         
-        // If there's only one match (likely), auto-select it or wait for user?
-        // Let's populate the marks dropdown.
         if (_marksOptions.length == 1) {
            _selectedMarks = _marksOptions.first;
            _onMarksChanged(_selectedMarks);
@@ -117,12 +114,12 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   void _onMarksChanged(String? marks) {
     setState(() {
       _selectedMarks = marks;
-      if (marks != null && _selectedSubject != null && _selectedExamName != null) {
+      if (marks != null && _selectedSubject != null && _selectedUnit != null) {
          // Find the exact exam ID
          try {
            final exam = _allExams.firstWhere((e) => 
              e['subject'] == _selectedSubject &&
-             e['name'] == _selectedExamName &&
+             (e['unit']?.toString() ?? 'Default Unit') == _selectedUnit &&
              e['totalMarks'].toString() == marks
            );
            _selectedExamId = exam['_id'];
@@ -173,12 +170,12 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                   ),
                   blankVerticalSpace16,
                   CustomDropdown<String>(
-                    labelText: "Exam Name", // Reusing "Unit" logic but renaming to Exam Name matches model better, or keep 'Unit' label if preferred
-                    hintText: "Select Exam Name",
-                    value: _selectedExamName,
-                    items: _examNames,
+                    labelText: "Unit",
+                    hintText: "Select Unit",
+                    value: _selectedUnit,
+                    items: _units,
                     itemLabelBuilder: (String item) => item,
-                    onChanged: _onExamNameChanged,
+                    onChanged: _onUnitChanged,
                   ),
                   blankVerticalSpace16,
                   CustomDropdown<String>(

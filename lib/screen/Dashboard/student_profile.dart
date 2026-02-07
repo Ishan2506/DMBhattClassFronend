@@ -266,8 +266,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                  child: _buildMarksCard(
                     context,
                     title: exam['title'] ?? 'Exam',
-                    marks: "${exam['obtainedMarks']}/${exam['totalMarks']}",
-                    color: (exam['obtainedMarks'] / exam['totalMarks']) >= 0.4 ? Colors.green : Colors.red,
+                    marks: "${exam['obtainedMarks'] ?? 0}/${exam['totalMarks'] ?? 0}",
+                    color: (exam['totalMarks'] != null && exam['totalMarks'] != 0) 
+                        ? ((exam['obtainedMarks'] ?? 0) / exam['totalMarks']) >= 0.4 ? Colors.green : Colors.red
+                        : Colors.grey,
                     isOnline: exam['isOnline'] ?? false,
                     onTap: () {
                        if (exam['isOnline'] == true) {

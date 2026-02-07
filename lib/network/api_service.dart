@@ -5,8 +5,8 @@ import 'package:http_parser/http_parser.dart'; // Make sure http_parser is in pu
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 
 class ApiService {
-  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-  // static const String baseUrl = "http://localhost:5000/api";
+  // static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+  static const String baseUrl = "http://localhost:5000/api";
 
   static Future<http.Response> getExploreProducts() async {
     final uri = Uri.parse("$baseUrl/explore/all");
@@ -115,6 +115,7 @@ class ApiService {
 
   static Future<http.Response> submitExamResult({
     required String token,
+    required String examId,
     required String title,
     required int obtainedMarks,
     required int totalMarks,
@@ -128,6 +129,7 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
+        'examId': examId,
         'title': title,
         'obtainedMarks': obtainedMarks,
         'totalMarks': totalMarks,
