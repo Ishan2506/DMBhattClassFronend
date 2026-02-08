@@ -220,6 +220,106 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
 
                    const SizedBox(height: 32),
 
+                   // Milestone Progress
+                   Align(
+                     alignment: Alignment.centerLeft,
+                     child: Text(
+                       "Referral Milestones",
+                       style: GoogleFonts.poppins(
+                         fontSize: 16,
+                         fontWeight: FontWeight.bold,
+                         color: colorScheme.onSurface,
+                       ),
+                     ),
+                   ),
+                   const SizedBox(height: 16),
+                   Container(
+                     padding: const EdgeInsets.all(20),
+                     decoration: BoxDecoration(
+                       color: colorScheme.surfaceContainer,
+                       borderRadius: BorderRadius.circular(20),
+                       border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                     ),
+                     child: Column(
+                       children: [
+                         Row(
+                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                           children: List.generate(5, (index) {
+                             final milestoneNum = index + 1;
+                             final isCompleted = _invitedFriends.length >= milestoneNum;
+                             final isCurrent = _invitedFriends.length == index;
+                             
+                             return Column(
+                               children: [
+                                 Container(
+                                   width: 40,
+                                   height: 40,
+                                   decoration: BoxDecoration(
+                                     color: isCompleted 
+                                         ? Colors.green 
+                                         : isCurrent 
+                                             ? colorScheme.primary 
+                                             : colorScheme.surfaceContainerHighest,
+                                     shape: BoxShape.circle,
+                                     border: Border.all(
+                                       color: isCurrent ? Colors.white : Colors.transparent,
+                                       width: 2,
+                                     ),
+                                   ),
+                                   child: Center(
+                                     child: isCompleted
+                                         ? const Icon(Icons.check, color: Colors.white, size: 20)
+                                         : Text(
+                                             "$milestoneNum",
+                                             style: GoogleFonts.poppins(
+                                               color: isCurrent ? Colors.white : colorScheme.onSurfaceVariant,
+                                               fontWeight: FontWeight.bold,
+                                             ),
+                                           ),
+                                   ),
+                                 ),
+                                 const SizedBox(height: 8),
+                                 Text(
+                                   "${milestoneNum * 500} pts",
+                                   style: GoogleFonts.poppins(
+                                     fontSize: 10,
+                                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                     color: isCompleted ? Colors.green : isCurrent ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                                   ),
+                                 ),
+                               ],
+                             );
+                           }),
+                         ),
+                         const SizedBox(height: 20),
+                         Container(
+                           padding: const EdgeInsets.all(12),
+                           decoration: BoxDecoration(
+                             color: colorScheme.primary.withOpacity(0.05),
+                             borderRadius: BorderRadius.circular(12),
+                           ),
+                           child: Row(
+                             children: [
+                               Icon(Icons.info_outline, size: 18, color: colorScheme.primary),
+                               const SizedBox(width: 12),
+                               Expanded(
+                                 child: Text(
+                                   "Points Conversion: 50 Points = ₹1. Points can be used for plan upgrades.",
+                                   style: GoogleFonts.poppins(
+                                     fontSize: 12,
+                                     color: colorScheme.onSurfaceVariant,
+                                   ),
+                                 ),
+                               ),
+                             ],
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+
+                   const SizedBox(height: 32),
+
                    // Bonus Points Display
                    Container(
                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

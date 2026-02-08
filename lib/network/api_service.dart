@@ -5,8 +5,8 @@ import 'package:http_parser/http_parser.dart'; // Make sure http_parser is in pu
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 
 class ApiService {
-  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-  //static const String baseUrl = "http://localhost:5000/api";
+  //static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+  static const String baseUrl = "http://localhost:5000/api";
 
   static Future<http.Response> getExploreProducts() async {
     final uri = Uri.parse("$baseUrl/explore/all");
@@ -16,6 +16,7 @@ class ApiService {
   static Future<http.Response> registerUser({
     required RegistrationPayload payload,
     required String dpin,
+    String? referralCode,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/register");
     final request = http.MultipartRequest("POST", uri);
@@ -26,7 +27,13 @@ class ApiService {
     // Add text fields
     final fields = Map<String, String>.from(payload.fields);
     fields["loginCode"] = dpin;
-    fields["role"] = payload.role; 
+    fields["role"] = payload.role;
+    
+    // Add referral code if provided
+    if (referralCode != null && referralCode.isNotEmpty) {
+      fields["referralCode"] = referralCode;
+    }
+    
     request.fields.addAll(fields);
 
     // File Handling
@@ -291,6 +298,19 @@ class ApiService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
+    );
+  }
+
+  static Future<http.Response> validateReferralCode(String referralCode) async {
+    final uri = Uri.parse("$baseUrl/referral/validate");
+    return await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'referralCode': referralCode,
+      }),
     );
   }
 }

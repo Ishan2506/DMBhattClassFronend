@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -19,12 +20,18 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   final TextEditingController _promoCodeController = TextEditingController();
+  final TextEditingController _referralCodeController = TextEditingController();
   
   double _originalAmount = 0;
   double _finalAmount = 0;
   double _discount = 0;
+  double _referralDiscount = 0;
   bool _isDiscountApplied = false;
-  bool _useRewardPoints = false;
+  
+  // Referral code validation states
+  bool _isValidatingReferral = false;
+  bool? _isReferralValid;
+  String _referralMessage = '';
   
   String get _std => widget.payload.fields['std'].toString();
   String get _medium => widget.payload.fields['medium'].toString();
@@ -59,7 +66,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
       default:
         _originalAmount = 0;
     }
-    _finalAmount = _originalAmount;
+    _calculateFinalAmount();
+  }
+
+  void _calculateFinalAmount() {
+    _finalAmount = _originalAmount - _discount - _referralDiscount;
+    if (_finalAmount < 0) _finalAmount = 0;
   }
 
   void _applyPromoCode() {
@@ -70,14 +82,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
       setState(() {
         _isDiscountApplied = true;
         _discount = _originalAmount * 0.50; // 50% discount
-        _finalAmount = _originalAmount - _discount;
+        _calculateFinalAmount();
       });
       CustomToast.showSuccess(context, "Promo code applied successfully!");
     } else {
       setState(() {
         _isDiscountApplied = false;
         _discount = 0;
-        _finalAmount = _originalAmount;
+        _calculateFinalAmount();
       });
       if (code.isNotEmpty) {
         CustomToast.showError(context, "Invalid promo code");
@@ -85,9 +97,69 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
+  Future<void> _validateReferralCode() async {
+    final code = _referralCodeController.text.trim();
+    
+    if (code.isEmpty) {
+      setState(() {
+        _isReferralValid = null;
+        _referralMessage = '';
+      });
+      return;
+    }
+
+    setState(() {
+      _isValidatingReferral = true;
+      _isReferralValid = null;
+      _referralMessage = '';
+    });
+
+    try {
+      final response = await ApiService.validateReferralCode(code);
+      final data = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _isReferralValid = true;
+          _referralMessage = data['message'] ?? 'Valid referral code';
+          _referralDiscount = (data['discountAmount'] ?? 0).toDouble();
+          _calculateFinalAmount();
+        });
+        CustomToast.showSuccess(context, _referralMessage);
+      } else {
+        setState(() {
+          _isReferralValid = false;
+          _referralMessage = data['message'] ?? 'Invalid referral code';
+          _referralDiscount = 0;
+          _calculateFinalAmount();
+        });
+        CustomToast.showError(context, _referralMessage);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isReferralValid = false;
+          _referralMessage = 'Error validating referral code';
+          _referralDiscount = 0;
+          _calculateFinalAmount();
+        });
+        CustomToast.showError(context, _referralMessage);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isValidatingReferral = false;
+        });
+      }
+    }
+  }
+
   Future<void> _processPaymentAndRegister() async {
-    // Here we simulate payment processing
-    // In a real app, you'd integrate a payment gateway here.
+    // Get referral code if provided and valid
+    final referralCode = _referralCodeController.text.trim();
+    final shouldIncludeReferral = referralCode.isNotEmpty && _isReferralValid == true;
     
     // Proceed to Registration
     try {
@@ -95,6 +167,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final response = await ApiService.registerUser(
         payload: widget.payload,
         dpin: widget.password,
+        referralCode: shouldIncludeReferral ? referralCode : null,
       );
       
       if (!mounted) return;
@@ -194,6 +267,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ],
                     ),
                   ],
+                  if (_referralDiscount > 0) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Referral Discount", style: GoogleFonts.poppins(fontSize: 16, color: Colors.green)),
+                        Text("-₹${_referralDiscount.toStringAsFixed(0)}", style: GoogleFonts.poppins(fontSize: 16, color: Colors.green, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Divider(color: colorScheme.outlineVariant),
                   const SizedBox(height: 16),
@@ -248,28 +331,82 @@ class _PaymentScreenState extends State<PaymentScreen> {
             
             const SizedBox(height: 24),
 
-            // Reward Points
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainer,
-                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: CheckboxListTile(
-                value: _useRewardPoints,
-                onChanged: (val) {
-                  setState(() {
-                    _useRewardPoints = val!;
-                  });
-                },
-                title: Text("Use Reward Points", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-                subtitle: Text("Available points: 0", style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant)),
-                contentPadding: EdgeInsets.zero,
-                activeColor: colorScheme.primary,
-                checkColor: colorScheme.onPrimary,
-              ),
+            // Referral Code
+            Text("Have a Referral Code?", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _isReferralValid == true 
+                          ? Colors.green 
+                          : _isReferralValid == false 
+                            ? Colors.red 
+                            : colorScheme.outlineVariant.withOpacity(0.5)
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _referralCodeController,
+                      onChanged: (value) {
+                        // Reset validation state when user types
+                        if (_isReferralValid != null) {
+                          setState(() {
+                            _isReferralValid = null;
+                            _referralMessage = '';
+                          });
+                        }
+                      },
+                      decoration: InputDecoration(
+                        hintText: "Enter Referral Code (Optional)",
+                        hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                        suffixIcon: _isValidatingReferral
+                          ? const Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : _isReferralValid == true
+                            ? const Icon(Icons.check_circle, color: Colors.green)
+                            : _isReferralValid == false
+                              ? const Icon(Icons.error, color: Colors.red)
+                              : null,
+                      ),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _isValidatingReferral ? null : _validateReferralCode,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.inverseSurface,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  ),
+                  child: Text("Validate", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
+            if (_referralMessage.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                _referralMessage,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: _isReferralValid == true ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
 
             const SizedBox(height: 32),
             
