@@ -21,6 +21,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String studentStandard = "";
   String schoolName = "";
   String mobileNo = "";
+  String? _photoPath;
   // String email = ""; // If needed
 
   List<dynamic> _examResults = [];
@@ -58,6 +59,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         setState(() {
           studentName = "${user['firstName']} ${user['middleName'] ?? ''} ${user['lastName'] ?? ''}".trim();
           mobileNo = user['phoneNum'] ?? "";
+          _photoPath = user['photoPath'];
           
           if (profile != null) {
              studentStandard = "${profile['std'] ?? 'N/A'} - ${profile['medium'] ?? ''}";
@@ -159,7 +161,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     child: CircleAvatar(
                       radius: MediaQuery.of(context).size.width * 0.12,
                       backgroundColor: theme.cardColor,
-                      backgroundImage: const AssetImage("assets/images/user_placeholder.png"), 
+                      backgroundImage: (_photoPath != null && _photoPath!.isNotEmpty)
+                          ? NetworkImage(_photoPath!)
+                          : const AssetImage("assets/images/user_placeholder.png") as ImageProvider, 
                     ),
                   ),
                   const SizedBox(height: 25),

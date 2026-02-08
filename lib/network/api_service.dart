@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart'; // Make sure http_parser is in pubspec
+import 'package:image_picker/image_picker.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 
 class ApiService {
@@ -97,16 +99,46 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> updateProfile(String token, Map<String, dynamic> data) async {
+  static Future<http.Response> updateProfile(String token, Map<String, dynamic> data, {XFile? imageFile}) async {
     final uri = Uri.parse("$baseUrl/profile");
-    return await http.put(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode(data),
-    );
+    final request = http.MultipartRequest("PUT", uri);
+    
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
+    request.headers['User-Agent'] = 'Flutter-App';
+
+    // Add text fields
+    data.forEach((key, value) {
+      if (value != null) {
+        request.fields[key] = value.toString();
+      }
+    });
+
+    // Add image file if provided
+    if (imageFile != null) {
+      final mimeType = _getMimeType(imageFile.name); // FIXED: Use name because path on web is a blob URL without extension
+      
+      if (kIsWeb) {
+        // For Web, we must use fromBytes as MultipartFile.fromPath is not supported
+        final bytes = await imageFile.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'photo',
+          bytes,
+          filename: imageFile.name,
+          contentType: MediaType.parse(mimeType),
+        ));
+      } else {
+        // For Mobile, fromPath is preferred
+        request.files.add(await http.MultipartFile.fromPath(
+          'photo',
+          imageFile.path,
+          contentType: MediaType.parse(mimeType),
+        ));
+      }
+    }
+
+    final streamedResponse = await request.send();
+    return await http.Response.fromStream(streamedResponse);
   }
 
   static Future<http.Response> getDashboardData(String token) async {

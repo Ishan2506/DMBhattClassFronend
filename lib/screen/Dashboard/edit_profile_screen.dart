@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -37,7 +38,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _selectedState = "Gujarat";
   String? _selectedInstitute;
 
-  File? _imageFile;
+  XFile? _imageFile;
+  String? _currentPhotoPath;
   final ImagePicker _picker = ImagePicker();
 
    // Data Lists
@@ -82,20 +84,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
            _phoneController.text = user['phoneNum'] ?? "";
            _cityController.text = user['address']?['city'] ?? "";
            
-           if (profile != null) {
-              _selectedStandard = profile['std'];
-              _selectedMedium = profile['medium'];
-              _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
-              
-              if (_schoolNameController.text == "D.M.BHATT Institute") {
-                _selectedInstitute = "D.M.BHATT Institute";
-              } else if (_schoolNameController.text.isNotEmpty) {
-                _selectedInstitute = "Other";
-              }
-              
-              _parentPhoneController.text = profile['parentPhone'] ?? "";
-           }
-           _isLoading = false;
+            if (profile != null) {
+               _selectedStandard = profile['std'];
+               _selectedMedium = profile['medium'];
+               _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
+               _parentPhoneController.text = profile['parentPhone'] ?? "";
+               
+               if (_schoolNameController.text == "D.M.BHATT Institute") {
+                 _selectedInstitute = "D.M.BHATT Institute";
+               } else if (_schoolNameController.text.isNotEmpty) {
+                 _selectedInstitute = "Other";
+               }
+            }
+            _currentPhotoPath = user['photoPath'];
+            _isLoading = false;
         });
       } else {
         CustomToast.showError(context, "Failed to fetch profile");
@@ -133,11 +135,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'parentPhone': _parentPhoneController.text,
       };
 
-      final response = await ApiService.updateProfile(token, data);
+      final response = await ApiService.updateProfile(token, data, imageFile: _imageFile);
 
       if (response.statusCode == 200) {
         CustomToast.showSuccess(context, 'Profile Updated Successfully');
-        Navigator.pop(context);
+        Navigator.pop(context, true); // Pass true to indicate update happened
       } else {
         CustomToast.showError(context, "Update Failed: ${response.body}");
       }
@@ -175,14 +177,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _pickImage() async {
     try {
-      final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+      final XFile? photo = await _picker.pickImage(source: ImageSource.gallery); // Changed to gallery for better testing
       if (photo != null) {
         setState(() {
-          _imageFile = File(photo.path);
+          _imageFile = photo;
         });
       }
     } catch (e) {
-      CustomToast.showError(context, "Error: $e");
+      CustomToast.showError(context, "Error picking image: $e");
     }
   }
 
@@ -242,8 +244,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             radius: 50,
                             backgroundColor: theme.cardColor,
                             backgroundImage: _imageFile != null 
-                                ? FileImage(_imageFile!) 
-                                : const AssetImage("assets/images/user_placeholder.png") as ImageProvider,
+                                ? (kIsWeb 
+                                    ? NetworkImage(_imageFile!.path) 
+                                    : FileImage(File(_imageFile!.path))) as ImageProvider
+                                : (_currentPhotoPath != null && _currentPhotoPath!.isNotEmpty)
+                                    ? NetworkImage(_currentPhotoPath!)
+                                    : const AssetImage("assets/images/user_placeholder.png") as ImageProvider,
                           ),
                         ),
                         Positioned(
