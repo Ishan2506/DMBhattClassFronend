@@ -5,7 +5,7 @@ import 'package:http_parser/http_parser.dart'; // Make sure http_parser is in pu
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 
 class ApiService {
-   static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
   //static const String baseUrl = "http://localhost:5000/api";
 
   static Future<http.Response> getExploreProducts() async {
