@@ -8,8 +8,9 @@ import 'package:flutter/material.dart';
 class ExamInstructionScreen extends StatelessWidget {
   final String subject;
   final String examId;
+  final String title;
   
-  const ExamInstructionScreen({super.key, required this.subject, required this.examId});
+  const ExamInstructionScreen({super.key, required this.subject, required this.examId, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +53,7 @@ class ExamInstructionScreen extends StatelessWidget {
             blankVerticalSpace32,
             Container(
               width: double.infinity,
-              height: S.s48,
+              height: MediaQuery.of(context).size.height * 0.065,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.7)],
@@ -73,7 +74,7 @@ class ExamInstructionScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ExamQuestionScreen(subject: subject, examId: examId),
+                      builder: (context) => ExamQuestionScreen(subject: subject, examId: examId, title: title),
                     ),
                   );
                 },
@@ -85,9 +86,9 @@ class ExamInstructionScreen extends StatelessWidget {
                 ),
                 child: Text(
                   lblProceedToExam,
-                  style: const TextStyle(
+                  style: TextStyle(
                       letterSpacing: 0.5,
-                      fontSize: S.s16,
+                      fontSize: MediaQuery.of(context).size.width * 0.045,
                       color: Colors.white,
                       fontWeight: FontWeight.bold),
                 ),

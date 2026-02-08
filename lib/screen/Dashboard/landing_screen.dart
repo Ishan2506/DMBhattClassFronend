@@ -7,6 +7,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/dmai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
 import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/social_media_ad_dialog.dart';
@@ -116,7 +117,10 @@ class _LandingScreenState extends State<LandingScreen> {
             child: Image.asset("assets/images/robot_logo.png", height: 30),
           ),
         ),
-        title: Text(titles[_selectedIndex], style: const TextStyle(color: Colors.white)),
+        title: Text(
+          titles[_selectedIndex], 
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -132,6 +136,14 @@ class _LandingScreenState extends State<LandingScreen> {
             },
           ),
           const SizedBox(width: 8),
+          // IconButton(
+          //   icon: const CircleAvatar(
+          //     backgroundColor: Colors.white24,
+          //     child: Icon(Icons.switch_account, color: Colors.white, size: 20),
+          //   ),
+          //   onPressed: () => StudentProfileScreen.showSwitchAccountSheet(context),
+          // ),
+          // const SizedBox(width: 8),
         ],
       ),
       body: IndexedStack(

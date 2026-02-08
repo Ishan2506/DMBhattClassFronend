@@ -147,7 +147,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F4F8),
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,7 +163,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey.shade800 : Colors.white,
+                            color: theme.colorScheme.surfaceContainerHighest,
                              borderRadius: BorderRadius.circular(16),
                              boxShadow: [
                                BoxShadow(
@@ -180,12 +180,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             decoration: InputDecoration(
                               hintText: "Search...",
                               hintStyle: GoogleFonts.poppins(
-                                color: Colors.grey.shade400,
+                                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
                                 fontSize: 16,
                               ),
                              border: InputBorder.none,
                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                             prefixIcon: Icon(Icons.search, color: Colors.grey.shade400,)
+                             prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),)
                             ),
                           ),
                         ),
@@ -244,16 +244,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       margin: const EdgeInsets.only(right: 12),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? (isDark ? Colors.white : Colors.black87) : Colors.transparent,
+                        color: isSelected ? theme.colorScheme.primary : Colors.transparent,
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: isSelected ? Colors.transparent : Colors.grey.shade400,
+                          color: isSelected ? Colors.transparent : theme.colorScheme.outline.withOpacity(0.5),
                         ),
                       ),
                       child: Text(
                         category,
                         style: GoogleFonts.poppins(
-                          color: isSelected ? (isDark ? Colors.black : Colors.white) : (isDark ? Colors.white70 : Colors.black54),
+                          color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -320,7 +320,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           child: Container(
                             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                              color: theme.cardColor,
                               borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
@@ -340,7 +340,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                     children: [
                                        Container(
                                         decoration: BoxDecoration(
-                                          color: isDark ? Colors.grey.shade800 : const Color(0xFFF5F5F7),
+                                          color: theme.colorScheme.surfaceContainerHighest,
                                           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                                         ),
                                        ),
@@ -392,7 +392,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                           style: GoogleFonts.poppins(
                                             fontSize: 18, // Reduced from 20
                                             fontWeight: FontWeight.bold,
-                                            color: isDark ? Colors.white : Colors.black87,
+                                            color: theme.colorScheme.onSurface,
                                             height: 1.2,
                                           ),
                                         ),
@@ -409,7 +409,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                           style: GoogleFonts.poppins(
                                             fontSize: 22, // Reduced from 24
                                             fontWeight: FontWeight.bold,
-                                            color: isDark ? Colors.white : Colors.black87,
+                                            color: theme.colorScheme.onSurface,
                                           ),
                                         ),
                                       ],

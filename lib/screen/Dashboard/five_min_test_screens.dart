@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // --- Screen 1: Selection ---
 class FiveMinTestSelectionScreen extends StatefulWidget {
@@ -23,10 +24,13 @@ class FiveMinTestSelectionScreen extends StatefulWidget {
 class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen> {
   String? _selectedUnit;
   String? _selectedSubject;
+  String? _selectedTitle;
   
   List<dynamic> _allTests = [];
   List<String> _subjects = [];
   List<String> _units = [];
+  List<String> _titles = [];
+  List<String> _takenTestTitles = [];
   
   bool _isLoading = true;
   dynamic _selectedTest; // The full test object from API
@@ -42,6 +46,19 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
       final response = await ApiService.getAllFiveMinTests();
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+        
+        // Fetch history to check for taken tests
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('auth_token');
+        if (token != null) {
+          final historyResponse = await ApiService.getDashboardData(token);
+          if (historyResponse.statusCode == 200) {
+             final historyData = jsonDecode(historyResponse.body);
+             final List<dynamic> results = historyData['examResults'] ?? [];
+             _takenTestTitles = results.map((e) => e['title'].toString().toLowerCase()).toList();
+          }
+        }
+
         if (mounted) {
            setState(() {
             _allTests = data;
@@ -64,6 +81,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
     setState(() {
       _selectedSubject = subject;
       _selectedUnit = null;
+      _selectedTitle = null;
       _selectedTest = null;
       if (subject != null) {
         _units = _allTests
@@ -74,16 +92,41 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
       } else {
         _units = [];
       }
+      _titles = [];
     });
   }
 
   void _onUnitChanged(String? unit) {
     setState(() {
       _selectedUnit = unit;
+      _selectedTitle = null;
+      _selectedTest = null;
       if (unit != null && _selectedSubject != null) {
+        _titles = _allTests
+            .where((t) => t['subject'] == _selectedSubject && t['unit'] == unit)
+            .map((t) => t['title']?.toString() ?? 'Untitled Test')
+            .toSet()
+            .toList();
+            
+        if (_titles.length == 1) {
+          _selectedTitle = _titles.first;
+          _onTitleChanged(_selectedTitle);
+        }
+      } else {
+        _titles = [];
+      }
+    });
+  }
+
+  void _onTitleChanged(String? title) {
+    setState(() {
+      _selectedTitle = title;
+      if (title != null && _selectedSubject != null && _selectedUnit != null) {
         try {
           _selectedTest = _allTests.firstWhere(
-            (t) => t['subject'] == _selectedSubject && t['unit'] == unit
+            (t) => t['subject'] == _selectedSubject && 
+                   t['unit'] == _selectedUnit &&
+                   (t['title']?.toString() ?? 'Untitled Test') == title
           );
         } catch (e) {
           _selectedTest = null;
@@ -103,7 +146,20 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: const CustomAppBar(title: "5 Min Test - Select"),
+      appBar: CustomAppBar(
+        title: "5 Min Test - Select",
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const StudentFiveMinHistoryScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator()) 
         : _allTests.isEmpty 
@@ -130,10 +186,19 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                   itemLabelBuilder: (String item) => item,
                   onChanged: _onUnitChanged,
                 ),
+                const SizedBox(height: 16),
+                CustomDropdown<String>(
+                  labelText: "Title",
+                  hintText: "Select Title",
+                  value: _selectedTitle,
+                  items: _titles,
+                  itemLabelBuilder: (String item) => item,
+                  onChanged: _onTitleChanged,
+                ),
                 const Spacer(),
                 Container(
                   width: double.infinity,
-                  height: S.s48,
+                  height: MediaQuery.of(context).size.height * 0.065,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.8)],
@@ -152,6 +217,22 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                   child: ElevatedButton(
                     onPressed: _selectedTest != null 
                         ? () {
+                            if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text("Already Taken"),
+                                  content: const Text("You have already performed this test. Students can only take each test once."),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text("OK"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return;
+                            }
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -170,11 +251,11 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(S.s12)),
                     ),
-                    child: const Text(
+                    child: Text(
                       "Next",
                       style: TextStyle(
                           letterSpacing: 0.5,
-                          fontSize: S.s16,
+                          fontSize: MediaQuery.of(context).size.width * 0.045,
                           color: Colors.white,
                           fontWeight: FontWeight.bold),
                     ),
@@ -564,21 +645,44 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
        });
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExamResultScreen(
-          totalQuestions: _questions.length,
-          correctAnswers: correct,
-          wrongAnswers: wrong,
-          skippedAnswers: skipped,
-          questions: mappedQuestions,
-          selectedAnswers: _selectedAnswers,
-          subject: widget.subject,
-          unit: widget.unit,
-        ),
-      ),
-    );
+    Future<void> _submitAndNavigate() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('auth_token');
+        if (token != null) {
+          await ApiService.submitExamResult(
+            token: token,
+            examId: widget.testData['_id'],
+            title: widget.testData['title'] ?? widget.unit,
+            obtainedMarks: correct,
+            totalMarks: _questions.length,
+            isOnline: false,
+          );
+        }
+      } catch (e) {
+        debugPrint("Error submitting 5 min result: $e");
+      }
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ExamResultScreen(
+              totalQuestions: _questions.length,
+              correctAnswers: correct,
+              wrongAnswers: wrong,
+              skippedAnswers: skipped,
+              questions: mappedQuestions,
+              selectedAnswers: _selectedAnswers,
+              subject: widget.subject,
+              unit: widget.unit,
+            ),
+          ),
+        );
+      }
+    }
+
+    _submitAndNavigate();
   }
 
   @override

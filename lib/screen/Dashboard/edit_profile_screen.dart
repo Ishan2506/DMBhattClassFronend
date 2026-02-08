@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -20,7 +21,7 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _isUpdating = false;
   
   // Controllers
@@ -62,6 +63,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _fetchProfile() async {
+    setState(() => _isLoading = true);
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
@@ -222,14 +224,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       body: Stack(
         children: [
-          _isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
+          Column(
+            children: [
+              if (_isLoading)
+                const LinearProgressIndicator(minHeight: 2),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
                   // Profile Image
                   Center(
                     child: Stack(
@@ -513,23 +518,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       child: Text(
                         "Update Profile",
                         style: GoogleFonts.poppins(
-                          fontSize: 18,
+                          fontSize: MediaQuery.of(context).size.width * 0.045,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
                     ),
                   ),
-                ],
+                  ],
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
           
           if (_isUpdating)
             Container(
               color: Colors.black.withOpacity(0.5),
               child: const Center(
-                child: CircularProgressIndicator(),
+                child: CustomLoader(),
               ),
             ),
         ],

@@ -7,9 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 
 class ApiService {
-  //static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-  static const String baseUrl = "http://localhost:5000/api";
-
+  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+ 
   static Future<http.Response> getExploreProducts() async {
     final uri = Uri.parse("$baseUrl/explore/all");
     return await http.get(uri);

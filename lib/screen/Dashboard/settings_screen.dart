@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/add_account_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'dart:convert';
 
@@ -66,13 +65,6 @@ class SettingsScreen extends StatelessWidget {
                     value: langText,
                     icon: Icons.language,
                     onTap: () => _showLanguageSelector(context),
-                  ),
-                  _buildSettingsItem(
-                    context, 
-                    title: "Switch Account", 
-                    value: "", 
-                    icon: Icons.switch_account, 
-                    onTap: () => _showSwitchAccountSheet(context),
                   ),
                   _buildSettingsItem(
                     context,
@@ -417,125 +409,5 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-  Future<void> _showSwitchAccountSheet(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    // Ensure current user is in the list
-    await _ensureCurrentAccountSaved(prefs);
-
-    List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
-    List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
-    String currentToken = prefs.getString('auth_token') ?? "";
-
-    if (!context.mounted) return;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24))
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Switch Account", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            ...accounts.map((acc) {
-               bool isActive = acc['token'] == currentToken;
-               return ListTile(
-                 leading: CircleAvatar(
-                   backgroundColor: isActive ? Colors.blue : Colors.grey.shade200,
-                   backgroundImage: (acc['profilePic'] != null && acc['profilePic'].toString().isNotEmpty) 
-                       ? NetworkImage(acc['profilePic']) 
-                       : null,
-                   child: (acc['profilePic'] == null || acc['profilePic'].toString().isEmpty)
-                       ? Text(acc['name'][0].toUpperCase(), style: TextStyle(color: isActive ? Colors.white : Colors.grey))
-                       : null,
-                 ),
-                 title: Text(acc['name'], style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                 subtitle: Text(acc['phone'], style: GoogleFonts.poppins(fontSize: 12)),
-                 trailing: isActive ? const Icon(Icons.check_circle, color: Colors.blue) : null,
-                 onTap: () {
-                   Navigator.pop(context);
-                   if (!isActive) _switchUser(context, acc);
-                 },
-               );
-            }).toList(),
-            
-            if (accounts.length < 3)
-              ListTile(
-                 leading: CircleAvatar(
-                   backgroundColor: Colors.grey.shade100,
-                   child: const Icon(Icons.add, color: Colors.black),
-                 ),
-                 title: Text("Add Account", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                 onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAccountScreen()));
-                 },
-              ),
-              
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _ensureCurrentAccountSaved(SharedPreferences prefs) async {
-    String token = prefs.getString('auth_token') ?? "";
-    if (token.isEmpty) return;
-    
-    List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
-    List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
-
-    // Check if current token exists in accounts
-    bool exists = accounts.any((acc) => acc['token'] == token);
-    
-    if (!exists) {
-       // We need to add the current user. But we might not have all details if they logged in before this feature.
-       // We'll try to use what we have or fetch? 
-       // For now, let's use placeholders or fetch if possible. 
-       // But fetching here is async and might block UI.
-       // Let's rely on basic data if available or just save token/phone if we stored it?
-       // The Login screen now stores password and userId.
-       // We don't have name/phone readily available in prefs usually unless we stored it.
-       // Let's assume we can survive with "Student" name until they re-login or use AddAccount.
-       // OR, better, we simply don't add them if we lack info, forcing them to re-login via Add Account?
-       // No, that's bad UX.
-       // Let's create a partial entry.
-       accounts.add({
-         'token': token,
-         'name': "Current User", // We could fetch this via API if we want to be fancy, but keeping it simple.
-         'phone': "Signed In",
-         'password': prefs.getString('user_password') ?? "",
-         'userId': prefs.getString('userId') ?? "",
-         'std': prefs.getString('std') ?? "",
-       });
-       await prefs.setStringList('saved_accounts', accounts.map((e) => jsonEncode(e)).toList());
-    }
-  }
-
-  Future<void> _switchUser(BuildContext context, Map<String, dynamic> account) async {
-     final prefs = await SharedPreferences.getInstance();
-     
-     // Set new active session
-     await prefs.setString('auth_token', account['token']);
-     if (account['password'] != null) await prefs.setString('user_password', account['password']);
-     if (account['userId'] != null) await prefs.setString('userId', account['userId']);
-     if (account['std'] != null) await prefs.setString('std', account['std']);
-     
-     CustomToast.showSuccess(context, "Switched to ${account['name']}");
-     
-     Navigator.pushAndRemoveUntil(
-       context,
-       MaterialPageRoute(builder: (context) => const LandingScreen()),
-       (route) => false,
-     );
   }
 }

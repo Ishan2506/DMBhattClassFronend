@@ -13,8 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ExamQuestionScreen extends StatefulWidget {
   final String subject;
   final String examId;
+  final String title;
   
-  const ExamQuestionScreen({super.key, required this.subject, required this.examId});
+  const ExamQuestionScreen({super.key, required this.subject, required this.examId, required this.title});
 
   @override
   State<ExamQuestionScreen> createState() => _ExamQuestionScreenState();
@@ -170,7 +171,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
           final response = await ApiService.submitExamResult(
             token: token,
             examId: widget.examId,
-            title: widget.subject,
+            title: widget.title,
             obtainedMarks: correct,
             totalMarks: _questions.length,
           );

@@ -18,6 +18,8 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/school_papers_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/board_paper_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -141,6 +143,30 @@ class _StudentActivitiesScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const MindGamesScreen()),
+                );
+              },
+            ),
+            _MoreScreenItem(
+              title: "School Papers",
+              value: "",
+              icon: Icons.note_alt_outlined,
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SchoolPapersScreen()),
+                );
+              },
+            ),
+            _MoreScreenItem(
+              title: "Board Papers",
+              value: "",
+              icon: Icons.assignment_outlined,
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const BoardPaperScreen()),
                 );
               },
             ),

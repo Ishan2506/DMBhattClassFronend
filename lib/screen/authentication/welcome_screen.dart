@@ -77,7 +77,7 @@ class WelcomeScreen extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade100,
                       foregroundColor: Colors.blue.shade900,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: Size(double.infinity, MediaQuery.of(context).size.height * 0.06),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -86,7 +86,7 @@ class WelcomeScreen extends StatelessWidget {
                     child: Text(
                       l10n.login,
                       style: GoogleFonts.poppins(
-                        fontSize: 16,
+                        fontSize: MediaQuery.of(context).size.width * 0.04,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -105,7 +105,7 @@ class WelcomeScreen extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade700,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: Size(double.infinity, MediaQuery.of(context).size.height * 0.06),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -114,7 +114,7 @@ class WelcomeScreen extends StatelessWidget {
                     child: Text(
                       l10n.register,
                       style: GoogleFonts.poppins(
-                        fontSize: 16,
+                        fontSize: MediaQuery.of(context).size.width * 0.04,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

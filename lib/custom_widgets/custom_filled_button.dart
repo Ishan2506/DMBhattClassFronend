@@ -17,19 +17,22 @@ class CustomFilledButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return SizedBox(
       width: double.infinity,
-      height: S.s48,
+      height: screenHeight * 0.06, // Responsive height (approx 48-56 depending on screen)
       child: icon == null
           ? FilledButton(
               onPressed: isLoading ? null : onPressed,
               style: _buttonStyle(),
-              child: _buildChild(context),
+              child: _buildChild(context, screenWidth),
             )
           : FilledButton.icon(
               onPressed: isLoading ? null : onPressed,
               style: _buttonStyle(),
-              label: _buildChild(context),
+              label: _buildChild(context, screenWidth),
               icon: isLoading
                   ? const SizedBox.shrink()
                   : Icon(icon, size: S.s20),
@@ -37,17 +40,21 @@ class CustomFilledButton extends StatelessWidget {
     );
   }
 
-  Widget _buildChild(BuildContext context) {
+  Widget _buildChild(BuildContext context, double screenWidth) {
     if (isLoading) {
-      return SizedBox(
+      return const SizedBox(
         height: S.s24,
         width: S.s24,
-        child: CircularProgressIndicator(strokeWidth: 2),
+        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
       );
     }
     return Text(
       label,
-      style: const TextStyle(letterSpacing: 0.5, fontSize: S.s16),
+      style: TextStyle(
+        letterSpacing: 0.5, 
+        fontSize: screenWidth * 0.04, // Responsive font size
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 

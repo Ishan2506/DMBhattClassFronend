@@ -203,7 +203,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       
       body: Column(
         children: [
@@ -250,7 +250,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                           "Ask me anything about your studies",
                           style: GoogleFonts.poppins(
                             fontSize: 12,
-                            color: Colors.grey.shade600,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -287,8 +287,8 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
 
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.1))),
+              color: colorScheme.surface,
+              border: Border(top: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.2))),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -302,12 +302,12 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colorScheme.surfaceContainer,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.refresh_rounded, color: Colors.grey),
+                    icon: Icon(Icons.refresh_rounded, color: colorScheme.onSurfaceVariant),
                     onPressed: _startFreshConversation,
                     tooltip: "Reset Chat",
                   ),
@@ -316,10 +316,10 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(30),
                       border: Border.all(
-                        color: colorScheme.primary,
+                        color: colorScheme.primary.withOpacity(0.5),
                         width: 1.5
                       ),
                     ),
@@ -336,7 +336,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                             decoration: InputDecoration(
                               hintText: "Type your answer...",
                               hintStyle: GoogleFonts.poppins(
-                                color: Colors.grey.shade400, fontSize: 14
+                                color: colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 14
                               ),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(vertical: 14),

@@ -20,11 +20,11 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
     {
       "start": "Rain",
       "target": "Bread",
-      "steps": [
-        {"options": ["Cloud", "Water", "Umbrella"], "correct": "Water", "reason": "Rain is made of Water"},
-        {"options": ["Fire", "Flour", "Ice"], "correct": "Flour", "reason": "Water mixed with flour makes dough"}, // Wait, logic: Water -> Wheat? No. Water -> Flour/Dough.
-        // Let's make simpler associations
-        // Rain -> Water -> Plant -> Wheat -> Bread
+      "path": ["Rain", "Water", "Flour", "Bread"],
+      "options_pool": [
+        ["Cloud", "Water", "Umbrella"], // Rain -> ?
+        ["Fire", "Flour", "Ice"],       // Water -> ?
+        ["Sandwich", "Dough", "Bread"]  // Flour -> ? (Flour makes Bread)
       ]
     },
     // Let's refine the logic to be "Connect the concepts"

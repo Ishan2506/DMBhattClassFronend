@@ -142,7 +142,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               // Reset Password Button
               SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: MediaQuery.of(context).size.height * 0.065,
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {

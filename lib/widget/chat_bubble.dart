@@ -35,7 +35,7 @@ class ChatBubble extends StatelessWidget {
     final urlRegex = RegExp(r'(https?:\/\/[^\s]+)');
     final match = urlRegex.firstMatch(text);
 
-    final bubbleColor = isUser ? scheme.primary : scheme.surface;
+    final bubbleColor = isUser ? scheme.primary : scheme.surfaceContainer;
     final textColor = isUser ? scheme.onPrimary : scheme.onSurface;
 
     return Align(
@@ -109,7 +109,7 @@ class ChatBubble extends StatelessWidget {
                           onOptionSelected!(option);
                         }
                       },
-                      backgroundColor: Colors.white,
+                      backgroundColor: scheme.surfaceContainer,
                     ),
                   );
                 }).toList(),

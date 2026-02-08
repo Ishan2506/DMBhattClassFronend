@@ -20,17 +20,27 @@ class MindGameService {
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
-    final today = "${now.year}-${now.month}-${now.day}";
+    // Get current user ID to make the limit user-specific
+    final userId = prefs.getString('userId') ?? "guest"; 
+    
+    // Key format: mind_game_date_{userId}
+    // This ensues each user gets their own daily tracking.
+    final String dateKey = 'mind_game_date_$userId';
+    final String usageKey = 'mind_game_seconds_$userId';
 
-    if (_todayStr != today) {
-      // New Day, Reset
+    final String storedDate = prefs.getString(dateKey) ?? "";
+    final String today = "${now.year}-${now.month}-${now.day}";
+
+    if (storedDate != today) {
+      // New Day for THIS user, Reset
       _todayStr = today;
       _dailyUsageSeconds = 0;
-      await prefs.setString('mind_game_date', today);
-      await prefs.setInt('mind_game_seconds', 0);
+      await prefs.setString(dateKey, today);
+      await prefs.setInt(usageKey, 0);
     } else {
-      // Load usage
-      _dailyUsageSeconds = prefs.getInt('mind_game_seconds') ?? 0;
+      // Load usage for THIS user
+      _todayStr = today;
+      _dailyUsageSeconds = prefs.getInt(usageKey) ?? 0;
     }
   }
 
@@ -53,7 +63,8 @@ class MindGameService {
        // Save every minute to avoid heavy IO
        if (_dailyUsageSeconds % 60 == 0) {
          final prefs = await SharedPreferences.getInstance();
-         await prefs.setInt('mind_game_seconds', _dailyUsageSeconds);
+         final userId = prefs.getString('userId') ?? "guest";
+         await prefs.setInt('mind_game_seconds_$userId', _dailyUsageSeconds);
        }
 
        // Checks
@@ -77,7 +88,8 @@ class MindGameService {
 
   Future<void> _saveProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('mind_game_seconds', _dailyUsageSeconds);
+    final userId = prefs.getString('userId') ?? "guest";
+    await prefs.setInt('mind_game_seconds_$userId', _dailyUsageSeconds);
   }
 
   void _showWarning(BuildContext context, int minsLeft) {

@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 
 class BoardPaperScreen extends StatefulWidget {
   const BoardPaperScreen({super.key});
@@ -24,10 +27,49 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   final List<String> _stds = ["10", "12"];
   final List<String> _streams = ["Science", "Commerce", "Arts"]; // Only for 12
   final List<String> _years = List.generate(10, (index) => (DateTime.now().year - index).toString());
+  final List<String> _subjects = ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+  String? _selectedSubject;
 
   bool _isLoading = false;
+  bool _isProfileLoading = true;
   List<dynamic> _papers = [];
   bool _hasSearched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    setState(() => _isProfileLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token == null) return;
+
+      final response = await ApiService.getProfile(token);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final profile = data['profile'];
+        if (profile != null) {
+          setState(() {
+            _selectedMedium = profile['medium'];
+            _selectedStd = profile['std'];
+            // Attempt to get stream if available or if std implies it (though API might not return it explicitly if not saved)
+            // For now, if std is 12, we might need a way to know stream. 
+            // Assuming profile might have 'stream' field or similar, or we just have to hope it's there.
+            // If not present in profile, we can't set it. 
+            _selectedStream = profile['stream']; 
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching profile: $e");
+    } finally {
+      if (mounted) setState(() => _isProfileLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,42 +79,65 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: Text("Board Papers", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-        backgroundColor: colorScheme.surface,
-        foregroundColor: colorScheme.onSurface,
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: "Board Papers",
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildFilterCard(colorScheme, isDark),
-            const SizedBox(height: 24),
-            
-            if (_isLoading)
-               const Center(child: CircularProgressIndicator())
-            else if (_hasSearched && _papers.isEmpty)
-               Center(
-                 child: Column(
-                   children: [
-                     Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade400),
-                     const SizedBox(height: 16),
-                     Text("No board papers found", style: GoogleFonts.poppins(color: Colors.grey)),
-                   ],
-                 ),
-               )
-            else if (_papers.isNotEmpty)
-               ..._papers.map((paper) => _buildPaperCard(paper, colorScheme, isDark)).toList(),
-          ],
-        ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildFilterCard(colorScheme, isDark),
+                const SizedBox(height: 24),
+                
+                if (_hasSearched && _papers.isEmpty && !_isLoading)
+                   Center(
+                     child: Column(
+                       children: [
+                         Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade400),
+                         const SizedBox(height: 16),
+                         Text("No board papers found", style: GoogleFonts.poppins(color: Colors.grey)),
+                       ],
+                     ),
+                   )
+                else if (_papers.any((p) => p['subject'] == _selectedSubject) && !_isLoading) ...[
+                   Text(
+                     "Available Papers (${_papers.where((p) => p['subject'] == _selectedSubject).length})",
+                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+                   ),
+                   const SizedBox(height: 12),
+                   ..._papers.where((p) => p['subject'] == _selectedSubject).map((paper) => _buildPaperCard(paper, colorScheme, isDark)).toList()
+                ]
+                else if (_hasSearched && !_isLoading)
+                   Center(
+                     child: Column(
+                       children: [
+                         Icon(Icons.description_outlined, size: 64, color: Colors.grey.shade400),
+                         const SizedBox(height: 16),
+                         Text("No papers found for $_selectedSubject", style: GoogleFonts.poppins(color: Colors.grey)),
+                       ],
+                     ),
+                   ),
+              ],
+            ),
+          ),
+          if (_isLoading || _isProfileLoading)
+            const Center(child: CustomLoader()),
+        ],
       ),
     );
   }
 
   Widget _buildFilterCard(ColorScheme colorScheme, bool isDark) {
+    // Note: Loader logic moved to Stack in build method
+    
+    // if (_isProfileLoading) {
+    //    return const CustomLoader();
+    // }
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -93,58 +158,38 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           Text("Select Details", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           
-          // Medium & Std Row
-          Row(
-            children: [
-              Expanded(
-                child: _buildDropdown(
-                  "Medium", 
-                  _mediums, 
-                  _selectedMedium, 
-                  (val) => setState(() => _selectedMedium = val)
-                ),
+          if (_selectedMedium != null && _selectedStd != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDropdown(
-                  "Std", 
-                  _stds, 
-                  _selectedStd, 
-                  (val) {
-                    setState(() {
-                      _selectedStd = val;
-                      if (val == "10") _selectedStream = null; // Reset stream for 10th
-                    });
-                  }
-                ),
+              child: Text(
+                "${_selectedStd}th - $_selectedMedium Medium${_selectedStream != null ? ' ($_selectedStream)' : ''}",
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: colorScheme.primary),
+                textAlign: TextAlign.center,
               ),
-            ],
+            ),
+
+          // Year Dropdown
+          _buildDropdown(
+            "Year", 
+            _years, 
+            _selectedYear, 
+            (val) => setState(() => _selectedYear = val)
           ),
           const SizedBox(height: 12),
-
-          // Stream (Only if Std 12) & Year Row
-          Row(
-            children: [
-              if (_selectedStd == "12") ...[
-                Expanded(
-                  child: _buildDropdown(
-                    "Stream", 
-                    _streams, 
-                    _selectedStream, 
-                    (val) => setState(() => _selectedStream = val)
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: _buildDropdown(
-                  "Year", 
-                  _years, 
-                  _selectedYear, 
-                  (val) => setState(() => _selectedYear = val)
-                ),
-              ),
-            ],
+          
+          // Subject Dropdown
+          _buildDropdown(
+            "Subject", 
+            _subjects, 
+            _selectedSubject, 
+            (val) => setState(() => _selectedSubject = val)
           ),
 
           const SizedBox(height: 20),
@@ -209,7 +254,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  paper['title'] ?? "Board Paper", // Assuming API response has 'title'
+                  paper['title'] ?? paper['name'] ?? "Board Paper", 
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 Text(
@@ -219,9 +264,26 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               ],
             ),
           ),
+          // View Button
           IconButton(
-            icon: Icon(Icons.download_rounded, color: colorScheme.primary),
-            onPressed: () => _launchURL(paper['url'] ?? ""), // Assuming 'url' field
+            icon: Icon(Icons.visibility_outlined, color: colorScheme.primary),
+            onPressed: () {
+               // Ensure paper map has 'image' key for PdfPreviewScreen
+               final pdfPaper = Map<String, dynamic>.from(paper);
+               if (pdfPaper['image'] == null) pdfPaper['image'] = pdfPaper['url'];
+               
+               Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PdfPreviewScreen(product: pdfPaper),
+                  ),
+                );
+            },
+          ),
+          // Download Button
+          IconButton(
+            icon: Icon(Icons.download_rounded, color: colorScheme.secondary),
+            onPressed: () => _launchURL(paper['url'] ?? ""), 
           ),
         ],
       ),
@@ -229,13 +291,22 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   }
 
   Future<void> _validateAndFetch() async {
-    if (_selectedMedium == null || _selectedStd == null || _selectedYear == null) {
-      CustomToast.showError(context, "Please select all fields");
-      return;
+    // Basic validation
+    if (_selectedMedium == null || _selectedStd == null) {
+       CustomToast.showError(context, "Could not load profile details. Please update your profile.");
+       return;
     }
+    
+    if (_selectedSubject == null || _selectedYear == null) {
+       CustomToast.showError(context, "Please select all fields");
+       return;
+    }
+
     if (_selectedStd == "12" && _selectedStream == null) {
-      CustomToast.showError(context, "Please select a stream");
-      return;
+       // If stream is missing from profile, we might still want to proceed or error out.
+       // For now, let's warn.
+       CustomToast.showError(context, "Stream information is missing from profile.");
+       return;
     }
 
     setState(() {

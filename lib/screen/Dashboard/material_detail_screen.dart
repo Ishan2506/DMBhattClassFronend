@@ -4,6 +4,9 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:printing/printing.dart';
+import 'package:http/http.dart' as http;
+import 'dart:typed_data';
 
 class MaterialDetailScreen extends StatelessWidget {
   final Map<String, dynamic> product;
@@ -26,7 +29,7 @@ class MaterialDetailScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      backgroundColor: theme.colorScheme.surface,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -36,7 +39,7 @@ class MaterialDetailScreen extends StatelessWidget {
                height: screenHeight * 0.4,
                padding: const EdgeInsets.all(32),
                decoration: BoxDecoration(
-                 color: isDark ? Colors.grey.shade900 : Colors.white,
+                 color: theme.colorScheme.surfaceContainerLowest,
                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
                  boxShadow: [
                    BoxShadow(
@@ -48,10 +51,43 @@ class MaterialDetailScreen extends StatelessWidget {
                ),
                child: Hero(
                  tag: product['id'],
-                 child: Image.asset(
-                   product['image'],
-                   fit: BoxFit.contain,
-                 ),
+                 child: () {
+                    final String imageUrl = product['image'].toString();
+                    // 1. Check if it's a Cloudinary PDF - Use fast image transformation
+                    if (imageUrl.toLowerCase().contains('.pdf') && imageUrl.contains('/upload/')) {
+                       final parts = imageUrl.split('/upload/');
+                       if (parts.length == 2) {
+                         final transformedUrl = '${parts[0]}/upload/pg_1,f_jpg/${parts[1]}';
+                         return Image.network(
+                           transformedUrl,
+                           fit: BoxFit.contain,
+                           errorBuilder: (context, error, stackTrace) =>
+                               const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                         );
+                       }
+                    }
+                    
+                    // 2. Check if it's a non-Cloudinary PDF - Use rasterization (slower)
+                    if (imageUrl.toLowerCase().contains('.pdf')) {
+                      return _PdfCover(url: imageUrl);
+                    }
+
+                    // 3. Standard Image
+                    if (imageUrl.startsWith('http')) {
+                      return Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                      );
+                    }
+
+                    // 4. Asset Image
+                    return Image.asset(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                    );
+                  }(),
                ),
             ),
 
@@ -222,9 +258,12 @@ class MaterialDetailScreen extends StatelessWidget {
     bool isPrimary = false,
     bool isOutlined = false,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: screenHeight * 0.065,
       child: isOutlined
           ? OutlinedButton(
               onPressed: onPressed,
@@ -236,9 +275,9 @@ class MaterialDetailScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 22),
+                  Icon(icon, size: screenWidth * 0.05),
                   const SizedBox(width: 8),
-                  Text(label, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(label, style: GoogleFonts.poppins(fontSize: screenWidth * 0.045, fontWeight: FontWeight.w600)),
                 ],
               ),
             )
@@ -254,12 +293,76 @@ class MaterialDetailScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 22),
+                  Icon(icon, size: screenWidth * 0.05),
                   const SizedBox(width: 8),
-                  Text(label, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(label, style: GoogleFonts.poppins(fontSize: screenWidth * 0.045, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
     );
+  }
+}
+
+class _PdfCover extends StatefulWidget {
+  final String url;
+  const _PdfCover({required this.url});
+
+  @override
+  State<_PdfCover> createState() => _PdfCoverState();
+}
+
+class _PdfCoverState extends State<_PdfCover> {
+  Uint8List? _imageBytes;
+  bool _isLoading = true;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPdfCover();
+  }
+
+  Future<void> _loadPdfCover() async {
+    try {
+      final response = await http.get(Uri.parse(widget.url));
+      if (response.statusCode == 200) {
+        final pdfBytes = response.bodyBytes;
+        // Rasterize the first page (0)
+        await for (final page in Printing.raster(pdfBytes, pages: [0])) {
+           final bytes = await page.toPng();
+           if (mounted) {
+             setState(() {
+               _imageBytes = bytes;
+               _isLoading = false;
+             });
+           }
+           break; // Just need the first page
+        }
+      } else {
+        if (mounted) setState(() { _hasError = true; _isLoading = false; });
+      }
+    } catch (e) {
+      if (mounted) setState(() { _hasError = true; _isLoading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_hasError || _imageBytes == null) {
+       return const Center(
+         child: Column(
+           mainAxisAlignment: MainAxisAlignment.center,
+           children: [
+             Icon(Icons.picture_as_pdf, size: 64, color: Colors.red),
+             SizedBox(height: 8),
+             Text("PDF Document", style: TextStyle(color: Colors.grey))
+           ],
+         )
+       );
+    }
+    return Image.memory(_imageBytes!, fit: BoxFit.contain);
   }
 }
