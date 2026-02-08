@@ -1,6 +1,7 @@
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -166,6 +167,27 @@ class MaterialDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    
+                    // Preview PDF (Only for PDFs)
+                    if (product['image'] != null && product['image'].toString().toLowerCase().contains('.pdf'))
+                      _buildActionButton(
+                        context: context,
+                        label: "Preview PDF",
+                        icon: Icons.visibility_outlined,
+                        color: theme.colorScheme.secondary,
+                        isPrimary: false,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PdfPreviewScreen(product: product),
+                            ),
+                          );
+                        },
+                      ),
+                    
+                    if (product['image'] != null && product['image'].toString().toLowerCase().contains('.pdf'))
+                      const SizedBox(height: 12),
                     
                     // 1. Download PDF (Prominent)
                     _buildActionButton(
