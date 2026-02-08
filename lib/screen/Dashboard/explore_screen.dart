@@ -100,6 +100,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
   }
 
+  /// Helper function to get image URL for display
+  /// If the URL is a PDF, converts it to show first page as image
+  String _getImageUrl(String url) {
+    if (url.isEmpty) return url;
+    
+    // Check if URL is a PDF (check before any URL encoding)
+    if (url.toLowerCase().contains('.pdf')) {
+      debugPrint('🔍 PDF detected: $url');
+      // Cloudinary PDF to Image transformation
+      // Replace /upload/ with /upload/pg_1,f_jpg/ to get first page as JPG
+      if (url.contains('/upload/')) {
+        // Split the URL at /upload/
+        final parts = url.split('/upload/');
+        if (parts.length == 2) {
+          // Reconstruct with transformation parameters
+          final transformedUrl = '${parts[0]}/upload/pg_1,f_jpg/${parts[1]}';
+          debugPrint('✅ Transformed URL: $transformedUrl');
+          return transformedUrl;
+        }
+      }
+    }
+    
+    return url;
+  }
+
+
 
 
   @override
@@ -322,7 +348,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                         child: Hero(
                                           tag: product['id'],
                                           child: Image.network(
-                                            product['image'],
+                                            _getImageUrl(product['image']),
                                             fit: BoxFit.contain,
                                             width: screenWidth * 0.5,
                                             errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 50, color: Colors.grey.shade400,),
