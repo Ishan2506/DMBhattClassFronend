@@ -33,7 +33,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   bool _isPromoApplied = false;
   
   // Simulated available points (In real app, fetch from user profile)
-  final int _availablePoints = 6000; 
+  int _availablePoints = 0; 
   
   String? _currentStandard;
   bool _isLoading = true;
@@ -42,6 +42,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   void initState() {
     super.initState();
     _fetchUserProfile();
+    _fetchBonusPoints();
   }
 
   Future<void> _fetchUserProfile() async {
@@ -77,6 +78,26 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _fetchBonusPoints() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        final response = await ApiService.getReferralData(token);
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (mounted) {
+             setState(() {
+               _availablePoints = data['bonusPoints'] ?? 0;
+             });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching points: $e");
     }
   }
 

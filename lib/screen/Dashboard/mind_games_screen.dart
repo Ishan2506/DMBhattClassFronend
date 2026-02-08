@@ -3,6 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/memory_match_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/math_quiz_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/word_scramble_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/odd_one_out_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/code_breaker_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/fact_or_fiction_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/sentence_builder_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/grammar_guardian_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/word_bridge_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/emoji_decoder_screen.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
@@ -118,6 +125,69 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
               icon: Icons.text_fields_rounded,
               color: Colors.deepPurple,
               onTap: () => _handleGameTap(const WordScrambleScreen()),
+            ),
+            const SizedBox(height: 16),
+             _buildGameCard(
+              context,
+              title: "Odd One Out",
+              description: "Identify the item that doesn't belong in the group.",
+              icon: Icons.filter_list_off,
+              color: Colors.brown,
+              onTap: () => _handleGameTap(const OddOneOutScreen()),
+            ),
+            const SizedBox(height: 16),
+            _buildGameCard(
+              context,
+              title: "Code Breaker",
+              description: "Use logic to guess the secret color code.",
+              icon: Icons.lock_open_rounded,
+              color: Colors.grey.shade800,
+              onTap: () => _handleGameTap(const CodeBreakerScreen()),
+            ),
+            const SizedBox(height: 16),
+            _buildGameCard(
+              context,
+              title: "Fact or Fiction?",
+              description: "Test your knowledge with quick true or false questions.",
+              icon: Icons.thumbs_up_down_rounded,
+              color: Colors.deepPurpleAccent,
+              onTap: () => _handleGameTap(const FactOrFictionScreen()),
+            ),
+            const SizedBox(height: 16),
+            _buildGameCard(
+              context,
+              title: "Sentence Builder",
+              description: "Form correct sentences from the jumbled words.",
+              icon: Icons.segment_rounded,
+              color: Colors.orange,
+              onTap: () => _handleGameTap(const SentenceBuilderScreen()),
+            ),
+            const SizedBox(height: 16),
+            _buildGameCard(
+              context,
+              title: "Grammar Guardian",
+              description: "Master English grammar by spotting the correct usage.",
+              icon: Icons.spellcheck,
+              color: Colors.teal,
+              onTap: () => _handleGameTap(const GrammarGuardianScreen()),
+            ),
+            const SizedBox(height: 16),
+             _buildGameCard(
+              context,
+              title: "Word Bridge",
+              description: "Connect two unrelated concepts through a chain of words.",
+              icon: Icons.hub,
+              color: Colors.pink,
+              onTap: () => _handleGameTap(const WordBridgeScreen()),
+            ),
+            const SizedBox(height: 16),
+            _buildGameCard(
+              context,
+              title: "Emoji Decoder",
+              description: "Guess the famous idiom or phrase from emojis.",
+              icon: Icons.emoji_objects_outlined,
+              color: Colors.amber.shade800,
+              onTap: () => _handleGameTap(const EmojiDecoderScreen()),
             ),
             const SizedBox(height: 32),
           ],

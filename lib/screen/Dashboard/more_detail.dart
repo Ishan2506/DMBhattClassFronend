@@ -17,6 +17,7 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -307,6 +308,18 @@ class _AppInfoScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const UpgradePlanScreen()), // Navigate to Upgrade Plan
+                );
+              },
+            ),
+            _MoreScreenItem(
+              title: "Refer & Earn",
+              value: "",
+              icon: Icons.diversity_3,
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ReferAndEarnScreen()),
                 );
               },
             ),

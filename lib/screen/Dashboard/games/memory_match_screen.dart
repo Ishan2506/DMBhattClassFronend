@@ -18,6 +18,7 @@ class MemoryMatchGameScreen extends StatefulWidget {
 
 class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
   // Game Configuration
+  final MindGameService _gameService = MindGameService();
   final int _gridSize = 4; // 4x4 grid = 16 cards
   late List<String> _cardContents;
   late List<bool> _cardFlipped;
@@ -33,10 +34,12 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
   void initState() {
     super.initState();
     _startNewGame();
+    _gameService.startSession(context);
   }
 
   @override
   void dispose() {
+    _gameService.stopSession();
     _timer?.cancel();
     super.dispose();
   }

@@ -153,8 +153,9 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.indigo.shade50,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: "Speed Math",
         centerTitle: true,
@@ -174,7 +175,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildInfoBadge(Icons.timer, "$_timeLeft s", _timeLeft < 10 ? Colors.red : Colors.blue),
+                _buildInfoBadge(Icons.timer, "$_timeLeft s", _timeLeft < 10 ? Colors.red : theme.primaryColor),
                 _buildInfoBadge(Icons.star, "Score: $_score", Colors.amber[800]!),
               ],
             ),
@@ -183,7 +184,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
             if (_gameOver)
               Column(
                 children: [
-                   Text("Time's Up!", style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                   Text("Time's Up!", style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.grey[800])),
                    const SizedBox(height: 16),
                    Text("Final Score: $_score", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.w600)),
                    const SizedBox(height: 32),
@@ -191,7 +192,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                      onPressed: _startRound,
                      style: ElevatedButton.styleFrom(
                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                       backgroundColor: Colors.indigo,
+                       backgroundColor: theme.primaryColor,
                      ),
                      child: Text("Play Again", style: GoogleFonts.poppins(color: Colors.white, fontSize: 18)),
                    )
@@ -200,7 +201,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
             else
               Column(
                 children: [
-                  Text(_question, style: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.indigo)),
+                  Text(_question, style: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.bold, color: theme.primaryColor)),
                   const SizedBox(height: 48),
                   GridView.builder(
                     shrinkWrap: true,
@@ -217,9 +218,9 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                         onPressed: () => _checkAnswer(_options[index]),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: Colors.indigo,
+                          foregroundColor: theme.primaryColor,
                           elevation: 4,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.shade200)),
                         ),
                         child: Text(
                           "${_options[index]}",

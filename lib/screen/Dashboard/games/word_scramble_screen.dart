@@ -15,6 +15,7 @@ class WordScrambleScreen extends StatefulWidget {
 }
 
 class _WordScrambleScreenState extends State<WordScrambleScreen> {
+  final MindGameService _gameService = MindGameService();
   final List<String> _words = [
     "EDUCATION", "FLUTTER", "SCHOOL", "STUDENT", "TEACHER", 
     "HOMEWORK", "EXAM", "LIBRARY", "SCISSORS", "HISTORY",
@@ -34,10 +35,12 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
   void initState() {
     super.initState();
     _startNewGame();
+    _gameService.startSession(context);
   }
 
   @override
   void dispose() {
+    _gameService.stopSession();
     _timer?.cancel();
     _controller.dispose();
     super.dispose();
@@ -127,8 +130,9 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: "Word Scramble",
         centerTitle: true,
@@ -147,7 +151,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                children: [
                  _buildBadge(Icons.timer, "$_timeLeft", Colors.orange),
-                 _buildBadge(Icons.star, "$_score", Colors.deepPurple),
+                 _buildBadge(Icons.star, "$_score", theme.primaryColor),
                ],
              ),
              
@@ -160,7 +164,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
              const SizedBox(height: 16),
              Text(
                _scrambledWord,
-               style: GoogleFonts.poppins(fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 4, color: Colors.deepPurple),
+               style: GoogleFonts.poppins(fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 4, color: theme.primaryColor),
                textAlign: TextAlign.center,
              ),
              
@@ -191,7 +195,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                child: ElevatedButton(
                  onPressed: _submitAnswer,
                  style: ElevatedButton.styleFrom(
-                   backgroundColor: Colors.deepPurple,
+                   backgroundColor: theme.primaryColor,
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                  ),
                  child: Text("Check", style: GoogleFonts.poppins(fontSize: 18, color: Colors.white)),
