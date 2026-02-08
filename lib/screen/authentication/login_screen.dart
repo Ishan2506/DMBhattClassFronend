@@ -169,6 +169,27 @@ class _LoginScreenState extends State<LoginScreen> {
                             await prefs.setString('auth_token', token);
                             await prefs.setString('user_password', _passwordController.text); // Saving password for PDF encryption
 
+                            // Fetch profile data to get std and userId
+                            try {
+                              final profileResponse = await ApiService.getProfile(token);
+                              if (profileResponse.statusCode == 200) {
+                                final profileData = jsonDecode(profileResponse.body);
+                                final user = profileData['user'];
+                                final profile = profileData['profile'];
+                                
+                                // Save userId and std for leaderboard
+                                if (user != null && user['_id'] != null) {
+                                  await prefs.setString('userId', user['_id']);
+                                }
+                                if (profile != null && profile['std'] != null) {
+                                  await prefs.setString('std', profile['std']);
+                                }
+                              }
+                            } catch (e) {
+                              print('Error fetching profile: $e');
+                              // Continue with login even if profile fetch fails
+                            }
+
                             CustomToast.showSuccess(context, "Login Successful");
                             Navigator.pushAndRemoveUntil(
                               context,

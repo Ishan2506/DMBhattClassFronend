@@ -268,4 +268,18 @@ class ApiService {
     final uri = Uri.parse("$baseUrl/fiveMinTest/all");
     return await http.get(uri);
   }
+
+  static Future<http.Response> getLeaderboard({
+    required String token,
+    required String std,
+  }) async {
+    final uri = Uri.parse("$baseUrl/leaderboard/$std");
+    return await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
 }
