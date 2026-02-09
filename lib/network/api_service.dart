@@ -202,12 +202,14 @@ class ApiService {
     );
   }
 
-  static String _getMimeType(String path) {
-    final ext = path.split('.').last.toLowerCase();
+  static String _getMimeType(String fileName) {
+    final ext = fileName.split('.').last.toLowerCase();
     const mimeTypes = {
       'jpg': 'image/jpeg',
       'jpeg': 'image/jpeg',
       'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
       'pdf': 'application/pdf',
     };
     return mimeTypes[ext] ?? 'application/octet-stream';
