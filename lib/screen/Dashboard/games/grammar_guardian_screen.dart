@@ -132,12 +132,14 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            LinearProgressIndicator(
-              value: (_currentIndex + 1) / _questions.length,
-              backgroundColor: Colors.grey.shade300,
-              color: theme.primaryColor,
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: (_currentIndex + 1) / _questions.length,
+                backgroundColor: theme.dividerColor.withOpacity(0.1),
+                color: theme.primaryColor,
+                minHeight: 8,
+              ),
             ),
             const SizedBox(height: 40),
             
@@ -151,14 +153,25 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                    blurRadius: 10, 
+                    offset: const Offset(0, 4)
+                  )
+                ],
               ),
               child: Text(
                 question['q'],
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: theme.primaryColor),
+                style: GoogleFonts.poppins(
+                  fontSize: 22, 
+                  fontWeight: FontWeight.bold, 
+                  color: theme.primaryColor
+                ),
               ),
             ),
             
@@ -167,8 +180,8 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
             ...question['options'].map<Widget>((option) {
               bool isSelected = _selectedOption == option;
               bool showColor = _isAnswered && (isSelected || option == question['a']);
-              Color color = Colors.white;
-              Color textColor = Colors.black87;
+              Color color = theme.cardColor;
+              Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.black87;
 
               if (showColor) {
                 if (option == question['a']) {
@@ -190,9 +203,16 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                     decoration: BoxDecoration(
                       color: color,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: showColor ? Colors.transparent : Colors.grey.shade300),
+                      border: Border.all(
+                        color: showColor ? Colors.transparent : theme.dividerColor.withOpacity(0.2)
+                      ),
                       boxShadow: [
-                         if (!showColor) BoxShadow(color: Colors.grey.shade200, blurRadius: 4, offset: const Offset(0, 2))
+                         if (!showColor) 
+                           BoxShadow(
+                             color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                             blurRadius: 4, 
+                             offset: const Offset(0, 2)
+                           )
                       ]
                     ),
                     child: Row(
@@ -208,7 +228,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                              color: Colors.white,
                            )
                          else
-                           const Icon(Icons.circle_outlined, color: Colors.grey),
+                           Icon(Icons.circle_outlined, color: theme.dividerColor),
                       ],
                     ),
                   ),

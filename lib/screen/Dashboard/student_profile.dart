@@ -325,333 +325,440 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.primary.withOpacity(0.8),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text("Profile",
+        title: Text("My Profile",
             style: GoogleFonts.poppins(
-                color: Colors.white, fontWeight: FontWeight.w600)),
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
         centerTitle: true,
-        actions: [
-           IconButton(
-             icon: const Icon(Icons.switch_account_outlined, color: Colors.white),
-             onPressed: () => StudentProfileScreen.showSwitchAccountSheet(context, name: studentName, phone: mobileNo, pic: _photoPath),
-           ),
-        ], 
       ),
       body: _isLoading 
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Profile Card
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-                      blurRadius: 10,
-                      spreadRadius: 2)
-                ],
-              ),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: Icon(Icons.edit, color: theme.iconTheme.color?.withOpacity(0.7) ?? Colors.grey, size: 22),
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                        );
-                        if (result == true) {
-                          _fetchProfile();
-                        }
-                      },
+            // 1. Premium Header Section
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(40),
+                      bottomRight: Radius.circular(40),
                     ),
                   ),
-                  
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: isDark ? Colors.grey.shade800 : const Color(0xFFE0E0E0),
-                    child: CircleAvatar(
-                      radius: 48,
-                      backgroundColor: theme.cardColor,
-                      backgroundImage: (_photoPath != null && _photoPath!.isNotEmpty)
-                          ? NetworkImage(_photoPath!)
-                          : const AssetImage("assets/images/user_placeholder.png") as ImageProvider, 
+                ),
+                Positioned(
+                  bottom: -50,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              )
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 55,
+                            backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                            backgroundImage: (_photoPath != null && _photoPath!.isNotEmpty)
+                                ? NetworkImage(_photoPath!)
+                                : const AssetImage("assets/images/user_placeholder.png") as ImageProvider,
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                              );
+                              if (result == true) {
+                                _fetchProfile();
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondary,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 25),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 60),
 
-                  _buildInfoRow(
-                    context,
-                    icon: Icons.person_outline,
-                    label: "Student Name",
-                    value: studentName,
-                    icon2: Icons.layers_outlined,
-                    label2: "Standard",
-                    value2: studentStandard,
-                  ),
-                  Divider(height: 30, color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
-                  _buildInfoRow(
-                    context,
-                    icon: Icons.phone_android,
-                    label: "Mobile No",
-                    value: mobileNo,
-                  ),
-                  Divider(height: 30, color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
-                  _buildInfoRow(
-                    context,
-                    icon: Icons.school_outlined,
-                    label: "School Name",
-                    value: schoolName,
-                  ),
-                ],
+            // 2. Name & Standard
+            Text(
+              studentName,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // Reward Points Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.amber.shade400, Colors.amber.shade700],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                   BoxShadow(
-                      color: Colors.amber.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                   )
-                ],
-              ),
-              child: Row(
-                children: [
-                   Container(
-                     padding: const EdgeInsets.all(12),
-                     decoration: BoxDecoration(
-                       color: Colors.white.withOpacity(0.2),
-                       shape: BoxShape.circle,
-                     ),
-                     child: const Icon(Icons.stars_rounded, color: Colors.white, size: 32),
-                   ),
-                   const SizedBox(width: 16),
-                   Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     children: [
-                       Text(
-                         "Total Reward Points",
-                         style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
-                       ),
-                       Text(
-                         "$_totalPoints",
-                         style: GoogleFonts.poppins(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                       ),
-                     ],
-                   ),
-                ],
+            Text(
+              "Standard: $studentStandard",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
               ),
             ),
             
             const SizedBox(height: 24),
 
-            // Contact Details Section Header
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Contact Details", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: theme.textTheme.titleLarge?.color))
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildDetailTile(context, icon: Icons.phone_android_rounded, title: "Mobile No", value: mobileNo)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildDetailTile(context, icon: Icons.family_restroom_rounded, title: "Parent's Mobile", value: parentMobile.isEmpty ? "N/A" : parentMobile)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildDetailTile(
-              context, 
-              icon: Icons.email_outlined, 
-              title: "Email ID", 
-              value: email.isEmpty ? "N/A" : email
-            ),
-
-            const SizedBox(height: 24),
-
-            // Academic Performance
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Academic Performance", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: theme.textTheme.titleLarge?.color))
-            ),
-            const SizedBox(height: 12),
-
-            if (_examResults.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
+            // 3. Quick Stats (Reward Points)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
-                ),
-                child: Column(
-                  children: [
-                    Icon(Icons.assignment_outlined, size: 48, color: Colors.grey.shade400),
-                    const SizedBox(height: 10),
-                    Text("No exam results yet", style: GoogleFonts.poppins(color: Colors.grey)),
+                  gradient: LinearGradient(
+                    colors: [Colors.amber.shade400, Colors.orange.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    )
                   ],
                 ),
-              )
-            else
-              ..._examResults.map((exam) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildMarksCard(
-                   context,
-                   title: exam['title'] ?? 'Exam',
-                   marks: "${exam['obtainedMarks'] ?? 0}/${exam['totalMarks'] ?? 0}",
-                   color: (exam['totalMarks'] != null && exam['totalMarks'] != 0) 
-                       ? ((exam['obtainedMarks'] ?? 0) / exam['totalMarks']) >= 0.4 ? Colors.green : Colors.red
-                       : Colors.grey,
-                   isOnline: exam['isOnline'] ?? false,
-                   onTap: () {
-                      if (exam['isOnline'] == true) {
-                         Navigator.push(
-                           context,
-                           MaterialPageRoute(builder: (context) => const McqDetailScreen()),
-                         );
-                      }
-                   },
-                 ),
-              )),
-
-            const SizedBox(height: 30),
-
-            // Sign Out Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                 onPressed: () async {
-                   final prefs = await SharedPreferences.getInstance();
-                   await prefs.remove('auth_token');
-                   await prefs.remove('user_password');
-                   await prefs.remove('userId'); 
-                   await prefs.remove('std'); 
-                   if (!mounted) return;
-                   Navigator.pushAndRemoveUntil(
-                     context,
-                     MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                     (route) => false,
-                   );
-                 },
-                 icon: Icon(Icons.logout_rounded, color: Colors.red.shade400),
-                 label: Text("Sign Out", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.red.shade400)),
-                 style: OutlinedButton.styleFrom(
-                   padding: const EdgeInsets.symmetric(vertical: 16),
-                   side: BorderSide(color: Colors.red.shade200),
-                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                 ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.stars_rounded, color: Colors.white, size: 30),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Learning Points",
+                          style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          "$_totalPoints XP",
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
+                  ],
+                ),
               ),
             ),
+
+            const SizedBox(height: 32),
+
+            // 4. Switch Account Section (Clearly Visible)
+            _buildSwitchAccountSection(context, theme),
+
+            const SizedBox(height: 32),
+
+            // 5. Academic Performance Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Recent Performance",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_examResults.isEmpty)
+                    _buildEmptyPerformance(theme)
+                  else
+                    ..._examResults.take(3).map((exam) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildMarksCard(
+                            context,
+                            title: exam['title'] ?? 'Exam',
+                            marks: "${exam['obtainedMarks'] ?? 0}/${exam['totalMarks'] ?? 0}",
+                            color: (exam['totalMarks'] != null && exam['totalMarks'] != 0)
+                                ? ((exam['obtainedMarks'] ?? 0) / exam['totalMarks']) >= 0.4 ? Colors.green : Colors.red
+                                : Colors.grey,
+                            isOnline: exam['isOnline'] ?? false,
+                            onTap: () {
+                              if (exam['isOnline'] == true) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const McqDetailScreen()),
+                                );
+                              }
+                            },
+                          ),
+                        )),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // 6. Contact & Details Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text(
+                    "Profile Details",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailItem(context, Icons.school_rounded, "School", schoolName),
+                  const SizedBox(height: 12),
+                  _buildDetailItem(context, Icons.phone_android_rounded, "Mobile", mobileNo),
+                  const SizedBox(height: 12),
+                  _buildDetailItem(context, Icons.email_rounded, "Email", email.isEmpty ? "Not provided" : email),
+                  const SizedBox(height: 12),
+                  _buildDetailItem(context, Icons.family_restroom_rounded, "Parent's Contact", parentMobile.isEmpty ? "N/A" : parentMobile),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 40),
+
+            // 7. Sign Out
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextButton.icon(
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.remove('auth_token');
+                  await prefs.remove('user_password');
+                  await prefs.remove('userId');
+                  await prefs.remove('std');
+                  if (!mounted) return;
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.logout_rounded, color: Colors.red),
+                label: Text("Sign Out of session", style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Colors.red, width: 1)),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 60),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, {required IconData icon, required String label, required String value, IconData? icon2, String? label2, String? value2}) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildInfoItem(icon, label, value),
-        ),
-        if (icon2 != null) ...[
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildInfoItem(icon2, label2!, value2!),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildInfoItem(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Colors.grey),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey)),
-              Text(value, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailTile(BuildContext context, {required IconData icon, required String title, required String value}) {
-    final theme = Theme.of(context);
-    
+  Widget _buildEmptyPerformance(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
-        ],
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: theme.primaryColor.withOpacity(0.7)),
-              const SizedBox(width: 8),
-              Text(title, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600)),
-            ],
+          Icon(Icons.assignment_turned_in_outlined, size: 40, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text("No results yet. Keep learning!", style: GoogleFonts.poppins(color: Colors.grey.shade500, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(BuildContext context, IconData icon, String label, String value) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
           ),
-          const SizedBox(height: 6),
-          Text(
-            value, 
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13, color: theme.textTheme.bodyLarge?.color),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600)),
+                Text(value, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSwitchAccountSection(BuildContext context, ThemeData theme) {
+    return FutureBuilder<SharedPreferences>(
+      future: SharedPreferences.getInstance(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final prefs = snapshot.data!;
+        List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
+        List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
+        String currentToken = prefs.getString('auth_token') ?? "";
+
+        // Filter out current active account for the "Switch" list
+        final otherAccounts = accounts.where((acc) => acc['token'] != currentToken).toList();
+
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Switch Profile",
+                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                  ),
+                  GestureDetector(
+                    onTap: () => StudentProfileScreen.showSwitchAccountSheet(context, name: studentName, phone: mobileNo, pic: _photoPath),
+                    child: Text(
+                      "See All",
+                      style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (otherAccounts.isEmpty)
+                Text(
+                  "Single Profile Active. Add another to switch easily.",
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500),
+                )
+              else
+                SizedBox(
+                  height: 60,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: otherAccounts.length,
+                    itemBuilder: (context, index) {
+                      final acc = otherAccounts[index];
+                      return GestureDetector(
+                        onTap: () => StudentProfileScreen._switchUser(context, acc),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                               CircleAvatar(
+                                radius: 14,
+                                backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                                backgroundImage: (acc['profilePic'] != null && acc['profilePic'].toString().isNotEmpty) 
+                                    ? NetworkImage(acc['profilePic']) 
+                                    : null,
+                                child: (acc['profilePic'] == null || acc['profilePic'].toString().isEmpty)
+                                    ? Text(acc['name'][0].toUpperCase(), style: TextStyle(fontSize: 10, color: theme.colorScheme.primary, fontWeight: FontWeight.bold))
+                                    : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(acc['name'], style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              if (accounts.length < 3) ...[
+                const SizedBox(height: 16),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAccountScreen())),
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                    label: const Text("Add Another Account"),
+                    style: TextButton.styleFrom(
+                      foregroundColor: theme.colorScheme.primary,
+                      textStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 

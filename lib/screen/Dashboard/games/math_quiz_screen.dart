@@ -183,26 +183,53 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
             
             if (_gameOver)
               Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                   Text("Time's Up!", style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+                   Text(
+                     "Time's Up!", 
+                     style: GoogleFonts.poppins(
+                       fontSize: 32, 
+                       fontWeight: FontWeight.bold, 
+                       color: theme.textTheme.headlineMedium?.color ?? Colors.blueGrey
+                     )
+                   ),
                    const SizedBox(height: 16),
-                   Text("Final Score: $_score", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.w600)),
+                   Text(
+                     "Final Score: $_score", 
+                     style: GoogleFonts.poppins(
+                       fontSize: 24, 
+                       fontWeight: FontWeight.w600,
+                       color: theme.textTheme.titleLarge?.color
+                     )
+                   ),
                    const SizedBox(height: 32),
                    ElevatedButton(
                      onPressed: _startRound,
                      style: ElevatedButton.styleFrom(
                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                        backgroundColor: theme.primaryColor,
+                       foregroundColor: Colors.white,
+                       elevation: 8,
+                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                      ),
-                     child: Text("Play Again", style: GoogleFonts.poppins(color: Colors.white, fontSize: 18)),
+                     child: Text("Play Again", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
                    )
                 ],
               )
             else
               Column(
                 children: [
-                  Text(_question, style: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.bold, color: theme.primaryColor)),
-                  const SizedBox(height: 48),
+                  FittedBox(
+                    child: Text(
+                      _question, 
+                      style: GoogleFonts.poppins(
+                        fontSize: 48, 
+                        fontWeight: FontWeight.bold, 
+                        color: theme.primaryColor
+                      )
+                    ),
+                  ),
+                  const SizedBox(height: 40),
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -210,21 +237,34 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 2.5,
+                      childAspectRatio: 2.0,
                     ),
                     itemCount: 4,
                     itemBuilder: (context, index) {
                       return ElevatedButton(
                         onPressed: () => _checkAnswer(_options[index]),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
+                          backgroundColor: theme.cardColor,
                           foregroundColor: theme.primaryColor,
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.shade200)),
+                          elevation: 2,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                          ),
                         ),
-                        child: Text(
-                          "${_options[index]}",
-                          style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold),
+                        child: Center(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "${_options[index]}",
+                              style: GoogleFonts.poppins(
+                                fontSize: 24, 
+                                fontWeight: FontWeight.bold,
+                                color: theme.textTheme.bodyLarge?.color
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     },

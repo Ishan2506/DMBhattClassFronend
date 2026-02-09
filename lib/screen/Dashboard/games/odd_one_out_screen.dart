@@ -127,15 +127,23 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            LinearProgressIndicator(
-              value: (_currentIndex + 1) / _levels.length,
-              color: theme.primaryColor,
-              backgroundColor: Colors.grey.shade200,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: (_currentIndex + 1) / _levels.length,
+                color: theme.primaryColor,
+                backgroundColor: theme.dividerColor.withOpacity(0.1),
+                minHeight: 8,
+              ),
             ),
             const SizedBox(height: 40),
             Text(
               "Which one does not belong?",
-              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey[800]),
+              style: GoogleFonts.poppins(
+                fontSize: 20, 
+                fontWeight: FontWeight.bold, 
+                color: theme.textTheme.titleLarge?.color
+              ),
             ),
             const SizedBox(height: 40),
             
@@ -150,12 +158,12 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                 itemCount: options.length,
                 itemBuilder: (context, index) {
                    final opt = options[index];
-                   Color bg = Colors.white;
-                   Color border = Colors.grey.shade300;
-                   Color text = Colors.black87;
+                   Color bg = theme.cardColor;
+                   Color border = theme.dividerColor.withOpacity(0.2);
+                   Color text = theme.textTheme.bodyLarge?.color ?? Colors.black87;
                    
                    if (_isAnswered) {
-                     if (opt == level["answer"] || (opt == "Carrrot" && level["answer"] == "Carrot")) {
+                     if (opt == level["answer"]) {
                        bg = Colors.green;
                        text = Colors.white;
                        border = Colors.green;
@@ -164,8 +172,8 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                        text = Colors.white;
                        border = Colors.red;
                      } else {
-                       bg = Colors.grey.shade100;
-                       text = Colors.grey;
+                       bg = theme.disabledColor.withOpacity(0.1);
+                       text = theme.disabledColor;
                      }
                    }
 
@@ -178,7 +186,12 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                          borderRadius: BorderRadius.circular(16),
                          border: Border.all(color: border, width: 2),
                          boxShadow: [
-                           if (!_isAnswered) BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4))
+                           if (!_isAnswered) 
+                             BoxShadow(
+                               color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                               blurRadius: 4, 
+                               offset: const Offset(0, 4)
+                             )
                          ]
                        ),
                        child: Center(
@@ -196,12 +209,20 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
             
             if (_isAnswered)
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1), 
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.primaryColor.withOpacity(0.2))
+                ),
                 child: Text(
                   _isCorrect ? "Correct! ${level['reason']}" : "Wrong! ${level['reason']}",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: Colors.blue[800], fontWeight: FontWeight.w600),
+                  style: GoogleFonts.poppins(
+                    color: theme.primaryColor, 
+                    fontWeight: FontWeight.w600
+                  ),
                 ),
               ),
               

@@ -159,7 +159,10 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
              
              Text(
                _isGameOver ? "Time Up!" : "Unscramble:",
-               style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey),
+               style: GoogleFonts.poppins(
+                 fontSize: 18, 
+                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)
+               ),
              ),
              const SizedBox(height: 16),
              Text(
@@ -175,12 +178,24 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                controller: _controller,
                textCapitalization: TextCapitalization.characters,
                textAlign: TextAlign.center,
-               style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold),
+               style: GoogleFonts.poppins(
+                 fontSize: 24, 
+                 fontWeight: FontWeight.bold,
+                 color: theme.textTheme.bodyLarge?.color
+               ),
                decoration: InputDecoration(
                  hintText: "Enter Word",
+                 hintStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.4)),
                  filled: true,
-                 fillColor: Colors.white,
-                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                 fillColor: theme.cardColor,
+                 border: OutlineInputBorder(
+                   borderRadius: BorderRadius.circular(16), 
+                   borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1))
+                 ),
+                 enabledBorder: OutlineInputBorder(
+                   borderRadius: BorderRadius.circular(16), 
+                   borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1))
+                 ),
                ),
                onSubmitted: (_) => _submitAnswer(),
              ),
@@ -196,22 +211,34 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                  onPressed: _submitAnswer,
                  style: ElevatedButton.styleFrom(
                    backgroundColor: theme.primaryColor,
+                   foregroundColor: Colors.white,
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                  ),
-                 child: Text("Check", style: GoogleFonts.poppins(fontSize: 18, color: Colors.white)),
+                 child: Text("Check", style: GoogleFonts.poppins(fontSize: 18)),
                ),
              ),
              
              if (_isGameOver) ...[
-                 Text("The word was: $_currentWord", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w500)),
-                 const SizedBox(height: 24),
-                 ElevatedButton(
-                   onPressed: () {
-                     _timer?.cancel();
-                     _startRound(); // Restart
-                   }, 
-                   child: const Text("Play Again")
-                 )
+                  Text(
+                    "The word was: $_currentWord", 
+                    style: GoogleFonts.poppins(
+                      fontSize: 20, 
+                      fontWeight: FontWeight.w500,
+                      color: theme.textTheme.bodyLarge?.color
+                    )
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      _timer?.cancel();
+                      _startRound(); // Restart
+                    }, 
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.primaryColor,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text("Play Again")
+                  )
              ],
              
              const Spacer(),

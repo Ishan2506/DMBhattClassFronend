@@ -176,6 +176,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final level = _levels[_currentIndex];
 
     return Scaffold(
@@ -185,10 +186,22 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-             icon: Badge(isLabelVisible: _hintsRemaining > 0, label: Text("$_hintsRemaining"), child: const Icon(Icons.lightbulb, color: Colors.amber)),
+             icon: Badge(
+               isLabelVisible: _hintsRemaining > 0, 
+               label: Text("$_hintsRemaining"), 
+               child: const Icon(Icons.lightbulb, color: Colors.amber)
+             ),
              onPressed: _useHint
           ),
-          Center(child: Padding(padding: const EdgeInsets.only(right: 16), child: Text("Score: $_score", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))))
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16), 
+              child: Text(
+                "Score: $_score", 
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)
+              )
+            )
+          )
         ],
       ),
       body: SingleChildScrollView(
@@ -200,19 +213,29 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                const SizedBox(height: 40),
                Text(
                  "Guess the Idiom:",
-                 style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 18),
+                 style: GoogleFonts.poppins(
+                   color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7), 
+                   fontSize: 18
+                 ),
                ),
                const SizedBox(height: 24),
                Container(
                  padding: const EdgeInsets.all(32),
                  decoration: BoxDecoration(
-                   color: Colors.white,
+                   color: theme.cardColor,
                    borderRadius: BorderRadius.circular(24),
-                   boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, 8))],
+                   border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                   boxShadow: [
+                     BoxShadow(
+                       color: Colors.black.withOpacity(isDark ? 0.3 : 0.1), 
+                       blurRadius: 15, 
+                       offset: const Offset(0, 8)
+                     )
+                   ],
                  ),
                  child: Text(
                    level["emoji"],
-                   style: const TextStyle(fontSize: 64), // Emojis need big font
+                   style: const TextStyle(fontSize: 64),
                    textAlign: TextAlign.center,
                  ),
                ),
@@ -221,18 +244,30 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                TextField(
                  controller: _controller,
                  textAlign: TextAlign.center,
-                 style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold),
+                 style: GoogleFonts.poppins(
+                   fontSize: 22, 
+                   fontWeight: FontWeight.bold,
+                   color: theme.textTheme.bodyLarge?.color
+                 ),
                  decoration: InputDecoration(
                    hintText: "Type the phrase...",
+                   hintStyle: GoogleFonts.poppins(color: theme.dividerColor),
                    filled: true,
-                   fillColor: Colors.grey.shade100,
-                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                   fillColor: theme.cardColor,
+                   enabledBorder: OutlineInputBorder(
+                     borderRadius: BorderRadius.circular(16), 
+                     borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2))
+                   ),
+                   focusedBorder: OutlineInputBorder(
+                     borderRadius: BorderRadius.circular(16), 
+                     borderSide: BorderSide(color: theme.primaryColor)
+                   ),
                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20)
                  ),
                  onSubmitted: (_) => _checkAnswer(),
                ),
                
-               const SizedBox(height: 24),
+               const SizedBox(height: 32),
                
                SizedBox(
                  width: double.infinity,
@@ -241,27 +276,30 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                    onPressed: _checkAnswer,
                    style: ElevatedButton.styleFrom(
                      backgroundColor: theme.primaryColor,
+                     foregroundColor: Colors.white,
                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                      elevation: 8,
                    ),
-                   child: Text("Decode", style: GoogleFonts.poppins(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                   child: Text("Decode", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
                  ),
                ),
 
                const SizedBox(height: 24),
                TextButton(
-                 onPressed: () {
-                    // Reveal answer cost points? 
-                    // For now just show hint
-                    _useHint();
-                 },
-                 child: Text("Need a Hint? ($_hintsRemaining left)", style: TextStyle(color: theme.primaryColor)),
+                 onPressed: _useHint,
+                 child: Text(
+                   "Need a Hint? ($_hintsRemaining left)", 
+                   style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold)
+                 ),
                ),
                
                const SizedBox(height: 12),
                TextButton(
                  onPressed: _skipLevel,
-                 child: Text("Skip Level", style: TextStyle(color: Colors.grey[600])),
+                 child: Text(
+                   "Skip Level", 
+                   style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5))
+                 ),
                )
             ],
           ),
