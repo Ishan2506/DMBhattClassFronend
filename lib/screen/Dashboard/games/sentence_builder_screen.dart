@@ -170,8 +170,14 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Level ${_currentIndex + 1}/${_sentences.length}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: theme.primaryColor)),
-                Text("Score: $_score", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.amber[800])),
+                Text(
+                  "Level ${_currentIndex + 1}/${_sentences.length}", 
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: theme.primaryColor)
+                ),
+                Text(
+                  "Score: $_score", 
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.amber[800])
+                ),
               ],
             ),
           ),
@@ -184,7 +190,10 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                   Text(
                     "Drag and drop words to form a correct sentence:",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600]),
+                    style: GoogleFonts.poppins(
+                      fontSize: 16, 
+                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Expanded(
@@ -208,20 +217,30 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                       children: [
                         for (int i = 0; i < _currentWords.length; i++)
                           Container(
-                            key: ValueKey(_currentWords[i] + i.toString()), // Unique key handles duplicate words
+                            key: ValueKey(_currentWords[i] + i.toString()),
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: theme.cardColor,
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
-                              border: Border.all(color: Colors.grey.shade200)
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                                  blurRadius: 4, 
+                                  offset: const Offset(0, 2)
+                                )
+                              ],
+                              border: Border.all(color: theme.dividerColor.withOpacity(0.1))
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                              leading: Icon(Icons.drag_indicator, color: Colors.grey[400]),
+                              leading: Icon(Icons.drag_indicator, color: theme.dividerColor),
                               title: Text(
                                 _currentWords[i],
-                                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.normal),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18, 
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.textTheme.bodyLarge?.color
+                                ),
                               ),
                             ),
                           ),
@@ -236,13 +255,13 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
           if (_isChecked)
             Container(
               padding: const EdgeInsets.all(16),
-              color: _isCorrect ? Colors.green.shade100 : Colors.red.shade100,
+              color: _isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
               width: double.infinity,
               child: Text(
                 _isCorrect ? "Correct! Well done." : "Not quite right yet.",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                  color: _isCorrect ? Colors.green[800] : Colors.red[800],
+                  color: _isCorrect ? Colors.green : Colors.red,
                   fontWeight: FontWeight.bold,
                   fontSize: 16
                 ),
@@ -258,12 +277,13 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                  onPressed: _isCorrect ? null : _checkOrder,
                  style: ElevatedButton.styleFrom(
                    backgroundColor: _isCorrect ? Colors.green : theme.primaryColor,
+                   foregroundColor: Colors.white,
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                    elevation: 4
                  ),
                  child: Text(
                     _isCorrect ? "Next Sentence" : "Check Sentence",
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
                  ),
                ),
             ),

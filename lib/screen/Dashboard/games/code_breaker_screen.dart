@@ -181,18 +181,32 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
              child: Row(
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                children: [
-                 Text("Attempts: ${_guesses.length} / $_maxAttempts", style: GoogleFonts.poppins(color: Colors.grey[800], fontWeight: FontWeight.bold)),
+                 Text(
+                   "Attempts: ${_guesses.length} / $_maxAttempts", 
+                   style: GoogleFonts.poppins(
+                     color: theme.textTheme.bodyLarge?.color, 
+                     fontWeight: FontWeight.bold
+                   )
+                 ),
                  // Hidden Code Placeholder
                  Row(
                    children: List.generate(4, (index) => Container(
                      margin: const EdgeInsets.only(left: 4),
                      width: 30, height: 30,
                      decoration: BoxDecoration(
-                       color: _isGameOver ? _digitColors[_secretCode[index]-1] : Colors.grey.shade300,
+                       color: _isGameOver ? _digitColors[_secretCode[index]-1] : theme.dividerColor.withOpacity(0.1),
                        shape: BoxShape.circle,
-                       border: Border.all(color: Colors.grey.shade400)
+                       border: Border.all(color: theme.dividerColor.withOpacity(0.2))
                      ),
-                     child: Center(child: Text(_isGameOver ? "${_secretCode[index]}" : "?", style: TextStyle(color: _isGameOver ? Colors.white : Colors.grey[700]))),
+                     child: Center(
+                       child: Text(
+                         _isGameOver ? "${_secretCode[index]}" : "?", 
+                         style: TextStyle(
+                           color: _isGameOver ? Colors.white : theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
+                           fontWeight: FontWeight.bold
+                         )
+                       )
+                     ),
                    )),
                  )
                ],
@@ -207,10 +221,12 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                   final result = _guessResults[index];
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)))
+                    ),
                     child: Row(
                       children: [
-                        Text("${index + 1}.", style: TextStyle(color: Colors.grey[600])),
+                        Text("${index + 1}.", style: TextStyle(color: theme.textTheme.bodySmall?.color)),
                         const SizedBox(width: 12),
                         // Guess Pegs
                         ...guess.map((digit) => Container(
@@ -220,16 +236,21 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                                color: _digitColors[digit-1],
                                shape: BoxShape.circle,
                              ),
-                             child: Center(child: Text("$digit", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white))),
+                             child: Center(
+                               child: Text(
+                                 "$digit", 
+                                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)
+                               )
+                             ),
                         )),
                         const Spacer(),
                         // Feedback Pegs
                         Row(
                           children: [
-                            // Bulls (Black/Red - Exact)
+                            // Bulls (Correct position)
                             ...List.generate(result['Bulls']!, (i) => const Icon(Icons.circle, size: 12, color: Colors.red)),
-                            // Cows (White/Grey - Wrong Pos)
-                            ...List.generate(result['Cows']!, (i) => Icon(Icons.circle_outlined, size: 12, color: Colors.grey[400])),
+                            // Cows (Wrong position)
+                            ...List.generate(result['Cows']!, (i) => Icon(Icons.circle_outlined, size: 12, color: theme.dividerColor.withOpacity(0.4))),
                           ],
                         )
                       ],
@@ -240,7 +261,16 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
            ),
            // Input Area
            Container(
-             color: Colors.white,
+             decoration: BoxDecoration(
+               color: theme.cardColor,
+               boxShadow: [
+                 BoxShadow(
+                   color: Colors.black.withOpacity(0.05),
+                   blurRadius: 10,
+                   offset: const Offset(0, -2)
+                 )
+               ]
+             ),
              padding: const EdgeInsets.all(16),
              child: _DigitInput(
                 colors: _digitColors,
@@ -305,25 +335,31 @@ class _DigitInputState extends State<_DigitInput> {
             children: List.generate(4, (index) {
                if (index < _currentInput.length) {
                  final val = _currentInput[index];
-                 return Container(
-                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                   width: 40, height: 40,
-                   decoration: BoxDecoration(
-                     color: widget.colors[val-1],
-                     borderRadius: BorderRadius.circular(8)
-                   ),
-                   child: Center(child: Text("$val", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white))),
-                 );
-               } else {
-                 return Container(
-                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                   width: 40, height: 40,
-                   decoration: BoxDecoration(
-                     border: Border.all(color: Colors.grey.shade300),
-                     borderRadius: BorderRadius.circular(8)
-                   ),
-                 );
-               }
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: widget.colors[val-1],
+                    borderRadius: BorderRadius.circular(8)
+                  ),
+                  child: Center(
+                    child: Text(
+                      "$val", 
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)
+                    )
+                  ),
+                );
+              } else {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: widget.theme.dividerColor.withOpacity(0.1),
+                    border: Border.all(color: widget.theme.dividerColor.withOpacity(0.2)),
+                    borderRadius: BorderRadius.circular(8)
+                  ),
+                );
+              }
             }),
           ),
           const SizedBox(height: 16),

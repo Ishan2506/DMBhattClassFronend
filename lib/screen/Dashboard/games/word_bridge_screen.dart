@@ -191,7 +191,15 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
         title: "Word Bridge",
         centerTitle: true,
         actions: [
-          Center(child: Padding(padding: const EdgeInsets.only(right: 16), child: Text("Score: $_score", style: const TextStyle(fontWeight: FontWeight.bold))))
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16), 
+              child: Text(
+                "Score: $_score", 
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
+              )
+            )
+          )
         ],
       ),
       body: Padding(
@@ -199,10 +207,14 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
         child: Column(
           children: [
              // Progress
-             LinearProgressIndicator(
-               value: (_currentLevelIndex + 1) / _levels.length,
-               backgroundColor: Colors.grey.shade300,
-               color: theme.primaryColor,
+             ClipRRect(
+               borderRadius: BorderRadius.circular(10),
+               child: LinearProgressIndicator(
+                 value: (_currentLevelIndex + 1) / _levels.length,
+                 backgroundColor: theme.dividerColor.withOpacity(0.1),
+                 color: theme.primaryColor,
+                 minHeight: 8,
+               ),
              ),
              const SizedBox(height: 40),
              
@@ -211,9 +223,23 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                children: [
                  _buildStone(_levels[_currentLevelIndex]["start"], isActive: true, theme: theme),
-                 Expanded(child: Divider(thickness: 2, color: Colors.grey.shade300, indent: 10, endIndent: 10)),
+                 Expanded(
+                   child: Divider(
+                     thickness: 2, 
+                     color: theme.dividerColor.withOpacity(0.2), 
+                     indent: 10, 
+                     endIndent: 10
+                   )
+                 ),
                  Icon(Icons.flag, color: theme.primaryColor),
-                 Expanded(child: Divider(thickness: 2, color: Colors.grey.shade300, indent: 10, endIndent: 10)),
+                 Expanded(
+                   child: Divider(
+                     thickness: 2, 
+                     color: theme.dividerColor.withOpacity(0.2), 
+                     indent: 10, 
+                     endIndent: 10
+                   )
+                 ),
                  _buildStone(target, isActive: false, theme: theme), // Target
                ],
              ),
@@ -222,19 +248,31 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
              
              Text(
                "Current Concept:",
-               style: GoogleFonts.poppins(color: Colors.grey[600]),
+               style: GoogleFonts.poppins(
+                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)
+               ),
              ),
              const SizedBox(height: 8),
              Text(
                _currentWord,
-               style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: theme.primaryColor),
+               style: GoogleFonts.poppins(
+                 fontSize: 32, 
+                 fontWeight: FontWeight.bold, 
+                 color: theme.primaryColor
+               ),
              ),
              const SizedBox(height: 8),
-             const Icon(Icons.arrow_downward, size: 32, color: Colors.grey),
+             Icon(
+               Icons.arrow_downward, 
+               size: 32, 
+               color: theme.textTheme.bodyMedium?.color?.withOpacity(0.3)
+             ),
              const SizedBox(height: 8),
              Text(
                "Connects to...",
-               style: GoogleFonts.poppins(color: Colors.grey[600]),
+               style: GoogleFonts.poppins(
+                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)
+               ),
              ),
              
              const Spacer(),
@@ -242,12 +280,18 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
              // Options
              ...currentOptions.map((opt) {
                 // Determine feedback color
-                Color btnColor = Colors.white;
+                Color btnColor = theme.cardColor;
+                Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.black87;
+                
                 if (_showFeedback) {
                    List<String> path = _levels[_currentLevelIndex]["path"] as List<String>;
                    String correct = path[_currentStepIndex + 1];
-                   if (opt == correct) btnColor = Colors.green.shade100;
-                   if (opt != correct && _lastChoiceCorrect == false) btnColor = Colors.transparent; // Don't highlight wrong ones, simple
+                   if (opt == correct) {
+                     btnColor = Colors.green;
+                     textColor = Colors.white;
+                   } else if (_lastChoiceCorrect == false && opt == _currentWord) {
+                     // Feedback for wrong choice could be here if needed
+                   }
                 }
 
                 return Padding(
@@ -259,14 +303,14 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         backgroundColor: btnColor,
-                        shadowColor: Colors.black12,
+                        foregroundColor: textColor,
                         elevation: 2,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        side: BorderSide(color: theme.primaryColor.withOpacity(0.2))
+                        side: BorderSide(color: theme.primaryColor.withOpacity(0.1))
                       ),
                       child: Text(
                         opt, 
-                        style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87, fontWeight: FontWeight.w500)
+                        style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)
                       ),
                     ),
                   ),
@@ -286,14 +330,26 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isActive ? theme.primaryColor : Colors.grey.shade200,
+            color: isActive ? theme.primaryColor : theme.dividerColor.withOpacity(0.1),
             shape: BoxShape.circle,
-            boxShadow: isActive ? [BoxShadow(color: theme.primaryColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
+            boxShadow: isActive 
+                ? [BoxShadow(color: theme.primaryColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] 
+                : [],
           ),
-          child: Icon(isActive ? Icons.hub : Icons.place, color: isActive ? Colors.white : Colors.grey),
+          child: Icon(
+            isActive ? Icons.hub : Icons.place, 
+            color: isActive ? Colors.white : theme.dividerColor
+          ),
         ),
         const SizedBox(height: 8),
-        Text(text, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14))
+        Text(
+          text, 
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold, 
+            fontSize: 14,
+            color: theme.textTheme.bodyLarge?.color
+          )
+        )
       ],
     );
   }

@@ -97,9 +97,6 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            
-            // Warning Note logic could go here, but it's in the AppBar now as requested.
-
             _buildGameCard(
               context,
               title: "Memory Match",
@@ -204,6 +201,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -214,12 +213,12 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
         ),
         child: Row(
           children: [
@@ -249,13 +248,13 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                     description,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+            Icon(Icons.arrow_forward_ios, color: theme.dividerColor, size: 16),
           ],
         ),
       ),

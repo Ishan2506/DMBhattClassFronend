@@ -210,28 +210,40 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: theme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.timer, color: Colors.blue, size: 20),
+                      Icon(Icons.timer, color: theme.primaryColor, size: 20),
                       const SizedBox(width: 8),
-                      Text("$_secondsElapsed s", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.blue)),
+                      Text(
+                        "$_secondsElapsed s", 
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold, 
+                          color: theme.primaryColor
+                        )
+                      ),
                     ],
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.amber.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.green, size: 20),
+                      const Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 8),
-                      Text("Score: $_score", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.green)),
+                      Text(
+                        "Score: $_score", 
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold, 
+                          color: Colors.amber[800]
+                        )
+                      ),
                     ],
                   ),
                 ),
@@ -243,7 +255,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
             child: GridView.builder(
               padding: const EdgeInsets.all(16),
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
@@ -262,6 +274,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
   }
 
   Widget _buildCard(int index) {
+    final theme = Theme.of(context);
     bool isFlipped = _cardFlipped[index] || _cardMatched[index];
     
     return GestureDetector(
@@ -270,7 +283,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
         decoration: BoxDecoration(
-          color: isFlipped ? Colors.white : Colors.blue.shade700,
+          color: isFlipped ? theme.cardColor : theme.primaryColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -279,7 +292,9 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
               offset: const Offset(0, 2),
             ),
           ],
-          border: isFlipped ? Border.all(color: Colors.blue.shade200, width: 2) : null,
+          border: isFlipped 
+              ? Border.all(color: theme.primaryColor.withOpacity(0.5), width: 2) 
+              : null,
         ),
         child: Center(
           child: isFlipped
@@ -287,9 +302,9 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                   _cardContents[index],
                   style: const TextStyle(fontSize: 32),
                 )
-              : const Icon(
+              : Icon(
                   Icons.question_mark_rounded,
-                  color: Colors.white,
+                  color: theme.colorScheme.onPrimary,
                   size: 32,
                 ),
         ),

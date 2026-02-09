@@ -131,26 +131,46 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               Text("Score: $_score", style: GoogleFonts.poppins(color: theme.primaryColor, fontSize: 18, fontWeight: FontWeight.bold)),
+               Text(
+                 "Score: $_score", 
+                 style: GoogleFonts.poppins(
+                   color: theme.primaryColor, 
+                   fontSize: 18, 
+                   fontWeight: FontWeight.bold
+                 )
+               ),
                Container(
                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                 decoration: BoxDecoration(color: Colors.grey.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                 child: Text("$_timeLeft s", style: GoogleFonts.poppins(color: theme.primaryColor, fontWeight: FontWeight.bold)),
+                 decoration: BoxDecoration(
+                   color: theme.dividerColor.withOpacity(0.1), 
+                   borderRadius: BorderRadius.circular(12)
+                 ),
+                 child: Text(
+                   "$_timeLeft s", 
+                   style: GoogleFonts.poppins(
+                     color: theme.primaryColor, 
+                     fontWeight: FontWeight.bold
+                   )
+                 ),
                )
             ],
           ),
           const SizedBox(height: 20),
-          LinearProgressIndicator(
-            value: _animationController.value,
-            backgroundColor: Colors.grey.withOpacity(0.2),
-            color: Colors.amber,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: _animationController.value,
+              backgroundColor: theme.dividerColor.withOpacity(0.1),
+              color: Colors.amber,
+              minHeight: 8,
+            ),
           ),
           const Spacer(),
           
           if (_lastFact != null)
-             _buildFeedbackCard()
+             _buildFeedbackCard(theme)
           else
-             _buildQuestionCard(question['q']),
+             _buildQuestionCard(question['q'], theme),
 
           const Spacer(),
           
@@ -190,42 +210,62 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
     );
   }
 
-  Widget _buildQuestionCard(String text) {
+  Widget _buildQuestionCard(String text, ThemeData theme) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 15, offset: Offset(0, 8))],
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.1), 
+            blurRadius: 15, 
+            offset: const Offset(0, 8)
+          )
+        ],
       ),
       child: Column(
         children: [
           Text(
             "Question ${_currentIndex + 1}",
-            style: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
+            style: GoogleFonts.poppins(
+              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5), 
+              fontSize: 14
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             text,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: GoogleFonts.poppins(
+              fontSize: 24, 
+              fontWeight: FontWeight.bold, 
+              color: theme.textTheme.bodyLarge?.color
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFeedbackCard() {
+  Widget _buildFeedbackCard(ThemeData theme) {
     bool isCorrect = _lastAnswerCorrect ?? false;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: isCorrect ? Colors.green.shade50 : Colors.red.shade50,
+        color: isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: isCorrect ? Colors.green : Colors.red, width: 2),
-         boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 15, offset: Offset(0, 8))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.1), 
+            blurRadius: 15, 
+            offset: const Offset(0, 8)
+          )
+        ],
       ),
       child: Column(
         children: [
@@ -233,13 +273,20 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
           const SizedBox(height: 16),
           Text(
             isCorrect ? "Correct!" : "Wrong!",
-            style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: isCorrect ? Colors.green : Colors.red),
+            style: GoogleFonts.poppins(
+              fontSize: 24, 
+              fontWeight: FontWeight.bold, 
+              color: isCorrect ? Colors.green : Colors.red
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             _lastFact!,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 16, color: Colors.black87),
+            style: GoogleFonts.poppins(
+              fontSize: 16, 
+              color: theme.textTheme.bodyMedium?.color
+            ),
           ),
         ],
       ),
@@ -247,13 +294,27 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
   }
 
   Widget _buildGameOver() {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Game Over!", style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+          Text(
+            "Game Over!", 
+            style: GoogleFonts.poppins(
+              fontSize: 32, 
+              fontWeight: FontWeight.bold, 
+              color: theme.textTheme.titleLarge?.color
+            )
+          ),
           const SizedBox(height: 16),
-          Text("You scored $_score / ${_questions.length}", style: GoogleFonts.poppins(fontSize: 20, color: Colors.grey[600])),
+          Text(
+            "You scored $_score / ${_questions.length}", 
+            style: GoogleFonts.poppins(
+              fontSize: 20, 
+              color: theme.textTheme.bodyMedium?.color
+            )
+          ),
           const SizedBox(height: 40),
           ElevatedButton(
             onPressed: () {
@@ -265,8 +326,13 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
                  _startTimer();
                });
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12)),
-            child: Text("Play Again", style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor, 
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            child: Text("Play Again", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
           )
         ],
       ),
