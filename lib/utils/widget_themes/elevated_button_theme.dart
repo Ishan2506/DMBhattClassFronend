@@ -11,7 +11,6 @@ class CustomElevatedButtonTheme {
         backgroundColor: colorScheme.primary,
         disabledForegroundColor: colorScheme.onSurface.withOpacity(0.38),
         disabledBackgroundColor: colorScheme.onSurface.withOpacity(0.12),
-        padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 80.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
         ),

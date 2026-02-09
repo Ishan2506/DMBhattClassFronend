@@ -17,12 +17,10 @@ class CustomFilledButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     
     return SizedBox(
       width: double.infinity,
-      height: screenHeight * 0.06, // Responsive height (approx 48-56 depending on screen)
       child: icon == null
           ? FilledButton(
               onPressed: isLoading ? null : onPressed,
@@ -61,6 +59,8 @@ class CustomFilledButton extends StatelessWidget {
   ButtonStyle _buttonStyle() {
     return FilledButton.styleFrom(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(S.s12)),
+      minimumSize: const Size.fromHeight(56.0), // Ensure a minimum height
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24), // Add vertical padding
     );
   }
 }

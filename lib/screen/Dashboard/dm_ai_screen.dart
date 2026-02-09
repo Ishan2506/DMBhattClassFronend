@@ -19,7 +19,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _aiService = TuitionAIService();
-  final FlutterTts _flutterTts = FlutterTts();
+  // final FlutterTts _flutterTts = FlutterTts();
 
 
   final List<ChatMessage> _messages = [];
@@ -33,23 +33,23 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
   @override
   void initState() {
     super.initState();
-    _initTts();
+    // _initTts();
     _startFreshConversation();
   }
 
-   Future<void> _initTts() async {
-    await _flutterTts.setLanguage("en-IN");
-    await _flutterTts.setPitch(1.1); // Higher pitch for female voice preference
-    await _flutterTts.setSpeechRate(0.5);
-  }
+  //  Future<void> _initTts() async {
+  //   await _flutterTts.setLanguage("en-IN");
+  //   await _flutterTts.setPitch(1.1); // Higher pitch for female voice preference
+  //   await _flutterTts.setSpeechRate(0.5);
+  // }
 
-  Future<void> _speak(String text) async {
-    await _flutterTts.speak(text);
-  }
+  // Future<void> _speak(String text) async {
+  //   await _flutterTts.speak(text);
+  // }
 
   @override
   void dispose() {
-    _flutterTts.stop();
+    // _flutterTts.stop();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -69,7 +69,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
   void _addBot(String text, {List<String>? options}) {
     _messages.add(ChatMessage(text: text, isUser: false, options: options));
     _scrollToBottom();
-    _speak(text);
+    // _speak(text);
     setState(() {});
   }
 
@@ -314,47 +314,37 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: colorScheme.primary.withOpacity(0.5),
-                        width: 1.5
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextField(
-                            controller: _controller,
-                            style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyLarge!.color,
-                            ),
-                            cursorColor: Theme.of(context).colorScheme.primary,
-                            decoration: InputDecoration(
-                              hintText: "Type your answer...",
-                              hintStyle: GoogleFonts.poppins(
-                                color: colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 14
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            onSubmitted: (_) => _handleSubmit(),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyLarge!.color,
                           ),
+                          cursorColor: Theme.of(context).colorScheme.primary,
+                          decoration: InputDecoration(
+                            hintText: "Type your answer...",
+                            hintStyle: GoogleFonts.poppins(
+                              color: colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 14
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onSubmitted: (_) => _handleSubmit(),
                         ),
-                        // Padding(
-                        //   padding: const EdgeInsets.only(right: 8.0),
-                        //   child: IconButton(
-                        //     icon: const Icon(Icons.mic, color: Colors.blue),
-                        //     onPressed: () {
-                        //         // Mic action placeholder
-                        //     },
-                        //   ),
-                        // ),
-                      ],
-                    ),
+                      ),
+                      // Padding(
+                      //   padding: const EdgeInsets.only(right: 8.0),
+                      //   child: IconButton(
+                      //     icon: const Icon(Icons.mic, color: Colors.blue),
+                      //     onPressed: () {
+                      //         // Mic action placeholder
+                      //     },
+                      //   ),
+                      // ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 12),

@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         // title: Text(
-        //   "Back", 
+        //   "Back",
         //   style: GoogleFonts.poppins(color: Colors.black54, fontSize: 16),
         // ),
        // titleSpacing: 0,
@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
              ),
             const SizedBox(height: 32),
-            
+
             Text(
               l10n.heyThere,
               style: GoogleFonts.poppins(fontSize: 16, color: Colors.black54),
@@ -73,18 +73,18 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(
               l10n.welcomeBack,
               style: GoogleFonts.poppins(
-                fontSize: 24, 
-                fontWeight: FontWeight.bold, 
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
                 color: Colors.black87
               ),
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+            const SizedBox(height: 24),
 
             // Phone Number Field
              _buildTextField(
               controller: _phoneController,
-              hint: l10n.phoneNumber, 
-              icon: Icons.phone_outlined, 
+              hint: l10n.phoneNumber,
+              icon: Icons.phone_outlined,
               inputType: TextInputType.phone,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
@@ -99,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
                 return null;
               },
+               errorMaxLines: 2,
             ),
             const SizedBox(height: 16),
 
@@ -120,13 +121,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
                 return null;
               },
+               errorMaxLines: 2,
             ),
             const SizedBox(height: 16),
 
              TextButton(
               onPressed: () {
                 Navigator.push(
-                  context, 
+                  context,
                   MaterialPageRoute(builder: (context) => const ForgotPasswordPhoneScreen())
                 );
               },
@@ -139,20 +141,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 32),
 
             // Login Button
             SizedBox(
               width: double.infinity,
-              height: MediaQuery.of(context).size.height * 0.07,
+              height: 56.0, // Fixed height for the button
               child: ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     CustomLoader.show(context); // Show Loader
                     try {
                         final response = await ApiService.loginUser(
-                          role: 'student', 
+                          role: 'student',
                           loginCode: _passwordController.text,
                           phoneNum: _phoneController.text,
                         );
@@ -163,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (response.statusCode == 200) {
                             final data = jsonDecode(response.body);
                             final token = data['token'];
-                            
+
                             // Save token
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setString('auth_token', token);
@@ -176,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 final profileData = jsonDecode(profileResponse.body);
                                 final user = profileData['user'];
                                 final profile = profileData['profile'];
-                                
+
                                 // Save userId and std for leaderboard
                                 if (user != null && user['_id'] != null) {
                                   await prefs.setString('userId', user['_id']);
@@ -219,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Text(
                   l10n.login,
                   style: GoogleFonts.poppins(
-                    fontSize: MediaQuery.of(context).size.width * 0.045,
+                    fontSize: 18.0, // Fixed font size
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -236,15 +238,16 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildTextField({
-    required String hint, 
-    required IconData icon, 
+    required String hint,
+    required IconData icon,
     TextEditingController? controller,
-    bool isPassword = false, 
+    bool isPassword = false,
     bool isVisible = false,
     VoidCallback? onVisibilityChanged,
     TextInputType inputType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    int? errorMaxLines,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -267,14 +270,15 @@ class _LoginScreenState extends State<LoginScreen> {
           hintText: hint,
           hintStyle: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.normal),
           prefixIcon: Icon(icon, color: Colors.black54),
-          suffixIcon: isPassword 
+          suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
                   onPressed: onVisibilityChanged,
-                ) 
+                )
               : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          errorMaxLines: errorMaxLines,
         ),
       ),
     );
