@@ -68,12 +68,14 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
         }
 
         // Fetch user profile to filter exams
-        final profileResponse = await ApiService.getProfile(token);
-        if (profileResponse.statusCode == 200) {
-          final profileData = jsonDecode(profileResponse.body);
-          final profile = profileData['profile'];
-          _userStandard = profile?['std']?.toString();
-          _userStream = profile?['stream']?.toString();
+        if (token != null) {
+          final profileResponse = await ApiService.getProfile(token);
+          if (profileResponse.statusCode == 200) {
+            final profileData = jsonDecode(profileResponse.body);
+            final profile = profileData['profile'];
+            _userStandard = profile?['std']?.toString();
+            _userStream = profile?['stream']?.toString();
+          }
         }
 
         setState(() {

@@ -154,7 +154,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomLoader.show(context); // Show Loader
                     try {
                         final response = await ApiService.loginUser(
-                          role: 'student',
                           loginCode: _passwordController.text,
                           phoneNum: _phoneController.text,
                         );
@@ -165,6 +164,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (response.statusCode == 200) {
                             final data = jsonDecode(response.body);
                             final token = data['token'];
+                            final user = data['user'];
+
+                            // Check Valid Role
+                            if (user['role'] != 'student' && user['role'] != 'guest') {
+                              CustomToast.showError(context, "Access Denied: Only Students and Guests can login.");
+                              return;
+                            }
 
                             // Save token
                             final prefs = await SharedPreferences.getInstance();

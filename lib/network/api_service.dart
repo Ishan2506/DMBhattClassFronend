@@ -7,8 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 
 class ApiService {
-  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
- 
+  // static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+  static const String baseUrl = "http://localhost:5000/api";
   static Future<http.Response> getExploreProducts() async {
     final uri = Uri.parse("$baseUrl/explore/all");
     return await http.get(uri);
@@ -67,22 +67,28 @@ class ApiService {
   }
 
   static Future<http.Response> loginUser({
-    required String role,
+    String? role,
     required String loginCode,
     required String phoneNum,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/login");
+    
+    final body = {
+      'loginCode': loginCode,
+      'phoneNum': phoneNum,
+    };
+
+    if (role != null) {
+      body['role'] = role;
+    }
+
     final response = await http.post(
       uri,
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'Flutter-App',
       },
-      body: jsonEncode({
-        'role': role,
-        'loginCode': loginCode,
-        'phoneNum': phoneNum,
-      }),
+      body: jsonEncode(body),
     );
     return response;
   }

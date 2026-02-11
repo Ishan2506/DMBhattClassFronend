@@ -434,7 +434,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   );
                 }
-              ),, // Login As Dropdown
+              ), // Login As Dropdown
             _buildDropdown(
               context,
               hint: l10n.loginAs,
@@ -512,7 +512,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         "phoneNum": _phoneController.text,
                         "std": _selectedStandard!,
                         "medium": _selectedMedium!,
-                        "stream": _selectedStream,
+                        "stream": _selectedStream ?? "",
                         "board": _selectedBoard!,
                         "loginAs": _selectedRole!,
                         "school": _schoolNameController.text,

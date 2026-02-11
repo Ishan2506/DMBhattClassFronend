@@ -29,7 +29,6 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       CustomLoader.show(context);
       try {
         final response = await ApiService.loginUser(
-          role: 'student',
           loginCode: _passwordController.text,
           phoneNum: _phoneController.text,
         );
@@ -39,6 +38,14 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
+          final user = data['user'];
+
+           // Check Valid Role
+           if (user['role'] != 'student' && user['role'] != 'guest') {
+             CustomToast.showError(context, "Access Denied: Only Students and Guests can login.");
+             return;
+           }
+
           final token = data['token'];
           
           // Fetch profile to get name and details
