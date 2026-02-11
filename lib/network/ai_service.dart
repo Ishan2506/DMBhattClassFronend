@@ -135,17 +135,31 @@ class TuitionAIService {
   String? _channelId;
 
   /// MAIN METHOD CALLED FROM UI
-  Future<String> fetchLectureVideo({
+  Future<List<Map<String, String>>> fetchLectureVideo({
     required String standard,
     required String subject,
     required String chapter,
   }) async {
     final channelId = await _getChannelId();
 
-    final keywords =
-        "$standard $subject $chapter lecture explanation";
+    // 1. Specific Search (Best Match)
+    var videos = await _searchYouTubeVideo(
+        "$standard $subject $chapter lecture explanation", channelId);
+    if (videos.isNotEmpty) return videos;
 
-    return await _searchYouTubeVideo(keywords, channelId);
+    // 2. Broader Search (Standard + Subject + Chapter)
+    videos = await _searchYouTubeVideo(
+        "$standard $subject $chapter", channelId);
+    if (videos.isNotEmpty) return videos;
+
+    // 3. Fallback Search (Subject + Chapter only) - As requested
+    videos = await _searchYouTubeVideo(
+        "$subject $chapter", channelId);
+    if (videos.isNotEmpty) return videos;
+
+    // 4. Last Resort (Chapter only)
+    return await _searchYouTubeVideo(
+        chapter, channelId);
   }
 
   /// GET CHANNEL ID ONCE (CACHED)
@@ -169,7 +183,7 @@ class TuitionAIService {
   }
 
   /// SEARCH VIDEO INSIDE CHANNEL ONLY
-  Future<String> _searchYouTubeVideo(
+  Future<List<Map<String, String>>> _searchYouTubeVideo(
       String keywords, String channelId) async {
     final url = Uri.parse(
       'https://www.googleapis.com/youtube/v3/search'
@@ -178,7 +192,7 @@ class TuitionAIService {
       '&channelId=$channelId'
       '&type=video'
       '&order=relevance'
-      '&maxResults=1'
+      '&maxResults=5' // ✅ Fetch 5 videos
       '&key=$_youtubeKey',
     );
 
@@ -186,12 +200,23 @@ class TuitionAIService {
     final data = jsonDecode(response.body);
 
     if (data['items'] == null || data['items'].isEmpty) {
-      return "🔍 No matching lecture found for:\n$keywords";
+      return [];
     }
 
-    final videoId = data['items'][0]['id']['videoId'];
-    final title = data['items'][0]['snippet']['title'];
+    List<Map<String, String>> videos = [];
 
-    return "📺 $title\nhttps://www.youtube.com/watch?v=$videoId";
+    for (var item in data['items']) {
+      final videoId = item['id']['videoId'];
+      final title = item['snippet']['title'];
+      final thumbnail = item['snippet']['thumbnails']['high']['url'];
+
+      videos.add({
+        'title': title,
+        'url': "https://www.youtube.com/watch?v=$videoId",
+        'thumbnail': thumbnail,
+      });
+    }
+
+    return videos;
   }
 }

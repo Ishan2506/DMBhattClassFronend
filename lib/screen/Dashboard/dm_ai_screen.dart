@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/model/chat_message.dart';
 import 'package:dm_bhatt_tutions/network/ai_service.dart';
 import 'package:dm_bhatt_tutions/widget/chat_bubble.dart';
@@ -6,6 +7,8 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 
 
 class DMAIChatScreen extends StatefulWidget {
@@ -29,12 +32,32 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
   String? _chapter;
 
   bool _loading = false;
+  String? _studentName;
 
   @override
   void initState() {
     super.initState();
     // _initTts();
+    _fetchStudentName();
     _startFreshConversation();
+  }
+
+  Future<void> _fetchStudentName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        final response = await ApiService.getProfile(token);
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          setState(() {
+            _studentName = data['user']['firstName'];
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching name: $e");
+    }
   }
 
   //  Future<void> _initTts() async {
@@ -55,10 +78,17 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
     super.dispose();
   }
 
-  // 🔁 RESET CHAT
+  // 🔁 FULL RESET (Clear chat)
   void _startFreshConversation() {
     setState(() {
       _messages.clear();
+      _resetQuery();
+    });
+  }
+
+  // 🔄 PARTIAL RESET (Keep chat, reset flow)
+  void _resetQuery() {
+    setState(() {
       _standard = null;
       _subject = null;
       _chapter = null;
@@ -66,8 +96,13 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
     });
   }
 
-  void _addBot(String text, {List<String>? options}) {
-    _messages.add(ChatMessage(text: text, isUser: false, options: options));
+  void _addBot(String text, {List<String>? options, List<Map<String, String>>? videos}) {
+    _messages.add(ChatMessage(
+      text: text, 
+      isUser: false, 
+      options: options,
+      videos: videos
+    ));
     _scrollToBottom();
     // _speak(text);
     setState(() {});
@@ -123,6 +158,16 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
     _controller.clear();
     _addUser(input);
 
+    // STEP 0: GREETING
+    final lowerInput = input.toLowerCase();
+    if (lowerInput.startsWith('hi') || lowerInput.startsWith('hello') || lowerInput.startsWith('hey')) {
+      final name = _studentName ?? "Student";
+      _addBot("Hi $name! 👋 I'm here to help with your studies. Which class are you in?",
+          options: ['Std 8', 'Std 9', 'Std 10', 'Std 11', 'Std 12']);
+      _resetQuery(); // Ensure we start fresh
+      return;
+    }
+
     // STEP 1: CLASS
     if (_standard == null) {
       if (!_isValidStandard(input)) {
@@ -167,12 +212,18 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
         return;
       }
       _subject = input;
-      _addBot("Nice! Now tell me the chapter name");
+      _addBot("Nice! Now tell me the chapter name (Chapter 1, Chapter 2, etc.)");
       return;
     }
 
     // STEP 3: CHAPTER
     if (_chapter == null) {
+      // 🚨 STRICT VALIDATION: If only digits, reject it
+      if (RegExp(r'^\d+$').hasMatch(input)) {
+         _addBot("❌ Please enter valid format like 'Chapter $input' or topic name.");
+         return; 
+      }
+
       if (!_isValidChapter(input)) {
         _addBot(
             "❌ Chapter name looks invalid. Example: Chapter 3, Geometry");
@@ -185,14 +236,33 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
     // STEP 4: CALL AI SERVICE
     setState(() => _loading = true);
     try {
-      final result = await _aiService.fetchLectureVideo(
+      final videos = await _aiService.fetchLectureVideo(
         standard: _standard!,
         subject: _subject!,
         chapter: _chapter!,
       );
-      _addBot(result);
+
+      if (videos.isNotEmpty) {
+        _addBot(
+          "📺 Found ${videos.length} videos for you! Tap to watch:",
+          videos: videos,
+        );
+        
+        // ✅ AUTO RESET FLOW FOR NEXT QUESTION
+        _resetQuery();
+        _addBot(
+            "🎓 Ready for next question! Which class?", 
+            options: ['Std 8', 'Std 9', 'Std 10', 'Std 11', 'Std 12']
+        );
+
+      } else {
+        _addBot("⚠️ Sorry, I couldn’t find a video for this chapter.");
+        _resetQuery(); // Reset to let them try again
+        _addBot("Please try another topic or class.", options: ['Std 8', 'Std 9', 'Std 10', 'Std 11', 'Std 12']);
+      }
     } catch (e) {
-      _addBot("⚠️ Sorry, I couldn’t find a video for this chapter.");
+      _addBot("⚠️ Something went wrong. Please try again.");
+      _resetQuery();
     } finally {
       setState(() => _loading = false);
     }

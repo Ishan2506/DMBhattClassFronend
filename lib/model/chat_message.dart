@@ -17,10 +17,12 @@ class ChatMessage {
   final String text;
   final bool isUser;
   final List<String>? options;
+  final List<Map<String, String>>? videos; // List of {title, url, thumbnail}
 
   ChatMessage({
     required this.text,
     required this.isUser,
     this.options,
+    this.videos,
   });
 }
