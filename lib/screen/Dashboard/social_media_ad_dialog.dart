@@ -1,3 +1,4 @@
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,6 +21,7 @@ class SocialMediaAdDialog extends StatelessWidget {
   }
 
   Widget contentBox(BuildContext context, double screenWidth) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -41,7 +43,7 @@ class SocialMediaAdDialog extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Rate our App", // Or "Follow Us", user image showed "2/2" style but didn't specify title. Using "Follow Us" implies connection.
+                l10n.rateUs, 
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -62,8 +64,8 @@ class SocialMediaAdDialog extends StatelessWidget {
           _buildSocialButton(
             context,
             screenWidth,
-            "Follow our WhatsApp Channel",
-            "Click here",
+            l10n.followOnWhatsApp, // Using followOnWhatsApp key
+            l10n.clickHere,
             Icons.chat_bubble_outline, // Using chat bubble as generic replacement for WhatsApp if logo unavailable
             [const Color(0xFF25D366), const Color(0xFF128C7E)], // WhatsApp Green Gradients
             "https://wa.me/9106315912",
@@ -74,8 +76,8 @@ class SocialMediaAdDialog extends StatelessWidget {
           _buildSocialButton(
             context,
             screenWidth,
-            "Follow our Instagram Page",
-            "Click here",
+            l10n.followOnInstagram,
+            l10n.clickHere,
             Icons.camera_alt_outlined, // Instagram generic icon
             [const Color(0xFF833AB4), const Color(0xFFE1306C), const Color(0xFFF77737)], // Insta Gradients
             "https://www.instagram.com/bondbyte.in/",
@@ -86,8 +88,8 @@ class SocialMediaAdDialog extends StatelessWidget {
           _buildSocialButton(
             context,
             screenWidth,
-            "Follow our Facebook Page",
-            "Click here",
+            l10n.followOnFacebook,
+            l10n.clickHere,
             Icons.facebook, // Material Icons usually has facebook, if not fallback to public
             [const Color(0xFF1877F2), const Color(0xFF0D47A1)], // FB Blue Gradients
             "https://www.instagram.com/bondbyte.in/", // As requested by user: same link as insta

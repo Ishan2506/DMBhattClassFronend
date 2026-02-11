@@ -134,7 +134,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
                Text(
                  "Score: $_score", 
                  style: GoogleFonts.poppins(
-                   color: theme.primaryColor, 
+                   color: theme.colorScheme.primary, 
                    fontSize: 18, 
                    fontWeight: FontWeight.bold
                  )
@@ -148,7 +148,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
                  child: Text(
                    "$_timeLeft s", 
                    style: GoogleFonts.poppins(
-                     color: theme.primaryColor, 
+                     color: theme.colorScheme.primary, 
                      fontWeight: FontWeight.bold
                    )
                  ),
@@ -327,8 +327,8 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
                });
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor, 
-              foregroundColor: Colors.white,
+              backgroundColor: theme.colorScheme.primary, 
+              foregroundColor: theme.colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             ),

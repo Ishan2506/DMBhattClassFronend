@@ -151,7 +151,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                children: [
                  _buildBadge(Icons.timer, "$_timeLeft", Colors.orange),
-                 _buildBadge(Icons.star, "$_score", theme.primaryColor),
+                 _buildBadge(Icons.star, "$_score", theme.colorScheme.primary),
                ],
              ),
              
@@ -167,7 +167,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
              const SizedBox(height: 16),
              Text(
                _scrambledWord,
-               style: GoogleFonts.poppins(fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 4, color: theme.primaryColor),
+               style: GoogleFonts.poppins(fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 4, color: theme.colorScheme.primary),
                textAlign: TextAlign.center,
              ),
              
@@ -210,8 +210,8 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                child: ElevatedButton(
                  onPressed: _submitAnswer,
                  style: ElevatedButton.styleFrom(
-                   backgroundColor: theme.primaryColor,
-                   foregroundColor: Colors.white,
+                   backgroundColor: theme.colorScheme.primary,
+                   foregroundColor: theme.colorScheme.onPrimary,
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                  ),
                  child: Text("Check", style: GoogleFonts.poppins(fontSize: 18)),
@@ -234,8 +234,8 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                       _startRound(); // Restart
                     }, 
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
-                      foregroundColor: Colors.white,
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
                     ),
                     child: const Text("Play Again")
                   )

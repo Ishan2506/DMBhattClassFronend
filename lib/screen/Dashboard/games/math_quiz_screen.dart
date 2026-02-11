@@ -175,7 +175,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildInfoBadge(Icons.timer, "$_timeLeft s", _timeLeft < 10 ? Colors.red : theme.primaryColor),
+                _buildInfoBadge(Icons.timer, "$_timeLeft s", _timeLeft < 10 ? Colors.red : theme.colorScheme.primary),
                 _buildInfoBadge(Icons.star, "Score: $_score", Colors.amber[800]!),
               ],
             ),
@@ -207,8 +207,8 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                      onPressed: _startRound,
                      style: ElevatedButton.styleFrom(
                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                       backgroundColor: theme.primaryColor,
-                       foregroundColor: Colors.white,
+                       backgroundColor: theme.colorScheme.primary,
+                       foregroundColor: theme.colorScheme.onPrimary,
                        elevation: 8,
                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                      ),
@@ -225,7 +225,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 48, 
                         fontWeight: FontWeight.bold, 
-                        color: theme.primaryColor
+                        color: theme.colorScheme.onSurface
                       )
                     ),
                   ),
@@ -245,7 +245,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                         onPressed: () => _checkAnswer(_options[index]),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.cardColor,
-                          foregroundColor: theme.primaryColor,
+                          foregroundColor: theme.colorScheme.primary,
                           elevation: 2,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           shape: RoundedRectangleBorder(
@@ -261,7 +261,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 24, 
                                 fontWeight: FontWeight.bold,
-                                color: theme.textTheme.bodyLarge?.color
+                                color: theme.colorScheme.onSurface
                               ),
                             ),
                           ),

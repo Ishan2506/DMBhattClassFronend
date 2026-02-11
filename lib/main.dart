@@ -9,6 +9,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 
 import 'constant/app_constant.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +56,8 @@ class MyApp extends StatelessWidget {
             darkTheme: theme.getThemeForStyle(styleName, true), // Dark
             themeMode: state.themeMode,
             locale: state.locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: const SplashScreen(),
           );
         },

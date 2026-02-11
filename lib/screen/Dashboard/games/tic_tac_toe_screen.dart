@@ -124,8 +124,9 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: "Tic Tac Toe",
         centerTitle: true,
@@ -138,7 +139,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
              _winner != "" 
                  ? "Winner: $_winner" 
                  : (_isDraw ? "It's a Draw!" : "Turn: $_currentPlayer"),
-             style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal.shade800),
+             style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
            ),
            const SizedBox(height: 32),
            
@@ -146,10 +147,14 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
            Container(
              margin: const EdgeInsets.all(24),
              decoration: BoxDecoration(
-               color: Colors.white,
+               color: theme.cardColor,
                borderRadius: BorderRadius.circular(16),
                boxShadow: [
-                 BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0, 4))
+                 BoxShadow(
+                   color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                   blurRadius: 10, 
+                   offset: const Offset(0, 4)
+                 )
                ]
              ),
              child: GridView.builder(
@@ -167,7 +172,9 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                    onTap: () => _onTileTap(index),
                    child: Container(
                      decoration: BoxDecoration(
-                       color: Colors.teal.shade100,
+                       color: theme.brightness == Brightness.dark 
+                           ? theme.colorScheme.surfaceVariant.withOpacity(0.3) 
+                           : theme.colorScheme.primary.withOpacity(0.1),
                        borderRadius: BorderRadius.circular(8),
                      ),
                      child: Center(
@@ -194,7 +201,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
              label: const Text("Restart Game"),
              style: ElevatedButton.styleFrom(
                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-               backgroundColor: Colors.teal,
+               backgroundColor: theme.colorScheme.primary,
                foregroundColor: Colors.white,
                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
              ),

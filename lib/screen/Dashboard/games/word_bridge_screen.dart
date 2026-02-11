@@ -212,7 +212,7 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                child: LinearProgressIndicator(
                  value: (_currentLevelIndex + 1) / _levels.length,
                  backgroundColor: theme.dividerColor.withOpacity(0.1),
-                 color: theme.primaryColor,
+                 color: theme.colorScheme.primary,
                  minHeight: 8,
                ),
              ),
@@ -231,7 +231,7 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                      endIndent: 10
                    )
                  ),
-                 Icon(Icons.flag, color: theme.primaryColor),
+                 Icon(Icons.flag, color: theme.colorScheme.primary),
                  Expanded(
                    child: Divider(
                      thickness: 2, 
@@ -258,7 +258,7 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                style: GoogleFonts.poppins(
                  fontSize: 32, 
                  fontWeight: FontWeight.bold, 
-                 color: theme.primaryColor
+                 color: theme.colorScheme.primary
                ),
              ),
              const SizedBox(height: 8),
@@ -281,7 +281,7 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
              ...currentOptions.map((opt) {
                 // Determine feedback color
                 Color btnColor = theme.cardColor;
-                Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.black87;
+                Color textColor = theme.colorScheme.onSurface;
                 
                 if (_showFeedback) {
                    List<String> path = _levels[_currentLevelIndex]["path"] as List<String>;
@@ -306,7 +306,7 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                         foregroundColor: textColor,
                         elevation: 2,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        side: BorderSide(color: theme.primaryColor.withOpacity(0.1))
+                        side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.1))
                       ),
                       child: Text(
                         opt, 
@@ -330,10 +330,10 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isActive ? theme.primaryColor : theme.dividerColor.withOpacity(0.1),
+            color: isActive ? theme.colorScheme.primary : theme.dividerColor.withOpacity(0.1),
             shape: BoxShape.circle,
             boxShadow: isActive 
-                ? [BoxShadow(color: theme.primaryColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] 
+                ? [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] 
                 : [],
           ),
           child: Icon(

@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -38,6 +39,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _selectedStream; 
   String? _selectedState = "Gujarat";
   String? _selectedInstitute;
+  String? _selectedBoard;
+  String? _selectedRole;
 
   XFile? _imageFile;
   String? _currentPhotoPath;
@@ -49,6 +52,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
+  final List<String> _boards = ["GSEB", "CBSE"];
+  final List<String> _roles = ["Student", "Teacher"];
   
   final Map<String, List<String>> _stateCityMap = {
     "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
@@ -91,6 +96,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                _selectedMedium = profile['medium'];
                _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
                _parentPhoneController.text = profile['parentPhone'] ?? "";
+               _selectedBoard = profile['board'];
+               _selectedRole = user['loginAs'];
                
                if (_schoolNameController.text == "D.M.BHATT Institute") {
                  _selectedInstitute = "D.M.BHATT Institute";
@@ -133,6 +140,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'school': _schoolNameController.text,
         'std': _selectedStandard,
         'medium': _selectedMedium,
+        'board': _selectedBoard,
+        'loginAs': _selectedRole,
         'city': _cityController.text,
         'parentPhone': _parentPhoneController.text,
       };
@@ -193,6 +202,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -347,6 +357,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     onChanged: (val) => setState(() => _selectedMedium = val),
                   ),
                    const SizedBox(height: 16),
+
+                   // Board Dropdown
+                  _buildDropdown(
+                    context,
+                    hint: l10n.board,
+                    icon: Icons.dashboard_outlined,
+                    value: _selectedBoard,
+                    items: _boards,
+                    onChanged: (val) => setState(() => _selectedBoard = val),
+                  ),
+                   const SizedBox(height: 16),
                    
                    // Stream (Only if relevant)
                    if (_selectedStandard == "11" || _selectedStandard == "12") ...[
@@ -499,7 +520,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     const SizedBox(height: 16),
                   ],
     
-    
+                  // Login As Dropdown
+                  _buildDropdown(
+                    context,
+                    hint: l10n.loginAs,
+                    icon: Icons.person_pin_outlined,
+                    value: _selectedRole,
+                    items: _roles,
+                    onChanged: (val) => setState(() => _selectedRole = val),
+                  ),
                   const SizedBox(height: 32),
     
                   // Update Button
@@ -618,7 +647,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           dropdownColor: theme.cardColor, 
           style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold),
           selectedItemBuilder: (BuildContext context) {
+            final l10n = AppLocalizations.of(context)!;
             return items.map<Widget>((String item) {
+              String label = item;
+              if (item == "Student") label = l10n.student;
+              if (item == "Teacher") label = l10n.teacher;
               return Align(
                  alignment: Alignment.centerLeft,
                  child: Row(
@@ -626,7 +659,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                      Icon(icon, color: isDark ? Colors.grey : Colors.black54), 
                      const SizedBox(width: 12),
                      Text(
-                       item,
+                       label,
                        style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
                      ),
                    ],
@@ -635,9 +668,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             }).toList();
           },
           items: items.map((String value) {
+            final l10n = AppLocalizations.of(context)!;
+            String label = value;
+            if (value == "Student") label = l10n.student;
+            if (value == "Teacher") label = l10n.teacher;
             return DropdownMenuItem<String>(
               value: value,
-              child: Text(value),
+              child: Text(label),
             );
           }).toList(),
           onChanged: isReadOnly ? null : onChanged, // Disable interaction

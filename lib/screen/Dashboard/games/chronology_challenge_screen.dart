@@ -177,7 +177,7 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
         Text(
           "Select a Topic",
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: theme.primaryColor),
+          style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
         ),
         const SizedBox(height: 20),
         ..._allLevels.keys.map((category) => Padding(
@@ -186,12 +186,13 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
             onPressed: () => _startLevel(category),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 20),
-              backgroundColor: theme.primaryColor,
+              backgroundColor: theme.colorScheme.primary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              foregroundColor: theme.colorScheme.onPrimary,
             ),
             child: Text(
               category,
-              style: GoogleFonts.poppins(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w600),
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
             ),
           ),
         )),
@@ -207,7 +208,7 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
           child: Text(
             "Drag and drop events from Oldest (Top) to Newest (Bottom)",
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[700]),
+            style: GoogleFonts.poppins(fontSize: 16, color: theme.colorScheme.onSurface.withOpacity(0.7)),
           ),
         ),
         Expanded(
@@ -225,26 +226,33 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
               for (int i = 0; i < _currentEvents.length; i++)
                 Card(
                   key: ValueKey(_currentEvents[i]['event']),
-                  color: Colors.white,
+                  color: theme.cardColor,
                   elevation: 2,
                   margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12), 
+                    borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1))
+                  ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     leading: CircleAvatar(
-                      backgroundColor: theme.primaryColor.withOpacity(0.1),
-                      child: Text("${i + 1}", style: TextStyle(fontWeight: FontWeight.bold, color: theme.primaryColor)),
+                      backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                      child: Text("${i + 1}", style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
                     ),
                     title: Text(
                       _currentEvents[i]['event'],
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16),
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600, 
+                        fontSize: 16,
+                        color: theme.colorScheme.onSurface
+                      ),
                     ),
                     trailing: _isChecked 
                       ? Text(
                           "${_currentEvents[i]['year'] < 0 ? '${_currentEvents[i]['year'].abs()} BC' : _currentEvents[i]['year']}",
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.grey),
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface.withOpacity(0.5)),
                         )
-                      : const Icon(Icons.drag_handle, color: Colors.grey),
+                      : Icon(Icons.drag_handle, color: theme.dividerColor),
                   ),
                 ),
             ],
@@ -253,8 +261,14 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))],
+            color: theme.colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                blurRadius: 10, 
+                offset: const Offset(0, -5)
+              )
+            ],
           ),
           child: SizedBox(
             width: double.infinity,
@@ -263,9 +277,10 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
               onPressed: _checkOrder,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: Text("Check Order", style: GoogleFonts.poppins(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text("Check Order", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
           ),
         ),

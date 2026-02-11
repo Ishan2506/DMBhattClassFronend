@@ -260,7 +260,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                    ),
                    focusedBorder: OutlineInputBorder(
                      borderRadius: BorderRadius.circular(16), 
-                     borderSide: BorderSide(color: theme.primaryColor)
+                     borderSide: BorderSide(color: theme.colorScheme.primary)
                    ),
                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20)
                  ),
@@ -275,7 +275,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                  child: ElevatedButton(
                    onPressed: _checkAnswer,
                    style: ElevatedButton.styleFrom(
-                     backgroundColor: theme.primaryColor,
+                     backgroundColor: theme.colorScheme.primary,
                      foregroundColor: Colors.white,
                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                      elevation: 8,
@@ -289,7 +289,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                  onPressed: _useHint,
                  child: Text(
                    "Need a Hint? ($_hintsRemaining left)", 
-                   style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold)
+                   style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)
                  ),
                ),
                

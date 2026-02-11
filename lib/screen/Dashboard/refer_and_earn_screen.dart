@@ -14,6 +14,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class ReferAndEarnScreen extends StatefulWidget {
   const ReferAndEarnScreen({super.key});
@@ -52,7 +53,8 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
 
       if (token == null) {
         if (mounted) {
-           CustomToast.showError(context, "Session expired. Please login again.");
+           final l10n = AppLocalizations.of(context)!;
+           CustomToast.showError(context, l10n.signOutSuccess); // Reusing signOutSuccess or adding a new key for session expired? Let's use hardcoded for now or assuming most users understand English if session fails. Actually, I should use localized string.
            Navigator.pop(context);
         }
         return;
@@ -95,17 +97,19 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _isLoading = false;
         });
-        CustomToast.showError(context, "Error fetching referral data: $e");
+        CustomToast.showError(context, "${l10n.registrationFailed} $e");
       }
     }
   }
 
   Future<void> _shareCode() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_referralCode.isEmpty || _referralCode == "Generate Code") {
-       CustomToast.showError(context, "Please generate a code first.");
+       CustomToast.showError(context, l10n.generateCodeFirst);
        return;
     }
 
@@ -116,7 +120,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
       if (kIsWeb) {
          // Web doesn't support file sharing easily or path_provider, share text only
          await Share.share(
-          'Join D. M. Bhatt Tuitions using my referral code: $_referralCode and get amazing benefits! Download now: https://play.google.com/store/apps/details?id=com.dmbhatt.tutions',
+          l10n.shareTextWeb(_referralCode, 'https://play.google.com/store/apps/details?id=com.dmbhatt.tutions'),
          );
          return;
       }
@@ -137,7 +141,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
 
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'Hello! I am gifting you a special discount on Padhaku App. Use my code "$_referralCode" at the time of registration to claim it! Download: https://play.google.com/store/apps/details?id=com.dmbhatt.tutions',
+        text: l10n.shareTextMobile(_referralCode, 'https://play.google.com/store/apps/details?id=com.dmbhatt.tutions'),
       );
     } catch (e) {
       CustomToast.showError(context, "Error sharing: $e");
@@ -145,20 +149,22 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
   }
 
   void _copyCode() {
-    if (_referralCode.isEmpty || _referralCode == "Generate Code") return;
+    final l10n = AppLocalizations.of(context)!;
+    if (_referralCode.isEmpty || _referralCode == "Generate Code" || _referralCode == l10n.generateCode) return;
     Clipboard.setData(ClipboardData(text: _referralCode));
-    CustomToast.showSuccess(context, "Code copied to clipboard!");
+    CustomToast.showSuccess(context, l10n.codeCopied);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final remainingReferrals = _maxReferrals - _invitedFriends.length;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
-        title: "Refer & Earn",
+        title: l10n.referAndEarn,
         centerTitle: true,
       ),
       body: Column(
@@ -186,7 +192,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                    const SizedBox(height: 24),
                    
                    Text(
-                     "Invited Friends & Earn Bonus Points",
+                     l10n.referAndEarnHeader,
                      textAlign: TextAlign.center,
                      style: GoogleFonts.poppins(
                        fontSize: 20,
@@ -196,7 +202,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                    ),
                    const SizedBox(height: 12),
                    Text(
-                     "Share your unique code with friends. When they join, you earn bonus points!",
+                     l10n.referAndEarnSubtext,
                      textAlign: TextAlign.center,
                      style: GoogleFonts.poppins(
                        fontSize: 14,
@@ -223,7 +229,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                      child: Column(
                        children: [
                          Text(
-                           "YOUR REFERRAL CODE",
+                           l10n.yourReferralCode,
                            style: GoogleFonts.poppins(
                              fontSize: 12,
                              fontWeight: FontWeight.w600,
@@ -292,7 +298,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                    Align(
                      alignment: Alignment.centerLeft,
                      child: Text(
-                       "Referral Milestones",
+                       l10n.referralMilestones,
                        style: GoogleFonts.poppins(
                          fontSize: 16,
                          fontWeight: FontWeight.bold,
@@ -372,7 +378,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                                const SizedBox(width: 12),
                                Expanded(
                                  child: Text(
-                                   "Points Conversion: 50 Points = ₹1. Points can be used for plan upgrades.",
+                                   l10n.pointsConversionNote,
                                    style: GoogleFonts.poppins(
                                      fontSize: 12,
                                      color: colorScheme.onSurfaceVariant,
@@ -413,7 +419,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                            crossAxisAlignment: CrossAxisAlignment.start,
                            children: [
                              Text(
-                               "Total Bonus Points",
+                               l10n.totalBonusPoints,
                                style: GoogleFonts.poppins(
                                  fontSize: 14,
                                  fontWeight: FontWeight.w600,

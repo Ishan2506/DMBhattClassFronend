@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
@@ -49,46 +50,49 @@ class MaterialDetailScreen extends StatelessWidget {
                    )
                  ],
                ),
-               child: Hero(
-                 tag: product['id'],
-                 child: () {
-                    final String imageUrl = product['image'].toString();
-                    // 1. Check if it's a Cloudinary PDF - Use fast image transformation
-                    if (imageUrl.toLowerCase().contains('.pdf') && imageUrl.contains('/upload/')) {
-                       final parts = imageUrl.split('/upload/');
-                       if (parts.length == 2) {
-                         final transformedUrl = '${parts[0]}/upload/pg_1,f_jpg/${parts[1]}';
+                child: ImageFiltered(
+                  imageFilter: ui.ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                  child: Hero(
+                    tag: product['id'],
+                    child: () {
+                       final String imageUrl = product['image'].toString();
+                       // 1. Check if it's a Cloudinary PDF - Use fast image transformation
+                       if (imageUrl.toLowerCase().contains('.pdf') && imageUrl.contains('/upload/')) {
+                          final parts = imageUrl.split('/upload/');
+                          if (parts.length == 2) {
+                            final transformedUrl = '${parts[0]}/upload/pg_1,f_jpg/${parts[1]}';
+                            return Image.network(
+                              transformedUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                            );
+                          }
+                       }
+                       
+                       // 2. Check if it's a non-Cloudinary PDF - Use rasterization (slower)
+                       if (imageUrl.toLowerCase().contains('.pdf')) {
+                         return _PdfCover(url: imageUrl);
+                       }
+   
+                       // 3. Standard Image
+                       if (imageUrl.startsWith('http')) {
                          return Image.network(
-                           transformedUrl,
+                           imageUrl,
                            fit: BoxFit.contain,
                            errorBuilder: (context, error, stackTrace) =>
                                const Icon(Icons.broken_image, size: 50, color: Colors.grey),
                          );
                        }
-                    }
-                    
-                    // 2. Check if it's a non-Cloudinary PDF - Use rasterization (slower)
-                    if (imageUrl.toLowerCase().contains('.pdf')) {
-                      return _PdfCover(url: imageUrl);
-                    }
-
-                    // 3. Standard Image
-                    if (imageUrl.startsWith('http')) {
-                      return Image.network(
-                        imageUrl,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                      );
-                    }
-
-                    // 4. Asset Image
-                    return Image.asset(
-                      imageUrl,
-                      fit: BoxFit.contain,
-                    );
-                  }(),
-               ),
+   
+                       // 4. Asset Image
+                       return Image.asset(
+                         imageUrl,
+                         fit: BoxFit.contain,
+                       );
+                     }(),
+                  ),
+                ),
             ),
 
             // 2. Content Body
@@ -115,6 +119,20 @@ class MaterialDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    
+                    // Subject Row
+                    if (product['subject'] != null && product['subject'].toString().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          "Subject: ${product['subject']}",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
 
                     // Title
                     Text(

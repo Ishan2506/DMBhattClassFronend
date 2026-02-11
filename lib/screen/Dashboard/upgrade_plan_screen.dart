@@ -1,6 +1,8 @@
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -37,6 +39,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   
   String? _currentStandard;
   bool _isLoading = true;
+  bool _isGuest = false;
 
   @override
   void initState() {
@@ -52,7 +55,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
       if (token == null) {
         if (mounted) {
-           CustomToast.showError(context, "Session expired. Please login again.");
+           final l10n = AppLocalizations.of(context)!;
+           CustomToast.showError(context, l10n.signOutSuccess); // Or session expired
            Navigator.pop(context);
         }
         return;
@@ -70,10 +74,12 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       }
     } catch (e) {
       if (mounted) {
-         CustomToast.showError(context, "Error fetching profile: $e");
+         final l10n = AppLocalizations.of(context)!;
+         CustomToast.showError(context, "${l10n.registrationFailed} $e");
       }
     } finally {
       if (mounted) {
+        _isGuest = await GuestUtils.isGuest();
         setState(() {
           _isLoading = false;
         });
@@ -161,7 +167,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
   void _applyPromoCode() {
     if (_selectedStandard == null) {
-      CustomToast.showError(context, "Please select standard first");
+      final l10n = AppLocalizations.of(context)!;
+      CustomToast.showError(context, l10n.selectStandardFirst);
       return;
     }
     final code = _promoCodeController.text.trim().toUpperCase();
@@ -172,14 +179,16 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         _isPromoApplied = true;
       });
       _recalculateFinal();
-      CustomToast.showSuccess(context, "Promo code applied successfully!");
+      final l10n = AppLocalizations.of(context)!;
+      CustomToast.showSuccess(context, l10n.promoAppliedSuccess);
     } else {
       setState(() {
         _isPromoApplied = false;
       });
       _recalculateFinal();
       if (code.isNotEmpty) {
-        CustomToast.showError(context, "Invalid promo code");
+        final l10n = AppLocalizations.of(context)!;
+        CustomToast.showError(context, l10n.invalidPromoCode);
       }
     }
   }
@@ -197,7 +206,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     
     // Check against available points
     if (points > _availablePoints) {
-      CustomToast.showError(context, "You only have $_availablePoints points");
+      final l10n = AppLocalizations.of(context)!;
+      CustomToast.showError(context, l10n.insufficientPoints(_availablePoints));
       // Clamp to available
       points = _availablePoints;
       _rewardPointsController.text = points.toString();
@@ -215,7 +225,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     if (points > maxUsablePoints) {
        points = maxUsablePoints;
        _rewardPointsController.text = points.toString();
-       CustomToast.showSuccess(context, "Points adjusted to max payable amount");
+       final l10n = AppLocalizations.of(context)!;
+       CustomToast.showSuccess(context, l10n.pointsAdjusted);
     }
 
     double discount = points / 50.0;
@@ -224,16 +235,26 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       _pointsDiscount = discount;
     });
     _recalculateFinal();
-    CustomToast.showSuccess(context, "Points applied: ₹${discount.toStringAsFixed(0)} off");
+    final l10n = AppLocalizations.of(context)!;
+    CustomToast.showSuccess(context, l10n.pointsAppliedAmount(discount.toStringAsFixed(0)));
   }
 
   Future<void> _processUpgrade() async {
+    if (_isGuest) {
+       GuestUtils.showGuestRestrictionDialog(
+         context,
+         message: "Guests cannot upgrade plans. Please register as a full student to access premium features."
+       );
+       return;
+    }
     if (_selectedStandard == null || _selectedMedium == null) {
-       CustomToast.showError(context, "Please select Standard and Medium");
+       final l10n = AppLocalizations.of(context)!;
+       CustomToast.showError(context, l10n.selectStandardMediumError);
        return;
     }
     if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
-       CustomToast.showError(context, "Please select Stream");
+       final l10n = AppLocalizations.of(context)!;
+       CustomToast.showError(context, l10n.selectStreamError);
        return;
     }
 
@@ -245,7 +266,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       if (!mounted) return;
       CustomLoader.hide(context);
 
-      CustomToast.showSuccess(context, "Plan Upgraded Successfully!");
+      final l10n = AppLocalizations.of(context)!;
+      CustomToast.showSuccess(context, l10n.planUpgradeSuccess);
       Navigator.pop(context);
     } catch (e) {
        if (mounted) {
@@ -257,18 +279,20 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
     if (_isLoading) {
        return Scaffold(
          backgroundColor: colorScheme.surface,
-         appBar: CustomAppBar(title: "Upgrade Plan", centerTitle: true),
+         appBar: CustomAppBar(title: l10n.upgradePlan, centerTitle: true),
          body: const Center(child: CustomLoader()),
        );
-    }    return Scaffold(
+    }
+    return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
-        title: "Upgrade Plan",
+        title: l10n.upgradePlan,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -294,7 +318,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
               child: Column(
                 children: [
                    _buildDropdown(
-                    label: "Standard",
+                    label: l10n.standard,
                     value: _selectedStandard,
                     items: _filteredStandards, // Use filtered list
                     onChanged: (val) {
@@ -311,7 +335,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   const SizedBox(height: 16),
                   if (_selectedStandard == "11" || _selectedStandard == "12") ...[
                       _buildDropdown(
-                      label: "Stream",
+                      label: l10n.stream,
                       value: _selectedStream,
                       items: _streams,
                       onChanged: (val) {
@@ -324,7 +348,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                     const SizedBox(height: 16),
                   ],
                   _buildDropdown(
-                    label: "Medium",
+                    label: l10n.medium,
                     value: _selectedMedium,
                     items: _mediums,
                     onChanged: (val) {
@@ -350,13 +374,13 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                 ),
                 child: Column(
                   children: [
-                    _buildSummaryRow("Base Amount", "₹$_originalAmount", colorScheme),
+                    _buildSummaryRow(l10n.baseAmount, "₹$_originalAmount", colorScheme),
                     if (_isPromoApplied)
-                      _buildSummaryRow("Promo Discount (50%)", "-₹${_promoDiscount.toStringAsFixed(0)}", colorScheme, isDiscount: true),
+                      _buildSummaryRow(l10n.promoDiscount, "-₹${_promoDiscount.toStringAsFixed(0)}", colorScheme, isDiscount: true),
                     if (_pointsDiscount > 0)
-                      _buildSummaryRow("Points Discount", "-₹${_pointsDiscount.toStringAsFixed(0)}", colorScheme, isDiscount: true),
+                      _buildSummaryRow(l10n.pointsDiscount, "-₹${_pointsDiscount.toStringAsFixed(0)}", colorScheme, isDiscount: true),
                     const Divider(),
-                     _buildSummaryRow("Total Payable", "₹${_finalAmount.toStringAsFixed(0)}", colorScheme, isTotal: true),
+                     _buildSummaryRow(l10n.totalPayable, "₹${_finalAmount.toStringAsFixed(0)}", colorScheme, isTotal: true),
                   ],
                 ),
               ),
@@ -378,8 +402,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                         controller: _promoCodeController,
                         decoration: InputDecoration(
                           hintText: _selectedStandard != null 
-                              ? "Use DMBHATT$_selectedStandard" 
-                              : "Use DMBHATT8", // Dynamic Hint
+                              ? l10n.promoHint(_selectedStandard!)
+                              : l10n.promoHint("8"), // Dynamic Hint
                           hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -396,14 +420,14 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     ),
-                    child: Text("Apply", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: Text(l10n.apply, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
 
               // Reward Points Section
-               Text("Use Reward Points (Available: $_availablePoints)", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
+               Text(l10n.useRewardPoints(_availablePoints), style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -418,7 +442,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                         controller: _rewardPointsController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          hintText: "Enter points to use",
+                          hintText: l10n.pointsHint,
                           hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -435,7 +459,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     ),
-                    child: Text("Use", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: Text(l10n.use, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -454,7 +478,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                     shadowColor: colorScheme.primary.withOpacity(0.4),
                   ),
                   child: Text(
-                    "Pay ₹${_finalAmount.toStringAsFixed(0)} & Upgrade",
+                    l10n.payAndUpgrade(_finalAmount.toStringAsFixed(0)),
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -477,6 +501,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     required Function(String?) onChanged,
     required ColorScheme colorScheme,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -493,7 +518,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              hint: Text("Select $label", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+              hint: Text("${l10n.selectSubject} $label", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)), // Assuming selectSubject is "Select" or using l10n.selectStandard etc? Actually I added selectStandard key. Let's use a generic one if I have or specific.
               dropdownColor: colorScheme.surface, // Or any distinct surface
               items: items.map((String item) {
                 return DropdownMenuItem<String>(

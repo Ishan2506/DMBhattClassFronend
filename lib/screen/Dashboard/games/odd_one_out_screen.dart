@@ -131,7 +131,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: (_currentIndex + 1) / _levels.length,
-                color: theme.primaryColor,
+                color: theme.colorScheme.primary,
                 backgroundColor: theme.dividerColor.withOpacity(0.1),
                 minHeight: 8,
               ),
@@ -160,7 +160,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                    final opt = options[index];
                    Color bg = theme.cardColor;
                    Color border = theme.dividerColor.withOpacity(0.2);
-                   Color text = theme.textTheme.bodyLarge?.color ?? Colors.black87;
+                   Color text = theme.colorScheme.onSurface;
                    
                    if (_isAnswered) {
                      if (opt == level["answer"]) {
@@ -212,15 +212,15 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.primaryColor.withOpacity(0.1), 
+                  color: theme.colorScheme.primary.withOpacity(0.1), 
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.primaryColor.withOpacity(0.2))
+                  border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2))
                 ),
                 child: Text(
                   _isCorrect ? "Correct! ${level['reason']}" : "Wrong! ${level['reason']}",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                    color: theme.primaryColor, 
+                    color: theme.colorScheme.primary, 
                     fontWeight: FontWeight.w600
                   ),
                 ),

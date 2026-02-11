@@ -1,7 +1,7 @@
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/update_password_screen.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,8 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
     
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -31,17 +32,19 @@ class SettingsScreen extends StatelessWidget {
             builder: (context, state) {
               String themeText;
               if (state.themeMode == ThemeMode.light) {
-                themeText = l10n.locale.languageCode == 'hi' ? "प्रकाश" : (l10n.locale.languageCode == 'gu' ? "પ્રકાશ" : "Light");
+                themeText = l10n.light;
               } else if (state.themeMode == ThemeMode.dark) {
-                themeText = l10n.locale.languageCode == 'hi' ? "डार्क" : (l10n.locale.languageCode == 'gu' ? "ડાર્ક" : "Dark");
+                themeText = l10n.dark;
               } else {
-                themeText = l10n.locale.languageCode == 'hi' ? "सिस्टम" : (l10n.locale.languageCode == 'gu' ? "સિસ્ટમ" : "System");
+                themeText = l10n.system;
               }
 
               String langText;
-              if (state.locale.languageCode == 'gu') langText = "Gujarati";
-              else if (state.locale.languageCode == 'hi') langText = "Hindi";
-              else langText = "English";
+              if (state.locale.languageCode == 'gu') langText = l10n.gujarati;
+              else if (state.locale.languageCode == 'hi') langText = l10n.hindi;
+              else if (state.locale.languageCode == 'ta') langText = l10n.tamil;
+              else if (state.locale.languageCode == 'mr') langText = l10n.marathi;
+              else langText = l10n.english;
 
               return Column(
                 children: [
@@ -54,7 +57,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   _buildSettingsItem(
                     context,
-                    title: "Theme Style",
+                    title: l10n.themeStyle,
                     value: state.selectedStyle.name.toUpperCase(),
                     icon: Icons.palette_outlined,
                     onTap: () => _showStyleSelector(context),
@@ -68,7 +71,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   _buildSettingsItem(
                     context,
-                    title: l10n.locale.languageCode == 'hi' ? "पासवर्ड अपडेट करें" : (l10n.locale.languageCode == 'gu' ? "પાસવર્ડ અપડેટ કરો" : "Update Password"),
+                    title: l10n.updatePassword,
                     value: "",
                     icon: Icons.lock_reset,
                       onTap: () {
@@ -143,7 +146,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showThemeSelector(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -168,7 +172,7 @@ class SettingsScreen extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Text(
-                  l10n.locale.languageCode == 'hi' ? "थीम चुनें" : (l10n.locale.languageCode == 'gu' ? "થીમ પસંદ કરો" : "Select Theme"), 
+                  l10n.themeMode, 
                   style: GoogleFonts.poppins(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold,
@@ -181,9 +185,9 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "लाइट मोड" : (l10n.locale.languageCode == 'gu' ? "લાઇટ મોડ" : "Light Mode"), ThemeMode.light),
-                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "डार्क मोड" : (l10n.locale.languageCode == 'gu' ? "ડાર્ક મોડ" : "Dark Mode"), ThemeMode.dark),
-                    _buildRadioOption(context, l10n.locale.languageCode == 'hi' ? "सिस्टम डिफ़ॉल्ट" : (l10n.locale.languageCode == 'gu' ? "સિસ્ટમ ડિફોલ્ટ" : "System Default"), ThemeMode.system),
+                    _buildRadioOption(context, l10n.lightMode, ThemeMode.light),
+                    _buildRadioOption(context, l10n.darkMode, ThemeMode.dark),
+                    _buildRadioOption(context, l10n.systemDefault, ThemeMode.system),
                   ],
                 ),
               ),
@@ -196,6 +200,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showStyleSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) {
@@ -220,7 +225,7 @@ class SettingsScreen extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Text(
-                  "Select Theme Style", 
+                  l10n.selectThemeStyle, 
                   style: GoogleFonts.poppins(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold,
@@ -234,12 +239,12 @@ class SettingsScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: [
-                      _buildStyleOption(context, "Classic", AppThemeStyle.classic),
-                      _buildStyleOption(context, "Ocean (Teal)", AppThemeStyle.ocean),
-                      _buildStyleOption(context, "Sunset (Orange)", AppThemeStyle.sunset),
-                      _buildStyleOption(context, "Forest (Green)", AppThemeStyle.forest),
-                      _buildStyleOption(context, "Lavender (Purple)", AppThemeStyle.lavender),
-                      _buildStyleOption(context, "Midnight (Deep Blue)", AppThemeStyle.midnight),
+                      _buildStyleOption(context, l10n.classic, AppThemeStyle.classic),
+                      _buildStyleOption(context, l10n.ocean, AppThemeStyle.ocean),
+                      _buildStyleOption(context, l10n.sunset, AppThemeStyle.sunset),
+                      _buildStyleOption(context, l10n.forest, AppThemeStyle.forest),
+                      _buildStyleOption(context, l10n.lavender, AppThemeStyle.lavender),
+                      _buildStyleOption(context, l10n.midnight, AppThemeStyle.midnight),
                     ],
                   ),
                 ),
@@ -285,7 +290,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showLanguageSelector(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -310,7 +316,7 @@ class SettingsScreen extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Text(
-                  l10n.locale.languageCode == 'hi' ? "भाषा चुनें" : (l10n.locale.languageCode == 'gu' ? "ભાષા પસંદ કરો" : "Select Language"), 
+                  l10n.selectLanguage, 
                   style: GoogleFonts.poppins(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold,
@@ -323,9 +329,11 @@ class SettingsScreen extends StatelessWidget {
                  padding: const EdgeInsets.symmetric(horizontal: 16),
                  child: Column(
                   children: [
-                    _buildLangOption(context, "English", const Locale('en')),
-                    _buildLangOption(context, "Hindi", const Locale('hi')),
-                    _buildLangOption(context, "Gujarati", const Locale('gu')),
+                    _buildLangOption(context, l10n.english, const Locale('en')),
+                    _buildLangOption(context, l10n.hindi, const Locale('hi')),
+                    _buildLangOption(context, l10n.gujarati, const Locale('gu')),
+                    _buildLangOption(context, l10n.tamil, const Locale('ta')),
+                    _buildLangOption(context, l10n.marathi, const Locale('mr')),
                   ],
                  ),
               ),
@@ -354,7 +362,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _handleSignOut(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
     final colorScheme = Theme.of(context).colorScheme;
     
     showDialog(
@@ -364,14 +373,14 @@ class SettingsScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(l10n.signOut, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
         content: Text(
-          l10n.locale.languageCode == 'hi' ? "क्या आप वाकई साइन आउट करना चाहते हैं?" : (l10n.locale.languageCode == 'gu' ? "શું તમે ખરેખર સાઇન આઉટ કરવા માંગો છો?" : "Are you sure you want to sign out?"), 
+          l10n.areYouSureSignOut, 
           style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              l10n.locale.languageCode == 'hi' ? "रद्द करें" : (l10n.locale.languageCode == 'gu' ? "રદ કરો" : "Cancel"), 
+              l10n.cancel, 
               style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.w600)
             ),
           ),
@@ -392,7 +401,7 @@ class SettingsScreen extends StatelessWidget {
                 );
                 CustomToast.showSuccess(
                   context, 
-                  l10n.locale.languageCode == 'hi' ? "सफलतापूर्वक साइन आउट किया गया" : (l10n.locale.languageCode == 'gu' ? "સફળતાપૂર્વક સાઇન આઉટ થયું" : "Signed out successfully")
+                  l10n.signOutSuccess
                 );
               }
             },

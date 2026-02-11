@@ -11,6 +11,7 @@ import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
@@ -37,6 +38,7 @@ class StudentProfileScreen extends StatefulWidget {
       isScrollControlled: true,
       builder: (context) {
          final theme = Theme.of(context);
+         final l10n = AppLocalizations.of(context)!;
          return Container(
           padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 40),
           decoration: BoxDecoration(
@@ -61,11 +63,11 @@ class StudentProfileScreen extends StatefulWidget {
                  )
               ),
               const SizedBox(height: 24),
-              Text("Switch Accounts", 
+              Text(l10n.switchProfile, 
                 style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)
               ),
               const SizedBox(height: 8),
-              Text("Manage your profiles seamlessly", 
+              Text(l10n.manageProfilesSeamlessly, 
                 style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)
               ),
               const SizedBox(height: 24),
@@ -147,7 +149,7 @@ class StudentProfileScreen extends StatefulWidget {
                              Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAccountScreen()));
                           },
                           icon: const Icon(Icons.login_rounded),
-                          label: const Text("Log In Existing"),
+                          label: Text(l10n.logInExisting),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: theme.colorScheme.primary),
@@ -164,7 +166,7 @@ class StudentProfileScreen extends StatefulWidget {
                              Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
                           },
                           icon: const Icon(Icons.person_add_rounded, color: Colors.white),
-                          label: const Text("Create New", style: TextStyle(color: Colors.white)),
+                          label: Text(l10n.createNew, style: const TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: theme.colorScheme.primary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -267,7 +269,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       final token = prefs.getString('auth_token');
 
       if (token == null) {
-        CustomToast.showError(context, "Session expired, please login again");
+        CustomToast.showError(context, AppLocalizations.of(context)!.registrationFailed); // Generic
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const WelcomeScreen()),
@@ -290,7 +292,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           _photoPath = user['photoPath'];
           
           if (profile != null) {
-             studentStandard = "${profile['std'] ?? 'N/A'} - ${profile['medium'] ?? ''}";
+             studentStandard = "${profile['std'] ?? 'N/A'}${AppLocalizations.of(context)!.th} - ${profile['medium'] ?? ''}";
              schoolName = profile['school'] ?? (profile['schoolName'] ?? 'N/A'); 
              profilePic = user['photoPath'] ?? ""; // Use photoPath from user
              parentMobile = profile['parentPhone'] ?? "";
@@ -321,6 +323,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -331,7 +334,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text("My Profile",
+        title: Text(l10n.myProfile,
             style: GoogleFonts.poppins(
                 color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
         centerTitle: true,
@@ -345,6 +348,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             Stack(
               clipBehavior: Clip.none,
               children: [
+                const SizedBox(height: 170, width: double.infinity),
                 Container(
                   height: 120,
                   width: double.infinity,
@@ -357,7 +361,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: -50,
+                  bottom: 0,
                   left: 0,
                   right: 0,
                   child: Center(
@@ -388,6 +392,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           bottom: 0,
                           right: 0,
                           child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
                             onTap: () async {
                               final result = await Navigator.push(
                                 context,
@@ -415,7 +420,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               ],
             ),
             
-            const SizedBox(height: 60),
+            const SizedBox(height: 16),
 
             // 2. Name & Standard
             Text(
@@ -428,7 +433,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               ),
             ),
             Text(
-              "Standard: $studentStandard",
+              "${l10n.standard}: $studentStandard",
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 color: Colors.grey.shade600,
@@ -473,7 +478,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Learning Points",
+                          l10n.learningPoints,
                           style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500),
                         ),
                         Text(
@@ -503,7 +508,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Recent Performance",
+                    l10n.recentPerformance,
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -518,12 +523,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _buildMarksCard(
                             context,
-                            title: exam['title'] ?? 'Exam',
+                            title: exam['title'] ?? l10n.regularExams,
                             marks: "${exam['obtainedMarks'] ?? 0}/${exam['totalMarks'] ?? 0}",
                             color: (exam['totalMarks'] != null && exam['totalMarks'] != 0)
                                 ? ((exam['obtainedMarks'] ?? 0) / exam['totalMarks']) >= 0.4 ? Colors.green : Colors.red
                                 : Colors.grey,
                             isOnline: exam['isOnline'] ?? false,
+                            l10n: l10n,
                             onTap: () {
                               if (exam['isOnline'] == true) {
                                 Navigator.push(
@@ -547,7 +553,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                    Text(
-                    "Profile Details",
+                    l10n.profileDetails,
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -555,13 +561,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildDetailItem(context, Icons.school_rounded, "School", schoolName),
+                  _buildDetailItem(context, Icons.school_rounded, l10n.school, schoolName),
                   const SizedBox(height: 12),
-                  _buildDetailItem(context, Icons.phone_android_rounded, "Mobile", mobileNo),
+                  _buildDetailItem(context, Icons.phone_android_rounded, l10n.mobile, mobileNo),
                   const SizedBox(height: 12),
-                  _buildDetailItem(context, Icons.email_rounded, "Email", email.isEmpty ? "Not provided" : email),
+                  _buildDetailItem(context, Icons.email_rounded, l10n.email, email.isEmpty ? l10n.notProvided : email),
                   const SizedBox(height: 12),
-                  _buildDetailItem(context, Icons.family_restroom_rounded, "Parent's Contact", parentMobile.isEmpty ? "N/A" : parentMobile),
+                  _buildDetailItem(context, Icons.family_restroom_rounded, l10n.parentsContact, parentMobile.isEmpty ? l10n.notApplicable : parentMobile),
                 ],
               ),
             ),
@@ -586,7 +592,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   );
                 },
                 icon: const Icon(Icons.logout_rounded, color: Colors.red),
-                label: Text("Sign Out of session", style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
+                label: Text(l10n.signOutSession, style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Colors.red, width: 1)),
@@ -602,6 +608,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildEmptyPerformance(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -614,7 +621,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         children: [
           Icon(Icons.assignment_turned_in_outlined, size: 40, color: Colors.grey.shade400),
           const SizedBox(height: 12),
-          Text("No results yet. Keep learning!", style: GoogleFonts.poppins(color: Colors.grey.shade500, fontSize: 13)),
+          Text(l10n.noResultsMessage, style: GoogleFonts.poppins(color: Colors.grey.shade500, fontSize: 13)),
         ],
       ),
     );
@@ -659,6 +666,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       future: SharedPreferences.getInstance(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox.shrink();
+        final l10n = AppLocalizations.of(context)!;
         final prefs = snapshot.data!;
         List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
         List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
@@ -683,13 +691,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Switch Profile",
+                    l10n.switchProfile,
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                   ),
                   GestureDetector(
                     onTap: () => StudentProfileScreen.showSwitchAccountSheet(context, name: studentName, phone: mobileNo, pic: _photoPath),
                     child: Text(
-                      "See All",
+                      l10n.seeAll,
                       style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
                     ),
                   ),
@@ -698,7 +706,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               const SizedBox(height: 16),
               if (otherAccounts.isEmpty)
                 Text(
-                  "Single Profile Active. Add another to switch easily.",
+                  l10n.singleProfileActive,
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500),
                 )
               else
@@ -747,7 +755,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   child: TextButton.icon(
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAccountScreen())),
                     icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                    label: const Text("Add Another Account"),
+                    label: Text(l10n.addAnotherAccount),
                     style: TextButton.styleFrom(
                       foregroundColor: theme.colorScheme.primary,
                       textStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
@@ -763,7 +771,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildMarksCard(BuildContext context,
-      {required String title, required String marks, required Color color, bool isOnline = false, required VoidCallback onTap}) {
+      {required String title, required String marks, required Color color, bool isOnline = false, required VoidCallback onTap, required AppLocalizations l10n}) {
     final theme = Theme.of(context);
 
     return InkWell(
@@ -796,7 +804,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 children: [
                   Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
                   Text(
-                    isOnline ? "Online Exam" : "Offline Exam",
+                    isOnline ? l10n.onlineExam : l10n.offlineExam,
                     style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)
                   ),
                 ],

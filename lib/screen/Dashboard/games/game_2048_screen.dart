@@ -226,7 +226,7 @@ class _Game2048ScreenState extends State<Game2048Screen> {
     final theme = Theme.of(context);
     
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8EF), // Keep game specific BG? Or use theme? 2048 usually has specific colors. Let's keep it but update AppBar.
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: "2048 Puzzle",
         centerTitle: true,
@@ -269,7 +269,7 @@ class _Game2048ScreenState extends State<Game2048Screen> {
                height: MediaQuery.of(context).size.width * 0.9,
                padding: const EdgeInsets.all(12),
                decoration: BoxDecoration(
-                 color: const Color(0xFFBBADA0),
+                 color: theme.colorScheme.primary.withOpacity(0.5),
                  borderRadius: BorderRadius.circular(8),
                ),
                child: GridView.builder(
@@ -342,15 +342,16 @@ class _Game2048ScreenState extends State<Game2048Screen> {
   }
 
   Widget _buildScoreBoard(String label, int score) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFBBADA0),
+        color: theme.brightness == Brightness.dark ? Colors.grey[800] : theme.colorScheme.primary.withOpacity(0.5),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Column(
         children: [
-          Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFFEEE4DA))),
+          Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: theme.brightness == Brightness.dark ? Colors.grey[400] : const Color(0xFFEEE4DA))),
           Text("$score", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
         ],
       ),

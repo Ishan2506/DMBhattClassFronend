@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_otp_screen.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -65,13 +65,13 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
               
               Center(
                 child: Text(
-                  AppLocalizations.of(context).dontWorry,
+                  AppLocalizations.of(context)!.dontWorry,
                   style: GoogleFonts.poppins(fontSize: 16, color: Colors.black54),
                 ),
               ),
               Center(
                 child: Text(
-                  AppLocalizations.of(context).forgotPasswordHeader,
+                  AppLocalizations.of(context)!.forgotPasswordHeader,
                   style: GoogleFonts.poppins(
                     fontSize: 24, 
                     fontWeight: FontWeight.bold, 
@@ -82,7 +82,7 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
               const SizedBox(height: 20),
               
               Text(
-                AppLocalizations.of(context).forgotPasswordSubtext,
+                AppLocalizations.of(context)!.forgotPasswordSubtext,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
@@ -107,19 +107,19 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    final l10n = AppLocalizations.of(context);
-                    return l10n.locale.languageCode == 'hi' ? "कृपया फोन नंबर दर्ज करें" : (l10n.locale.languageCode == 'gu' ? "કૃપા કરીને ફોન નંબર દાખલ કરો" : 'Please enter phone number');
+                    final l10n = AppLocalizations.of(context)!;
+                    return l10n.pleaseEnterPhone;
                   }
                   if (value.length != 10) {
-                    final l10n = AppLocalizations.of(context);
-                    return l10n.locale.languageCode == 'hi' ? "फोन नंबर 10 अंकों का होना चाहिए" : (l10n.locale.languageCode == 'gu' ? "ફોન નંબર 10 અંકનો હોવો જોઈએ" : 'Phone number must be 10 digits');
+                    final l10n = AppLocalizations.of(context)!;
+                    return l10n.phoneMustBeTenDigits;
                   }
                   return null;
                 },
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context).phoneNumber,
+                  labelText: AppLocalizations.of(context)!.phoneNumber,
                   labelStyle: GoogleFonts.poppins(color: Colors.grey),
-                  hintText: AppLocalizations.of(context).enterPhoneHint,
+                  hintText: AppLocalizations.of(context)!.enterPhoneHint,
                   hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 14),
                   prefixIcon: const Icon(Icons.phone_android_rounded, color: Colors.black54),
                   filled: true,
@@ -149,7 +149,7 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                        ScaffoldMessenger.of(context).showSnackBar(
-                         SnackBar(content: Text(AppLocalizations.of(context).sendingOtp)),
+                         SnackBar(content: Text(AppLocalizations.of(context)!.sendingOtp)),
                        );
                        
                        ApiService.forgetPassword(phone: _phoneController.text).then((response) {
@@ -174,7 +174,7 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
                     elevation: 2,
                   ),
                   child: Text(
-                    AppLocalizations.of(context).sendOtp,
+                    AppLocalizations.of(context)!.sendOtp,
                     style: GoogleFonts.poppins(
                       fontSize: screenWidth * 0.045, // Responsive
                       fontWeight: FontWeight.bold,

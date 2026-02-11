@@ -1,7 +1,7 @@
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -38,6 +38,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   String? _selectedState;
   String? _selectedCity;
   String? _selectedInstitute;
+  String? _selectedBoard;
+  String? _selectedRole;
 
   // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
@@ -45,6 +47,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
 
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
+  final List<String> _boards = ["GSEB", "CBSE"];
+  final List<String> _roles = ["Student", "Teacher"];
   
   final Map<String, List<String>> _stateCityMap = {
     "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
@@ -85,7 +89,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          AppLocalizations.of(context).guestRegistration, 
+          AppLocalizations.of(context)!.guestRegistration, 
           style: GoogleFonts.poppins(color: Colors.black54, fontSize: 16),
         ),
         centerTitle: true,
@@ -95,7 +99,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-          children: [
+            children: [
             // Logo
              Container(
               padding: const EdgeInsets.all(12),
@@ -112,11 +116,11 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             const SizedBox(height: 24),
             
             Text(
-              AppLocalizations.of(context).heyThere,
+              AppLocalizations.of(context)!.heyThere,
               style: GoogleFonts.poppins(fontSize: 16, color: Colors.black54),
             ),
             Text(
-              AppLocalizations.of(context).welcomeGuest,
+              AppLocalizations.of(context)!.welcomeGuest,
               style: GoogleFonts.poppins(
                 fontSize: 24, 
                 fontWeight: FontWeight.bold, 
@@ -130,12 +134,12 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             // Name
             _buildTextField(
               controller: _nameController,
-              hint: AppLocalizations.of(context).name, 
+              hint: AppLocalizations.of(context)!.name, 
               icon: Icons.person_outline,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  final l10n = AppLocalizations.of(context);
-                  return l10n.locale.languageCode == 'hi' ? "कृपया अपना नाम दर्ज करें" : (l10n.locale.languageCode == 'gu' ? "કૃપા કરીને તમારું નામ દાખલ કરો" : 'Please enter your name');
+                  final l10n = AppLocalizations.of(context)!;
+                  return l10n.pleaseEnterName;
                 }
                 return null;
               },
@@ -145,7 +149,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             // Phone
              _buildTextField(
               controller: _phoneController,
-              hint: AppLocalizations.of(context).phoneNumber, 
+              hint: AppLocalizations.of(context)!.phoneNumber, 
               icon: Icons.phone_outlined, 
               inputType: TextInputType.phone,
               inputFormatters: [
@@ -154,12 +158,12 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
               ],
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  final l10n = AppLocalizations.of(context);
-                  return l10n.locale.languageCode == 'hi' ? "कृपया फोन नंबर दर्ज करें" : (l10n.locale.languageCode == 'gu' ? "કૃપા કરીને ફોન નંબર દાખલ કરો" : 'Please enter phone number');
+                  final l10n = AppLocalizations.of(context)!;
+                  return l10n.pleaseEnterPhone;
                 }
                 if (value.length != 10) {
-                  final l10n = AppLocalizations.of(context);
-                  return l10n.locale.languageCode == 'hi' ? "फोन नंबर 10 अंकों का होना चाहिए" : (l10n.locale.languageCode == 'gu' ? "ફોન નંબર 10 અંકનો હોવો જોઈએ" : 'Phone number must be 10 digits');
+                  final l10n = AppLocalizations.of(context)!;
+                  return l10n.phoneMustBeTenDigits;
                 }
                 return null;
               },
@@ -169,7 +173,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             // Password
             _buildTextField(
               controller: _passwordController,
-              hint: AppLocalizations.of(context).password,
+              hint: AppLocalizations.of(context)!.password,
               icon: Icons.lock_outline,
               isPassword: true,
               isVisible: _isPasswordVisible,
@@ -180,12 +184,12 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
               },
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  final l10n = AppLocalizations.of(context);
-                  return l10n.locale.languageCode == 'hi' ? "कृपया पासवर्ड दर्ज करें" : (l10n.locale.languageCode == 'gu' ? "કૃપા કરીને પાસવર્ડ દાખલ કરો" : 'Please enter password');
+                  final l10n = AppLocalizations.of(context)!;
+                  return l10n.pleaseEnterPassword;
                 }
                 if (value.length < 7) {
-                  final l10n = AppLocalizations.of(context);
-                  return l10n.locale.languageCode == 'hi' ? "पासवर्ड कम से कम 7 वर्णों का होना चाहिए" : (l10n.locale.languageCode == 'gu' ? "પાસવર્ડ ઓછામાં ઓછો 7 અક્ષરોનો હોવો જોઈએ" : 'Password must be at least 7 characters');
+                  final l10n = AppLocalizations.of(context)!;
+                  return l10n.passwordLengthError;
                 }
                 return null;
               },
@@ -195,7 +199,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             // Parent's Mobile
             _buildTextField(
               controller: _parentPhoneController,
-              hint: AppLocalizations.of(context).parentPhone, 
+              hint: AppLocalizations.of(context)!.parentPhone, 
               icon: Icons.family_restroom_outlined, 
               inputType: TextInputType.phone,
               inputFormatters: [
@@ -204,12 +208,12 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
               ],
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  final l10n = AppLocalizations.of(context);
-                  return l10n.locale.languageCode == 'hi' ? "कृपया माता-पिता का मोबाइल नंबर दर्ज करें" : (l10n.locale.languageCode == 'gu' ? "કૃપા કરીને વાલીનો મોબાઈલ નંબર દાખલ કરો" : "Please enter parent's mobile number");
+                  final l10n = AppLocalizations.of(context)!;
+                  return l10n.pleaseEnterParentMobile;
                 }
                 if (value.length != 10) {
-                  final l10n = AppLocalizations.of(context);
-                  return l10n.locale.languageCode == 'hi' ? "फोन नंबर 10 अंकों का होना चाहिए" : (l10n.locale.languageCode == 'gu' ? "ફોન નંબર 10 અંકનો હોવો જોઈએ" : 'Phone number must be 10 digits');
+                  final l10n = AppLocalizations.of(context)!;
+                  return l10n.phoneMustBeTenDigits;
                 }
                 return null;
               },
@@ -218,7 +222,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             
             // Standard Dropdown
             _buildDropdown(
-              hint: AppLocalizations.of(context).standard,
+              context,
+              hint: AppLocalizations.of(context)!.standard,
               icon: Icons.school_outlined,
               value: _selectedStandard,
               items: _standards,
@@ -237,7 +242,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             // Stream Dropdown (Conditional)
             if (_selectedStandard == "11" || _selectedStandard == "12") ...[
                _buildDropdown(
-                hint: AppLocalizations.of(context).stream,
+                context,
+                hint: AppLocalizations.of(context)!.stream,
                 icon: Icons.science_outlined,
                 value: _selectedStream,
                 items: _streams,
@@ -252,7 +258,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
 
             // Medium Dropdown
             _buildDropdown(
-              hint: AppLocalizations.of(context).medium,
+              context,
+              hint: AppLocalizations.of(context)!.medium,
               icon: Icons.language,
               value: _selectedMedium,
               items: _mediums,
@@ -262,12 +269,28 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                 });
               },
             ),
+            const SizedBox(height: 16),
+
+            // Board Dropdown
+            _buildDropdown(
+              context,
+              hint: AppLocalizations.of(context)!.board,
+              icon: Icons.dashboard_outlined,
+              value: _selectedBoard,
+              items: _boards,
+              onChanged: (val) {
+                setState(() {
+                  _selectedBoard = val;
+                });
+              },
+            ),
 
             const SizedBox(height: 16),
 
             // State Dropdown
             _buildDropdown(
-              hint: AppLocalizations.of(context).state,
+              context,
+              hint: AppLocalizations.of(context)!.state,
               icon: Icons.map_outlined,
               value: _selectedState,
               items: _stateCityMap.keys.toList(),
@@ -282,7 +305,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
 
             // City Dropdown (Conditional)
              _buildDropdown(
-              hint: AppLocalizations.of(context).city,
+              context,
+              hint: AppLocalizations.of(context)!.city,
               icon: Icons.location_city,
               value: _selectedCity,
               items: _selectedState != null ? _stateCityMap[_selectedState]! : [],
@@ -296,7 +320,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
 
             // Institute Dropdown
             _buildDropdown(
-              hint: AppLocalizations.of(context).locale.languageCode == 'hi' ? "संस्थान का नाम" : (AppLocalizations.of(context).locale.languageCode == 'gu' ? "સંસ્થાનું નામ" : "Institute Name"),
+              context,
+              hint: AppLocalizations.of(context)!.instituteName,
               icon: Icons.business,
               value: _selectedInstitute,
               items: _institutes,
@@ -314,7 +339,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             const SizedBox(height: 16),
 
              // School Name Autocomplete
-            if (_selectedInstitute == "Other") ...[
+             if (_selectedInstitute == "Other")
               LayoutBuilder(
                 builder: (context, constraints) {
                   return Autocomplete<String>(
@@ -349,7 +374,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                           },
                           style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold),
                           decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context).schoolName,
+                            hintText: AppLocalizations.of(context)!.schoolName,
                             hintStyle: GoogleFonts.poppins(color: Colors.grey),
                             prefixIcon: const Icon(Icons.school_outlined, color: Colors.black54),
                             border: InputBorder.none,
@@ -396,8 +421,19 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                   );
                 }
               ),
-              const SizedBox(height: 24),
-            ],
+            // Login As Dropdown
+            _buildDropdown(
+              context,
+              hint: AppLocalizations.of(context)!.loginAs,
+              icon: Icons.person_pin_outlined,
+              value: _selectedRole,
+              items: _roles,
+              onChanged: (val) {
+                setState(() {
+                  _selectedRole = val;
+                });
+              },
+            ),
             const SizedBox(height: 24),
 
             // Terms Checkbox
@@ -413,11 +449,11 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                   }
                 ),
                 Text(
-                  AppLocalizations.of(context).agreeTerms,
+                  AppLocalizations.of(context)!.agreeTerms,
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
                 ),
                 Text(
-                  AppLocalizations.of(context).termsConditions,
+                  AppLocalizations.of(context)!.termsConditions,
                   style: GoogleFonts.poppins(
                     fontSize: 12, 
                     color: Colors.blue.shade700, 
@@ -437,19 +473,19 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     if (!_agreedToTerms) {
-                      final l10n = AppLocalizations.of(context);
-                      CustomToast.showError(context, l10n.locale.languageCode == 'hi' ? 'कृपया नियम और शर्तों से सहमत हों' : (l10n.locale.languageCode == 'gu' ? 'કૃપા કરીને નિયમો અને શરતો સાથે સંમત થાઓ' : 'Please agree to Terms and Conditions'));
+                      final l10n = AppLocalizations.of(context)!;
+                      CustomToast.showError(context, l10n.pleaseAgreeTerms);
                       return;
                     }
                     // Validate Dropdowns
-                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedInstitute == null) {
-                        final l10n = AppLocalizations.of(context);
-                        CustomToast.showError(context, l10n.locale.languageCode == 'hi' ? 'कृपया सभी आवश्यक फ़ील्ड चुनें' : (l10n.locale.languageCode == 'gu' ? 'કૃપા કરીને બધા જરૂરી ક્ષેત્રો પસંદ કરો' : 'Please select all required fields'));
+                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedInstitute == null || _selectedBoard == null || _selectedRole == null) {
+                         final l10n = AppLocalizations.of(context)!;
+                        CustomToast.showError(context, l10n.pleaseSelectAllFields);
                       return;
                      }
                       if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
-                         final l10n = AppLocalizations.of(context);
-                         CustomToast.showError(context, l10n.locale.languageCode == 'hi' ? 'कृपया स्ट्रीम चुनें' : (l10n.locale.languageCode == 'gu' ? 'કૃપા કરીને સ્ટ્રીમ પસંદ કરો' : 'Please select a stream'));
+                         final l10n = AppLocalizations.of(context)!;
+                         CustomToast.showError(context, l10n.pleaseSelectStream);
                       return;
                       }
 
@@ -463,9 +499,10 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       fields: {
                         "firstName": firstName,
                         "phoneNum": _phoneController.text,
-                        // Guest doesn't need Std/Medium/School in backend registerGuest?
-                        // "const { firstName, middleName, phoneNum, loginCode, schoolName } = req.body;"
-                        // It takes schoolName.
+                        "std": _selectedStandard!,
+                        "medium": _selectedMedium!,
+                        "board": _selectedBoard!,
+                        "loginAs": _selectedRole!,
                         "schoolName": _schoolNameController.text,
                       },
                       files: [],
@@ -482,15 +519,15 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       CustomLoader.hide(context); // Hide Loader
 
                       if (response.statusCode == 201 || response.statusCode == 200) {
-                        final l10n = AppLocalizations.of(context);
-                        CustomToast.showSuccess(context, l10n.locale.languageCode == 'hi' ? "पंजीकरण सफल" : (l10n.locale.languageCode == 'gu' ? "નોંધણી સફળ" : "Guest Registration Successful"));
+                        final l10n = AppLocalizations.of(context)!;
+                        CustomToast.showSuccess(context, l10n.guestRegistrationSuccessful);
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const LoginScreen()),
                         );
                       } else {
-                        final l10n = AppLocalizations.of(context);
-                        CustomToast.showError(context, (l10n.locale.languageCode == 'hi' ? "पंजीकरण विफल: " : (l10n.locale.languageCode == 'gu' ? "નોંધણી નિષ્ફળ: " : "Registration Failed: ")) + response.body);
+                        final l10n = AppLocalizations.of(context)!;
+                        CustomToast.showError(context, l10n.registrationFailed + response.body);
                       }
                     } catch (e) {
                       if (mounted) {
@@ -509,7 +546,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                   elevation: 2,
                 ),
                 child: Text(
-                  AppLocalizations.of(context).registerGuest,
+                  AppLocalizations.of(context)!.registerGuest,
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -566,7 +603,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
     );
   }
 
-  Widget _buildDropdown({
+  Widget _buildDropdown(BuildContext context, {
     required String hint,
     required IconData icon,
     required String? value,
@@ -595,6 +632,10 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
           dropdownColor: Colors.white, // Cleaner White Background
           selectedItemBuilder: (BuildContext context) {
             return items.map<Widget>((String item) {
+              final l10n = AppLocalizations.of(context)!;
+              String label = item;
+              if (item == "Student") label = l10n.student;
+              if (item == "Teacher") label = l10n.teacher;
               return Align(
                  alignment: Alignment.centerLeft,
                  child: Row(
@@ -602,7 +643,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                      Icon(icon, color: Colors.black54), 
                      const SizedBox(width: 12),
                      Text(
-                       item,
+                       label,
                        style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), 
                      ),
                    ],
@@ -611,10 +652,14 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             }).toList();
           },
           items: items.map((String value) {
+            final l10n = AppLocalizations.of(context)!;
+            String label = value;
+            if (value == "Student") label = l10n.student;
+            if (value == "Teacher") label = l10n.teacher;
             return DropdownMenuItem<String>(
               value: value,
               child: Text(
-                value, 
+                label, 
                 style: GoogleFonts.poppins(color: Colors.black87), // Black text for readability
               ),
             );

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
@@ -225,7 +225,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     if (_isLoading) {
@@ -289,7 +289,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                       border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
                     ),
                     child: Text(
-                      "${l10n.question} ${_currentQuestionIndex + 1} ${l10n.locale.languageCode == 'en' ? 'of' : (l10n.locale.languageCode == 'hi' ? 'में से' : 'માંથી')} ${_questions.length}",
+                      l10n.questionProgress(_currentQuestionIndex + 1, _questions.length),
                       style: textTheme.labelLarge?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,

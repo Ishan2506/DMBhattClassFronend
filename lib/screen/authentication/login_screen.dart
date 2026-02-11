@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services for formatters
@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -92,10 +92,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter phone number';
+                  return l10n.pleaseEnterPhone;
                 }
                 if (value.length != 10) {
-                  return 'Phone number must be 10 digits';
+                  return l10n.phoneMustBeTenDigits;
                 }
                 return null;
               },
@@ -117,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
               },
                validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter password';
+                  return l10n.pleaseEnterPassword;
                 }
                 return null;
               },
@@ -183,6 +183,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (user != null && user['_id'] != null) {
                                   await prefs.setString('userId', user['_id']);
                                 }
+                                if (user != null && user['role'] != null) {
+                                  await prefs.setString('user_role', user['role']);
+                                }
                                 if (profile != null && profile['std'] != null) {
                                   await prefs.setString('std', profile['std']);
                                 }
@@ -192,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               // Continue with login even if profile fetch fails
                             }
 
-                            CustomToast.showSuccess(context, "Login Successful");
+                             CustomToast.showSuccess(context, "Login Successful");
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(

@@ -3,7 +3,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/settings_screen.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,6 +35,7 @@ class MoreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -45,7 +46,7 @@ class MoreScreen extends StatelessWidget {
           children: [
             // Section 1: Student Activities
             _MoreScreenItem(
-              title: "Student Activities",
+              title: l10n.studentActivities,
               value: "",
               icon: Icons.school,
               onTap: () {
@@ -59,7 +60,7 @@ class MoreScreen extends StatelessWidget {
 
             // Section 2: App Information
             _MoreScreenItem(
-              title: "App Information",
+              title: l10n.appInformation,
               value: "",
               icon: Icons.info_outline_rounded,
               onTap: () {
@@ -89,9 +90,10 @@ class _StudentActivitiesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: CustomAppBar(
-        title: "Student Activities",
+        title: l10n.studentActivities,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -99,7 +101,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
         child: Column(
           children: [
             _MoreScreenItem(
-              title: "My Area",
+              title: l10n.myArea,
               value: "",
               icon: Icons.person_pin,
               onTap: () {
@@ -111,7 +113,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "Events",
+              title: l10n.events,
               value: "",
               icon: Icons.event,
               onTap: () {
@@ -123,7 +125,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "History",
+              title: l10n.history,
               value: "",
               icon: Icons.history,
               onTap: () {
@@ -135,7 +137,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "Mind Games",
+              title: l10n.mindGames,
               value: "",
               icon: Icons.games_outlined,
               onTap: () {
@@ -147,7 +149,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "School Papers",
+              title: l10n.schoolPapers,
               value: "",
               icon: Icons.note_alt_outlined,
               onTap: () {
@@ -159,7 +161,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "Board Papers",
+              title: l10n.boardPapers,
               value: "",
               icon: Icons.assignment_outlined,
               onTap: () {
@@ -196,7 +198,9 @@ class _AppInfoScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return Container(
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
@@ -218,7 +222,7 @@ class _AppInfoScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              "Follow Us On",
+              l10n.followUsOn,
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -234,35 +238,36 @@ class _AppInfoScreen extends StatelessWidget {
                   icon: FontAwesomeIcons.facebook,
                   color: const Color(0xFF1877F2),
                   url: "https://www.facebook.com/dmbhatttutionclasses",
-                  label: "Facebook",
+                  label: l10n.facebook,
                 ),
                 _buildSocialIcon(
                   context,
                   icon: FontAwesomeIcons.instagram,
                   color: const Color(0xFFE4405F),
                   url: "https://www.instagram.com/dmbhatttutions",
-                  label: "Instagram",
+                  label: l10n.instagram,
                 ),
                 _buildSocialIcon(
                   context,
                   icon: FontAwesomeIcons.youtube,
                   color: const Color(0xFFFF0000),
                   url: "https://www.youtube.com/@dmbhatteducationchannel",
-                  label: "YouTube",
+                  label: l10n.youtube,
                 ),
                 _buildSocialIcon(
                   context,
                   icon: FontAwesomeIcons.whatsapp,
                   color: const Color(0xFF25D366),
                   url: "https://wa.me/919876543210",
-                  label: "WhatsApp",
+                  label: l10n.whatsapp,
                 ),
               ],
             ),
             const SizedBox(height: 16),
           ],
         ),
-      ),
+      );
+      },
     );
   }
 
@@ -304,9 +309,10 @@ class _AppInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: CustomAppBar(
-        title: "App Information",
+        title: l10n.appInformation,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -314,7 +320,7 @@ class _AppInfoScreen extends StatelessWidget {
         child: Column(
           children: [
             _MoreScreenItem(
-              title: "About Us",
+              title: l10n.aboutUs,
               value: "",
               icon: Icons.info_outline,
               onTap: () {
@@ -326,7 +332,7 @@ class _AppInfoScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "Upgrade Plan",
+              title: l10n.upgradePlan,
               value: "",
               icon: Icons.upgrade_rounded,
                onTap: () {
@@ -338,7 +344,7 @@ class _AppInfoScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "Refer & Earn",
+              title: l10n.referAndEarn,
               value: "",
               icon: Icons.diversity_3,
               onTap: () {
@@ -350,7 +356,7 @@ class _AppInfoScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "Settings",
+              title: l10n.settings,
               value: "",
               icon: Icons.settings,
               onTap: () {
@@ -362,19 +368,19 @@ class _AppInfoScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "Share App",
+              title: l10n.shareApp,
               value: "",
               icon: Icons.share,
               onTap: _shareApp,
             ),
             _MoreScreenItem(
-              title: "Rate Us",
+              title: l10n.rateUs,
               value: "",
               icon: Icons.star_rate_rounded,
               onTap: () => _showRateUsDialog(context),
             ),
             _MoreScreenItem(
-              title: "Follow Us",
+              title: l10n.followUs,
               value: "",
               icon: Icons.rss_feed_rounded,
               onTap: () => _showFollowUsSheet(context),
@@ -395,17 +401,19 @@ class _RateUsDialogState extends State<_RateUsDialog> {
   int _selectedRating = -1;
   final TextEditingController _feedbackController = TextEditingController();
 
-  final List<Map<String, dynamic>> _emojis = [
-    {"icon": "😡", "label": "Terrible", "score": 1},
-    {"icon": "🙁", "label": "Bad", "score": 2},
-    {"icon": "😐", "label": "Okay", "score": 3},
-    {"icon": "🙂", "label": "Good", "score": 4},
-    {"icon": "😍", "label": "Great", "score": 5},
+  List<Map<String, dynamic>> _emojis(AppLocalizations l10n) => [
+    {"icon": "😡", "label": l10n.terrible, "score": 1},
+    {"icon": "🙁", "label": l10n.bad, "score": 2},
+    {"icon": "😐", "label": l10n.okay, "score": 3},
+    {"icon": "🙂", "label": l10n.good, "score": 4},
+    {"icon": "😍", "label": l10n.great, "score": 5},
   ];
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final emojis = _emojis(l10n);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -436,7 +444,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                 const Icon(Icons.star_rounded, color: Colors.white, size: 48),
                 const SizedBox(height: 8),
                 Text(
-                  "Rate Your Experience",
+                  l10n.rateYourExperience,
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -451,7 +459,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
             child: Column(
               children: [
                 Text(
-                  "How do you feel about the app?",
+                  l10n.howDoYouFeel,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                       color: colorScheme.onSurfaceVariant, fontSize: 14),
@@ -459,7 +467,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: _emojis.map((e) {
+                  children: emojis.map((e) {
                     final isSelected = _selectedRating == e['score'];
                     return GestureDetector(
                       onTap: () {
@@ -486,7 +494,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      _emojis[_selectedRating - 1]['label'],
+                      emojis[_selectedRating - 1]['label'],
                       style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -498,7 +506,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                   controller: _feedbackController,
                   maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: "Write your feedback here (optional)...",
+                    hintText: l10n.feedbackHint,
                     hintStyle:
                         GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
                     border: OutlineInputBorder(
@@ -524,7 +532,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        child: Text("Cancel",
+                        child: Text(l10n.cancel,
                             style: GoogleFonts.poppins(
                                 color: Colors.grey, fontWeight: FontWeight.w600)),
                       ),
@@ -535,11 +543,11 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                         onPressed: () {
                           if (_selectedRating != -1) {
                             CustomToast.showSuccess(
-                                context, "Thank you for your feedback!");
+                                context, l10n.thankYouFeedback);
                             Navigator.pop(context);
                           } else {
                             CustomToast.showError(
-                                context, "Please select a rating.");
+                                context, l10n.selectRatingError);
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -549,7 +557,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        child: Text("Submit",
+                        child: Text(l10n.submit,
                             style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -572,9 +580,10 @@ class _MyAreaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: CustomAppBar(
-        title: "My Area",
+        title: l10n.myArea,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -583,7 +592,7 @@ class _MyAreaScreen extends StatelessWidget {
           child: Column(
             children: [
               _MoreScreenItem(
-                title: "Leaderboard",
+                title: l10n.leaderboard,
                 value: "",
                 icon: Icons.leaderboard,
                 onTap: () {
@@ -607,9 +616,10 @@ class _HistoryMenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: CustomAppBar(
-        title: "History",
+        title: l10n.history,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -618,7 +628,7 @@ class _HistoryMenuScreen extends StatelessWidget {
           child: Column(
             children: [
               _MoreScreenItem(
-                title: "Exam History",
+                title: l10n.examHistory,
                 value: "",
                 icon: Icons.history_edu,
                 onTap: () {
@@ -630,7 +640,7 @@ class _HistoryMenuScreen extends StatelessWidget {
                 },
               ),
               _MoreScreenItem(
-                title: "Product History",
+                title: l10n.productHistory,
                 value: "",
                 icon: Icons.shopping_bag,
                 onTap: () {
@@ -795,7 +805,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
         child: Column(
           children: [
             Text(
-              "MEET OUR INFLUENCER",
+              AppLocalizations.of(context)!.meetOurInfluencer.toUpperCase(),
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

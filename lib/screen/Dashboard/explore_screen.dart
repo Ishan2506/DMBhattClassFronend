@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -82,6 +83,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               "rating": 4.5,
               "reviews": 0,
               "image": item['image'] ?? "",
+              "subject": item['subject'] ?? "",
             }).toList().cast<Map<String, dynamic>>();
             _isLoading = false;
           });
@@ -130,6 +132,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -178,7 +181,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             onChanged: (value) => setState(() => _searchQuery = value),
                             style: GoogleFonts.poppins(color: isDark ? Colors.white : Colors.black87),
                             decoration: InputDecoration(
-                              hintText: "Search...",
+                              hintText: l10n.search,
                               hintStyle: GoogleFonts.poppins(
                                 color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
                                 fontSize: 16,
@@ -274,8 +277,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     children: [
                       Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
                       const SizedBox(height: 16),
-                      Text(
-                        "No items found",
+                       Text(
+                        AppLocalizations.of(context)!.noExamsFound, // Generic
                         style: GoogleFonts.poppins(
                           color: Colors.grey.shade600, 
                           fontSize: 16
@@ -397,7 +400,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                           ),
                                         ),
                                         Text(
-                                          "New Sale", 
+                                          l10n.newSale, 
                                           style: GoogleFonts.poppins(
                                             fontSize: 13, // Reduced from 14
                                             color: Colors.grey,

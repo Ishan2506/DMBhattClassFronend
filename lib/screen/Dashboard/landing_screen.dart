@@ -6,7 +6,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/explore_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/dmai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 
@@ -83,7 +83,7 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     // Titles corresponding to each page
     final List<String> titles = [

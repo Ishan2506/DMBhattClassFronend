@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -133,6 +133,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   @override
   Widget build(BuildContext context) {
     // Reusing styles from LoginScreen
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -142,7 +143,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text("Add Account", style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: Text(l10n.addAccount, style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -159,19 +160,19 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               ),
               const SizedBox(height: 32),
               Text(
-                "Add Another Account",
+                l10n.addAnotherAccount,
                 style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               const SizedBox(height: 8),
               Text(
-                "Enter details to add a new profile",
+                l10n.enterDetailsToAdd,
                 style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54),
               ),
               const SizedBox(height: 40),
 
                _buildTextField(
                 controller: _phoneController,
-                hint: "Phone Number", 
+                hint: l10n.phoneNumber, 
                 icon: Icons.phone_outlined, 
                 inputType: TextInputType.phone,
                 inputFormatters: [
@@ -179,20 +180,20 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                   LengthLimitingTextInputFormatter(10),
                 ],
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter phone number';
-                  if (value.length != 10) return 'Phone number must be 10 digits';
+                  if (value == null || value.isEmpty) return l10n.pleaseEnterPhone;
+                  if (value.length != 10) return l10n.phoneMustBeTenDigits;
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _passwordController,
-                hint: "Password",
+                hint: l10n.password,
                 icon: Icons.lock_outline,
                 isPassword: true,
                 isVisible: _isPasswordVisible,
                 onVisibilityChanged: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                validator: (value) => (value == null || value.isEmpty) ? 'Please enter password' : null,
+                validator: (value) => (value == null || value.isEmpty) ? l10n.pleaseEnterPassword : null,
               ),
                
               const SizedBox(height: 40),
@@ -207,7 +208,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
                   child: Text(
-                    "Login & Add",
+                    l10n.loginAndAdd,
                     style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
@@ -217,7 +218,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account? ", style: GoogleFonts.poppins(color: Colors.black54)),
+                  Text("${l10n.dontHaveAccount} ", style: GoogleFonts.poppins(color: Colors.black54)),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -226,7 +227,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                       );
                     },
                     child: Text(
-                      "Register",
+                      l10n.register,
                       style: GoogleFonts.poppins(
                         color: Colors.blue.shade700,
                         fontWeight: FontWeight.bold,

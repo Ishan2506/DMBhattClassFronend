@@ -137,7 +137,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
               child: LinearProgressIndicator(
                 value: (_currentIndex + 1) / _questions.length,
                 backgroundColor: theme.dividerColor.withOpacity(0.1),
-                color: theme.primaryColor,
+                color: theme.colorScheme.primary,
                 minHeight: 8,
               ),
             ),
@@ -146,7 +146,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
             Text(
               "Question ${_currentIndex + 1}",
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 16),
+              style: GoogleFonts.poppins(color: theme.colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
             ),
             const SizedBox(height: 20),
             
@@ -170,7 +170,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 22, 
                   fontWeight: FontWeight.bold, 
-                  color: theme.primaryColor
+                  color: theme.colorScheme.primary
                 ),
               ),
             ),
@@ -181,7 +181,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
               bool isSelected = _selectedOption == option;
               bool showColor = _isAnswered && (isSelected || option == question['a']);
               Color color = theme.cardColor;
-              Color textColor = theme.textTheme.bodyLarge?.color ?? Colors.black87;
+              Color textColor = theme.colorScheme.onSurface;
 
               if (showColor) {
                 if (option == question['a']) {

@@ -210,18 +210,18 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: theme.primaryColor.withOpacity(0.1),
+                    color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.timer, color: theme.primaryColor, size: 20),
+                      Icon(Icons.timer, color: theme.colorScheme.primary, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         "$_secondsElapsed s", 
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold, 
-                          color: theme.primaryColor
+                          color: theme.colorScheme.primary
                         )
                       ),
                     ],
@@ -283,7 +283,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
         decoration: BoxDecoration(
-          color: isFlipped ? theme.cardColor : theme.primaryColor,
+          color: isFlipped ? theme.cardColor : theme.colorScheme.primary,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -293,7 +293,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
             ),
           ],
           border: isFlipped 
-              ? Border.all(color: theme.primaryColor.withOpacity(0.5), width: 2) 
+              ? Border.all(color: theme.colorScheme.primary.withOpacity(0.5), width: 2) 
               : null,
         ),
         child: Center(

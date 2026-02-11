@@ -7,6 +7,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.da
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,6 +38,9 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   String? _selectedExamId;
   String? _selectedTitle;
   List<String> _takenTestTitles = [];
+  String? _userRole;
+  String? _userStandard;
+  String? _userStream;
 
   @override
   void initState() {
@@ -52,6 +56,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
 
         // Fetch history to check for taken tests
         final prefs = await SharedPreferences.getInstance();
+        _userRole = prefs.getString('user_role');
         final token = prefs.getString('auth_token');
         if (token != null) {
           final historyResponse = await ApiService.getDashboardData(token);
@@ -62,13 +67,40 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
           }
         }
 
+        // Fetch user profile to filter exams
+        final profileResponse = await ApiService.getProfile(token);
+        if (profileResponse.statusCode == 200) {
+          final profileData = jsonDecode(profileResponse.body);
+          final profile = profileData['profile'];
+          _userStandard = profile?['std']?.toString();
+          _userStream = profile?['stream']?.toString();
+        }
+
         setState(() {
           _allExams = data;
-          // Extract unique subjects
-          _subjects = _allExams
+          
+          // Filter exams based on standard and stream
+          final filteredExams = _allExams.where((e) {
+            final examStd = e['std']?.toString();
+            final examStream = e['stream']?.toString();
+            
+            // Match Standard
+            if (_userStandard != null && examStd != _userStandard) return false;
+            
+            // Match Stream if Std is 11 or 12
+            if (_userStandard != null && (int.tryParse(_userStandard!) ?? 0) >= 11) {
+               if (_userStream != null && examStream != null && examStream != _userStream) return false;
+            }
+            
+            return true;
+          }).toList();
+
+          // Extract unique subjects from filtered exams
+          _subjects = filteredExams
               .map((e) => e['subject'].toString())
               .toSet()
               .toList();
+          
           _isLoading = false;
         });
       } else {
@@ -274,6 +306,13 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                       onPressed: _selectedExamId == null
                           ? null
                           : () {
+                              if (_userRole == 'guest' && _takenTestTitles.length >= 2) {
+                                GuestUtils.showGuestRestrictionDialog(
+                                  context, 
+                                  message: "Guests are limited to 2 free exams. Please register as a student to unlock unlimited exams."
+                                );
+                                return;
+                              }
                               if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
                                 showDialog(
                                   context: context,

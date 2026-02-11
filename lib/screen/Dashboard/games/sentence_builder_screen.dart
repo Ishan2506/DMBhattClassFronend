@@ -166,13 +166,13 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             width: double.infinity,
-            color: theme.primaryColor.withOpacity(0.1),
+            color: theme.colorScheme.primary.withOpacity(0.1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   "Level ${_currentIndex + 1}/${_sentences.length}", 
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: theme.primaryColor)
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)
                 ),
                 Text(
                   "Score: $_score", 
@@ -276,8 +276,8 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                child: ElevatedButton(
                  onPressed: _isCorrect ? null : _checkOrder,
                  style: ElevatedButton.styleFrom(
-                   backgroundColor: _isCorrect ? Colors.green : theme.primaryColor,
-                   foregroundColor: Colors.white,
+                   backgroundColor: _isCorrect ? Colors.green : theme.colorScheme.primary,
+                   foregroundColor: theme.colorScheme.onPrimary,
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                    elevation: 4
                  ),

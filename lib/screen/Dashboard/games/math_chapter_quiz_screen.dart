@@ -204,7 +204,7 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.indigo.shade50,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: "Subject Quiz",
         centerTitle: true,
@@ -238,7 +238,7 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
           const SizedBox(height: 16),
           Text(
             "Select Chapter:",
-            style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo),
+            style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -252,8 +252,8 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     leading: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.indigo.shade100, shape: BoxShape.circle),
-                      child: const Icon(Icons.book, color: Colors.indigo),
+                      decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.1), shape: BoxShape.circle),
+                      child: Icon(Icons.book, color: theme.colorScheme.primary),
                     ),
                     title: Text(chapters[index], style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -285,10 +285,11 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
                  });
                },
                style: ElevatedButton.styleFrom(
-                 backgroundColor: Colors.indigo,
+                 backgroundColor: theme.colorScheme.primary,
+                 foregroundColor: theme.colorScheme.onPrimary,
                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12)
                ),
-               child: Text("Back to Chapters", style: GoogleFonts.poppins(color: Colors.white)),
+               child: Text("Back to Chapters", style: GoogleFonts.poppins()),
              )
           ],
         ),
@@ -303,14 +304,14 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Chapter: $_selectedChapter", style: GoogleFonts.poppins(color: Colors.indigo, fontWeight: FontWeight.w500)),
+              Text("Chapter: $_selectedChapter", style: GoogleFonts.poppins(color: theme.colorScheme.primary, fontWeight: FontWeight.w500)),
               Text("Q: ${_currentQuestionIndex + 1}/5", style: GoogleFonts.poppins(color: Colors.grey)),
             ],
           ),
           const Spacer(),
           Text(
             question['question'], 
-            style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 48),

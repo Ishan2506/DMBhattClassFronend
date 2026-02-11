@@ -28,8 +28,12 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
   final List<ChatMessage> _messages = [];
 
   String? _standard;
+  String? _stream;
   String? _subject;
   String? _chapter;
+  
+  String? _savedStandard;
+  String? _savedStream;
 
   bool _loading = false;
   String? _studentName;
@@ -141,7 +145,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
 
   bool _isValidSubject(String input) {
     if (_looksLikeQuestion(input)) return false;
-    if (input.length < 3 || input.length > 25) return false;
+    if (input.length < 2 || input.length > 25) return false;
     return true;
   }
 
@@ -177,38 +181,69 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
         return;
       }
       _standard = input;
-      _addBot("Great 👍 Now tell me your subject", options: [
-        'Maths',
-        'Science',
-        'English',
-        'Social Science',
-        'Gujarati',
-        'Account',
-        'Stats',
-        'Physics',
-        'Chemistry',
-        'Biology'
-      ]);
+      
+      final stdNum = int.tryParse(input.replaceAll(RegExp(r'[^0-9]'), ''));
+      if (stdNum != null && stdNum >= 11) {
+        _addBot("Which stream are you in?", options: ['Science', 'Commerce']);
+      } else {
+        _addBot("Great 👍 Now tell me your subject", options: [
+          'Maths',
+          'Science',
+          'English',
+          'Social Science',
+          'Gujarati',
+        ]);
+      }
+      return;
+    }
+
+    // STEP 1.5: STREAM (Conditional for 11 & 12)
+    final stdNum = int.tryParse(_standard!.replaceAll(RegExp(r'[^0-9]'), ''));
+    if (stdNum != null && stdNum >= 11 && _stream == null) {
+      if (input.toLowerCase() == 'science' || input.toLowerCase() == 'commerce') {
+        _stream = input;
+        if (input.toLowerCase() == 'science') {
+          _addBot("Select your Science subject", options: [
+            'Physics',
+            'Chemistry',
+            'Mathematics',
+            'English',
+            'Biology',
+            'Computer',
+            'Physical Education'
+          ]);
+        } else {
+          _addBot("Select your Commerce subject", options: [
+            'Account',
+            'BA',
+            'Eco',
+            'English',
+            'State'
+          ]);
+        }
+      } else {
+        _addBot("❌ Please select a valid stream", options: ['Science', 'Commerce']);
+      }
       return;
     }
 
     // STEP 2: SUBJECT
     if (_subject == null) {
       if (!_isValidSubject(input)) {
+        List<String> options = [];
+        if (stdNum != null && stdNum >= 11) {
+          if (_stream?.toLowerCase() == 'science') {
+            options = ['Physics', 'Chemistry', 'Mathematics', 'English', 'Biology', 'Computer', 'Physical Education'];
+          } else {
+            options = ['Account', 'BA', 'Eco', 'English', 'State'];
+          }
+        } else {
+          options = ['Maths', 'Science', 'English', 'Social Science', 'Gujarati'];
+        }
+
         _addBot(
-            "❌ Subject name looks invalid. Example: Science, Maths, Commerce",
-            options: [
-              'Maths',
-              'Science',
-              'English',
-              'Social Science',
-              'Gujarati',
-              'Account',
-              'Stats',
-              'Physics',
-              'Chemistry',
-              'Biology'
-            ]);
+            "❌ Subject name looks invalid. Please select from the options below:",
+            options: options);
         return;
       }
       _subject = input;

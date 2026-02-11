@@ -59,3 +59,4 @@ class ThemeCubit extends Cubit<ThemeState> {
     emit(state.copyWith(selectedStyle: style));
   }
 }
+  

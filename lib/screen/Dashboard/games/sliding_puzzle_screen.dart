@@ -149,8 +149,9 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.brown.shade50,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: "15 Puzzle",
         centerTitle: true,
@@ -162,13 +163,13 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-            Text("Moves: $_moves", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600)),
+            Text("Moves: $_moves", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
             const SizedBox(height: 32),
             Container(
                 margin: const EdgeInsets.symmetric(horizontal: 24),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: Colors.brown.shade200,
+                    color: theme.brightness == Brightness.dark ? Colors.grey[800] : Colors.brown.shade200,
                     borderRadius: BorderRadius.circular(8)
                 ),
                 child: GridView.builder(
@@ -188,7 +189,7 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
                             onTap: () => _onTileTap(index),
                             child: Container(
                                 decoration: BoxDecoration(
-                                    color: Colors.brown.shade400,
+                                    color: theme.brightness == Brightness.dark ? theme.colorScheme.primaryContainer : Colors.brown.shade400,
                                     borderRadius: BorderRadius.circular(4),
                                     boxShadow: [
                                         BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(1,1))
@@ -200,7 +201,7 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
                                         style: GoogleFonts.poppins(
                                             fontSize: 24, 
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.white
+                                            color: theme.brightness == Brightness.dark ? theme.colorScheme.onPrimaryContainer : Colors.white
                                         ),
                                     ),
                                 ),

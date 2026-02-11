@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
@@ -72,20 +73,22 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
     final regularExams = ExamHistoryData().regularExams;
     final quizExams = ExamHistoryData().quizExams;
 
+    final l10n = AppLocalizations.of(context)!;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: CustomAppBar(
-          title: "Exam History",
+          title: l10n.examHistory,
           bottom: TabBar(
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
             indicatorWeight: 3,
             tabs: [
-              Tab(child: Text("Regular Exams", style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
-              Tab(child: Text("5 Min Quiz", style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
+              Tab(child: Text(l10n.regularExams, style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
+              Tab(child: Text(l10n.fiveMinQuiz, style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
             ],
           ),
         ),
@@ -105,9 +108,10 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     if (exams.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       return Center(
         child: Text(
-          "No exams found",
+          l10n.noExamsFound,
           style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
         ),
       );
@@ -139,11 +143,11 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
               child: Icon(Icons.assignment, color: colorScheme.primary),
             ),
             title: Text(
-              exam['title'] ?? 'Exam',
+              exam['title'] ?? (exam['isOnline'] == true ? AppLocalizations.of(context)!.regularExams : AppLocalizations.of(context)!.fiveMinQuiz),
               style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
             ),
             subtitle: Text(
-              "Date: $formattedDate",
+              AppLocalizations.of(context)!.dateLabel(formattedDate),
               style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
             ),
             trailing: Column(
@@ -151,7 +155,7 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  "Marks",
+                  AppLocalizations.of(context)!.marksLabel,
                   style: GoogleFonts.poppins(fontSize: 10, color: colorScheme.onSurfaceVariant),
                 ),
                 Text(
@@ -189,12 +193,12 @@ class ExamPdfViewer extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.download, color: Colors.white),
             onPressed: () => _downloadPdf(context),
-            tooltip: "Download",
+            tooltip: AppLocalizations.of(context)!.download,
           ),
           IconButton(
             icon: const Icon(Icons.share, color: Colors.white),
             onPressed: () => _sharePdf(context),
-             tooltip: "Share (Protected)",
+             tooltip: AppLocalizations.of(context)!.shareProtected,
           ),
         ],
       ),
@@ -227,12 +231,14 @@ class ExamPdfViewer extends StatelessWidget {
         await file.writeAsBytes(bytes);
 
         if (context.mounted) {
-          CustomToast.showSuccess(context, "Downloaded to: ${file.path}");
+          final l10n = AppLocalizations.of(context)!;
+          CustomToast.showSuccess(context, l10n.downloadedTo(file.path));
         }
       }
     } catch (e) {
       if (context.mounted) {
-        CustomToast.showError(context, "Download failed: $e");
+        final l10n = AppLocalizations.of(context)!;
+        CustomToast.showError(context, l10n.downloadFailed(e.toString()));
       }
     }
   }
@@ -243,13 +249,15 @@ class ExamPdfViewer extends StatelessWidget {
       final bytes = await _generateExamPdf(PdfPageFormat.a4, exam);
       
       if (context.mounted) {
-         CustomToast.showSuccess(context, "Sharing PDF...");
+         final l10n = AppLocalizations.of(context)!;
+         CustomToast.showSuccess(context, l10n.sharingPdf);
       }
       
       await Printing.sharePdf(bytes: bytes, filename: '${exam['title']}.pdf');
     } catch (e) {
       if (context.mounted) {
-        CustomToast.showError(context, "Share failed: $e");
+        final l10n = AppLocalizations.of(context)!;
+        CustomToast.showError(context, l10n.shareFailed(e.toString()));
       }
     }
   }

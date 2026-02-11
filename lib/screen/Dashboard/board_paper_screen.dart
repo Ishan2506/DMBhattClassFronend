@@ -1,3 +1,4 @@
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -8,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class BoardPaperScreen extends StatefulWidget {
   const BoardPaperScreen({super.key});
@@ -32,6 +34,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
   bool _isLoading = false;
   bool _isProfileLoading = true;
+  bool _isGuest = false;
   List<dynamic> _papers = [];
   bool _hasSearched = false;
 
@@ -67,6 +70,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     } catch (e) {
       debugPrint("Error fetching profile: $e");
     } finally {
+      _isGuest = await GuestUtils.isGuest();
       if (mounted) setState(() => _isProfileLoading = false);
     }
   }
@@ -77,10 +81,11 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
-        title: "Board Papers",
+        title: l10n.boardPapers,
         centerTitle: true,
       ),
       body: Stack(
@@ -99,13 +104,13 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                        children: [
                          Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade400),
                          const SizedBox(height: 16),
-                         Text("No board papers found", style: GoogleFonts.poppins(color: Colors.grey)),
+                         Text(l10n.noPapersFound, style: GoogleFonts.poppins(color: Colors.grey)),
                        ],
                      ),
                    )
                 else if (_papers.any((p) => p['subject'] == _selectedSubject) && !_isLoading) ...[
                    Text(
-                     "Available Papers (${_papers.where((p) => p['subject'] == _selectedSubject).length})",
+                     "${l10n.availablePapers} (${_papers.where((p) => p['subject'] == _selectedSubject).length})",
                      style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                    ),
                    const SizedBox(height: 12),
@@ -117,7 +122,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                        children: [
                          Icon(Icons.description_outlined, size: 64, color: Colors.grey.shade400),
                          const SizedBox(height: 16),
-                         Text("No papers found for $_selectedSubject", style: GoogleFonts.poppins(color: Colors.grey)),
+                         Text("${l10n.noExamsFound} ${l10n.forLabel} $_selectedSubject", style: GoogleFonts.poppins(color: Colors.grey)),
                        ],
                      ),
                    ),
@@ -132,6 +137,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   }
 
   Widget _buildFilterCard(ColorScheme colorScheme, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     // Note: Loader logic moved to Stack in build method
     
     // if (_isProfileLoading) {
@@ -155,7 +161,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Select Details", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(l10n.selectSubject, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)), // Generic
           const SizedBox(height: 16),
           
           if (_selectedMedium != null && _selectedStd != null)
@@ -169,7 +175,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                 border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
               ),
               child: Text(
-                "${_selectedStd}th - $_selectedMedium Medium${_selectedStream != null ? ' ($_selectedStream)' : ''}",
+                "${_selectedStd}${l10n.th} - $_selectedMedium ${l10n.medium}${_selectedStream != null ? ' ($_selectedStream)' : ''}",
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: colorScheme.primary),
                 textAlign: TextAlign.center,
               ),
@@ -177,7 +183,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
           // Year Dropdown
           _buildDropdown(
-            "Year", 
+            l10n.year, 
             _years, 
             _selectedYear, 
             (val) => setState(() => _selectedYear = val)
@@ -186,7 +192,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           
           // Subject Dropdown
           _buildDropdown(
-            "Subject", 
+            l10n.subject, 
             _subjects, 
             _selectedSubject, 
             (val) => setState(() => _selectedSubject = val)
@@ -203,7 +209,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: Text("Find Papers", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              child: Text(AppLocalizations.of(context)!.apply, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)), // Or findPapers
             ),
           ),
         ],
@@ -254,7 +260,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  paper['title'] ?? paper['name'] ?? "Board Paper", 
+                  paper['title'] ?? paper['name'] ?? AppLocalizations.of(context)!.boardPapers, 
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 Text(
@@ -268,6 +274,10 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           IconButton(
             icon: Icon(Icons.visibility_outlined, color: colorScheme.primary),
             onPressed: () {
+               if (_isGuest) {
+                  GuestUtils.showGuestRestrictionDialog(context, message: "Register to view board papers!");
+                  return;
+               }
                // Ensure paper map has 'image' key for PdfPreviewScreen
                final pdfPaper = Map<String, dynamic>.from(paper);
                if (pdfPaper['image'] == null) pdfPaper['image'] = pdfPaper['url'];
@@ -283,7 +293,13 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           // Download Button
           IconButton(
             icon: Icon(Icons.download_rounded, color: colorScheme.secondary),
-            onPressed: () => _launchURL(paper['url'] ?? ""), 
+            onPressed: () {
+              if (_isGuest) {
+                  GuestUtils.showGuestRestrictionDialog(context, message: "Register to download board papers!");
+                  return;
+              }
+              _launchURL(paper['url'] ?? ""); 
+            }, 
           ),
         ],
       ),
@@ -293,21 +309,21 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   Future<void> _validateAndFetch() async {
     // Basic validation
     if (_selectedMedium == null || _selectedStd == null) {
-       CustomToast.showError(context, "Could not load profile details. Please update your profile.");
+       CustomToast.showError(context, AppLocalizations.of(context)!.registrationFailed); // Generic profile error
        return;
     }
     
     if (_selectedSubject == null || _selectedYear == null) {
-       CustomToast.showError(context, "Please select all fields");
+       CustomToast.showError(context, AppLocalizations.of(context)!.selectStandardMediumError);
        return;
     }
 
-    if (_selectedStd == "12" && _selectedStream == null) {
-       // If stream is missing from profile, we might still want to proceed or error out.
-       // For now, let's warn.
-       CustomToast.showError(context, "Stream information is missing from profile.");
-       return;
-    }
+     if (_selectedStd == "12" && _selectedStream == null) {
+        // If stream is missing from profile, we might still want to proceed or error out.
+        // For now, let's warn.
+        CustomToast.showError(context, AppLocalizations.of(context)!.selectStreamError);
+        return;
+     }
 
     setState(() {
       _isLoading = true;
@@ -334,7 +350,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           _papers = data['papers'] ?? []; // Adjust key based on actual API
         });
         if (_papers.isEmpty) {
-           CustomToast.showSuccess(context, "No papers found");
+           CustomToast.showSuccess(context, AppLocalizations.of(context)!.noExamsFound);
         }
       } else {
          CustomToast.showError(context, "Failed to fetch papers");
@@ -350,7 +366,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     if (url.isEmpty) return;
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      CustomToast.showError(context, "Could not launch PDF");
+      CustomToast.showError(context, AppLocalizations.of(context)!.downloadFailed("PDF"));
     }
   }
 }

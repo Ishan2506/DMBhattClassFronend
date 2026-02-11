@@ -1,4 +1,6 @@
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,18 @@ class SchoolPapersScreen extends StatefulWidget {
 
 class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   String? _selectedSubject;
+  bool _isGuest = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkGuestStatus();
+  }
+
+  Future<void> _checkGuestStatus() async {
+    _isGuest = await GuestUtils.isGuest();
+    if (mounted) setState(() {});
+  }
   final List<String> _subjects = [
     "Mathematics",
     "Science", 
@@ -72,6 +86,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -79,7 +94,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
-        title: "School Papers",
+        title: l10n.schoolPapers,
         centerTitle: true, 
       ),
       body: SingleChildScrollView(
@@ -105,11 +120,11 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Select Subject", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+                  Text(l10n.selectSubject, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedSubject,
-                    hint: Text("Choose Subject", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+                    hint: Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                     items: _subjects.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                     onChanged: (val) {
                       _selectedSubject = val;
@@ -140,7 +155,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                      children: [
                        Icon(Icons.subject, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                        const SizedBox(height: 16),
-                       Text("Please select a subject", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+                       Text(l10n.selectStandardMediumError, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)), // Generic msg if needed
                      ],
                    ),
                  ),
@@ -153,7 +168,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                      children: [
                        Icon(Icons.description_outlined, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                        const SizedBox(height: 16),
-                       Text("No papers found for $_selectedSubject", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+                       Text("${l10n.noExamsFound} ${l10n.forLabel} $_selectedSubject", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                      ],
                    ),
                  ),
@@ -163,7 +178,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Available Papers (${_displayPapers.length})", // "give the number of pdf"
+                    "${l10n.availablePapers} (${_displayPapers.length})", // Corrected
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                   ),
                   const SizedBox(height: 12),
@@ -177,6 +192,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   }
 
   Widget _buildPaperCard(Map<String, dynamic> paper, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = theme.colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -217,6 +233,10 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
           IconButton(
             icon: Icon(Icons.visibility_outlined, color: colorScheme.primary),
             onPressed: () {
+               if (_isGuest) {
+                  GuestUtils.showGuestRestrictionDialog(context, message: "Register to view school papers!");
+                  return;
+               }
                Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -224,17 +244,21 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                   ),
                 );
             },
-            tooltip: "View",
+            tooltip: l10n.view,
           ),
           
           // Download Button
           IconButton(
             icon: Icon(Icons.download_rounded, color: colorScheme.secondary),
             onPressed: () {
+               if (_isGuest) {
+                  GuestUtils.showGuestRestrictionDialog(context, message: "Register to download school papers!");
+                  return;
+               }
                CustomToast.showSuccess(context, "Downloading ${paper['name']}...");
                // Implement download logic here
             },
-             tooltip: "Download",
+             tooltip: l10n.download,
           ),
         ],
       ),

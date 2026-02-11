@@ -139,6 +139,7 @@ class TuitionAIService {
     required String standard,
     required String subject,
     required String chapter,
+    String? stream,
   }) async {
     final channelId = await _getChannelId();
 

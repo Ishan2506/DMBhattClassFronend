@@ -2,7 +2,7 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_start_exam_form.dart';
-import 'package:dm_bhatt_tutions/utils/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,7 +18,7 @@ class StudentHomeScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       child: Column(
@@ -54,7 +54,7 @@ class StudentHomeScreen extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  "DM Bhatt Group Tuition",
+                  l10n.dmBhattGroupTuition,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: screenWidth * 0.055, // Responsive Font Size
@@ -65,7 +65,7 @@ class StudentHomeScreen extends StatelessWidget {
                 ),
                 SizedBox(height: screenHeight * 0.01),
                 Text(
-                  "Excellence in Education",
+                  l10n.excellenceInEducation,
                   style: GoogleFonts.poppins(
                     fontSize: screenWidth * 0.035, // Responsive Font Size
                     color: Colors.white70,
@@ -265,7 +265,7 @@ class StudentHomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.locale.languageCode == 'en' ? "5 Min Rapid Test" : (l10n.locale.languageCode == 'hi' ? "5 मिनट रैपिड टेस्ट" : "5 મિનિટ રેપિડ ટેસ્ટ"),
+                          l10n.fiveMinRapidTest,
                           style: GoogleFonts.poppins(
                             fontSize: screenWidth * 0.045, 
                             fontWeight: FontWeight.bold,
@@ -274,7 +274,7 @@ class StudentHomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          l10n.locale.languageCode == 'en' ? "Study for 5 mins & take a quick quiz!" : (l10n.locale.languageCode == 'hi' ? "5 मिनट तक अध्ययन करें और एक त्वरित प्रश्नोत्तरी लें!" : "5 મિનિટ માટે અભ્યાસ કરો અને ઝડપી ક્વિઝ લો!"),
+                          l10n.studyForFiveMins,
                           style: GoogleFonts.poppins(
                             fontSize: screenWidth * 0.032,
                             color: Colors.white.withOpacity(0.9),
@@ -298,7 +298,7 @@ class StudentHomeScreen extends StatelessWidget {
                             ),
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           ),
-                          child: Text(l10n.locale.languageCode == 'en' ? "Start Now" : (l10n.locale.languageCode == 'hi' ? "अभी शुरू करें" : "હમણાં શરૂ કરો"), style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                          child: Text(l10n.startNow, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),

@@ -172,7 +172,7 @@ class _MysteryBoxGameScreenState extends State<MysteryBoxGameScreen> {
   @override
   Widget build(BuildContext context) {
      return Scaffold(
-       backgroundColor: const Color(0xFF3E2723), // Dark Brown Bookshelf BG
+       backgroundColor: theme.brightness == Brightness.dark ? theme.scaffoldBackgroundColor : const Color(0xFF3E2723), // Dark Brown Bookshelf BG or System Dark
        appBar: CustomAppBar(
          title: "Knowledge Box",
          centerTitle: true,
@@ -367,7 +367,7 @@ class _QuestionDialogState extends State<_QuestionDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      backgroundColor: Colors.white,
+      backgroundColor: theme.cardColor,
       title: Text(
         "For ${widget.points} Points", 
         style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
@@ -378,7 +378,7 @@ class _QuestionDialogState extends State<_QuestionDialog> {
         children: [
            Text(
              widget.question,
-             style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+             style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
              textAlign: TextAlign.center,
            ),
            const SizedBox(height: 24),
@@ -388,8 +388,8 @@ class _QuestionDialogState extends State<_QuestionDialog> {
                width: double.infinity,
                child: ElevatedButton(
                  style: ElevatedButton.styleFrom(
-                   backgroundColor: Colors.blue.shade50,
-                   foregroundColor: Colors.blue.shade900,
+                   backgroundColor: theme.colorScheme.primaryContainer,
+                   foregroundColor: theme.colorScheme.onPrimaryContainer,
                    elevation: 0,
                    padding: const EdgeInsets.symmetric(vertical: 12),
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))

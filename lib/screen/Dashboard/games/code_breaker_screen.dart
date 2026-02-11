@@ -250,7 +250,7 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                             // Bulls (Correct position)
                             ...List.generate(result['Bulls']!, (i) => const Icon(Icons.circle, size: 12, color: Colors.red)),
                             // Cows (Wrong position)
-                            ...List.generate(result['Cows']!, (i) => Icon(Icons.circle_outlined, size: 12, color: theme.dividerColor.withOpacity(0.4))),
+                            ...List.generate(result['Cows']!, (i) => Icon(Icons.circle_outlined, size: 12, color: theme.colorScheme.onSurface.withOpacity(0.4))),
                           ],
                         )
                       ],
@@ -375,7 +375,13 @@ class _DigitInputState extends State<_DigitInput> {
                     decoration: BoxDecoration(
                       color: widget.colors[index],
                       shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(2,2))]
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(widget.theme.brightness == Brightness.dark ? 0.3 : 0.1), 
+                          blurRadius: 4, 
+                          offset: const Offset(2,2)
+                        )
+                      ]
                     ),
                     child: Center(child: Text("${index+1}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white))),
                   ),
@@ -395,10 +401,11 @@ class _DigitInputState extends State<_DigitInput> {
               ElevatedButton(
                 onPressed: _currentInput.length == 4 && widget.enabled ? _submit : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.theme.primaryColor,
+                  backgroundColor: widget.theme.colorScheme.primary,
+                  foregroundColor: widget.theme.colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12)
                 ),
-                child: const Text("GUESS", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text("GUESS", style: TextStyle(fontWeight: FontWeight.bold)),
               )
             ],
           )

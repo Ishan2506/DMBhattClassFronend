@@ -3,6 +3,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({super.key});
@@ -12,10 +13,12 @@ class AboutUsScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: const CustomAppBar(
-        title: "About Us",
+      appBar: CustomAppBar(
+        title: l10n.aboutUs,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -46,7 +49,7 @@ class AboutUsScreen extends StatelessWidget {
 
             // Description Section
             Text(
-              "D. M. Bhatt Tuition Classes",
+              l10n.aboutUsHeader,
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -55,7 +58,7 @@ class AboutUsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              "Welcome to D. M. Bhatt Tuition Classes, your partner in academic excellence. We are dedicated to providing high-quality education and guidance to students, helping them achieve their potential and secure a bright future.\n\nOur experienced faculty and comprehensive curriculum ensure that every student receives personalized attention and support. Join us to embark on a journey of learning and success.",
+              l10n.aboutUsDescription,
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: colorScheme.onSurfaceVariant,
@@ -69,7 +72,7 @@ class AboutUsScreen extends StatelessWidget {
             // Meet Our Influencer Section
             Center(
               child: Text(
-                "MEET OUR INFLUENCER",
+                l10n.meetOurInfluencer.toUpperCase(),
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -110,7 +113,7 @@ class AboutUsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      "D.M. Bhatt Sir",
+                      l10n.influencerName,
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -124,7 +127,7 @@ class AboutUsScreen extends StatelessWidget {
                         Icon(Icons.link, size: 16, color: Colors.blue.shade600),
                         const SizedBox(width: 4),
                         Text(
-                          "Follow on Instagram",
+                          l10n.followOnInstagram,
                           style: GoogleFonts.poppins(
                              fontSize: 14,
                              color: Colors.blue.shade600,

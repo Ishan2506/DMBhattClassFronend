@@ -1,3 +1,4 @@
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/memory_match_screen.dart';
@@ -13,6 +14,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/emoji_decoder_screen.dar
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class MindGamesScreen extends StatefulWidget {
   const MindGamesScreen({super.key});
@@ -23,6 +25,7 @@ class MindGamesScreen extends StatefulWidget {
 
 class _MindGamesScreenState extends State<MindGamesScreen> {
   final MindGameService _gameService = MindGameService();
+  bool _isGuest = false;
 
   @override
   void initState() {
@@ -32,10 +35,18 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
 
   Future<void> _initService() async {
     await _gameService.init();
-    setState(() {}); // Refresh UI to show correct time
+    _isGuest = await GuestUtils.isGuest();
+    if (mounted) setState(() {}); // Refresh UI
   }
 
-  void _handleGameTap(Widget gameScreen) {
+  void _handleGameTap(Widget gameScreen, {bool isFree = false}) {
+    if (_isGuest && !isFree) {
+      GuestUtils.showGuestRestrictionDialog(
+        context,
+        message: "Only one game is accessible in guest mode. Register to unlock all games!"
+      );
+      return;
+    }
     if (_gameService.canPlay()) {
       Navigator.push(
         context, 
@@ -45,15 +56,16 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
         setState(() {});
       });
     } else {
+      final l10n = AppLocalizations.of(context)!;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("Daily Limit Reached"),
-          content: const Text("You have used your 1 hour quota for today. Come back tomorrow!"),
+          title: Text(l10n.dailyLimitReached),
+          content: Text(l10n.limitQuotaMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
+              child: Text(l10n.ok),
             )
           ],
         ),
@@ -63,10 +75,11 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
 
   @override
   Widget build(BuildContext context) {
+     final l10n = AppLocalizations.of(context)!;
      final theme = Theme.of(context);
     return Scaffold(
       appBar: CustomAppBar(
-        title: "Mind Games",
+        title: AppLocalizations.of(context)!.mindGames,
         centerTitle: true,
         actions: [
           Center(
@@ -99,17 +112,18 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
           children: [
             _buildGameCard(
               context,
-              title: "Memory Match",
-              description: "Improve your memory by finding matching pairs of cards.",
+              title: l10n.memoryMatch,
+              description: l10n.memoryMatchDesc,
+              isFree: true,
               icon: Icons.grid_view_rounded,
               color: Colors.blue,
-              onTap: () => _handleGameTap(const MemoryMatchGameScreen()),
+              onTap: () => _handleGameTap(const MemoryMatchGameScreen(), isFree: true),
             ),
             const SizedBox(height: 16),
             _buildGameCard(
               context,
-              title: "Speed Math",
-              description: "Test your calculation speed! Good for mental agility.",
+              title: l10n.speedMath,
+              description: l10n.speedMathDesc,
               icon: Icons.calculate_outlined,
               color: Colors.red,
               onTap: () => _handleGameTap(const MathQuizScreen()),
@@ -117,8 +131,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
             const SizedBox(height: 16),
             _buildGameCard(
               context,
-              title: "Word Scramble",
-              description: "Unscramble the educational words.",
+              title: l10n.wordScramble,
+              description: l10n.wordScrambleDesc,
               icon: Icons.text_fields_rounded,
               color: Colors.deepPurple,
               onTap: () => _handleGameTap(const WordScrambleScreen()),
@@ -126,8 +140,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
             const SizedBox(height: 16),
              _buildGameCard(
               context,
-              title: "Odd One Out",
-              description: "Identify the item that doesn't belong in the group.",
+              title: l10n.oddOneOut,
+              description: l10n.oddOneOutDesc,
               icon: Icons.filter_list_off,
               color: Colors.brown,
               onTap: () => _handleGameTap(const OddOneOutScreen()),
@@ -135,8 +149,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
             const SizedBox(height: 16),
             _buildGameCard(
               context,
-              title: "Code Breaker",
-              description: "Use logic to guess the secret color code.",
+              title: l10n.codeBreaker,
+              description: l10n.codeBreakerDesc,
               icon: Icons.lock_open_rounded,
               color: Colors.grey.shade800,
               onTap: () => _handleGameTap(const CodeBreakerScreen()),
@@ -144,8 +158,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
             const SizedBox(height: 16),
             _buildGameCard(
               context,
-              title: "Fact or Fiction?",
-              description: "Test your knowledge with quick true or false questions.",
+              title: l10n.factOrFiction,
+              description: l10n.factOrFictionDesc,
               icon: Icons.thumbs_up_down_rounded,
               color: Colors.deepPurpleAccent,
               onTap: () => _handleGameTap(const FactOrFictionScreen()),
@@ -153,8 +167,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
             const SizedBox(height: 16),
             _buildGameCard(
               context,
-              title: "Sentence Builder",
-              description: "Form correct sentences from the jumbled words.",
+              title: l10n.sentenceBuilder,
+              description: l10n.sentenceBuilderDesc,
               icon: Icons.segment_rounded,
               color: Colors.orange,
               onTap: () => _handleGameTap(const SentenceBuilderScreen()),
@@ -162,8 +176,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
             const SizedBox(height: 16),
             _buildGameCard(
               context,
-              title: "Grammar Guardian",
-              description: "Master English grammar by spotting the correct usage.",
+              title: l10n.grammarGuardian,
+              description: l10n.grammarGuardianDesc,
               icon: Icons.spellcheck,
               color: Colors.teal,
               onTap: () => _handleGameTap(const GrammarGuardianScreen()),
@@ -171,8 +185,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
             const SizedBox(height: 16),
              _buildGameCard(
               context,
-              title: "Word Bridge",
-              description: "Connect two unrelated concepts through a chain of words.",
+              title: l10n.wordBridge,
+              description: l10n.wordBridgeDesc,
               icon: Icons.hub,
               color: Colors.pink,
               onTap: () => _handleGameTap(const WordBridgeScreen()),
@@ -180,8 +194,8 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
             const SizedBox(height: 16),
             _buildGameCard(
               context,
-              title: "Emoji Decoder",
-              description: "Guess the famous idiom or phrase from emojis.",
+              title: l10n.emojiDecoder,
+              description: l10n.emojiDecoderDesc,
               icon: Icons.emoji_objects_outlined,
               color: Colors.amber.shade800,
               onTap: () => _handleGameTap(const EmojiDecoderScreen()),
@@ -199,8 +213,10 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
+    bool isFree = false,
   }) {
     final theme = Theme.of(context);
+    final isLocked = _isGuest && !isFree;
     final isDark = theme.brightness == Brightness.dark;
     
     return InkWell(
@@ -254,7 +270,11 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: theme.dividerColor, size: 16),
+            Icon(
+              isLocked ? Icons.lock_outline_rounded : Icons.arrow_forward_ios, 
+              color: isLocked ? Colors.orange : theme.dividerColor, 
+              size: 16
+            ),
           ],
         ),
       ),
