@@ -40,7 +40,7 @@ class EventGalleryScreen extends StatelessWidget {
                  // Open full screen image viewer if needed
                  _showFullScreenImage(context, photos[index]);
                },
-              child: Image.asset(
+              child: Image.network(
                 photos[index],
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
@@ -76,7 +76,7 @@ class EventGalleryScreen extends StatelessWidget {
           ),
           body: Center(
             child: InteractiveViewer(
-              child: Image.asset(imagePath),
+              child: Image.network(imagePath),
             ),
           ),
         ),

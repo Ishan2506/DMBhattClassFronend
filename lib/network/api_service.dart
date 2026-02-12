@@ -352,4 +352,9 @@ class ApiService {
       }),
     );
   }
+
+  static Future<http.Response> getAllEvents() async {
+    final uri = Uri.parse("$baseUrl/event/all");
+    return await http.get(uri);
+  }
 }
