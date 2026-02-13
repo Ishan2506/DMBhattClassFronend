@@ -17,6 +17,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String? errorMessage;
   String? currentUserId;
   String? userStandard;
+  String? std;
+  String? userId;
 
   @override
   void initState() {
@@ -76,7 +78,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       userStandard = std;
 
       final response = await ApiService.getLeaderboard(
-        std: std,
+        std: std!,
       );
 
       if (response.statusCode == 200) {

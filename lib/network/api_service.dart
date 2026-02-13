@@ -11,6 +11,8 @@ class ApiService {
   static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
   static String? _authToken;
 
+  static String? get userToken => _authToken;
+
   static Future<void> loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     _authToken = prefs.getString('auth_token');
@@ -139,7 +141,7 @@ class ApiService {
       'Accept': 'application/json',
       'User-Agent': 'Flutter-App',
     });
-
+2322222222
     // Add text fields
     data.forEach((key, value) {
       if (value != null) {

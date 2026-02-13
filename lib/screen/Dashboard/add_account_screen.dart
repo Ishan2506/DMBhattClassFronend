@@ -55,7 +55,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           String profilePic = "";
 
           try {
-             final profileResponse = await ApiService.getProfile(token);
+             final profileResponse = await ApiService.getProfile();
              if (profileResponse.statusCode == 200) {
                final profileData = jsonDecode(profileResponse.body);
                final user = profileData['user'];

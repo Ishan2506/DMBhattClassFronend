@@ -5,6 +5,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart'; // Impor
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

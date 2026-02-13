@@ -59,7 +59,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
         // Fetch history to check for taken tests
         // Fetch history to check for taken tests
         // Token managed internally
-        final token = ApiService.getAuthToken();
+        final token = ApiService.userToken;
         final historyResponse = await ApiService.getDashboardData();
         if (historyResponse.statusCode == 200) {
           final historyData = jsonDecode(historyResponse.body);
@@ -69,7 +69,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
 
         // Fetch user profile to filter exams
         if (token != null) {
-          final profileResponse = await ApiService.getProfile(token);
+          final profileResponse = await ApiService.getProfile();
           if (profileResponse.statusCode == 200) {
             final profileData = jsonDecode(profileResponse.body);
             final profile = profileData['profile'];

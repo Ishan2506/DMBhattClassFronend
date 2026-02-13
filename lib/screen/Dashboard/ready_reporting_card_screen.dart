@@ -44,7 +44,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
       final token = prefs.getString('auth_token');
 
       if (token != null) {
-        final response = await ApiService.getDashboardData(token);
+        final response = await ApiService.getDashboardData();
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final List<dynamic> results = data['examResults'] ?? [];

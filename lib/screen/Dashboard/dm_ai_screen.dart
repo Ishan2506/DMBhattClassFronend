@@ -56,7 +56,6 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
             _studentName = data['user']['firstName'];
           });
         }
-      }
     } catch (e) {
       debugPrint("Error fetching name: $e");
     }
