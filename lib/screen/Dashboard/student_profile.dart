@@ -227,7 +227,7 @@ class StudentProfileScreen extends StatefulWidget {
      final prefs = await SharedPreferences.getInstance();
      
      // Set new active session
-     await prefs.setString('auth_token', account['token']);
+     await ApiService.setAuthToken(account['token']);
      if (account['password'] != null) await prefs.setString('user_password', account['password']);
      if (account['userId'] != null) await prefs.setString('userId', account['userId']);
      if (account['std'] != null) await prefs.setString('std', account['std']);
@@ -265,21 +265,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   Future<void> _fetchProfile() async {
     setState(() => _isLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      // Token managed internally
 
-      if (token == null) {
-        CustomToast.showError(context, AppLocalizations.of(context)!.registrationFailed); // Generic
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-          (route) => false,
-        );
-        return;
-      }
 
       // Fetch Profile
-      final profileResponse = await ApiService.getProfile(token);
+      final profileResponse = await ApiService.getProfile();
       if (profileResponse.statusCode == 200) {
         final data = jsonDecode(profileResponse.body);
         final user = data['user'];
@@ -301,7 +291,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       }
 
       // Fetch Dashboard Data (Points & Exams)
-      final dashboardResponse = await ApiService.getDashboardData(token);
+      final dashboardResponse = await ApiService.getDashboardData();
       if (dashboardResponse.statusCode == 200) {
          final data = jsonDecode(dashboardResponse.body);
          setState(() {

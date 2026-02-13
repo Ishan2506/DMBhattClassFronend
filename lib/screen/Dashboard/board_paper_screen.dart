@@ -47,11 +47,8 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   Future<void> _fetchUserProfile() async {
     setState(() => _isProfileLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      if (token == null) return;
-
-      final response = await ApiService.getProfile(token);
+      // Token managed internally
+      final response = await ApiService.getProfile();
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final profile = data['profile'];
@@ -332,12 +329,8 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
       // Use API Service
       final response = await ApiService.getBoardPapers(
-        token: token ?? "",
         medium: _selectedMedium!,
         std: _selectedStd!,
         stream: _selectedStream, // Can be null

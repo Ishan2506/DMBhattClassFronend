@@ -48,15 +48,13 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
         final List<dynamic> data = jsonDecode(response.body);
         
         // Fetch history to check for taken tests
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
-        if (token != null) {
-          final historyResponse = await ApiService.getDashboardData(token);
-          if (historyResponse.statusCode == 200) {
+        // Fetch history to check for taken tests
+        // Token managed internally
+        final historyResponse = await ApiService.getDashboardData();
+        if (historyResponse.statusCode == 200) {
              final historyData = jsonDecode(historyResponse.body);
              final List<dynamic> results = historyData['examResults'] ?? [];
              _takenTestTitles = results.map((e) => e['title'].toString().toLowerCase()).toList();
-          }
         }
 
         if (mounted) {
@@ -647,18 +645,14 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
 
     Future<void> _submitAndNavigate() async {
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
-        if (token != null) {
-          await ApiService.submitExamResult(
-            token: token,
-            examId: widget.testData['_id'],
-            title: widget.testData['title'] ?? widget.unit,
-            obtainedMarks: correct,
-            totalMarks: _questions.length,
-            isOnline: false,
-          );
-        }
+        // Token managed internally
+        await ApiService.submitExamResult(
+          examId: widget.testData['_id'],
+          title: widget.testData['title'] ?? widget.unit,
+          obtainedMarks: correct,
+          totalMarks: _questions.length,
+          isOnline: false,
+        );
       } catch (e) {
         debugPrint("Error submitting 5 min result: $e");
       }

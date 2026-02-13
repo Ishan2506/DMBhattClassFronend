@@ -151,12 +151,8 @@ class _McqScreenState extends State<McqScreen> {
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token != null) {
+         // Token managed internally
          final response = await ApiService.submitExamResult(
-           token: token,
            examId: "mcq_general", // Dummy ID for general quizzes
            title: "MCQ Quiz", // Or dynamic title
            obtainedMarks: score,

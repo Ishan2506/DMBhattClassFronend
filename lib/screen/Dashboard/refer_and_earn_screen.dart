@@ -49,18 +49,10 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
     setState(() => _isLoading = true);
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      // Token managed internally
 
-      if (token == null) {
-        if (mounted) {
-           final l10n = AppLocalizations.of(context)!;
-           CustomToast.showError(context, l10n.signOutSuccess); // Reusing signOutSuccess or adding a new key for session expired? Let's use hardcoded for now or assuming most users understand English if session fails. Actually, I should use localized string.
-           Navigator.pop(context);
-        }
-        return;
-      }
 
-      final response = await ApiService.getReferralData(token);
+      final response = await ApiService.getReferralData();
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -68,7 +60,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
         // Also fetch profile to get name
         String name = "Student";
         try {
-           final profileRes = await ApiService.getProfile(token);
+           final profileRes = await ApiService.getProfile();
            if (profileRes.statusCode == 200) {
              final pData = jsonDecode(profileRes.body);
              final user = pData['user'];

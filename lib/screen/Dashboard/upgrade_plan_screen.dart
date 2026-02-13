@@ -50,19 +50,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
   Future<void> _fetchUserProfile() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token == null) {
-        if (mounted) {
-           final l10n = AppLocalizations.of(context)!;
-           CustomToast.showError(context, l10n.signOutSuccess); // Or session expired
-           Navigator.pop(context);
-        }
-        return;
-      }
-
-      final response = await ApiService.getProfile(token);
+      // Token managed internally
+      final response = await ApiService.getProfile();
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -89,10 +78,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
   Future<void> _fetchBonusPoints() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      if (token != null) {
-        final response = await ApiService.getReferralData(token);
+      // Token managed internally
+      final response = await ApiService.getReferralData();
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           if (mounted) {
@@ -101,7 +88,6 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
              });
           }
         }
-      }
     } catch (e) {
       debugPrint("Error fetching points: $e");
     }

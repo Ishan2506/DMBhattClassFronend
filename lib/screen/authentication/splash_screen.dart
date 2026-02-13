@@ -56,6 +56,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     
     if (!mounted) return;
 
+    await ApiService.loadToken();
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 

@@ -42,10 +42,8 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
 
   Future<void> _fetchStandard() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      if (token != null) {
-        final response = await ApiService.getProfile(token);
+      // Token managed internally
+      final response = await ApiService.getProfile();
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final profile = data['profile'];
@@ -55,7 +53,6 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
             });
           }
         }
-      }
     } catch (e) {
       debugPrint("Error fetching profile: $e");
     } finally {

@@ -5,10 +5,36 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart'; // Make sure http_parser is in pubspec
 import 'package:image_picker/image_picker.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-  // static const String baseUrl = "http://localhost:5000/api";
+  static String? _authToken;
+
+  static Future<void> loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    _authToken = prefs.getString('auth_token');
+  }
+
+  static Future<void> setAuthToken(String token) async {
+    _authToken = token;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+  }
+
+  static Future<void> clearAuthToken() async {
+    _authToken = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+  }
+
+  static Map<String, String> _addAuth(Map<String, String> headers) {
+    if (_authToken != null) {
+      headers['Authorization'] = 'Bearer $_authToken';
+    }
+    return headers;
+  }
+
   static Future<http.Response> getExploreProducts() async {
     final uri = Uri.parse("$baseUrl/explore/all");
     return await http.get(uri);
@@ -93,24 +119,26 @@ class ApiService {
     return response;
   }
 
-  static Future<http.Response> getProfile(String token) async {
+  static Future<http.Response> getProfile() async {
     final uri = Uri.parse("$baseUrl/profile");
     return await http.get(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
     );
   }
 
-  static Future<http.Response> updateProfile(String token, Map<String, dynamic> data, {XFile? imageFile}) async {
+  static Future<http.Response> updateProfile(Map<String, dynamic> data, {XFile? imageFile}) async {
     final uri = Uri.parse("$baseUrl/profile");
     final request = http.MultipartRequest("PUT", uri);
     
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
-    request.headers['User-Agent'] = 'Flutter-App';
+    request.headers.addAll({
+      if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+      'Accept': 'application/json',
+      'User-Agent': 'Flutter-App',
+    });
 
     // Add text fields
     data.forEach((key, value) {
@@ -146,19 +174,18 @@ class ApiService {
     return await http.Response.fromStream(streamedResponse);
   }
 
-  static Future<http.Response> getDashboardData(String token) async {
+  static Future<http.Response> getDashboardData() async {
     final uri = Uri.parse("$baseUrl/dashboard");
     return await http.get(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
     );
   }
 
   static Future<http.Response> submitExamResult({
-    required String token,
     required String examId,
     required String title,
     required int obtainedMarks,
@@ -168,10 +195,11 @@ class ApiService {
     final uri = Uri.parse("$baseUrl/exam/submit");
     return await http.post(
       uri,
-      headers: {
+      headers: _addAuth({
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
       body: jsonEncode({
         'examId': examId,
         'title': title,
@@ -183,7 +211,6 @@ class ApiService {
   }
 
   static Future<http.Response> getBoardPapers({
-    required String token,
     required String medium,
     required String std,
     String? stream,
@@ -201,10 +228,10 @@ class ApiService {
     
     return await http.get(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
     );
   }
 
@@ -275,7 +302,6 @@ class ApiService {
     return response;
   }
   static Future<http.Response> updatePassword({
-    required String token,
     required String oldPassword,
     required String newPassword,
   }) async {
@@ -283,10 +309,11 @@ class ApiService {
     
     final response = await http.post(
       uri,
-      headers: {
+      headers: _addAuth({
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
       body: jsonEncode({
         'oldPassword': oldPassword,
         'newPassword': newPassword,
@@ -316,27 +343,26 @@ class ApiService {
   }
 
   static Future<http.Response> getLeaderboard({
-    required String token,
     required String std,
   }) async {
     final uri = Uri.parse("$baseUrl/leaderboard/$std");
     return await http.get(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
     );
   }
 
-  static Future<http.Response> getReferralData(String token) async {
+  static Future<http.Response> getReferralData() async {
     final uri = Uri.parse("$baseUrl/referral/data");
     return await http.get(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
     );
   }
 

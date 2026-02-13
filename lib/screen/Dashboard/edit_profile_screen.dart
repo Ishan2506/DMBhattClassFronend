@@ -70,15 +70,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _fetchProfile() async {
     setState(() => _isLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      // Token is managed internally by ApiService
 
-      if (token == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
 
-      final response = await ApiService.getProfile(token);
+      final response = await ApiService.getProfile();
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -124,14 +119,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isUpdating = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      // Token is managed internally
 
-      if (token == null) {
-        CustomToast.showError(context, "Session expired");
-        setState(() => _isUpdating = false);
-        return;
-      }
 
       final Map<String, dynamic> data = {
         'firstName': _nameController.text,
@@ -146,7 +135,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'parentPhone': _parentPhoneController.text,
       };
 
-      final response = await ApiService.updateProfile(token, data, imageFile: _imageFile);
+      final response = await ApiService.updateProfile(data, imageFile: _imageFile);
 
       if (response.statusCode == 200) {
         CustomToast.showSuccess(context, 'Profile Updated Successfully');

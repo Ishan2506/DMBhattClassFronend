@@ -48,10 +48,8 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
 
   Future<void> _fetchStudentName() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      if (token != null) {
-        final response = await ApiService.getProfile(token);
+      // Token managed internally
+      final response = await ApiService.getProfile();
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           setState(() {

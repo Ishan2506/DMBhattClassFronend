@@ -165,18 +165,15 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
 
     Future<void> submitAndNavigate() async {
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
-        if (token != null) {
-          final response = await ApiService.submitExamResult(
-            token: token,
-            examId: widget.examId,
-            title: widget.title,
-            obtainedMarks: correct,
-            totalMarks: _questions.length,
-          );
-          
-          if (response.statusCode != 201) {
+        // Token managed internally
+        final response = await ApiService.submitExamResult(
+          examId: widget.examId,
+          title: widget.title,
+          obtainedMarks: correct,
+          totalMarks: _questions.length,
+        );
+        
+        if (response.statusCode != 201) {
              debugPrint("Submit failed: ${response.body}");
              if (mounted) {
                // Show toast or some feedback if it failed
@@ -184,7 +181,6 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                  SnackBar(content: Text("Failed to save result to server: ${response.statusCode}")),
                );
              }
-          }
         }
       } catch (e) {
         debugPrint("Error submitting result: $e");

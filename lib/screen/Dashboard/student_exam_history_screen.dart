@@ -39,24 +39,20 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
   Future<void> _fetchHistory() async {
     setState(() => _isLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token != null) {
-        final response = await ApiService.getDashboardData(token);
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final List<dynamic> results = data['examResults'] ?? [];
-          
-          setState(() {
-            _regularExams = results.where((e) => e['isOnline'] == true).toList();
-            // Assuming five min quizzes might be filtered differently later, 
-            // but for now isOnline=true covers our regular online exams.
-            // If there's a specific flag for five min quiz, we'd use it here.
-            _fiveMinQuizzes = results.where((e) => e['isOnline'] == false).toList(); 
-            _isLoading = false;
-          });
-        }
+      // Token managed internally
+      final response = await ApiService.getDashboardData();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> results = data['examResults'] ?? [];
+        
+        setState(() {
+          _regularExams = results.where((e) => e['isOnline'] == true).toList();
+          // Assuming five min quizzes might be filtered differently later, 
+          // but for now isOnline=true covers our regular online exams.
+          // If there's a specific flag for five min quiz, we'd use it here.
+          _fiveMinQuizzes = results.where((e) => e['isOnline'] == false).toList(); 
+          _isLoading = false;
+        });
       }
     } catch (e) {
       debugPrint("Error fetching history: $e");

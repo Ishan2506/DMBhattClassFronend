@@ -74,16 +74,10 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       try {
-                        final prefs = await SharedPreferences.getInstance();
-                        final String? token = prefs.getString('token'); 
+                        // Token managed internally
 
-                        if (token == null) {
-                           CustomToast.showError(context, "Authentication Error. Please login again.");
-                           return;
-                        }
 
                         final response = await ApiService.updatePassword(
-                          token: token,
                           oldPassword: _oldPasswordController.text,
                           newPassword: _newPasswordController.text,
                         );

@@ -32,22 +32,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       });
 
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      String? userId = prefs.getString('userId');
-      String? std = prefs.getString('std');
+      // Token managed internally
 
-      if (token == null) {
-        setState(() {
-          errorMessage = 'Please login again';
-          isLoading = false;
-        });
-        return;
-      }
 
       // If std or userId is missing, fetch profile data
       if (std == null || userId == null) {
         try {
-          final profileResponse = await ApiService.getProfile(token);
+          final profileResponse = await ApiService.getProfile();
           if (profileResponse.statusCode == 200) {
             final profileData = jsonDecode(profileResponse.body);
             final user = profileData['user'];
@@ -85,7 +76,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       userStandard = std;
 
       final response = await ApiService.getLeaderboard(
-        token: token,
         std: std,
       );
 

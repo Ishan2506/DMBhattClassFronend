@@ -174,12 +174,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Save token
                             final prefs = await SharedPreferences.getInstance();
-                            await prefs.setString('auth_token', token);
+                            await ApiService.setAuthToken(token);
+                            //await prefs.setString('auth_token', token);
                             await prefs.setString('user_password', _passwordController.text); // Saving password for PDF encryption
 
                             // Fetch profile data to get std and userId
                             try {
-                              final profileResponse = await ApiService.getProfile(token);
+                              final profileResponse = await ApiService.getProfile();
                               if (profileResponse.statusCode == 200) {
                                 final profileData = jsonDecode(profileResponse.body);
                                 final user = profileData['user'];
