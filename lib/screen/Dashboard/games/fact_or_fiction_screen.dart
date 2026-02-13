@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class FactOrFictionScreen extends StatefulWidget {
   const FactOrFictionScreen({super.key});
@@ -12,18 +15,7 @@ class FactOrFictionScreen extends StatefulWidget {
 }
 
 class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTickerProviderStateMixin {
-  List<Map<String, dynamic>> _questions = [
-    {"q": "The Great Wall of China is visible from space.", "a": false, "fact": "It's a myth! You can't see it with the naked eye from low Earth orbit."},
-    {"q": "Water boils at 100°C at sea level.", "a": true, "fact": "Correct! Boiling point decreases with altitude."},
-    {"q": "Sharks have bones.", "a": false, "fact": "Sharks have skeletons made of cartilage, not bone."},
-    {"q": "Lightning never strikes the same place twice.", "a": false, "fact": "It often does, especially tall buildings."},
-    {"q": "The sun is a star.", "a": true, "fact": "Yes, it is a G-type main-sequence star."},
-    {"q": "Penguins can fly.", "a": false, "fact": "Penguins are flightless birds adapted for swimming."},
-    {"q": "Honey never spoils.", "a": true, "fact": "Archaeologists have found edible honey in ancient Egyptian tombs."},
-    {"q": "Venus is the hottest planet in our solar system.", "a": true, "fact": "True, due to its thick atmosphere (greenhouse effect)."},
-    {"q": "The human body has 206 bones.", "a": true, "fact": "An adult human skeleton has 206 bones."},
-    {"q": "Bats are blind.", "a": false, "fact": "Bats can see quite well, but rely on echolocation in the dark."},
-  ];
+  List<GameQuestion> _allQuestions = [];
 
   int _currentIndex = 0;
   int _score = 0;
@@ -32,6 +24,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
   bool _isGameOver = false;
   String? _lastFact;
   bool? _lastAnswerCorrect;
+  bool _isLoading = true;
 
   late AnimationController _animationController;
   final MindGameService _gameService = MindGameService();
@@ -40,12 +33,39 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _questions.shuffle();
     _animationController = AnimationController(vsync: this, duration: const Duration(seconds: 10));
-    _startTimer();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Fact or Fiction');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allQuestions = data.map((json) => GameQuestion.fromJson(json)).toList();
+          _allQuestions.shuffle();
+          _isLoading = false;
+        });
+        if (_allQuestions.isNotEmpty) {
+           _startTimer();
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching questions: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _startTimer() {
+    if (_allQuestions.isEmpty) return;
+    
     _timeLeft = 10;
     _animationController.reset();
     _animationController.forward();
@@ -66,8 +86,13 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
     _animationController.stop();
 
     bool correct = false;
+    final question = _allQuestions[_currentIndex];
+    
+    // Parse correct answer from string "true"/"false"
+    bool correctAnswerBool = question.correctAnswer.toLowerCase() == 'true';
+
     if (userAnswer != null) {
-      if (userAnswer == _questions[_currentIndex]['a']) {
+      if (userAnswer == correctAnswerBool) {
         correct = true;
         _score++;
       }
@@ -75,12 +100,12 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
 
     setState(() {
       _lastAnswerCorrect = correct;
-      _lastFact = _questions[_currentIndex]['fact'];
+      _lastFact = question.meta['fact'] ?? "No explanation available.";
     });
 
     Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return;
-        if (_currentIndex < _questions.length - 1) {
+        if (_currentIndex < _allQuestions.length - 1) {
           setState(() {
             _currentIndex++;
             _lastFact = null;
@@ -106,10 +131,39 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
     _animationController.dispose();
     super.dispose();
   }
+  
+  void _restartGame() {
+    setState(() {
+      _currentIndex = 0;
+      _score = 0;
+      _isGameOver = false;
+      _lastFact = null;
+      _lastAnswerCorrect = null;
+      _allQuestions.shuffle();
+    });
+    _startTimer();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Fact or Fiction?", centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    if (_allQuestions.isEmpty) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Fact or Fiction?", centerTitle: true),
+        body: Center(child: Text("No questions available", style: GoogleFonts.poppins())),
+      );
+    }
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
@@ -121,7 +175,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
   }
 
   Widget _buildGame(ThemeData theme) {
-    final question = _questions[_currentIndex];
+    final question = _allQuestions[_currentIndex];
     
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -170,7 +224,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
           if (_lastFact != null)
              _buildFeedbackCard(theme)
           else
-             _buildQuestionCard(question['q'], theme),
+             _buildQuestionCard(question.questionText, theme),
 
           const Spacer(),
           
@@ -309,7 +363,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
           ),
           const SizedBox(height: 16),
           Text(
-            "You scored $_score / ${_questions.length}", 
+            "You scored $_score / ${_allQuestions.length}", 
             style: GoogleFonts.poppins(
               fontSize: 20, 
               color: theme.textTheme.bodyMedium?.color
@@ -317,15 +371,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
           ),
           const SizedBox(height: 40),
           ElevatedButton(
-            onPressed: () {
-               setState(() {
-                 _currentIndex = 0;
-                 _score = 0;
-                 _isGameOver = false;
-                 _questions.shuffle();
-                 _startTimer();
-               });
-            },
+            onPressed: _restartGame,
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary, 
               foregroundColor: theme.colorScheme.onPrimary,

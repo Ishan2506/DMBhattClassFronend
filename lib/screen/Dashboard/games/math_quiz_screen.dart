@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart'; // Ensure this path is correct based on your project structure
 
 class MathQuizScreen extends StatefulWidget {
   const MathQuizScreen({super.key});
@@ -20,16 +23,46 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
   Timer? _timer;
   
   String _question = "";
-  List<int> _options = [];
-  int _correctAnswer = 0;
+  List<String> _options = [];
+  String _correctAnswer = "";
   bool _gameOver = false;
+  
+  List<GameQuestion> _allQuestions = [];
+  int _currentQuestionIndex = 0;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     MindGameService().startSession(context);
-    _generateQuestion();
-    _startRound();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Speed Math');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allQuestions = data.map((json) => GameQuestion.fromJson(json)).toList();
+          _allQuestions.shuffle(); // Randomize order
+          _isLoading = false;
+        });
+        if (_allQuestions.isNotEmpty) {
+          _startRound();
+        }
+      } else {
+        // Handle error or empty state
+         setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching questions: $e");
+       setState(() {
+          _isLoading = false;
+        });
+    }
   }
 
   @override
@@ -41,15 +74,19 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
 
   void _startNewGame() {
     _score = 0;
+    _currentQuestionIndex = 0;
+    _allQuestions.shuffle();
     _startRound();
   }
 
   void _startRound() {
+    if (_allQuestions.isEmpty) return;
+
     setState(() {
       _timeLeft = 30;
       _gameOver = false;
     });
-    _generateQuestion();
+    _loadQuestion();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_timeLeft > 0) {
         setState(() {
@@ -64,55 +101,31 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
     });
   }
   
-  void _generateQuestion() {
-    final random = Random();
-    int a = random.nextInt(20) + 1;
-    int b = random.nextInt(20) + 1;
-    int operator = random.nextInt(3); // 0: +, 1: -, 2: *
-
-    switch (operator) {
-      case 0:
-        _correctAnswer = a + b;
-        _question = "$a + $b = ?";
-        break;
-      case 1:
-        _correctAnswer = a - b;
-        _question = "$a - $b = ?";
-        break;
-      case 2:
-        a = random.nextInt(12) + 1; // Smaller numbers for multiplication
-        b = random.nextInt(12) + 1;
-        _correctAnswer = a * b;
-        _question = "$a × $b = ?";
-        break;
-    }
-
-    _generateOptions();
-  }
-
-  void _generateOptions() {
-    final random = Random();
-    Set<int> optionsSet = {_correctAnswer};
-    
-    while (optionsSet.length < 4) {
-      int drift = random.nextInt(10) + 1;
-      optionsSet.add(random.nextBool() ? _correctAnswer + drift : _correctAnswer - drift);
+  void _loadQuestion() {
+    if (_currentQuestionIndex >= _allQuestions.length) {
+      _currentQuestionIndex = 0;
+      _allQuestions.shuffle(); // Loop back and shuffle
     }
     
-    _options = optionsSet.toList()..shuffle();
+    final q = _allQuestions[_currentQuestionIndex];
+    setState(() {
+      _question = q.questionText;
+      _options = q.options;
+      _correctAnswer = q.correctAnswer;
+    });
   }
 
-  void _checkAnswer(int answer) {
+  void _checkAnswer(String answer) {
     if (_gameOver) return;
 
     if (answer == _correctAnswer) {
       setState(() {
         _score += 10;
         _timeLeft += 2; // Bonus time
+        _currentQuestionIndex++;
       });
-      _generateQuestion(); // Next question immediately
+      _loadQuestion(); // Next question immediately
     } else {
-      // Wrong answer deducts time or just shakes? Let's deduct time.
       setState(() {
         _timeLeft = max(0, _timeLeft - 5);
       });
@@ -166,7 +179,11 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
           ),
         ],
       ),
-      body: Padding(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : _allQuestions.isEmpty 
+            ? Center(child: Text("No questions available", style: GoogleFonts.poppins()))
+            : Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -204,7 +221,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                    ),
                    const SizedBox(height: 32),
                    ElevatedButton(
-                     onPressed: _startRound,
+                     onPressed: _startNewGame, // Reset everything
                      style: ElevatedButton.styleFrom(
                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                        backgroundColor: theme.colorScheme.primary,
@@ -239,7 +256,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                       mainAxisSpacing: 16,
                       childAspectRatio: 2.0,
                     ),
-                    itemCount: 4,
+                    itemCount: _options.length,
                     itemBuilder: (context, index) {
                       return ElevatedButton(
                         onPressed: () => _checkAnswer(_options[index]),
@@ -257,7 +274,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
-                              "${_options[index]}",
+                              _options[index],
                               style: GoogleFonts.poppins(
                                 fontSize: 24, 
                                 fontWeight: FontWeight.bold,

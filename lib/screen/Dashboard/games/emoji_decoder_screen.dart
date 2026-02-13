@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class EmojiDecoderScreen extends StatefulWidget {
   const EmojiDecoderScreen({super.key});
@@ -14,55 +17,46 @@ class EmojiDecoderScreen extends StatefulWidget {
 class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
   final MindGameService _gameService = MindGameService();
 
-  final List<Map<String, dynamic>> _levels = [
-    {
-      "emoji": "🤐 🥈 🥇", 
-      "phrase": "Silence is Golden",
-      "hint": "Sometimes not speaking is better."
-    },
-    {
-      "emoji": "🥶 🦃", 
-      "phrase": "Cold Turkey",
-      "hint": "Stopping a habit suddenly."
-    },
-    {
-      "emoji": "🍰 🚶", 
-      "phrase": "Piece of Cake", // or Cake Walk
-      "hint": "Something very easy."
-    },
-    {
-      "emoji": "🌧️ 🐱 🐶", 
-      "phrase": "Raining Cats and Dogs",
-      "hint": "Heavy rain."
-    },
-    {
-      "emoji": "💔 🥚", 
-      "phrase": "Break a Leg", // Wait no, Heart + Egg? Break an egg? 
-      // Let's use simpler ones.
-      "phrase": "Heart of Gold",
-      "emoji": "💛 🏆",
-      "hint": "Very kind person."
-    },
-    {
-      "emoji": "👀 🍎",
-      "phrase": "Apple of my Eye",
-      "hint": "Someone cherished."
-    },
-  ];
-
+  List<GameQuestion> _allQuestions = [];
   int _currentIndex = 0;
   String _userAnswer = "";
   bool _isGameOver = false;
   int _score = 0;
-  int _hintsRemaining = 3; // Limited hints for the game
+  int _hintsRemaining = 3;
   TextEditingController _controller = TextEditingController();
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     MindGameService().startSession(context);
-    _levels.shuffle(); // Randomize order
-    _startLevel();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Emoji Decoder');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allQuestions = data.map((json) => GameQuestion.fromJson(json)).toList();
+          _allQuestions.shuffle();
+          _isLoading = false;
+        });
+        if (_allQuestions.isNotEmpty) {
+           _startLevel();
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching questions: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -81,23 +75,20 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
   }
 
   void _checkAnswer() {
-    String correct = _levels[_currentIndex]["phrase"].toString().toLowerCase();
+    if (_allQuestions.isEmpty) return;
+    
+    final question = _allQuestions[_currentIndex];
+    String correct = question.correctAnswer.toLowerCase();
     String user = _controller.text.trim().toLowerCase();
 
-    // Check for "almost correct" or exact
-    // Idioms can vary (e.g. piece of cake vs a piece of cake).
-    // Let's check if user contains key words
-    
-    // Using simple exact match for now, maybe Levenshtein later but keeping it simple.
-    // Or key words check.
+    // Simple containment check for keywords or exact match
     List<String> keyWords = correct.split(' ').where((w) => w.length > 2).toList();
     int matches = 0;
     for (var k in keyWords) {
       if (user.contains(k)) matches++;
     }
 
-    // Heuristic: If they get > 70% of keywords right?
-    bool isCorrect = (user == correct) || (matches >= keyWords.length);
+    bool isCorrect = (user == correct) || (matches >= keyWords.length && keyWords.isNotEmpty);
 
     if (isCorrect) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,7 +106,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
   }
 
   void _nextLevel() {
-    if (_currentIndex < _levels.length - 1) {
+    if (_currentIndex < _allQuestions.length - 1) {
       setState(() {
         _currentIndex++;
         _startLevel();
@@ -135,30 +126,52 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(context); // Dialog
+              Navigator.pop(context); // Screen
             },
             child: const Text("Exit"),
+          ),
+          TextButton(
+             onPressed: () {
+               Navigator.pop(context);
+               _restartGame();
+             },
+             child: const Text("Play Again"),
           )
         ],
       ),
     );
   }
+  
+  void _restartGame() {
+    setState(() {
+      _currentIndex = 0;
+      _score = 0;
+      _hintsRemaining = 3;
+      _isGameOver = false;
+      _allQuestions.shuffle();
+      _isLoading = false;
+    });
+    _startLevel();
+  }
 
   void _useHint() {
+    if (_allQuestions.isEmpty) return;
+    
     if (_hintsRemaining > 0) {
       setState(() {
          _hintsRemaining--;
       });
-      // Show the ANSWER directly as requested
-      final answer = _levels[_currentIndex]["phrase"];
-      _controller.text = answer;
+      
+      final question = _allQuestions[_currentIndex];
+      // Use meta hint if available, else show first letter or part of answer
+      String hintText = question.meta['hint'] ?? "Answer starts with '${question.correctAnswer[0]}...'";
       
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("Hint Used"),
-          content: Text("The answer is:\n\n$answer"),
+          title: const Text("Hint"),
+          content: Text(hintText),
           actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))],
         ),
       );
@@ -177,7 +190,24 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final level = _levels[_currentIndex];
+    
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Emoji Decoder", centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    if (_allQuestions.isEmpty) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Emoji Decoder", centerTitle: true),
+        body: Center(child: Text("No questions available", style: GoogleFonts.poppins())),
+      );
+    }
+
+    final question = _allQuestions[_currentIndex];
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -212,7 +242,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
             children: [
                const SizedBox(height: 40),
                Text(
-                 "Guess the Idiom:",
+                 "Guess the Phrase:",
                  style: GoogleFonts.poppins(
                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7), 
                    fontSize: 18
@@ -234,7 +264,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                    ],
                  ),
                  child: Text(
-                   level["emoji"],
+                   question.questionText,
                    style: const TextStyle(fontSize: 64),
                    textAlign: TextAlign.center,
                  ),

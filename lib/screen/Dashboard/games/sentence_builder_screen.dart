@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class SentenceBuilderScreen extends StatefulWidget {
   const SentenceBuilderScreen({super.key});
@@ -14,32 +17,45 @@ class SentenceBuilderScreen extends StatefulWidget {
 class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
   final MindGameService _gameService = MindGameService();
 
-  // List of sentences to unscramble
-  final List<String> _sentences = [
-    "Honesty is the best policy",
-    "Practice makes a man perfect",
-    "A stitch in time saves nine",
-    "Actions speak louder than words",
-    "The quick brown fox jumps over the lazy dog",
-    "Education is the most powerful weapon",
-    "Better late than never",
-    "Slow and steady wins the race",
-    "Reading is to the mind what exercise is to the body",
-    "Flutter is an open source framework by Google"
-  ];
-
+  List<GameQuestion> _allQuestions = [];
   int _currentIndex = 0;
   List<String> _currentWords = [];
   bool _isChecked = false;
   bool _isCorrect = false;
   int _score = 0;
+  bool _isLoading = true;
   
   @override
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _sentences.shuffle();
-    _startLevel();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Sentence Builder');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allQuestions = data.map((json) => GameQuestion.fromJson(json)).toList();
+          _allQuestions.shuffle();
+          _isLoading = false;
+        });
+        if (_allQuestions.isNotEmpty) {
+           _startLevel();
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching questions: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -49,11 +65,14 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
   }
 
   void _startLevel() {
+    if (_allQuestions.isEmpty) return;
+    
     setState(() {
-      _currentWords = _sentences[_currentIndex].split(' ');
+      String sentence = _allQuestions[_currentIndex].questionText;
+      _currentWords = sentence.split(' ');
       _currentWords.shuffle();
       // Ensure it's shuffled
-      if (_currentWords.join(' ') == _sentences[_currentIndex]) {
+      if (_currentWords.join(' ') == sentence) {
         _currentWords.shuffle();
       }
       _isChecked = false;
@@ -62,8 +81,11 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
   }
 
   void _checkOrder() {
+    if (_allQuestions.isEmpty) return;
+
+    String targetSentence = _allQuestions[_currentIndex].questionText;
     String formedSentence = _currentWords.join(' ');
-    bool correct = formedSentence == _sentences[_currentIndex];
+    bool correct = formedSentence == targetSentence;
 
     setState(() {
       _isChecked = true;
@@ -76,7 +98,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
     if (correct) {
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) {
-          if (_currentIndex < _sentences.length - 1) {
+          if (_currentIndex < _allQuestions.length - 1) {
             setState(() {
               _currentIndex++;
             });
@@ -111,29 +133,54 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
               Navigator.pop(context);
             },
             child: const Text("Exit"),
+          ),
+          TextButton(
+             onPressed: () {
+               Navigator.pop(context);
+               _restartGame();
+             },
+             child: const Text("Play Again"),
           )
         ],
       ),
     );
   }
+  
+  void _restartGame() {
+    setState(() {
+      _currentIndex = 0;
+      _score = 0;
+      _isCorrect = false;
+      _isChecked = false;
+      _allQuestions.shuffle();
+      _isLoading = false;
+    });
+    _startLevel();
+  }
 
   void _useHint() {
+    if (_allQuestions.isEmpty) return;
+    
     // Hint: Move the first correct word to the first position if not already
-    String targetSentence = _sentences[_currentIndex];
+    String targetSentence = _allQuestions[_currentIndex].questionText;
     List<String> correctOrder = targetSentence.split(' ');
     
     // Find the first word that is out of place
     for (int i = 0; i < correctOrder.length; i++) {
+      if (i >= _currentWords.length) break;
+      
       if (_currentWords[i] != correctOrder[i]) {
         // Found mismatch at index i
         // Find where the correct word is
         int correctIndex = _currentWords.indexOf(correctOrder[i]);
-        setState(() {
-           // Swap
-           String temp = _currentWords[i];
-           _currentWords[i] = _currentWords[correctIndex];
-           _currentWords[correctIndex] = temp;
-        });
+        if (correctIndex != -1) {
+            setState(() {
+               // Swap
+               String temp = _currentWords[i];
+               _currentWords[i] = _currentWords[correctIndex];
+               _currentWords[correctIndex] = temp;
+            });
+        }
         return; // Only one hint per click
       }
     }
@@ -142,6 +189,22 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Sentence Builder", centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    if (_allQuestions.isEmpty) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Sentence Builder", centerTitle: true),
+        body: Center(child: Text("No questions available", style: GoogleFonts.poppins())),
+      );
+    }
     
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -171,7 +234,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Level ${_currentIndex + 1}/${_sentences.length}", 
+                  "Level ${_currentIndex + 1}/${_allQuestions.length}", 
                   style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)
                 ),
                 Text(
@@ -217,7 +280,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                       children: [
                         for (int i = 0; i < _currentWords.length; i++)
                           Container(
-                            key: ValueKey(_currentWords[i] + i.toString()),
+                            key: ValueKey(_currentWords[i] + i.toString()), // Ensure unique key
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
                               color: theme.cardColor,

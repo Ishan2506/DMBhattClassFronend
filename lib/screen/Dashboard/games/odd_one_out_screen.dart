@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class OddOneOutScreen extends StatefulWidget {
   const OddOneOutScreen({super.key});
@@ -14,50 +17,42 @@ class OddOneOutScreen extends StatefulWidget {
 class _OddOneOutScreenState extends State<OddOneOutScreen> {
   final MindGameService _gameService = MindGameService();
 
-  final List<Map<String, dynamic>> _levels = [
-    {
-      "options": ["Apple", "Banana", "Carrot", "Orange"],
-      "answer": "Carrot", // Vegetable vs Fruits
-      "reason": "It's a vegetable, others are fruits."
-    },
-    {
-      "options": ["Car", "Bus", "Bike", "Plane"],
-      "answer": "Plane", // Air vs Land
-      "reason": "It travels in air, others on land."
-    },
-    {
-      "options": ["Python", "Java", "HTML", "C++"],
-      "answer": "HTML", // Markup vs Programming
-      "reason": "HTML is a markup language, not a programming language."
-    },
-    {
-      "options": ["Ear", "Eye", "Nose", "Hand"],
-      "answer": "Hand", // Sense organs vs Limb
-      "reason": "Others are sensory organs of the face."
-    },
-    {
-      "options": ["3", "5", "9", "7"],
-      "answer": "9", // Composite vs Prime
-      "reason": "9 is not a prime number (3x3)."
-    },
-    {
-       "options": ["Tennis", "Badminton", "Cricket", "Squash"],
-       "answer": "Cricket", // Racket sports vs Bat/Ball
-       "reason": "Others are racket sports."
-    }
-  ];
-
+  List<GameQuestion> _allQuestions = [];
   int _currentIndex = 0;
   int _score = 0;
   bool _isAnswered = false;
   String? _selectedOption;
   bool _isCorrect = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     MindGameService().startSession(context);
-    _levels.shuffle();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Odd One Out');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allQuestions = data.map((json) => GameQuestion.fromJson(json)).toList();
+          _allQuestions.shuffle();
+          _isLoading = false;
+        });
+      } else {
+         setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching questions: $e");
+       setState(() {
+          _isLoading = false;
+        });
+    }
   }
 
   @override
@@ -69,8 +64,8 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
   void _handleOption(String option) {
     if (_isAnswered) return;
 
-    final level = _levels[_currentIndex];
-    String correctAnswer = level["answer"];
+    final question = _allQuestions[_currentIndex];
+    String correctAnswer = question.correctAnswer;
     bool correct = (option == correctAnswer);
 
     setState(() {
@@ -82,7 +77,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
 
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
-      if (_currentIndex < _levels.length - 1) {
+      if (_currentIndex < _allQuestions.length - 1) {
         setState(() {
           _currentIndex++;
           _isAnswered = false;
@@ -105,6 +100,19 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
           ElevatedButton(
             onPressed: () {Navigator.pop(context); Navigator.pop(context);},
             child: const Text("Exit"),
+          ),
+           TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _score = 0;
+                _currentIndex = 0;
+                _isAnswered = false;
+                _selectedOption = null;
+                _allQuestions.shuffle();
+              });
+            },
+            child: const Text("Play Again"),
           )
         ],
       ),
@@ -114,8 +122,25 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final level = _levels[_currentIndex];
-    final List<String> options = List<String>.from(level["options"]);
+    
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Odd One Out", centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_allQuestions.isEmpty) {
+       return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Odd One Out", centerTitle: true),
+        body: Center(child: Text("No questions available", style: GoogleFonts.poppins())),
+      );
+    }
+
+    final question = _allQuestions[_currentIndex];
+    final List<String> options = question.options;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -130,7 +155,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
-                value: (_currentIndex + 1) / _levels.length,
+                value: (_currentIndex + 1) / _allQuestions.length,
                 color: theme.colorScheme.primary,
                 backgroundColor: theme.dividerColor.withOpacity(0.1),
                 minHeight: 8,
@@ -138,12 +163,13 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
             ),
             const SizedBox(height: 40),
             Text(
-              "Which one does not belong?",
+              question.questionText.isNotEmpty ? question.questionText : "Which one does not belong?",
               style: GoogleFonts.poppins(
                 fontSize: 20, 
                 fontWeight: FontWeight.bold, 
                 color: theme.textTheme.titleLarge?.color
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
             
@@ -163,7 +189,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                    Color text = theme.colorScheme.onSurface;
                    
                    if (_isAnswered) {
-                     if (opt == level["answer"]) {
+                     if (opt == question.correctAnswer) {
                        bg = Colors.green;
                        text = Colors.white;
                        border = Colors.green;
@@ -212,17 +238,33 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1), 
+                  color: _isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1), 
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2))
+                  border: Border.all(color: _isCorrect ? Colors.green : Colors.red)
                 ),
-                child: Text(
-                  _isCorrect ? "Correct! ${level['reason']}" : "Wrong! ${level['reason']}",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    color: theme.colorScheme.primary, 
-                    fontWeight: FontWeight.w600
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      _isCorrect ? "Correct!" : "Wrong!",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        color: _isCorrect ? Colors.green : Colors.red, 
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18
+                      ),
+                    ),
+                    if (question.meta.containsKey('reason')) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        question.meta['reason'],
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          color: theme.textTheme.bodyMedium?.color,
+                          fontSize: 14
+                        ),
+                      ),
+                    ]
+                  ],
                 ),
               ),
               

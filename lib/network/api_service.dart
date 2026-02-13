@@ -357,4 +357,11 @@ class ApiService {
     final uri = Uri.parse("$baseUrl/event/all");
     return await http.get(uri);
   }
+
+  // --- Game APIs ---
+
+  static Future<http.Response> getGameQuestions(String gameType) async {
+    final uri = Uri.parse("$baseUrl/games/$gameType");
+    return await http.get(uri);
+  }
 }
