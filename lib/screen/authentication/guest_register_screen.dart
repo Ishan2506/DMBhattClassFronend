@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 
 class GuestRegisterScreen extends StatefulWidget {
   const GuestRegisterScreen({super.key});
@@ -29,7 +30,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
-  final TextEditingController _schoolNameController = TextEditingController();
+  final TextEditingController _schoolNameController = TextEditingController(text: "D.M.BHATT Institute");
 
   // Selection States
   String? _selectedStandard;
@@ -37,9 +38,9 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   String? _selectedStream;
   String? _selectedState;
   String? _selectedCity;
-  String? _selectedInstitute;
+  String? _selectedInstitute = "D.M.BHATT Institute";
   String? _selectedBoard;
-  String? _selectedRole;
+  String? _selectedRole = "Student";
 
   // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
@@ -156,17 +157,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return l10n.pleaseEnterPhone;
-                }
-                if (value.length != 10) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return l10n.phoneMustBeTenDigits;
-                }
-                return null;
-              },
+              validator: ValidationUtils.validateIndianPhoneNumber,
             ),
             const SizedBox(height: 16),
 
@@ -206,17 +197,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return l10n.pleaseEnterParentMobile;
-                }
-                if (value.length != 10) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return l10n.phoneMustBeTenDigits;
-                }
-                return null;
-              },
+              validator: ValidationUtils.validateIndianPhoneNumber,
             ),
             const SizedBox(height: 16),
             
@@ -319,24 +300,24 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             const SizedBox(height: 16),
 
             // Institute Dropdown
-            _buildDropdown(
-              context,
-              hint: AppLocalizations.of(context)!.instituteName,
-              icon: Icons.business,
-              value: _selectedInstitute,
-              items: _institutes,
-              onChanged: (val) {
-                setState(() {
-                  _selectedInstitute = val;
-                  if (val == "D.M.BHATT Institute") {
-                    _schoolNameController.text = "D.M.BHATT Institute";
-                  } else {
-                    _schoolNameController.text = "";
-                  }
-                });
-              },
-            ),
-            const SizedBox(height: 16),
+            // _buildDropdown(
+            //   context,
+            //   hint: AppLocalizations.of(context)!.instituteName,
+            //   icon: Icons.business,
+            //   value: _selectedInstitute,
+            //   items: _institutes,
+            //   onChanged: (val) {
+            //     setState(() {
+            //       _selectedInstitute = val;
+            //       if (val == "D.M.BHATT Institute") {
+            //         _schoolNameController.text = "D.M.BHATT Institute";
+            //       } else {
+            //         _schoolNameController.text = "";
+            //       }
+            //     });
+            //   },
+            // ),
+            // const SizedBox(height: 16),
 
              // School Name Autocomplete
              if (_selectedInstitute == "Other")
@@ -422,19 +403,19 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                 }
               ),
             // Login As Dropdown
-            _buildDropdown(
-              context,
-              hint: AppLocalizations.of(context)!.loginAs,
-              icon: Icons.person_pin_outlined,
-              value: _selectedRole,
-              items: _roles,
-              onChanged: (val) {
-                setState(() {
-                  _selectedRole = val;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
+            // _buildDropdown(
+            //   context,
+            //   hint: AppLocalizations.of(context)!.loginAs,
+            //   icon: Icons.person_pin_outlined,
+            //   value: _selectedRole,
+            //   items: _roles,
+            //   onChanged: (val) {
+            //     setState(() {
+            //       _selectedRole = val;
+            //     });
+            //   },
+            // ),
+            // const SizedBox(height: 24),
 
             // Terms Checkbox
             Row(

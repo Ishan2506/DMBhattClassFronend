@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -104,7 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _isLoading = false;
         });
       } else {
-        CustomToast.showError(context, "Failed to fetch profile");
+        CustomToast.showError(context, "Failed to fetch profile: ${ApiService.getErrorMessage(response.body)}");
         setState(() => _isLoading = false);
       }
     } catch (e) {
@@ -141,7 +142,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         CustomToast.showSuccess(context, 'Profile Updated Successfully');
         Navigator.pop(context, true); // Pass true to indicate update happened
       } else {
-        CustomToast.showError(context, "Update Failed: ${response.body}");
+        CustomToast.showError(context, "Update Failed: ${ApiService.getErrorMessage(response.body)}");
       }
     } catch (e) {
       CustomToast.showError(context, "Error: $e");
@@ -310,7 +311,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.phone_outlined, 
                     inputType: TextInputType.phone,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
-                    validator: (val) => val!.length != 10 ? "Invalid phone" : null,
+                    validator: ValidationUtils.validateIndianPhoneNumber,
                   ),
                   const SizedBox(height: 16),
     
@@ -322,6 +323,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.family_restroom_outlined, 
                     inputType: TextInputType.phone,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                    validator: ValidationUtils.validateIndianPhoneNumber,
                   ),
                   const SizedBox(height: 16),
     
@@ -333,6 +335,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     value: _selectedStandard,
                     items: _standards,
                     onChanged: (val) => setState(() => _selectedStandard = val),
+                    isReadOnly: true,
                   ),
                   const SizedBox(height: 16),
     
@@ -344,6 +347,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     value: _selectedMedium,
                     items: _mediums,
                     onChanged: (val) => setState(() => _selectedMedium = val),
+                    isReadOnly: true,
                   ),
                    const SizedBox(height: 16),
 
@@ -355,6 +359,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     value: _selectedBoard,
                     items: _boards,
                     onChanged: (val) => setState(() => _selectedBoard = val),
+                    isReadOnly: true,
                   ),
                    const SizedBox(height: 16),
                    
@@ -367,6 +372,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       value: _selectedStream,
                       items: _streams,
                       onChanged: (val) => setState(() => _selectedStream = val),
+                      isReadOnly: true,
                     ),
                     const SizedBox(height: 16),
                    ],
@@ -418,6 +424,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         }
                       });
                     },
+                    isReadOnly: true,
                   ),
                   const SizedBox(height: 16),
 
@@ -510,6 +517,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ],
     
                   // Login As Dropdown
+                  /*
                   _buildDropdown(
                     context,
                     hint: l10n.loginAs,
@@ -518,6 +526,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     items: _roles,
                     onChanged: (val) => setState(() => _selectedRole = val),
                   ),
+                  */
                   const SizedBox(height: 32),
     
                   // Update Button

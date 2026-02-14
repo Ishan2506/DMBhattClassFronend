@@ -105,6 +105,28 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
           
           _isLoading = false;
         });
+
+        if (_subjects.isEmpty) {
+           if (mounted) {
+             showDialog(
+               context: context, 
+               barrierDismissible: false,
+               builder: (context) => AlertDialog(
+                 title: const Text("No Exam Available"),
+                 content: const Text("No exam available please try after some days"),
+                 actions: [
+                   TextButton(
+                     onPressed: () {
+                       Navigator.pop(context); // Close dialog
+                       Navigator.pop(context); // Go back
+                     }, 
+                     child: const Text("OK"),
+                   )
+                 ],
+               ),
+             );
+           }
+        }
       } else {
         // Handle error
         setState(() => _isLoading = false);
@@ -292,7 +314,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                      color: _selectedExamId == null ? Colors.grey.shade300 : null,
+                      // Removed color property to let Button handle disabled state
                       borderRadius: BorderRadius.circular(S.s12),
                       boxShadow: _selectedExamId == null
                           ? []
@@ -345,6 +367,8 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
+                        disabledBackgroundColor: Colors.grey.shade400, // Explicit disabled color
+                        disabledForegroundColor: Colors.white, // Explicit disabled text color
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(S.s12)),
                       ),

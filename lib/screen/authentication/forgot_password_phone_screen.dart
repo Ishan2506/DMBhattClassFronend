@@ -6,6 +6,7 @@ import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 
 
 class ForgotPasswordPhoneScreen extends StatefulWidget {
@@ -105,17 +106,7 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return l10n.pleaseEnterPhone;
-                  }
-                  if (value.length != 10) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return l10n.phoneMustBeTenDigits;
-                  }
-                  return null;
-                },
+                validator: ValidationUtils.validateIndianPhoneNumber,
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context)!.phoneNumber,
                   labelStyle: GoogleFonts.poppins(color: Colors.grey),

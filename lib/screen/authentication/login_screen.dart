@@ -10,6 +10,7 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_phone_screen.dart';
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -90,15 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterPhone;
-                }
-                if (value.length != 10) {
-                  return l10n.phoneMustBeTenDigits;
-                }
-                return null;
-              },
+              validator: ValidationUtils.validateIndianPhoneNumber,
                errorMaxLines: 2,
             ),
             const SizedBox(height: 16),

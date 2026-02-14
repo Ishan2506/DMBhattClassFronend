@@ -2,6 +2,10 @@ import 'dart:ui';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:printing/printing.dart';
+import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+import 'dart:math' as math;
 
 class PdfPreviewScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -16,8 +20,55 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   final int _freePages = 2; // First 2 pages are free
-  final int _previewPages = 3; // Can navigate to 3 pages (2 free + 1 locked)
-  final int _actualTotalPages = 10; // Actual total pages in PDF
+  int _actualTotalPages = 1; // Actual total pages in PDF (dynamic)
+  bool _isLoading = true;
+  Uint8List? _pdfBytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPdfInfo();
+  }
+
+  Future<void> _loadPdfInfo() async {
+    try {
+      final response = await http.get(Uri.parse(widget.product['image']));
+      if (response.statusCode == 200) {
+        _pdfBytes = response.bodyBytes;
+        
+        // Robust page counting using structural PDF markers
+        try {
+          final content = String.fromCharCodes(_pdfBytes!);
+          
+          // Strategy 1: Look for /Count in the page tree
+          final countMatch = RegExp(r'/Count\s+(\d+)').firstMatch(content);
+          if (countMatch != null) {
+            _actualTotalPages = int.parse(countMatch.group(1)!);
+          } else {
+            // Strategy 2: Count all instances of /Type /Page
+            // We use a boundary check to avoid catching similar strings
+            _actualTotalPages = RegExp(r'/Type\s*/Page\b').allMatches(content).length;
+          }
+        } catch (parseError) {
+          debugPrint("Error parsing PDF content for page count: $parseError");
+          _actualTotalPages = 1; // Fallback
+        }
+
+        if (_actualTotalPages <= 0) _actualTotalPages = 1;
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error loading PDF info: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -102,68 +153,60 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
           // Page viewer
           Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              itemCount: _previewPages,
-              itemBuilder: (context, index) {
-                final pageNumber = index + 1;
-                final isLocked = pageNumber > _freePages;
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                    },
+                    itemCount: math.min(_actualTotalPages, _freePages + 1),
+                    itemBuilder: (context, index) {
+                      final pageNumber = index + 1;
+                      final isLocked = pageNumber > _freePages;
+                      final bool isCloudinary = widget.product['image'].contains('/upload/');
 
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade900 : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      // PDF Page Image
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.network(
-                          _getPdfPageUrl(widget.product['image'], pageNumber),
-                          fit: BoxFit.contain,
-                          width: double.infinity,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Failed to load page',
-                                    style: GoogleFonts.poppins(color: Colors.grey.shade600),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey.shade900 : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ),
+                        child: Stack(
+                          children: [
+                            // PDF Page Image
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: isCloudinary
+                                  ? Image.network(
+                                      _getPdfPageUrl(widget.product['image'], pageNumber),
+                                      fit: BoxFit.contain,
+                                      width: double.infinity,
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            value: loadingProgress.expectedTotalBytes != null
+                                                ? loadingProgress.cumulativeBytesLoaded /
+                                                    loadingProgress.expectedTotalBytes!
+                                                : null,
+                                          ),
+                                        );
+                                      },
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          _buildRasterizedFallback(pageNumber),
+                                    )
+                                  : _buildRasterizedFallback(pageNumber),
+                            ),
 
                       // Locked overlay for pages beyond free limit
                       if (isLocked)
@@ -280,7 +323,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
                 // Next button
                 ElevatedButton.icon(
-                  onPressed: _currentPage < _previewPages - 1
+                  onPressed: _currentPage < math.min(_actualTotalPages, _freePages + 1) - 1
                       ? () {
                           _pageController.nextPage(
                             duration: const Duration(milliseconds: 300),
@@ -308,5 +351,53 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildRasterizedFallback(int pageNumber) {
+    return FutureBuilder<Uint8List?>(
+      future: _getRasterizedPage(widget.product['image'], pageNumber),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasData && snapshot.data != null) {
+          return Image.memory(snapshot.data!, fit: BoxFit.contain);
+        }
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+              const SizedBox(height: 8),
+              Text(
+                'Failed to load page',
+                style: GoogleFonts.poppins(color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<Uint8List?> _getRasterizedPage(String url, int pageNumber) async {
+    try {
+      if (_pdfBytes == null) {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          _pdfBytes = response.bodyBytes;
+        }
+      }
+
+      if (_pdfBytes != null) {
+        // Rasterize the specific page (0-indexed in Printing.raster)
+        await for (final page in Printing.raster(_pdfBytes!, pages: [pageNumber - 1])) {
+          return await page.toPng();
+        }
+      }
+    } catch (e) {
+      debugPrint("Error rasterizing PDF: $e");
+    }
+    return null;
   }
 }

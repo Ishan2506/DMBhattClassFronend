@@ -14,6 +14,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/emoji_decoder_screen.dar
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class MindGamesScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class MindGamesScreen extends StatefulWidget {
 class _MindGamesScreenState extends State<MindGamesScreen> {
   final MindGameService _gameService = MindGameService();
   bool _isGuest = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -34,9 +36,10 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
   }
 
   Future<void> _initService() async {
+    setState(() => _isLoading = true);
     await _gameService.init();
     _isGuest = await GuestUtils.isGuest();
-    if (mounted) setState(() {}); // Refresh UI
+    if (mounted) setState(() => _isLoading = false); // Refresh UI
   }
 
   void _handleGameTap(Widget gameScreen, {bool isFree = false}) {
@@ -106,103 +109,109 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
           )
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildGameCard(
-              context,
-              title: l10n.memoryMatch,
-              description: l10n.memoryMatchDesc,
-              isFree: true,
-              icon: Icons.grid_view_rounded,
-              color: Colors.blue,
-              onTap: () => _handleGameTap(const MemoryMatchGameScreen(), isFree: true),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                _buildGameCard(
+                  context,
+                  title: l10n.memoryMatch,
+                  description: l10n.memoryMatchDesc,
+                  isFree: true,
+                  icon: Icons.grid_view_rounded,
+                  color: Colors.blue,
+                  onTap: () => _handleGameTap(const MemoryMatchGameScreen(), isFree: true),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.speedMath,
+                  description: l10n.speedMathDesc,
+                  icon: Icons.calculate_outlined,
+                  color: Colors.red,
+                  onTap: () => _handleGameTap(const MathQuizScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.wordScramble,
+                  description: l10n.wordScrambleDesc,
+                  icon: Icons.text_fields_rounded,
+                  color: Colors.deepPurple,
+                  onTap: () => _handleGameTap(const WordScrambleScreen()),
+                ),
+                const SizedBox(height: 16),
+                 _buildGameCard(
+                  context,
+                  title: l10n.oddOneOut,
+                  description: l10n.oddOneOutDesc,
+                  icon: Icons.filter_list_off,
+                  color: Colors.brown,
+                  onTap: () => _handleGameTap(const OddOneOutScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.codeBreaker,
+                  description: l10n.codeBreakerDesc,
+                  icon: Icons.lock_open_rounded,
+                  color: Colors.grey.shade800,
+                  onTap: () => _handleGameTap(const CodeBreakerScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.factOrFiction,
+                  description: l10n.factOrFictionDesc,
+                  icon: Icons.thumbs_up_down_rounded,
+                  color: Colors.deepPurpleAccent,
+                  onTap: () => _handleGameTap(const FactOrFictionScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.sentenceBuilder,
+                  description: l10n.sentenceBuilderDesc,
+                  icon: Icons.segment_rounded,
+                  color: Colors.orange,
+                  onTap: () => _handleGameTap(const SentenceBuilderScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.grammarGuardian,
+                  description: l10n.grammarGuardianDesc,
+                  icon: Icons.spellcheck,
+                  color: Colors.teal,
+                  onTap: () => _handleGameTap(const GrammarGuardianScreen()),
+                ),
+                const SizedBox(height: 16),
+                 _buildGameCard(
+                  context,
+                  title: l10n.wordBridge,
+                  description: l10n.wordBridgeDesc,
+                  icon: Icons.hub,
+                  color: Colors.pink,
+                  onTap: () => _handleGameTap(const WordBridgeScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.emojiDecoder,
+                  description: l10n.emojiDecoderDesc,
+                  icon: Icons.emoji_objects_outlined,
+                  color: Colors.amber.shade800,
+                  onTap: () => _handleGameTap(const EmojiDecoderScreen()),
+                ),
+                const SizedBox(height: 32),
+              ],
             ),
-            const SizedBox(height: 16),
-            _buildGameCard(
-              context,
-              title: l10n.speedMath,
-              description: l10n.speedMathDesc,
-              icon: Icons.calculate_outlined,
-              color: Colors.red,
-              onTap: () => _handleGameTap(const MathQuizScreen()),
-            ),
-            const SizedBox(height: 16),
-            _buildGameCard(
-              context,
-              title: l10n.wordScramble,
-              description: l10n.wordScrambleDesc,
-              icon: Icons.text_fields_rounded,
-              color: Colors.deepPurple,
-              onTap: () => _handleGameTap(const WordScrambleScreen()),
-            ),
-            const SizedBox(height: 16),
-             _buildGameCard(
-              context,
-              title: l10n.oddOneOut,
-              description: l10n.oddOneOutDesc,
-              icon: Icons.filter_list_off,
-              color: Colors.brown,
-              onTap: () => _handleGameTap(const OddOneOutScreen()),
-            ),
-            const SizedBox(height: 16),
-            _buildGameCard(
-              context,
-              title: l10n.codeBreaker,
-              description: l10n.codeBreakerDesc,
-              icon: Icons.lock_open_rounded,
-              color: Colors.grey.shade800,
-              onTap: () => _handleGameTap(const CodeBreakerScreen()),
-            ),
-            const SizedBox(height: 16),
-            _buildGameCard(
-              context,
-              title: l10n.factOrFiction,
-              description: l10n.factOrFictionDesc,
-              icon: Icons.thumbs_up_down_rounded,
-              color: Colors.deepPurpleAccent,
-              onTap: () => _handleGameTap(const FactOrFictionScreen()),
-            ),
-            const SizedBox(height: 16),
-            _buildGameCard(
-              context,
-              title: l10n.sentenceBuilder,
-              description: l10n.sentenceBuilderDesc,
-              icon: Icons.segment_rounded,
-              color: Colors.orange,
-              onTap: () => _handleGameTap(const SentenceBuilderScreen()),
-            ),
-            const SizedBox(height: 16),
-            _buildGameCard(
-              context,
-              title: l10n.grammarGuardian,
-              description: l10n.grammarGuardianDesc,
-              icon: Icons.spellcheck,
-              color: Colors.teal,
-              onTap: () => _handleGameTap(const GrammarGuardianScreen()),
-            ),
-            const SizedBox(height: 16),
-             _buildGameCard(
-              context,
-              title: l10n.wordBridge,
-              description: l10n.wordBridgeDesc,
-              icon: Icons.hub,
-              color: Colors.pink,
-              onTap: () => _handleGameTap(const WordBridgeScreen()),
-            ),
-            const SizedBox(height: 16),
-            _buildGameCard(
-              context,
-              title: l10n.emojiDecoder,
-              description: l10n.emojiDecoderDesc,
-              icon: Icons.emoji_objects_outlined,
-              color: Colors.amber.shade800,
-              onTap: () => _handleGameTap(const EmojiDecoderScreen()),
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
+          ),
+          if (_isLoading)
+            const Center(child: CustomLoader()),
+        ],
       ),
     );
   }

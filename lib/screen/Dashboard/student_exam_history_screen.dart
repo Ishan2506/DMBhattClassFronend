@@ -12,6 +12,7 @@ import 'dart:io';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,7 +90,7 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
           ),
         ),
         body: _isLoading 
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: CustomLoader())
             : TabBarView(
                 children: [
                   _buildExamList(context, _regularExams),

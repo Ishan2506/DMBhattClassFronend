@@ -12,19 +12,13 @@ import 'constant/app_constant.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // await _secureScreen();
   runApp(const MyApp());
 }
-
-// Future<void> _secureScreen() async {
-//   try {
-//     await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-//   } catch (e) {
-//     debugPrint("Error securing screen: $e");
-//   }
-// }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -49,6 +43,7 @@ class MyApp extends StatelessWidget {
           final styleName = state.selectedStyle.name;
           
           return MaterialApp(
+            navigatorKey: navigatorKey,
             debugShowCheckedModeBanner: false,
             title: appName,
             // Use extension method to get theme based on style and brightness

@@ -20,6 +20,7 @@ class StudentProfileScreen extends StatefulWidget {
   State<StudentProfileScreen> createState() => _StudentProfileScreenState();
 
 
+/*
   static Future<void> showSwitchAccountSheet(BuildContext context, {String? name, String? phone, String? pic}) async {
     final prefs = await SharedPreferences.getInstance();
     
@@ -240,6 +241,7 @@ class StudentProfileScreen extends StatefulWidget {
        (route) => false,
      );
   }
+*/
 }
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
@@ -330,7 +332,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         centerTitle: true,
       ),
       body: _isLoading 
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CustomLoader())
           : SingleChildScrollView(
         child: Column(
           children: [
@@ -487,7 +489,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             const SizedBox(height: 32),
 
             // 4. Switch Account Section (Clearly Visible)
-            _buildSwitchAccountSection(context, theme),
+            // _buildSwitchAccountSection(context, theme),
 
             const SizedBox(height: 32),
 
@@ -651,6 +653,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     );
   }
 
+/*
   Widget _buildSwitchAccountSection(BuildContext context, ThemeData theme) {
     return FutureBuilder<SharedPreferences>(
       future: SharedPreferences.getInstance(),
@@ -759,6 +762,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       },
     );
   }
+*/
 
   Widget _buildMarksCard(BuildContext context,
       {required String title, required String marks, required Color color, bool isOnline = false, required VoidCallback onTap, required AppLocalizations l10n}) {

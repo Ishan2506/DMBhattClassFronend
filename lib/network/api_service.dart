@@ -2,10 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart'; // Make sure http_parser is in pubspec
+import 'package:http_parser/http_parser.dart'; 
 import 'package:image_picker/image_picker.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/main.dart'; // To access navigatorKey
+import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
+import 'package:flutter/material.dart';
 
 class ApiService {
   static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
@@ -37,9 +40,41 @@ class ApiService {
     return headers;
   }
 
+  /// Centralized check for 401 Unauthorized errors
+  static http.Response _handleSession(http.Response response) {
+    if (response.statusCode == 401) {
+      debugPrint("Session expired (401). Redirecting to WelcomeScreen.");
+      
+      // Clear token to prevent infinite loop or persistent bad state
+      clearAuthToken();
+
+      // Global Redirection using navigatorKey
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+          (route) => false,
+        );
+      }
+    }
+    return response;
+  }
+
+  /// Parse error message from common backend JSON formats
+  static String getErrorMessage(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map) {
+        return decoded['message'] ?? decoded['error'] ?? body;
+      }
+      return body;
+    } catch (_) {
+      return body;
+    }
+  }
+
   static Future<http.Response> getExploreProducts() async {
     final uri = Uri.parse("$baseUrl/explore/all");
-    return await http.get(uri);
+    return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> registerUser({
@@ -53,19 +88,16 @@ class ApiService {
     request.headers['Accept'] = 'application/json';
     request.headers['User-Agent'] = 'Flutter-App';
     
-    // Add text fields
     final fields = Map<String, String>.from(payload.fields);
     fields["loginCode"] = dpin;
     fields["role"] = payload.role;
     
-    // Add referral code if provided
     if (referralCode != null && referralCode.isNotEmpty) {
       fields["referralCode"] = referralCode;
     }
     
     request.fields.addAll(fields);
 
-    // File Handling
     if (payload.files.isNotEmpty) {
       if (payload.role == "assistant") {
         for (var file in payload.files) {
@@ -77,7 +109,6 @@ class ApiService {
           ));
         }
       } else {
-        // For student/guest, photo is optional. Check if file exists.
         final file = payload.files.first;
         if (file.existsSync()) {
              final mimeType = _getMimeType(file.path);
@@ -91,7 +122,7 @@ class ApiService {
     }
 
     final streamedResponse = await request.send();
-    return await http.Response.fromStream(streamedResponse);
+    return _handleSession(await http.Response.fromStream(streamedResponse));
   }
 
   static Future<http.Response> loginUser({
@@ -118,18 +149,18 @@ class ApiService {
       },
       body: jsonEncode(body),
     );
-    return response;
+    return _handleSession(response);
   }
 
   static Future<http.Response> getProfile() async {
     final uri = Uri.parse("$baseUrl/profile");
-    return await http.get(
+    return _handleSession(await http.get(
       uri,
       headers: _addAuth({
         'Accept': 'application/json',
         'User-Agent': 'Flutter-App',
       }),
-    );
+    ));
   }
 
   static Future<http.Response> updateProfile(Map<String, dynamic> data, {XFile? imageFile}) async {
@@ -141,19 +172,17 @@ class ApiService {
       'Accept': 'application/json',
       'User-Agent': 'Flutter-App',
     });
-    // Add text fields
+    
     data.forEach((key, value) {
       if (value != null) {
         request.fields[key] = value.toString();
       }
     });
 
-    // Add image file if provided
     if (imageFile != null) {
-      final mimeType = _getMimeType(imageFile.name); // FIXED: Use name because path on web is a blob URL without extension
+      final mimeType = _getMimeType(imageFile.name); 
       
       if (kIsWeb) {
-        // For Web, we must use fromBytes as MultipartFile.fromPath is not supported
         final bytes = await imageFile.readAsBytes();
         request.files.add(http.MultipartFile.fromBytes(
           'photo',
@@ -162,7 +191,6 @@ class ApiService {
           contentType: MediaType.parse(mimeType),
         ));
       } else {
-        // For Mobile, fromPath is preferred
         request.files.add(await http.MultipartFile.fromPath(
           'photo',
           imageFile.path,
@@ -172,18 +200,18 @@ class ApiService {
     }
 
     final streamedResponse = await request.send();
-    return await http.Response.fromStream(streamedResponse);
+    return _handleSession(await http.Response.fromStream(streamedResponse));
   }
 
   static Future<http.Response> getDashboardData() async {
     final uri = Uri.parse("$baseUrl/dashboard");
-    return await http.get(
+    return _handleSession(await http.get(
       uri,
       headers: _addAuth({
         'Accept': 'application/json',
         'User-Agent': 'Flutter-App',
       }),
-    );
+    ));
   }
 
   static Future<http.Response> submitExamResult({
@@ -194,7 +222,7 @@ class ApiService {
     bool isOnline = true,
   }) async {
     final uri = Uri.parse("$baseUrl/exam/submit");
-    return await http.post(
+    return _handleSession(await http.post(
       uri,
       headers: _addAuth({
         'Content-Type': 'application/json',
@@ -208,7 +236,7 @@ class ApiService {
         'totalMarks': totalMarks,
         'isOnline': isOnline,
       }),
-    );
+    ));
   }
 
   static Future<http.Response> getBoardPapers({
@@ -217,7 +245,6 @@ class ApiService {
     String? stream,
     required String year,
   }) async {
-    // Construct query parameters
     final queryParams = {
       'medium': medium,
       'std': std,
@@ -227,13 +254,13 @@ class ApiService {
     
     final uri = Uri.parse("$baseUrl/materials/board-papers").replace(queryParameters: queryParams);
     
-    return await http.get(
+    return _handleSession(await http.get(
       uri,
       headers: _addAuth({
         'Accept': 'application/json',
         'User-Agent': 'Flutter-App',
       }),
-    );
+    ));
   }
 
   static String _getMimeType(String fileName) {
@@ -248,12 +275,13 @@ class ApiService {
     };
     return mimeTypes[ext] ?? 'application/octet-stream';
   }
+
   static Future<http.Response> forgetPassword({
     required String phone,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/forget-password");
     
-    final response = await http.post(
+    return _handleSession(await http.post(
       uri,
       headers: {
         'Content-Type': 'application/json',
@@ -261,8 +289,7 @@ class ApiService {
       body: jsonEncode({
         'phoneNum': phone,
       }),
-    );
-    return response;
+    ));
   }
 
   static Future<http.Response> verifyOtp({
@@ -271,7 +298,7 @@ class ApiService {
   }) async {
     final uri = Uri.parse("$baseUrl/auth/verify-otp");
     
-    final response = await http.post(
+    return _handleSession(await http.post(
       uri,
       headers: {
         'Content-Type': 'application/json',
@@ -280,8 +307,7 @@ class ApiService {
         'phoneNum': phone,
         'otp': otp,
       }),
-    );
-    return response;
+    ));
   }
 
   static Future<http.Response> resetPassword({
@@ -290,7 +316,7 @@ class ApiService {
   }) async {
     final uri = Uri.parse("$baseUrl/auth/reset-password");
     
-    final response = await http.post(
+    return _handleSession(await http.post(
       uri,
       headers: {
         'Content-Type': 'application/json',
@@ -299,16 +325,16 @@ class ApiService {
         'phoneNum': phone,
         'newPassword': newPassword,
       }),
-    );
-    return response;
+    ));
   }
+
   static Future<http.Response> updatePassword({
     required String oldPassword,
     required String newPassword,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/update-password");
     
-    final response = await http.post(
+    return _handleSession(await http.post(
       uri,
       headers: _addAuth({
         'Content-Type': 'application/json',
@@ -319,57 +345,56 @@ class ApiService {
         'oldPassword': oldPassword,
         'newPassword': newPassword,
       }),
-    );
-    return response;
+    ));
   }
 
   static Future<http.Response> getAllTopRankers() async {
     final uri = Uri.parse("$baseUrl/topRanker/all");
-    return await http.get(uri);
+    return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> getAllExams() async {
     final uri = Uri.parse("$baseUrl/exam/all");
-    return await http.get(uri);
+    return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> getExamById(String examId) async {
     final uri = Uri.parse("$baseUrl/exam/$examId");
-    return await http.get(uri);
+    return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> getAllFiveMinTests() async {
     final uri = Uri.parse("$baseUrl/fiveMinTest/all");
-    return await http.get(uri);
+    return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> getLeaderboard({
     required String std,
   }) async {
     final uri = Uri.parse("$baseUrl/leaderboard/$std");
-    return await http.get(
+    return _handleSession(await http.get(
       uri,
       headers: _addAuth({
         'Accept': 'application/json',
         'User-Agent': 'Flutter-App',
       }),
-    );
+    ));
   }
 
   static Future<http.Response> getReferralData() async {
     final uri = Uri.parse("$baseUrl/referral/data");
-    return await http.get(
+    return _handleSession(await http.get(
       uri,
       headers: _addAuth({
         'Accept': 'application/json',
         'User-Agent': 'Flutter-App',
       }),
-    );
+    ));
   }
 
   static Future<http.Response> validateReferralCode(String referralCode) async {
     final uri = Uri.parse("$baseUrl/referral/validate");
-    return await http.post(
+    return _handleSession(await http.post(
       uri,
       headers: {
         'Content-Type': 'application/json',
@@ -377,18 +402,16 @@ class ApiService {
       body: jsonEncode({
         'referralCode': referralCode,
       }),
-    );
+    ));
   }
 
   static Future<http.Response> getAllEvents() async {
     final uri = Uri.parse("$baseUrl/event/all");
-    return await http.get(uri);
+    return _handleSession(await http.get(uri));
   }
-
-  // --- Game APIs ---
 
   static Future<http.Response> getGameQuestions(String gameType) async {
     final uri = Uri.parse("$baseUrl/games/$gameType");
-    return await http.get(uri);
+    return _handleSession(await http.get(uri));
   }
 }

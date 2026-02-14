@@ -4,7 +4,6 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
@@ -47,7 +46,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   Future<void> _fetchUserProfile() async {
     setState(() => _isProfileLoading = true);
     try {
-      // Token managed internally
       final response = await ApiService.getProfile();
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -56,10 +54,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           setState(() {
             _selectedMedium = profile['medium'];
             _selectedStd = profile['std'];
-            // Attempt to get stream if available or if std implies it (though API might not return it explicitly if not saved)
-            // For now, if std is 12, we might need a way to know stream. 
-            // Assuming profile might have 'stream' field or similar, or we just have to hope it's there.
-            // If not present in profile, we can't set it. 
             _selectedStream = profile['stream']; 
           });
         }
@@ -77,8 +71,8 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-
     final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
@@ -97,32 +91,37 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                 
                 if (_hasSearched && _papers.isEmpty && !_isLoading)
                    Center(
-                     child: Column(
-                       children: [
-                         Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade400),
-                         const SizedBox(height: 16),
-                         Text(l10n.noPapersFound, style: GoogleFonts.poppins(color: Colors.grey)),
-                       ],
+                     child: Padding(
+                       padding: const EdgeInsets.only(top: 40),
+                       child: Column(
+                         children: [
+                           Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade400),
+                           const SizedBox(height: 16),
+                           const Text("No papers found for this search", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
+                         ],
+                       ),
                      ),
                    )
-                else if (_papers.any((p) => p['subject'] == _selectedSubject) && !_isLoading) ...[
-                   Text(
-                     "${l10n.availablePapers} (${_papers.where((p) => p['subject'] == _selectedSubject).length})",
-                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
-                   ),
-                   const SizedBox(height: 12),
-                   ..._papers.where((p) => p['subject'] == _selectedSubject).map((paper) => _buildPaperCard(paper, colorScheme, isDark)).toList()
-                ]
-                else if (_hasSearched && !_isLoading)
-                   Center(
-                     child: Column(
-                       children: [
-                         Icon(Icons.description_outlined, size: 64, color: Colors.grey.shade400),
-                         const SizedBox(height: 16),
-                         Text("${l10n.noExamsFound} ${l10n.forLabel} $_selectedSubject", style: GoogleFonts.poppins(color: Colors.grey)),
-                       ],
-                     ),
-                   ),
+                else if (_hasSearched && _papers.isNotEmpty && !_isLoading) ...[
+                   Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                        Text(
+                          "${l10n.availablePapers} (${_papers.where((p) => _selectedSubject == null || p['subject'] == _selectedSubject).length})",
+                          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+                        ),
+                        const SizedBox(height: 12),
+                        ..._papers.where((p) => _selectedSubject == null || p['subject'] == _selectedSubject).map((paper) => _buildPaperCard(paper, colorScheme, isDark)).toList(),
+                        if (_papers.where((p) => _selectedSubject == null || p['subject'] == _selectedSubject).isEmpty)
+                           Center(
+                             child: Padding(
+                               padding: const EdgeInsets.only(top: 20),
+                               child: Text("No papers found for $_selectedSubject", style: GoogleFonts.poppins(color: Colors.grey)),
+                             ),
+                           ),
+                     ],
+                   )
+                ],
               ],
             ),
           ),
@@ -135,11 +134,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
   Widget _buildFilterCard(ColorScheme colorScheme, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
-    // Note: Loader logic moved to Stack in build method
-    
-    // if (_isProfileLoading) {
-    //    return const CustomLoader();
-    // }
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -158,27 +152,41 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.selectSubject, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)), // Generic
+          Text(l10n.selectSubject, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           
-          if (_selectedMedium != null && _selectedStd != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDropdown(
+                  l10n.medium, 
+                  _mediums, 
+                  _selectedMedium, 
+                  (val) => setState(() => _selectedMedium = val)
+                ),
               ),
-              child: Text(
-                "${_selectedStd}${l10n.th} - $_selectedMedium ${l10n.medium}${_selectedStream != null ? ' ($_selectedStream)' : ''}",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: colorScheme.primary),
-                textAlign: TextAlign.center,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDropdown(
+                  l10n.standard, 
+                  _stds.map((e) => "$e${l10n.th}").toList(), 
+                  _selectedStd != null ? "$_selectedStd${l10n.th}" : null, 
+                  (val) => setState(() => _selectedStd = val?.replaceAll(l10n.th, ""))
+                ),
               ),
-            ),
+            ],
+          ),
+          const SizedBox(height: 12),
 
-          // Year Dropdown
+          if (_selectedStd == "12")
+            _buildDropdown(
+              l10n.stream, 
+              _streams, 
+              _selectedStream, 
+              (val) => setState(() => _selectedStream = val)
+            ),
+          if (_selectedStd == "12") const SizedBox(height: 12),
+
           _buildDropdown(
             l10n.year, 
             _years, 
@@ -187,7 +195,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           ),
           const SizedBox(height: 12),
           
-          // Subject Dropdown
           _buildDropdown(
             l10n.subject, 
             _subjects, 
@@ -206,7 +213,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: Text(AppLocalizations.of(context)!.apply, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)), // Or findPapers
+              child: Text(l10n.apply, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -267,7 +274,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               ],
             ),
           ),
-          // View Button
           IconButton(
             icon: Icon(Icons.visibility_outlined, color: colorScheme.primary),
             onPressed: () {
@@ -275,7 +281,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                   GuestUtils.showGuestRestrictionDialog(context, message: "Register to view board papers!");
                   return;
                }
-               // Ensure paper map has 'image' key for PdfPreviewScreen
                final pdfPaper = Map<String, dynamic>.from(paper);
                if (pdfPaper['image'] == null) pdfPaper['image'] = pdfPaper['url'];
                
@@ -287,7 +292,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                 );
             },
           ),
-          // Download Button
           IconButton(
             icon: Icon(Icons.download_rounded, color: colorScheme.secondary),
             onPressed: () {
@@ -304,20 +308,15 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   }
 
   Future<void> _validateAndFetch() async {
-    // Basic validation
     if (_selectedMedium == null || _selectedStd == null) {
-       CustomToast.showError(context, AppLocalizations.of(context)!.registrationFailed); // Generic profile error
+       CustomToast.showError(context, "Please select Medium and Standard");
        return;
     }
-    
-    if (_selectedSubject == null || _selectedYear == null) {
-       CustomToast.showError(context, AppLocalizations.of(context)!.selectStandardMediumError);
+    if (_selectedYear == null) {
+       CustomToast.showError(context, "Please select Year");
        return;
     }
-
      if (_selectedStd == "12" && _selectedStream == null) {
-        // If stream is missing from profile, we might still want to proceed or error out.
-        // For now, let's warn.
         CustomToast.showError(context, AppLocalizations.of(context)!.selectStreamError);
         return;
      }
@@ -329,24 +328,23 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     });
 
     try {
-      // Use API Service
       final response = await ApiService.getBoardPapers(
         medium: _selectedMedium!,
         std: _selectedStd!,
-        stream: _selectedStream, // Can be null
+        stream: _selectedStream,
         year: _selectedYear!,
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _papers = data['papers'] ?? []; // Adjust key based on actual API
+          _papers = data['papers'] ?? [];
         });
         if (_papers.isEmpty) {
            CustomToast.showSuccess(context, AppLocalizations.of(context)!.noExamsFound);
         }
       } else {
-         CustomToast.showError(context, "Failed to fetch papers");
+         CustomToast.showError(context, "Failed to fetch papers: ${ApiService.getErrorMessage(response.body)}");
       }
     } catch (e) {
       CustomToast.showError(context, "Error: $e");

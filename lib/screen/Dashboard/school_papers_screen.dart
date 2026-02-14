@@ -5,6 +5,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SchoolPapersScreen extends StatefulWidget {
   const SchoolPapersScreen({super.key});
@@ -46,6 +47,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       "subject": "Mathematics",
       "date": "10 Aug 2025",
       "image": "https://pdfobject.com/pdf/sample.pdf", // Mock PDF
+      "price": 49,
     },
     {
       "id": "2",
@@ -53,6 +55,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       "subject": "Mathematics",
       "date": "15 Oct 2025",
       "image": "https://pdfobject.com/pdf/sample.pdf",
+      "price": 99,
     },
     {
       "id": "3",
@@ -60,6 +63,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       "subject": "Science",
       "date": "12 Sep 2025",
       "image": "https://pdfobject.com/pdf/sample.pdf",
+      "price": 29,
     },
     {
       "id": "4",
@@ -67,6 +71,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       "subject": "English",
       "date": "05 Nov 2025",
       "image": "https://pdfobject.com/pdf/sample.pdf",
+      "price": 39,
     },
   ];
 
@@ -255,13 +260,36 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                   GuestUtils.showGuestRestrictionDialog(context, message: "Register to download school papers!");
                   return;
                }
-               CustomToast.showSuccess(context, "Downloading ${paper['name']}...");
-               // Implement download logic here
+               _downloadPaper(paper);
             },
              tooltip: l10n.download,
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _downloadPaper(Map<String, dynamic> paper) async {
+    try {
+      CustomToast.showSuccess(context, "Preparing download for ${paper['name']}...");
+      
+      // We'll use url_launcher as a simple way to "download" since it's a browser-friendly app 
+      // and direct file system access on mobile requires more setup.
+      // Alternatively, we could use dio + path_provider for a real background download.
+      // Given the user's request "i just want to know Actual we support the download functionlity",
+      // implementing a functional download is the goal.
+      
+      final String url = paper['image'];
+      final Uri uri = Uri.parse(url);
+      
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        CustomToast.showSuccess(context, "Download started in browser.");
+      } else {
+        CustomToast.showError(context, "Could not launch download URL.");
+      }
+    } catch (e) {
+      CustomToast.showError(context, "Download failed: $e");
+    }
   }
 }

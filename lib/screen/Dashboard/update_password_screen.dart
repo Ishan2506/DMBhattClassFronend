@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
   bool _isOldVisible = false;
   bool _isNewVisible = false;
   bool _isConfirmVisible = false;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -32,82 +34,87 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
         title: "Update Password",
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildPasswordField(
-                context,
-                controller: _oldPasswordController,
-                hint: "Old Password",
-                isVisible: _isOldVisible,
-                onVisibilityChanged: () => setState(() => _isOldVisible = !_isOldVisible),
-              ),
-              const SizedBox(height: 16),
-              _buildPasswordField(
-                context,
-                controller: _newPasswordController,
-                hint: "New Password",
-                isVisible: _isNewVisible,
-                onVisibilityChanged: () => setState(() => _isNewVisible = !_isNewVisible),
-                validator: (val) => val!.length < 6 ? "Minimum 6 chars" : null,
-              ),
-              const SizedBox(height: 16),
-              _buildPasswordField(
-                context,
-                controller: _confirmPasswordController,
-                hint: "Confirm Password",
-                isVisible: _isConfirmVisible,
-                onVisibilityChanged: () => setState(() => _isConfirmVisible = !_isConfirmVisible),
-                validator: (val) {
-                  if (val != _newPasswordController.text) return "Passwords do not match";
-                  return null;
-                },
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      try {
-                        // Token managed internally
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  _buildPasswordField(
+                    context,
+                    controller: _oldPasswordController,
+                    hint: "Old Password",
+                    isVisible: _isOldVisible,
+                    onVisibilityChanged: () => setState(() => _isOldVisible = !_isOldVisible),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPasswordField(
+                    context,
+                    controller: _newPasswordController,
+                    hint: "New Password",
+                    isVisible: _isNewVisible,
+                    onVisibilityChanged: () => setState(() => _isNewVisible = !_isNewVisible),
+                    validator: (val) => val!.length < 6 ? "Minimum 6 chars" : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPasswordField(
+                    context,
+                    controller: _confirmPasswordController,
+                    hint: "Confirm Password",
+                    isVisible: _isConfirmVisible,
+                    onVisibilityChanged: () => setState(() => _isConfirmVisible = !_isConfirmVisible),
+                    validator: (val) {
+                      if (val != _newPasswordController.text) return "Passwords do not match";
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () async {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() => _isLoading = true);
+                          try {
+                            final response = await ApiService.updatePassword(
+                              oldPassword: _oldPasswordController.text,
+                              newPassword: _newPasswordController.text,
+                            );
 
-
-                        final response = await ApiService.updatePassword(
-                          oldPassword: _oldPasswordController.text,
-                          newPassword: _newPasswordController.text,
-                        );
-
-                        if (response.statusCode == 200) {
-                          CustomToast.showSuccess(context, "Password Updated Successfully");
-                          if (mounted) Navigator.pop(context);
-                        } else {
-                           final body = jsonDecode(response.body);
-                           CustomToast.showError(context, body['message'] ?? "Failed to update password");
+                            if (response.statusCode == 200) {
+                              CustomToast.showSuccess(context, "Password Updated Successfully");
+                              if (mounted) Navigator.pop(context);
+                            } else {
+                               CustomToast.showError(context, "Failed to update password: ${ApiService.getErrorMessage(response.body)}");
+                            }
+                          } catch (e) {
+                             debugPrint("Update Password Error: $e");
+                             CustomToast.showError(context, "An error occurred");
+                          } finally {
+                             if (mounted) setState(() => _isLoading = false);
+                          }
                         }
-                      } catch (e) {
-                         print(e);
-                         CustomToast.showError(context, "An error occurred");
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      child: Text(
+                        "Update Password",
+                        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
+                      ),
+                    ),
                   ),
-                  child: Text(
-                    "Update Password",
-                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          if (_isLoading)
+            const Center(child: CustomLoader()),
+        ],
       ),
     );
   }

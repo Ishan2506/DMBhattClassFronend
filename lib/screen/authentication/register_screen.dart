@@ -11,6 +11,7 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/payment_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -175,15 +176,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterPhone;
-                }
-                if (value.length != 10) {
-                  return l10n.phoneMustBeTenDigits;
-                }
-                return null;
-              },
+              validator: ValidationUtils.validateIndianPhoneNumber,
             ),
             const SizedBox(height: 16),
 
@@ -221,15 +214,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterParentMobile;
-                }
-                if (value.length != 10) {
-                  return l10n.phoneMustBeTenDigits;
-                }
-                return null;
-              },
+              validator: ValidationUtils.validateIndianPhoneNumber,
             ),
             const SizedBox(height: 16),
             

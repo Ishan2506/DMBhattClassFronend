@@ -10,6 +10,7 @@ import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 
 class PhoneInputScreen extends StatefulWidget {
   const PhoneInputScreen({super.key});
@@ -145,10 +146,11 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
     return CustomFilledButton(
       label: "ENTER DPIN".toUpperCase(),
       onPressed: () {
-        if (_phoneNoController.text.length != 10) {
+        final validationError = ValidationUtils.validateIndianPhoneNumber(_phoneNoController.text);
+        if (validationError != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Please enter valid 10 digit phone number"),
+            SnackBar(
+              content: Text(validationError),
               backgroundColor: Colors.red,
             ),
           );
