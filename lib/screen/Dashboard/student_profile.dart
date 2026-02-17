@@ -278,16 +278,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         final profile = data['profile'];
 
         setState(() {
-          studentName = "${user['firstName']} ${user['middleName'] ?? ''} ${user['lastName'] ?? ''}".trim();
+             studentName = "${user['firstName']} ${user['middleName'] ?? ''} ${user['lastName'] ?? ''}".trim();
           mobileNo = user['phoneNum'] ?? "";
-          email = user['email'] ?? "";
+          email = user['email'] ?? (profile?['email'] ?? ""); // Check both locations
           _photoPath = user['photoPath'];
           
           if (profile != null) {
              studentStandard = "${profile['std'] ?? 'N/A'}${AppLocalizations.of(context)!.th} - ${profile['medium'] ?? ''}";
              schoolName = profile['school'] ?? (profile['schoolName'] ?? 'N/A'); 
              profilePic = user['photoPath'] ?? ""; // Use photoPath from user
-             parentMobile = profile['parentPhone'] ?? "";
+             // Check parentPhone, then parentNo, then maybe in user object?
+             parentMobile = profile['parentPhone'] ?? (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
           }
         });
       }
