@@ -276,7 +276,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         final data = jsonDecode(profileResponse.body);
         final user = data['user'];
         final profile = data['profile'];
-
+        debugPrint("UserDate ${data}");
         setState(() {
           studentName = "${user['firstName']} ${user['middleName'] ?? ''} ${user['lastName'] ?? ''}".trim();
           mobileNo = user['phoneNum'] ?? "";

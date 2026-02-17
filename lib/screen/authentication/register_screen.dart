@@ -499,6 +499,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         "email": _emailController.text,
                         "phoneNum": _phoneController.text,
+                        "parentPhone": _parentPhoneController.text,
                         "std": _selectedStandard!,
                         "medium": _selectedMedium!,
                         "stream": _selectedStream ?? "",

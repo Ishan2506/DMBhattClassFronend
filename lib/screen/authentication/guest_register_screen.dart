@@ -27,6 +27,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   
   // Controllers
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
@@ -142,6 +143,24 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                 if (value == null || value.isEmpty) {
                   final l10n = AppLocalizations.of(context)!;
                   return l10n.pleaseEnterName;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Email
+            _buildTextField(
+              controller: _emailController,
+              hint: AppLocalizations.of(context)!.email, 
+              icon: Icons.email_outlined,
+              inputType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return AppLocalizations.of(context)!.pleaseEnterEmail;
+                }
+                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                  return AppLocalizations.of(context)!.pleaseEnterValidEmail;
                 }
                 return null;
               },
@@ -479,7 +498,9 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       role: 'guest',
                       fields: {
                         "firstName": firstName,
+                        "email": _emailController.text,
                         "phoneNum": _phoneController.text,
+                        "parentPhone": _parentPhoneController.text,
                         "std": _selectedStandard!,
                         "medium": _selectedMedium!,
                         "board": _selectedBoard!,
