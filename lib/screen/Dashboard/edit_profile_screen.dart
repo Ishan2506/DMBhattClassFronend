@@ -83,7 +83,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         setState(() {
            _nameController.text = user['firstName'] ?? "";
-           _emailController.text = user['email'] ?? "";
+           _emailController.text = user['email'] ?? (profile?['email'] ?? "");
            _phoneController.text = user['phoneNum'] ?? "";
            _cityController.text = user['address']?['city'] ?? "";
            
@@ -91,7 +91,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                _selectedStandard = profile['std'];
                _selectedMedium = profile['medium'];
                _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
-               _parentPhoneController.text = profile['parentPhone'] ?? "";
+               _parentPhoneController.text = profile['parentPhone'] ?? (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
                _selectedBoard = profile['board'];
                _selectedRole = user['loginAs'];
                
