@@ -344,6 +344,10 @@ class AppLocalizationsTa extends AppLocalizations {
       'கடவுச்சொல் குறைந்தது 7 எழுத்துகள் இருக்க வேண்டும்';
 
   @override
+  String get passwordComplexityError =>
+      'Password must have at least one uppercase letter, one digit, and one special character';
+
+  @override
   String get pleaseEnterParentMobile => 'பெற்றோரின் மொபைல் எண்ணை உள்ளிடவும்';
 
   @override
@@ -358,6 +362,10 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'ஒரு பிரிவைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get phoneNumbersCannotBeSame =>
+      'Phone number and Parent\'s mobile number cannot be the same';
 
   @override
   String get addAccount => 'கணக்கைச் சேர்';

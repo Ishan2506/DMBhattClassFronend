@@ -1,7 +1,8 @@
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -103,15 +104,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     _isPasswordVisible = !_isPasswordVisible;
                   });
                 },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter new password';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
+                validator: (value) => ValidationUtils.noFieldError(value, AppLocalizations.of(context)!),
               ),
               const SizedBox(height: 20),
 
@@ -146,6 +139,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
+                       final l10n = AppLocalizations.of(context)!;
+
+                       // Password Complexity Validation
+                       final passwordError = ValidationUtils.validatePasswordForToast(_newPasswordController.text, l10n);
+                       if (passwordError != null) {
+                         CustomToast.showError(context, passwordError);
+                         return;
+                       }
+
                        // Perform Reset Logic (API call etc)
                        ApiService.resetPassword(phone: widget.phone, newPassword: _newPasswordController.text).then((response) {
                           if (response.statusCode == 200) {

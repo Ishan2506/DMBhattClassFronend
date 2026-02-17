@@ -116,6 +116,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    final l10n = AppLocalizations.of(context)!;
+    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
+      CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
+      return;
+    }
 
     setState(() => _isUpdating = true);
 

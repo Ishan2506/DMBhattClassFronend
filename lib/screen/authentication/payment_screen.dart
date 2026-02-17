@@ -45,6 +45,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void _calculateInitialAmount() {
     // Base amounts from the excel requirement
     switch (_std) {
+      case "6":
+        _originalAmount = 300;
+        break;
       case "7":
         _originalAmount = 400;
         break;

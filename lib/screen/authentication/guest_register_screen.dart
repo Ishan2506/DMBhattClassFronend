@@ -80,6 +80,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -173,17 +174,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                   _isPasswordVisible = !_isPasswordVisible;
                 });
               },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return l10n.pleaseEnterPassword;
-                }
-                if (value.length < 7) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return l10n.passwordLengthError;
-                }
-                return null;
-              },
+              validator: (value) => ValidationUtils.noFieldError(value, l10n),
             ),
             const SizedBox(height: 16),
 
@@ -452,23 +443,32 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
               height: MediaQuery.of(context).size.height * 0.07,
               child: ElevatedButton(
                 onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
+                    if (_formKey.currentState!.validate()) {
+                    // Password Complexity Validation
+                    final passwordError = ValidationUtils.validatePasswordForToast(_passwordController.text, l10n);
+                    if (passwordError != null) {
+                      CustomToast.showError(context, passwordError);
+                      return;
+                    }
+
                     if (!_agreedToTerms) {
-                      final l10n = AppLocalizations.of(context)!;
                       CustomToast.showError(context, l10n.pleaseAgreeTerms);
                       return;
                     }
                     // Validate Dropdowns
                      if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedInstitute == null || _selectedBoard == null || _selectedRole == null) {
-                         final l10n = AppLocalizations.of(context)!;
                         CustomToast.showError(context, l10n.pleaseSelectAllFields);
                       return;
                      }
-                      if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
-                         final l10n = AppLocalizations.of(context)!;
+                    if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
                          CustomToast.showError(context, l10n.pleaseSelectStream);
                       return;
                       }
+
+                    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
+                      CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
+                      return;
+                    }
 
                     // Split Name
                     final nameParts = _nameController.text.trim().split(' ');

@@ -192,15 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _isPasswordVisible = !_isPasswordVisible;
                 });
               },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterPassword;
-                }
-                if (value.length < 7) {
-                  return l10n.passwordLengthError;
-                }
-                return null;
-              },
+              validator: (value) => ValidationUtils.noFieldError(value, l10n),
             ),
             const SizedBox(height: 16),
 
@@ -470,6 +462,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+                    // Password Complexity Validation (Toast)
+                    final passwordError = ValidationUtils.validatePasswordForToast(_passwordController.text, l10n);
+                    if (passwordError != null) {
+                      CustomToast.showError(context, passwordError);
+                      return;
+                    }
+
                     if (!_agreedToTerms) {
                       CustomToast.showError(context, l10n.pleaseAgreeTerms);
                       return;
@@ -480,6 +479,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                     if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
                           CustomToast.showError(context, l10n.pleaseSelectStream);
+                      return;
+                    }
+
+                    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
+                      CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
                       return;
                     }
 

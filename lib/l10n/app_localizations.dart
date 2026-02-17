@@ -752,6 +752,12 @@ abstract class AppLocalizations {
   /// **'Password must be at least 7 characters'**
   String get passwordLengthError;
 
+  /// No description provided for @passwordComplexityError.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must have at least one uppercase letter, one digit, and one special character'**
+  String get passwordComplexityError;
+
   /// No description provided for @pleaseEnterParentMobile.
   ///
   /// In en, this message translates to:
@@ -781,6 +787,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please select a stream'**
   String get pleaseSelectStream;
+
+  /// No description provided for @phoneNumbersCannotBeSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number and Parent\'s mobile number cannot be the same'**
+  String get phoneNumbersCannotBeSame;
 
   /// No description provided for @addAccount.
   ///

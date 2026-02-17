@@ -339,6 +339,10 @@ class AppLocalizationsMr extends AppLocalizations {
   String get passwordLengthError => 'पासवर्ड किमान 7 वर्णांचा असावा';
 
   @override
+  String get passwordComplexityError =>
+      'Password must have at least one uppercase letter, one digit, and one special character';
+
+  @override
   String get pleaseEnterParentMobile =>
       'कृपया पालकांचा मोबाइल नंबर प्रविष्ट करा';
 
@@ -353,6 +357,10 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'कृपया एक शाखा निवडा';
+
+  @override
+  String get phoneNumbersCannotBeSame =>
+      'Phone number and Parent\'s mobile number cannot be the same';
 
   @override
   String get addAccount => 'खाते जोडा';

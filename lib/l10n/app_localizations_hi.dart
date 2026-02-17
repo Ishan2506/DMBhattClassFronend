@@ -338,7 +338,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pleaseEnterPassword => 'कृपया पासवर्ड दर्ज करें';
 
   @override
-  String get passwordLengthError => 'पासवर्ड कम से कम 7 वर्णों का होना चाहिए';
+  String get passwordLengthError => 'पासवर्ड कम से कम 6 वर्णों का होना चाहिए';
+
+  @override
+  String get passwordComplexityError =>
+      'पासवर्ड में कम से कम एक बड़ा अक्षर (Capital), एक अंक और एक विशेष वर्ण होना चाहिए';
 
   @override
   String get pleaseEnterParentMobile =>
@@ -355,6 +359,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'कृपया स्ट्रीम चुनें';
+
+  @override
+  String get phoneNumbersCannotBeSame =>
+      'फ़ोन नंबर और माता-पिता का मोबाइल नंबर समान नहीं हो सकता';
 
   @override
   String get addAccount => 'खाता जोड़ें';

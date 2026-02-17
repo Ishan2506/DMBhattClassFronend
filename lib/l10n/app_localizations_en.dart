@@ -337,6 +337,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordLengthError => 'Password must be at least 7 characters';
 
   @override
+  String get passwordComplexityError =>
+      'Password must have at least one uppercase letter, one digit, and one special character';
+
+  @override
   String get pleaseEnterParentMobile => 'Please enter parent\'s mobile number';
 
   @override
@@ -350,6 +354,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'Please select a stream';
+
+  @override
+  String get phoneNumbersCannotBeSame =>
+      'Phone number and Parent\'s mobile number cannot be the same';
 
   @override
   String get addAccount => 'Add Account';

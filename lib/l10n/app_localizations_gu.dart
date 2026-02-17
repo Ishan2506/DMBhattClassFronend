@@ -337,7 +337,11 @@ class AppLocalizationsGu extends AppLocalizations {
   String get pleaseEnterPassword => 'કૃપા કરીને પાસવર્ડ દાખલ કરો';
 
   @override
-  String get passwordLengthError => 'પાસવર્ડ ઓછામાં ઓછો 7 અક્ષરોનો હોવો જોઈએ';
+  String get passwordLengthError => 'પાસવર્ડ ઓછામાં ઓછો 6 અક્ષરોનો હોવો જોઈએ';
+
+  @override
+  String get passwordComplexityError =>
+      'પાસવર્ડમાં ઓછામાં ઓછો એક મોટો અક્ષર (Capital), એક અંક અને એક વિશેષ અક્ષર હોવો આવશ્યક છે';
 
   @override
   String get pleaseEnterParentMobile =>
@@ -354,6 +358,10 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'કૃપા કરીને સ્ટ્રીમ પસંદ કરો';
+
+  @override
+  String get phoneNumbersCannotBeSame =>
+      'ફોન નંબર અને વાલીનો મોબાઈલ નંબર સમાન ન હોઈ શકે';
 
   @override
   String get addAccount => 'ખાતું ઉમેરો';

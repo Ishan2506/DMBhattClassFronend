@@ -4,6 +4,8 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -56,7 +58,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                     hint: "New Password",
                     isVisible: _isNewVisible,
                     onVisibilityChanged: () => setState(() => _isNewVisible = !_isNewVisible),
-                    validator: (val) => val!.length < 6 ? "Minimum 6 chars" : null,
+                    validator: (val) => ValidationUtils.noFieldError(val, AppLocalizations.of(context)!),
                   ),
                   const SizedBox(height: 16),
                   _buildPasswordField(
@@ -77,6 +79,15 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : () async {
                         if (_formKey.currentState!.validate()) {
+                          final l10n = AppLocalizations.of(context)!;
+
+                          // Password Complexity Validation
+                          final passwordError = ValidationUtils.validatePasswordForToast(_newPasswordController.text, l10n);
+                          if (passwordError != null) {
+                            CustomToast.showError(context, passwordError);
+                            return;
+                          }
+
                           setState(() => _isLoading = true);
                           try {
                             final response = await ApiService.updatePassword(
