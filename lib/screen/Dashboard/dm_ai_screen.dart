@@ -148,7 +148,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
 
   bool _isValidChapter(String input) {
     if (_looksLikeQuestion(input)) return false;
-    if (input.length < 3 || input.length > 50) return false;
+    if (input.isEmpty || input.length > 50) return false;
     return true;
   }
 
@@ -244,18 +244,12 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
         return;
       }
       _subject = input;
-      _addBot("Nice! Now tell me the chapter name (Chapter 1, Chapter 2, etc.)");
+      _addBot("Nice! Now tell me the chapter name or number (e.g., 1, 2, or Chapter name)");
       return;
     }
 
     // STEP 3: CHAPTER
     if (_chapter == null) {
-      // 🚨 STRICT VALIDATION: If only digits, reject it
-      if (RegExp(r'^\d+$').hasMatch(input)) {
-         _addBot("❌ Please enter valid format like 'Chapter $input' or topic name.");
-         return; 
-      }
-
       if (!_isValidChapter(input)) {
         _addBot(
             "❌ Chapter name looks invalid. Example: Chapter 3, Geometry");

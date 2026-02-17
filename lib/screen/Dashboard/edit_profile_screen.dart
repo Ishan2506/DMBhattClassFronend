@@ -73,7 +73,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       // Token is managed internally by ApiService
 
-
+      debugPrint("token ${ApiService.userToken}");
       final response = await ApiService.getProfile();
 
       if (response.statusCode == 200) {
