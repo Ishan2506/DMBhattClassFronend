@@ -88,6 +88,11 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                             return;
                           }
 
+                          if (_oldPasswordController.text == _newPasswordController.text) {
+                            CustomToast.showError(context, "New Password cannot be same as Old Password");
+                            return;
+                          }
+
                           setState(() => _isLoading = true);
                           try {
                             final response = await ApiService.updatePassword(
