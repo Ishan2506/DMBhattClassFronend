@@ -9,17 +9,73 @@ import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 
-class MaterialDetailScreen extends StatelessWidget {
+import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+
+class MaterialDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
 
   const MaterialDetailScreen({super.key, required this.product});
 
   @override
+  State<MaterialDetailScreen> createState() => _MaterialDetailScreenState();
+}
+
+class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
+  late RazorpayHelper _razorpayHelper;
+  bool _isPurchased = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpayHelper = RazorpayHelper(
+      context: context,
+      onSuccess: _handlePaymentSuccess,
+      onFailure: _handlePaymentFailure,
+    );
+    // If price is 0, it's free/already purchased
+    if ((widget.product['price'] ?? 0) <= 0) {
+      _isPurchased = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _razorpayHelper.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    CustomToast.showSuccess(context, "Payment Successful: ${response.paymentId}");
+    setState(() {
+      _isPurchased = true;
+    });
+  }
+
+  void _handlePaymentFailure(PaymentFailureResponse response) {
+    CustomToast.showError(context, "Payment Failed: ${response.message}");
+  }
+
+  void _initiatePurchase() {
+    double price = (widget.product['price'] ?? 0).toDouble();
+    _razorpayHelper.openCheckout(
+      amount: price,
+      name: widget.product['name'] ?? "Material",
+      description: "Purchase Material",
+      contact: "", // specific user phone not available here without fetch
+      email: "",
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isPdf = product['image'] != null && product['image'].toString().toLowerCase().contains('.pdf');
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -223,7 +279,7 @@ class MaterialDetailScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     
                     // Preview PDF (Only for PDFs)
-                    if (product['image'] != null && product['image'].toString().toLowerCase().contains('.pdf'))
+                    if (isPdf)
                       _buildActionButton(
                         context: context,
                         label: "Preview PDF",
@@ -244,16 +300,21 @@ class MaterialDetailScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                     
                     // 1. Download PDF (Prominent)
+                    // 1. Action Button (Buy or Download)
                     _buildActionButton(
                       context: context,
-                      label: "Download PDF",
-                      icon: Icons.file_download_outlined,
-                      color: theme.colorScheme.primary, // Use theme color
+                      label: _isPurchased ? (isPdf ? "Download PDF" : "Download Image") : "Buy for ₹${product['price']}",
+                      icon: _isPurchased ? Icons.file_download_outlined : Icons.shopping_cart_outlined,
+                      color: theme.colorScheme.primary,
                       isPrimary: true,
                       onPressed: () {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(content: Text("Downloading PDF...")),
-                         );
+                         if (_isPurchased) {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             SnackBar(content: Text(isPdf ? "Downloading PDF..." : "Downloading Image...")),
+                           );
+                         } else {
+                           _initiatePurchase();
+                         }
                       },
                     ),
 

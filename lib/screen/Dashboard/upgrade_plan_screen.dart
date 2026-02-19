@@ -8,7 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 class UpgradePlanScreen extends StatefulWidget {
   const UpgradePlanScreen({super.key});
 
@@ -40,12 +41,33 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   String? _currentStandard;
   bool _isLoading = true;
   bool _isGuest = false;
+  late RazorpayHelper _razorpayHelper;
 
   @override
   void initState() {
     super.initState();
     _fetchUserProfile();
     _fetchBonusPoints();
+    _razorpayHelper = RazorpayHelper(
+      context: context,
+      onSuccess: _handlePaymentSuccess,
+      onFailure: _handlePaymentFailure,
+    );
+  }
+
+  @override
+  void dispose() {
+    _razorpayHelper.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    CustomToast.showSuccess(context, "Payment Successful: ${response.paymentId}");
+    _processUpgrade(paymentId: response.paymentId);
+  }
+
+  void _handlePaymentFailure(PaymentFailureResponse response) {
+    CustomToast.showError(context, "Payment Failed: ${response.message}");
   }
 
   Future<void> _fetchUserProfile() async {
@@ -225,7 +247,43 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     CustomToast.showSuccess(context, l10n.pointsAppliedAmount(discount.toStringAsFixed(0)));
   }
 
-  Future<void> _processUpgrade() async {
+  void _initiatePayment() {
+    if (_isGuest) {
+       GuestUtils.showGuestRestrictionDialog(
+         context,
+         message: "Guests cannot upgrade plans. Please register as a full student to access premium features."
+       );
+       return;
+    }
+    if (_selectedStandard == null || _selectedMedium == null) {
+       final l10n = AppLocalizations.of(context)!;
+       CustomToast.showError(context, l10n.selectStandardMediumError);
+       return;
+    }
+    if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
+       final l10n = AppLocalizations.of(context)!;
+       CustomToast.showError(context, l10n.selectStreamError);
+       return;
+    }
+
+    if (_finalAmount <= 0) {
+      _processUpgrade(paymentId: "FREE_UPGRADE");
+      return;
+    }
+
+    // Need user details for Razorpay prefill
+    // Ideally we should have fetched email/phone in _fetchUserProfile
+    // For now passing empty strings or we need to store them in variables
+    _razorpayHelper.openCheckout(
+      amount: _finalAmount,
+      name: "DM Bhatt Tuitions",
+      description: "Upgrade to Standard $_selectedStandard",
+      contact: "", // specific user phone not in state, maybe fetch or leave empty
+      email: "",
+    );
+  }
+
+  Future<void> _processUpgrade({String? paymentId}) async {
     if (_isGuest) {
        GuestUtils.showGuestRestrictionDialog(
          context,
@@ -246,15 +304,27 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
     try {
       CustomLoader.show(context);
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      CustomLoader.show(context);
+      
+      final Map<String, dynamic> updateData = {
+        "std": _selectedStandard,
+        "medium": _selectedMedium,
+        "stream": _selectedStream ?? "",
+        if (paymentId != null) "paymentId": paymentId,
+      };
+
+      final response = await ApiService.updateProfile(updateData);
       
       if (!mounted) return;
       CustomLoader.hide(context);
 
-      final l10n = AppLocalizations.of(context)!;
-      CustomToast.showSuccess(context, l10n.planUpgradeSuccess);
-      Navigator.pop(context);
+      if (response.statusCode == 200) {
+        final l10n = AppLocalizations.of(context)!;
+        CustomToast.showSuccess(context, l10n.planUpgradeSuccess);
+        Navigator.pop(context); // Go back
+      } else {
+        CustomToast.showError(context, "Upgrade Failed: ${response.body}");
+      }
     } catch (e) {
        if (mounted) {
          CustomLoader.hide(context);
@@ -456,7 +526,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _processUpgrade,
+                  onPressed: _initiatePayment,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
