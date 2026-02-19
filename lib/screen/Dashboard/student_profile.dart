@@ -10,8 +10,10 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/add_account_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/constant/app_images.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
@@ -20,7 +22,6 @@ class StudentProfileScreen extends StatefulWidget {
   State<StudentProfileScreen> createState() => _StudentProfileScreenState();
 
 
-/*
   static Future<void> showSwitchAccountSheet(BuildContext context, {String? name, String? phone, String? pic}) async {
     final prefs = await SharedPreferences.getInstance();
     
@@ -194,10 +195,16 @@ class StudentProfileScreen extends StatefulWidget {
     List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
     List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
 
-    // Check if current token exists in accounts
-    int index = accounts.indexWhere((acc) => acc['token'] == token);
+    // Try to match by Phone (most reliable), then Token
+    int index = -1;
+    if (phone != null && phone.isNotEmpty && phone != "Signed In") {
+      index = accounts.indexWhere((acc) => acc['phone'] == phone);
+    }
+    if (index == -1) {
+      index = accounts.indexWhere((acc) => acc['token'] == token);
+    }
     
-    // Create updated account object from current profile state
+    // Create updated account object
     final updatedAccount = {
          'token': token,
          'name': (name != null && name.isNotEmpty) ? name : "User",
@@ -209,15 +216,28 @@ class StudentProfileScreen extends StatefulWidget {
     };
 
     if (index != -1) {
-       // Update existing entry with latest name/phone/pic if available
+       // Merge updates
+       final existing = accounts[index];
        accounts[index] = {
-         ...accounts[index],
-         'name': (name != null && name.isNotEmpty) ? name : accounts[index]['name'],
-         'phone': (phone != null && phone.isNotEmpty) ? phone : accounts[index]['phone'],
-         'profilePic': (pic != null && pic.isNotEmpty) ? pic : accounts[index]['profilePic'],
+         ...existing,
+         'token': token, // Ensure token is latest
+         'name': (name != null && name.isNotEmpty) ? name : existing['name'],
+         'phone': (phone != null && phone.isNotEmpty) ? phone : existing['phone'],
+         'profilePic': (pic != null && pic.isNotEmpty) ? pic : existing['profilePic'],
+         'password': prefs.getString('user_password') ?? existing['password'],
+         'userId': prefs.getString('userId') ?? existing['userId'],
+         'std': prefs.getString('std') ?? existing['std'],
        };
     } else {
-       // Add new
+       // Prevent duplicates if by chance token changed but phone is same (handled by phone check above),
+       // or if fully new. limit to 3.
+       if (accounts.length >= 3) {
+         // Should we remove the oldest? Or just fail? 
+         // For now, let's keep it simple. If we are just saving CURRENT, we should probably allow it or replace the non-active one?
+         // User didn't specify replacement policy. We'll just add if space.
+         // Realistically, ensureCurrent shouldn't fail silently, but for safety:
+         if (accounts.isNotEmpty) accounts.removeAt(0); // Remove oldest
+       }
        accounts.add(updatedAccount);
     }
     
@@ -225,23 +245,65 @@ class StudentProfileScreen extends StatefulWidget {
   }
 
   static Future<void> _switchUser(BuildContext context, Map<String, dynamic> account) async {
+     CustomLoader.show(context);
      final prefs = await SharedPreferences.getInstance();
      
-     // Set new active session
-     await ApiService.setAuthToken(account['token']);
-     if (account['password'] != null) await prefs.setString('user_password', account['password']);
-     if (account['userId'] != null) await prefs.setString('userId', account['userId']);
-     if (account['std'] != null) await prefs.setString('std', account['std']);
-     
-     //CustomToast.showSuccess(context, "Switched to ${account['name']}");
-     
-     Navigator.pushAndRemoveUntil(
-       context,
-       MaterialPageRoute(builder: (context) => const LandingScreen()),
-       (route) => false,
-     );
+     try {
+       String token = account['token'];
+       
+       // 1. Attempt Background Login to refresh session
+       if (account['phone'] != null && 
+           account['password'] != null && 
+           account['phone'].toString().length >= 10 && 
+           account['password'].toString().isNotEmpty) {
+           
+           try {
+             final response = await ApiService.loginUser(
+               loginCode: account['password'],
+               phoneNum: account['phone'],
+             );
+             
+             if (response.statusCode == 200) {
+               final data = jsonDecode(response.body);
+               token = data['token'];
+               
+               // Update the local list with the new token so next time it's fresh
+               List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
+               List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
+               
+               int idx = accounts.indexWhere((acc) => acc['phone'] == account['phone']);
+               if (idx != -1) {
+                 accounts[idx]['token'] = token;
+                 await prefs.setStringList('saved_accounts', accounts.map((e) => jsonEncode(e)).toList());
+               }
+             }
+           } catch (e) {
+             print("Background login failed: $e");
+             // Fallback to existing token
+           }
+       }
+
+       // 2. Set Active Session
+       await ApiService.setAuthToken(token);
+       if (account['password'] != null) await prefs.setString('user_password', account['password']);
+       if (account['userId'] != null) await prefs.setString('userId', account['userId']);
+       if (account['std'] != null) await prefs.setString('std', account['std']);
+       
+       if (context.mounted) {
+         CustomLoader.hide(context);
+         Navigator.pushAndRemoveUntil(
+           context,
+           MaterialPageRoute(builder: (context) => const LandingScreen()),
+           (route) => false,
+         );
+       }
+     } catch (e) {
+       if (context.mounted) {
+         CustomLoader.hide(context);
+         CustomToast.showError(context, "Switch failed: $e");
+       }
+     }
   }
-*/
 }
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
@@ -490,7 +552,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             const SizedBox(height: 32),
 
             // 4. Switch Account Section (Clearly Visible)
-            // _buildSwitchAccountSection(context, theme),
+            _buildSwitchAccountSection(context, theme),
 
             const SizedBox(height: 32),
 
@@ -500,19 +562,41 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.recentPerformance,
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        l10n.recentPerformance,
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      if (_examResults.isNotEmpty)
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const StudentExamHistoryScreen()),
+                            );
+                          },
+                          child: Text(
+                            l10n.seeAll,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   if (_examResults.isEmpty)
                     _buildEmptyPerformance(theme)
                   else
-                    ..._examResults.take(3).map((exam) => Padding(
+                    ..._examResults.take(2).map((exam) => Padding( // Changed to take(2)
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _buildMarksCard(
                             context,
@@ -654,7 +738,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     );
   }
 
-/*
   Widget _buildSwitchAccountSection(BuildContext context, ThemeData theme) {
     return FutureBuilder<SharedPreferences>(
       future: SharedPreferences.getInstance(),
@@ -712,7 +795,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     itemBuilder: (context, index) {
                       final acc = otherAccounts[index];
                       return GestureDetector(
-                        onTap: () => StudentProfileScreen._switchUser(context, acc),
+                        onTap: () async {
+                           // Save the CURRENT user state first so we don't lose it
+                           final prefs = await SharedPreferences.getInstance();
+                           await StudentProfileScreen._ensureCurrentAccountSaved(
+                             prefs, 
+                             name: studentName, 
+                             phone: mobileNo, 
+                             pic: _photoPath
+                           );
+
+                           if (!context.mounted) return;
+                           await StudentProfileScreen._switchUser(context, acc);
+                        },
                         child: Container(
                           margin: const EdgeInsets.only(right: 12),
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -747,7 +842,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 const SizedBox(height: 16),
                 Center(
                   child: TextButton.icon(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAccountScreen())),
+                    onPressed: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      // Ensure current profile is updated before adding a new one
+                      await StudentProfileScreen._ensureCurrentAccountSaved(
+                        prefs,
+                        name: studentName,
+                        phone: mobileNo,
+                        pic: _photoPath,
+                      );
+                      if (!context.mounted) return;
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAccountScreen()));
+                    },
                     icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
                     label: Text(l10n.addAnotherAccount),
                     style: TextButton.styleFrom(
@@ -763,7 +869,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       },
     );
   }
-*/
 
   Widget _buildMarksCard(BuildContext context,
       {required String title, required String marks, required Color color, bool isOnline = false, required VoidCallback onTap, required AppLocalizations l10n}) {

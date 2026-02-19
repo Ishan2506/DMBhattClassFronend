@@ -56,7 +56,33 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
     "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
     "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
     "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
+    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
   };
+
+  void _showTermsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Terms and Conditions", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Text(
+            "1. By registering as a guest, you agree to abide by the rules and regulations of DM Bhatt Classes.\n\n"
+            "2. Ensure all provided information is accurate and up-to-date.\n\n"
+            "3. The institute reserves the right to modify the curriculum and schedule as needed.\n\n"
+            "4. Respectful behavior towards staff and fellow students is mandatory.\n\n"
+            "5. Unauthorized sharing of study material is strictly prohibited.\n\n",
+            style: GoogleFonts.poppins(fontSize: 14),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Close", style: GoogleFonts.poppins(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<List<String>> _fetchSchools(String query) async {
     if (_selectedCity == null || query.isEmpty) return [];
@@ -443,13 +469,16 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                   AppLocalizations.of(context)!.agreeTerms,
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
                 ),
-                Text(
-                  AppLocalizations.of(context)!.termsConditions,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12, 
-                    color: Colors.blue.shade700, 
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.underline,
+                GestureDetector(
+                  onTap: _showTermsDialog,
+                  child: Text(
+                    AppLocalizations.of(context)!.termsConditions,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12, 
+                      color: Colors.blue.shade700, 
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ],
@@ -484,8 +513,21 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       return;
                       }
 
+                    // Validate Phone != Parent Phone
                     if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
                       CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
+                      return;
+                    }
+
+                    // Check if User Exists
+                    CustomLoader.show(context);
+                    final exists = await ApiService.checkUserExists(_phoneController.text);
+                    
+                    if (!mounted) return;
+                    CustomLoader.hide(context);
+                    
+                    if (exists) {
+                      CustomToast.showError(context, "Mobile number already registered. Please login.");
                       return;
                     }
 

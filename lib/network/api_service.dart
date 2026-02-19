@@ -414,4 +414,33 @@ class ApiService {
     final uri = Uri.parse("$baseUrl/games/$gameType");
     return _handleSession(await http.get(uri));
   }
+
+  /// Checks if a user exists by attempting a login with a dummy password.
+  /// Returns YES if user exists (Invalid Credentials/Success), NO if User Not Found.
+  static Future<bool> checkUserExists(String phone) async {
+    try {
+      // using a dummy password that is unlikely to be correct
+      final response = await loginUser(
+        loginCode: "DUMMY_PASSWORD_CHECK_123", 
+        phoneNum: phone
+      );
+
+      if (response.statusCode == 200) {
+         return true; // Exists (and somehow password matched??)
+      } else if (response.statusCode == 404) {
+         return false; // User not found
+      } else {
+         // 400, 401 usually mean Invalid Credentials => User Exists
+         // We need to be careful about other errors, but typically:
+         // "User not found" is distinctive.
+         final body = jsonDecode(response.body);
+         if (body['message'] == "User not found") {
+           return false;
+         }
+         return true; // Default to assuming exist if other error (like wrong password)
+      }
+    } catch (_) {
+      return false; // Assume not exist or network error (fail safe to allow try)
+    }
+  }
 }

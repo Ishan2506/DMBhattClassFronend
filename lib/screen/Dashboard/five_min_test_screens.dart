@@ -4,6 +4,7 @@ import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
@@ -159,7 +160,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
         ],
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator()) 
+        ? const CustomLoader() 
         : _allTests.isEmpty 
            ? const Center(child: Text("No tests available."))
            : Padding(
@@ -214,7 +215,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                   ),
                   child: ElevatedButton(
                     onPressed: _selectedTest != null 
-                        ? () {
+                        ? () async {
                             if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
                               showDialog(
                                 context: context,
@@ -231,16 +232,22 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                               );
                               return;
                             }
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FiveMinTestInstructionScreen(
-                                  subject: _selectedSubject!,
-                                  unit: _selectedUnit!,
-                                  testData: _selectedTest,
+                            
+                            CustomLoader.show(context);
+                            await Future.delayed(const Duration(milliseconds: 500));
+                            if (context.mounted) {
+                              CustomLoader.hide(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => FiveMinTestInstructionScreen(
+                                    subject: _selectedSubject!,
+                                    unit: _selectedUnit!,
+                                    testData: _selectedTest,
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            }
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
@@ -519,17 +526,22 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                    : null,
                ),
                child: ElevatedButton(
-                 onPressed: _canProceed ? () {
-                   Navigator.pushReplacement(
-                     context,
-                     MaterialPageRoute(
-                       builder: (context) => FiveMinQuizScreen(
-                         subject: widget.subject,
-                         unit: widget.unit,
-                         testData: widget.testData,
+                 onPressed: _canProceed ? () async {
+                   CustomLoader.show(context);
+                   await Future.delayed(const Duration(milliseconds: 500));
+                   if (context.mounted) {
+                     CustomLoader.hide(context);
+                     Navigator.pushReplacement(
+                       context,
+                       MaterialPageRoute(
+                         builder: (context) => FiveMinQuizScreen(
+                           subject: widget.subject,
+                           unit: widget.unit,
+                           testData: widget.testData,
+                         ),
                        ),
-                     ),
-                   );
+                     );
+                   }
                  } : null, // Functionally disabled
                  style: ElevatedButton.styleFrom(
                    backgroundColor: Colors.transparent,
@@ -645,6 +657,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
 
     Future<void> _submitAndNavigate() async {
       try {
+        CustomLoader.show(context);
         // Token managed internally
         await ApiService.submitExamResult(
           examId: widget.testData['_id'],
@@ -658,6 +671,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
       }
 
       if (mounted) {
+        CustomLoader.hide(context);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(

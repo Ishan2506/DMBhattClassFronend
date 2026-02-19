@@ -48,6 +48,10 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
 
           final token = data['token'];
           
+          // IMPORTANT: Set this new token as active BEFORE fetching profile
+          // Otherwise getProfile() will use the OLD token and return the OLD user's data!
+          await ApiService.setAuthToken(token);
+          
           // Fetch profile to get name and details
           String name = "User";
           String std = "";
@@ -62,12 +66,14 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                final profile = profileData['profile'];
                
                if (user != null) {
-                 name = user['fname'] ?? "User";
+                 // Prioritize firstName as seen in StudentProfileScreen, fallback to fname
+                 name = "${user['firstName'] ?? user['fname'] ?? 'User'} ${user['lastName'] ?? ''}".trim();
+                 if (name.isEmpty) name = "User";
                  userId = user['_id'] ?? "";
                }
                if (profile != null) {
                  std = profile['std'] ?? "";
-                 profilePic = profile['profile_pic'] ?? "";
+                 profilePic = profile['profile_pic'] ?? (user != null ? user['photoPath'] : "") ?? "";
                }
              }
           } catch (e) {

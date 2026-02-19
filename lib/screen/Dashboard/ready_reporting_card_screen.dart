@@ -24,6 +24,8 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   DateTimeRange? _selectedDateRange;
+  String _selectedSubject = "All";
+  List<String> _subjects = ["All"];
   bool _isLoading = true;
   List<dynamic> _allExams = [];
   List<dynamic> _manualExams = [];
@@ -48,17 +50,25 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final List<dynamic> results = data['examResults'] ?? [];
+          
+          // Extract unique subjects
+          Set<String> subjectSet = {"All"};
+          for (var exam in results) {
+            if (exam['subject'] != null) {
+              subjectSet.add(exam['subject']);
+            }
+          }
+
           setState(() {
             _allExams = results;
+            _subjects = subjectSet.toList();
             _filterExams(); 
             _isLoading = false;
           });
         } else {
-             // Handle error
              setState(() => _isLoading = false);
         }
       } else {
-          // Handle no token
            setState(() => _isLoading = false);
       }
     } catch (e) {
@@ -68,15 +78,21 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
   }
 
   void _filterExams() {
-    // Filter by date range if selected
     List<dynamic> filtered = _allExams;
+    
+    // Filter by Date Range
     if (_selectedDateRange != null) {
-      filtered = _allExams.where((exam) {
+      filtered = filtered.where((exam) {
         final examDate = DateTime.tryParse(exam['date'] ?? "");
         if (examDate == null) return false;
         return examDate.isAfter(_selectedDateRange!.start.subtract(const Duration(days: 1))) &&
             examDate.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
       }).toList();
+    }
+
+    // Filter by Subject
+    if (_selectedSubject != "All") {
+      filtered = filtered.where((exam) => exam['subject'] == _selectedSubject).toList();
     }
 
     _appExams = filtered.where((e) => e['isOnline'] == true).toList();
@@ -119,7 +135,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
-        title: "Reporting Card", // TODO: Add to l10n
+        title: "Reporting Card",
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
@@ -127,9 +143,9 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
           indicatorWeight: 3,
-          tabs: [
-            Tab(text: "Manual Exam Mark"), // TODO: Add to l10n
-            Tab(text: "Application Exam Mark"), // TODO: Add to l10n
+          tabs: const [
+            Tab(text: "Manual Exam Mark"),
+            Tab(text: "Application Exam Mark"),
           ],
         ),
         actions: [
@@ -143,23 +159,58 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                Padding(
+                // Date Range and Subject Filter
+                Container(
                   padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  color: colorScheme.surface,
+                  child: Column(
                     children: [
-                      Text(
-                        _selectedDateRange == null
-                            ? "Select Date Range" // TODO: Add to l10n
-                            : "${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd').format(_selectedDateRange!.end)}",
-                        style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            color: colorScheme.onSurface),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _selectedDateRange == null
+                                ? "Select Date Range"
+                                : "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
+                            style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: colorScheme.onSurface),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.calendar_month,
+                                color: colorScheme.primary),
+                            onPressed: () => _selectDateRange(context),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(Icons.calendar_month,
-                            color: colorScheme.primary),
-                        onPressed: () => _selectDateRange(context),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 40,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _subjects.length,
+                          itemBuilder: (context, index) {
+                            final subject = _subjects[index];
+                            final isSelected = _selectedSubject == subject;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: FilterChip(
+                                selected: isSelected,
+                                label: Text(subject, style: GoogleFonts.poppins(fontSize: 12)),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _selectedSubject = subject;
+                                    _filterExams();
+                                  });
+                                },
+                                selectedColor: colorScheme.primary.withOpacity(0.2),
+                                checkmarkColor: colorScheme.primary,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -179,14 +230,15 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
   }
 
   Widget _buildReportView(List<dynamic> exams) {
+    final colorScheme = Theme.of(context).colorScheme;
     if (exams.isEmpty) {
-      return Center(child: Text("No exams found for this period.", style: GoogleFonts.poppins()));
+      return Center(child: Text("No exams found for this selection.", style: GoogleFonts.poppins()));
     }
 
-    // Prepare chart data
-    // Simply mapping index to x, percentage to y
     List<BarChartGroupData> barGroups = [];
-    double maxPercentage = 0;
+    double totalMaxPercentage = 0;
+    num totalObtained = 0;
+    num totalPossible = 0;
     
     for (int i = 0; i < exams.length; i++) {
         final exam = exams[i];
@@ -194,49 +246,85 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
         final total = (exam['totalMarks'] as num).toDouble();
         final percentage = total == 0 ? 0.0 : (obtained / total) * 100;
         
-        if (percentage > maxPercentage) maxPercentage = percentage;
+        totalObtained += exam['obtainedMarks'] as num;
+        totalPossible += exam['totalMarks'] as num;
+
+        if (percentage > totalMaxPercentage) totalMaxPercentage = percentage;
 
         barGroups.add(
             BarChartGroupData(
                 x: i,
                 barRods: [
+                    // Obtained Mark Bar
                     BarChartRodData(
-                        toY: percentage,
-                        color: percentage >= 90 ? Colors.green : (percentage >= 50 ? Colors.blue : Colors.red),
-                        width: 16,
-                        borderRadius: BorderRadius.circular(4),
+                        toY: obtained,
+                        color: colorScheme.primary,
+                        width: 8,
+                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+                    ),
+                    // Total Mark Bar (Gray/Black background effect)
+                    BarChartRodData(
+                        toY: total,
+                        color: Colors.grey.withOpacity(0.3),
+                        width: 8,
+                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
                     ),
                 ],
+                barsSpace: 4,
             ),
         );
     }
+
+    final double overAllPercentage = totalPossible == 0 ? 0 : (totalObtained / totalPossible) * 100;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Legend
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendItem("Obtained Mark", colorScheme.primary),
+              const SizedBox(width: 20),
+              _buildLegendItem("Total Mark", Colors.grey.withOpacity(0.3)),
+            ],
+          ),
+          const SizedBox(height: 16),
           // Bar Chart Section
           SizedBox(
             height: 250,
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: 100,
-                barTouchData: BarTouchData(enabled: true),
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    tooltipBgColor: colorScheme.surfaceContainerHigh,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                       final exam = exams[group.x.toInt()];
+                       String label = rodIndex == 0 ? "Obtained: " : "Total: ";
+                       return BarTooltipItem(
+                         "$label${rod.toY}",
+                         GoogleFonts.poppins(color: colorScheme.onSurface, fontSize: 12),
+                       );
+                    }
+                  )
+                ),
                 titlesData: FlTitlesData(
                   show: true,
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
+                      reservedSize: 30,
                       getTitlesWidget: (double value, TitleMeta meta) {
                         int index = value.toInt();
                         if (index >= 0 && index < exams.length) {
                              String title = exams[index]['title'] ?? "";
-                             if (title.length > 5) title = "${title.substring(0, 5)}...";
+                             if (title.length > 8) title = "${title.substring(0, 6)}..";
                              return Padding(
                                padding: const EdgeInsets.only(top: 8.0),
-                               child: Text(title, style: const TextStyle(fontSize: 10)),
+                               child: Text(title, style: const TextStyle(fontSize: 9)),
                              );
                         }
                         return const SizedBox.shrink();
@@ -244,13 +332,13 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                     ),
                   ),
                   leftTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 35),
                   ),
                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 gridData: FlGridData(show: true, drawVerticalLine: false),
-                borderData: FlBorderData(show: true),
+                borderData: FlBorderData(show: false),
                 barGroups: barGroups,
               ),
             ),
@@ -258,37 +346,41 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
           
           const SizedBox(height: 24),
           
-          // Highest Mark & Grade Section
+          // Performance Summary Card
           Container(
+             width: double.infinity,
              padding: const EdgeInsets.all(16),
              decoration: BoxDecoration(
-                 color: Theme.of(context).colorScheme.surfaceContainer,
-                 borderRadius: BorderRadius.circular(12),
+                 color: colorScheme.surfaceContainer,
+                 borderRadius: BorderRadius.circular(16),
+                 border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
              ),
              child: Column(
                  crossAxisAlignment: CrossAxisAlignment.start,
                  children: [
                      Text("Performance Summary", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-                     const SizedBox(height: 12),
-                     Row(
-                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                         children: [
-                             Text("Highest Percentage:", style: GoogleFonts.poppins()),
-                             Text("${maxPercentage.toStringAsFixed(1)}%", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.green)),
-                         ],
-                     ),
-                     const Divider(),
-                      Text("Remarks:", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      Text("Professor: $_remark", style: GoogleFonts.poppins(fontStyle: FontStyle.italic)),
+                     const SizedBox(height: 16),
+                     _buildSummaryRow("Total Marks Obtained:", "$totalObtained/$totalPossible"),
+                     _buildSummaryRow("Overall Percentage:", "${overAllPercentage.toStringAsFixed(1)}%"),
+                     _buildSummaryRow("Highest Mark in Class:", "${exams.fold(0, (max, e) => (e['highestMark'] ?? 0) > max ? e['highestMark'] : max)}", isBold: true),
+                     const Divider(height: 24),
+                      Text("Professor's Remarks:", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
+                      const SizedBox(height: 8),
+                      Text("\"$_remark\"", style: GoogleFonts.poppins(fontStyle: FontStyle.italic, color: colorScheme.onSurfaceVariant)),
                  ],
              ),
           ),
 
           const SizedBox(height: 24),
 
-          // Detailed List
-          Text("Exam Details", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
+          // Detailed List (Table Style)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Exam Details", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
+              Text("Scroll for more", style: GoogleFonts.poppins(fontSize: 10, color: colorScheme.onSurfaceVariant)),
+            ],
+          ),
           const SizedBox(height: 12),
           ListView.builder(
             shrinkWrap: true,
@@ -298,33 +390,93 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
               final exam = exams[index];
               final obtained = (exam['obtainedMarks'] as num).toDouble();
               final total = (exam['totalMarks'] as num).toDouble();
+              final highest = (exam['highestMark'] as num? ?? 0).toDouble();
               final percentage = total == 0 ? 0.0 : (obtained / total) * 100;
               final grade = _calculateGrade(percentage);
 
-              return Card(
-                elevation: 0,
-                color: Theme.of(context).colorScheme.surface,
-                shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                    borderRadius: BorderRadius.circular(8)),
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  title: Text(exam['title'] ?? "Unknown Exam", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                  subtitle: Text(DateFormat('MMM dd, yyyy').format(DateTime.parse(exam['date'] ?? DateTime.now().toIso8601String()))),
-                  trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                          Text("${percentage.toStringAsFixed(1)}%", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                          Text("Grade: $grade", style: GoogleFonts.poppins(fontSize: 12, color: _getGradeColor(grade))),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(exam['title'] ?? "Unknown Exam", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text(exam['subject'] ?? "General", style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.primary)),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getGradeColor(grade).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(grade, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: _getGradeColor(grade))),
+                        ),
                       ],
-                  ),
+                    ),
+                    const Divider(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildStatColumn("Obtained", "${obtained.toInt()}"),
+                        _buildStatColumn("Total", "${total.toInt()}"),
+                        _buildStatColumn("Highest", "${highest.toInt()}"),
+                        _buildStatColumn("Per(%)", "${percentage.toStringAsFixed(1)}%"),
+                      ],
+                    ),
+                  ],
                 ),
               );
             },
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      children: [
+        Container(width: 12, height: 12, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 8),
+        Text(label, style: GoogleFonts.poppins(fontSize: 11)),
+      ],
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: GoogleFonts.poppins(fontSize: 13)),
+          Text(value, style: GoogleFonts.poppins(fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatColumn(String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Text(label, style: GoogleFonts.poppins(fontSize: 10, color: colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 4),
+        Text(value, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13)),
+      ],
     );
   }
 
@@ -347,13 +499,14 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
   Future<void> _generatePDF(BuildContext context) async {
     final pdf = pw.Document();
 
-    // Use current tab's exams
+    // Use filtered exams
     final exams = _tabController.index == 0 ? _manualExams : _appExams;
     final title = _tabController.index == 0 ? "Manual Exam Report" : "Application Exam Report";
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -362,53 +515,105 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                pw.Row(
                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                    children: [
-                       pw.Text("Padhku", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-                       // Scan QR to download app
+                       pw.Column(
+                         crossAxisAlignment: pw.CrossAxisAlignment.start,
+                         children: [
+                           pw.Text("Padhku", style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+                           pw.Text("D. M. Bhatt Tuition Classes", style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                         ]
+                       ),
                        pw.Column(
                            children: [
                                pw.BarcodeWidget(
                                    barcode: pw.Barcode.qrCode(),
-                                   data: "https://play.google.com/store/apps/details?id=com.dmbhatt.tutions", // App Link
-                                   width: 60,
-                                   height: 60,
+                                   data: "https://play.google.com/store/apps/details?id=com.dmbhatt.tutions",
+                                   width: 50,
+                                   height: 50,
                                ),
-                               pw.Text("Scan to Download App", style: const pw.TextStyle(fontSize: 8)),
+                               pw.SizedBox(height: 4),
+                               pw.Text("Scan to Download", style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
                            ]
                        )
                    ]
                ),
-               pw.Divider(),
+               pw.Divider(thickness: 2, color: PdfColors.blue900),
                pw.SizedBox(height: 20),
-               pw.Center(child: pw.Text(title, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold))),
+               pw.Center(child: pw.Text(title, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold))),
                pw.SizedBox(height: 10),
-               if (_selectedDateRange != null)
-                   pw.Center(child: pw.Text("Period: ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.start)} - ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.end)}")),
+               pw.Row(
+                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                 children: [
+                    if (_selectedDateRange != null)
+                      pw.Text("Period: ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.start)} - ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.end)}", style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text("Subject: $_selectedSubject", style: const pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                 ]
+               ),
                
-               pw.SizedBox(height: 20),
+               pw.SizedBox(height: 24),
 
                // Table
                pw.Table.fromTextArray(
-                   headers: ["Date", "Exam Title", "Obtained/Total", "Percentage", "Grade"],
+                   headers: ["Date", "Subject", "Paper Title", "Total Mark", "Obt. Mark", "High. Mark", "Per(%)", "Grade"],
                    data: exams.map((e) {
                        final obtained = (e['obtainedMarks'] as num).toDouble();
                        final total = (e['totalMarks'] as num).toDouble();
+                       final highest = (e['highestMark'] as num? ?? 0).toDouble();
                        final percentage = total == 0 ? 0.0 : (obtained / total) * 100;
                        return [
                            DateFormat('dd MMM').format(DateTime.parse(e['date'] ?? DateTime.now().toIso8601String())),
+                           e['subject'] ?? "General",
                            e['title'] ?? "",
-                           "${obtained.toInt()}/${total.toInt()}",
+                           "${total.toInt()}",
+                           "${obtained.toInt()}",
+                           "${highest.toInt()}",
                            "${percentage.toStringAsFixed(1)}%",
                            _calculateGrade(percentage)
                        ];
                    }).toList(),
-                   headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                   headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                   headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                   headerDecoration: const pw.BoxDecoration(color: PdfColors.blue900),
                    cellAlignment: pw.Alignment.centerLeft,
+                   cellStyle: const pw.TextStyle(fontSize: 8),
+                   headerHeight: 25,
+                   cellHeight: 20,
+                   columnWidths: {
+                     0: const pw.FixedColumnWidth(40),
+                     1: const pw.FixedColumnWidth(55),
+                     2: const pw.FlexColumnWidth(),
+                     3: const pw.FixedColumnWidth(40),
+                     4: const pw.FixedColumnWidth(40),
+                     5: const pw.FixedColumnWidth(40),
+                     6: const pw.FixedColumnWidth(40),
+                     7: const pw.FixedColumnWidth(30),
+                   }
+               ),
+
+               pw.SizedBox(height: 30),
+               pw.Container(
+                 padding: const pw.EdgeInsets.all(10),
+                 decoration: pw.BoxDecoration(
+                   border: pw.Border.all(color: PdfColors.grey400),
+                   borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+                 ),
+                 child: pw.Column(
+                   crossAxisAlignment: pw.CrossAxisAlignment.start,
+                   children: [
+                     pw.Text("Professor's Remarks:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11)),
+                     pw.SizedBox(height: 5),
+                     pw.Text("\"$_remark\"", style: pw.TextStyle(fontStyle: pw.FontStyle.italic, fontSize: 10)),
+                   ]
+                 )
                ),
 
                pw.Spacer(),
-               pw.Divider(),
-               pw.Text("Report Generated on: ${DateFormat('dd MMM yyyy').format(DateTime.now())}", style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
+               pw.Divider(color: PdfColors.grey400),
+               pw.Row(
+                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                 children: [
+                   pw.Text("Generated via Padhku Student App", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                   pw.Text("Date: ${DateFormat('dd MMM yyyy HH:mm').format(DateTime.now())}", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                 ]
+               ),
             ],
           );
         },
@@ -418,6 +623,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
     // Share/Print
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: "Padhku_Report_${_selectedSubject.replaceAll(' ', '_')}",
     );
   }
 }

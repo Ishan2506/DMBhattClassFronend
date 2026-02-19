@@ -47,6 +47,8 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
 
   Future<void> _fetchReferralData() async {
     setState(() => _isLoading = true);
+    // Removed CustomLoader.show(context) here as it causes issues when called immediately.
+    // relying on _isLoading
     try {
       final prefs = await SharedPreferences.getInstance();
       // Token managed internally
@@ -76,6 +78,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
             _studentName = name;
             _isLoading = false;
           });
+          // Removed CustomLoader.hide(context);
         }
       } else {
         // If 404 or other error, handle gracefully (e.g., allow generating first code)
@@ -85,6 +88,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
              // Default values if no data found yet
              _referralCode = "Generate Code"; 
            });
+           // Removed CustomLoader.hide(context);
         }
       }
     } catch (e) {
@@ -93,6 +97,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
         setState(() {
           _isLoading = false;
         });
+        // Removed CustomLoader.hide(context);
         CustomToast.showError(context, "${l10n.registrationFailed} $e");
       }
     }
@@ -107,13 +112,14 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
 
     try {
       // Show loading
-      CustomToast.showSuccess(context, kIsWeb ? "Sharing code..." : "Generating share image...");
+      CustomLoader.show(context);
 
       if (kIsWeb) {
          // Web doesn't support file sharing easily or path_provider, share text only
          await Share.share(
           l10n.shareTextWeb(_referralCode, 'https://play.google.com/store/apps/details?id=com.dmbhatt.tutions'),
          );
+         if (mounted) CustomLoader.hide(context);
          return;
       }
 
@@ -135,7 +141,9 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
         [XFile(file.path)],
         text: l10n.shareTextMobile(_referralCode, 'https://play.google.com/store/apps/details?id=com.dmbhatt.tutions'),
       );
+      if (mounted) CustomLoader.hide(context);
     } catch (e) {
+      if (mounted) CustomLoader.hide(context);
       CustomToast.showError(context, "Error sharing: $e");
     }
   }
@@ -159,11 +167,10 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
         title: l10n.referAndEarn,
         centerTitle: true,
       ),
-      body: Column(
+      body: _isLoading 
+        ? const CustomLoader() 
+        : Column(
         children: [
-          if (_isLoading)
-            const LinearProgressIndicator(minHeight: 2),
-            
           Expanded(
             child: Stack(
               children: [
@@ -544,11 +551,11 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
               ),
             ),
           ],
-            ),
-          ),
-        ],
+        ),
       ),
-    );
+    ],
+  ),
+);
   }
 
   Widget _buildShareWidget() {

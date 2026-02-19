@@ -3,6 +3,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_question_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:flutter/material.dart';
 
 class ExamInstructionScreen extends StatelessWidget {
@@ -69,13 +70,18 @@ class ExamInstructionScreen extends StatelessWidget {
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ExamQuestionScreen(subject: subject, examId: examId, title: title),
-                      ),
-                    );
+                  onPressed: () async {
+                    CustomLoader.show(context);
+                    await Future.delayed(const Duration(milliseconds: 500));
+                    if (context.mounted) {
+                      CustomLoader.hide(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ExamQuestionScreen(subject: subject, examId: examId, title: title),
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,

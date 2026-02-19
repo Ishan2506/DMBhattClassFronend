@@ -6,6 +6,7 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:flutter/material.dart';
@@ -258,7 +259,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const CustomLoader()
           : Padding(
               padding: P.all24,
               child: Column(
@@ -329,7 +330,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                     child: ElevatedButton(
                       onPressed: _selectedExamId == null
                           ? null
-                          : () {
+                          : () async {
                               if (_userRole == 'guest' && _takenTestTitles.length >= 2) {
                                 GuestUtils.showGuestRestrictionDialog(
                                   context, 
@@ -353,16 +354,22 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                                 );
                                 return;
                               }
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ExamInstructionScreen(
-                                    subject: _selectedSubject ?? 'Math',
-                                    examId: _selectedExamId!, 
-                                    title: _selectedTitle ?? 'Untitled Exam',
+                              
+                              CustomLoader.show(context);
+                              await Future.delayed(const Duration(milliseconds: 500));
+                              if (context.mounted) {
+                                CustomLoader.hide(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ExamInstructionScreen(
+                                      subject: _selectedSubject ?? 'Math',
+                                      examId: _selectedExamId!, 
+                                      title: _selectedTitle ?? 'Untitled Exam',
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,

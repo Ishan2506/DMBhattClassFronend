@@ -24,7 +24,7 @@ class ThemeState {
 
   factory ThemeState.initial() {
     return const ThemeState(
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       locale: Locale('en'),
       selectedStyle: AppThemeStyle.classic,
     );

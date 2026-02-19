@@ -60,6 +60,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
   };
 
+  void _showTermsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Terms and Conditions", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Text(
+            "1. By registering, you agree to abide by the rules and regulations of DM Bhatt Classes.\n\n"
+            "2. Ensure all provided information is accurate and up-to-date.\n\n"
+            "3. The institute reserves the right to modify the curriculum and schedule as needed.\n\n"
+            "4. Fees once paid are non-refundable under any circumstances.\n\n"
+            "5. Respectful behavior towards staff and fellow students is mandatory.\n\n"
+            "6. Unauthorized sharing of study material is strictly prohibited.\n\n"
+            "7. Regular attendance and participation in assessments are expected for optimal performance.",
+            style: GoogleFonts.poppins(fontSize: 14),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Close", style: GoogleFonts.poppins(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<List<String>> _fetchSchools(String query) async {
     if (_selectedCity == null || query.isEmpty) return [];
     
@@ -442,13 +469,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   l10n.agreeTerms,
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
                 ),
-                Text(
-                  l10n.termsConditions,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12, 
-                    color: Colors.blue.shade700, 
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.underline,
+                GestureDetector(
+                  onTap: _showTermsDialog,
+                  child: Text(
+                    l10n.termsConditions,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12, 
+                      color: Colors.blue.shade700, 
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ],
@@ -479,6 +509,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                     if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
                           CustomToast.showError(context, l10n.pleaseSelectStream);
+                      return;
+                    }
+                    
+                    // Validate Phone != Parent Phone
+                    if (_phoneController.text == _parentPhoneController.text) {
+                      CustomToast.showError(context, "Student and Parent mobile numbers cannot be the same.");
+                      return;
+                    }
+
+                    // Check if User Exists
+                    CustomLoader.show(context);
+                    final exists = await ApiService.checkUserExists(_phoneController.text);
+                    
+                    if (!mounted) return;
+                    CustomLoader.hide(context);
+                    
+                    if (exists) {
+                      CustomToast.showError(context, "Mobile number already registered. Please login.");
                       return;
                     }
 
