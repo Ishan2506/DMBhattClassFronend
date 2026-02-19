@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -7,6 +8,8 @@ import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+
+import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 
 class PaymentScreen extends StatefulWidget {
   final RegistrationPayload payload;
@@ -28,6 +31,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   double _referralDiscount = 0;
   bool _isDiscountApplied = false;
   
+  late RazorpayHelper _razorpayHelper;
+  
   // Referral code validation states
   bool _isValidatingReferral = false;
   bool? _isReferralValid;
@@ -40,6 +45,21 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void initState() {
     super.initState();
     _calculateInitialAmount();
+    _razorpayHelper = RazorpayHelper(
+      context: context,
+      onSuccess: _handlePaymentSuccess,
+      onFailure: _handlePaymentFailure,
+    );
+  }
+  
+  @override
+  void dispose() {
+    _razorpayHelper.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentFailure(PaymentFailureResponse response) {
+    CustomToast.showError(context, "Payment Failed: ${response.message}");
   }
 
   void _calculateInitialAmount() {
@@ -159,7 +179,58 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
-  Future<void> _processPaymentAndRegister() async {
+  Future<void> _initiatePayment() async {
+    if (_finalAmount <= 0) {
+      // If amount is 0 (e.g. 100% discount), skip payment
+      _processRegistration(paymentId: "FREE_PLAN");
+      return;
+    }
+
+    try {
+      CustomLoader.show(context);
+      final orderResponse = await ApiService.createPaymentOrder(_finalAmount);
+      
+      if (!mounted) return;
+      CustomLoader.hide(context);
+
+      if (orderResponse.statusCode == 200) {
+        final orderData = jsonDecode(orderResponse.body);
+        final String orderId = orderData['id'];
+        
+        _razorpayHelper.openCheckout(
+          amount: _finalAmount,
+          name: "DM Bhatt Classes",
+          description: "Standard $_std Membership",
+          contact: widget.payload.fields['phoneNum'] ?? '',
+          email: widget.payload.fields['email'] ?? '',
+          orderId: orderId,
+        );
+
+      } else {
+         CustomToast.showError(context, "Failed to create order: ${orderResponse.body}");
+      }
+    } catch (e) {
+       if (mounted) {
+         CustomLoader.hide(context);
+         CustomToast.showError(context, "Error initiating payment: $e");
+       }
+    }
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    CustomToast.showSuccess(context, "Payment Successful: ${response.paymentId}");
+    _processRegistration(
+      paymentId: response.paymentId,
+      orderId: response.orderId,
+      signature: response.signature,
+    );
+  }
+
+  Future<void> _processRegistration({
+    String? paymentId,
+    String? orderId,
+    String? signature,
+  }) async {
     // Get referral code if provided and valid
     final referralCode = _referralCodeController.text.trim();
     final shouldIncludeReferral = referralCode.isNotEmpty && _isReferralValid == true;
@@ -171,6 +242,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
         payload: widget.payload,
         dpin: widget.password,
         referralCode: shouldIncludeReferral ? referralCode : null,
+        razorpayPaymentId: paymentId,
+        razorpayOrderId: orderId,
+        razorpaySignature: signature,
+        amount: _finalAmount,
       );
       
       if (!mounted) return;
@@ -184,7 +259,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           (route) => false,
         );
       } else {
-         CustomToast.showError(context, "Registration Failed: ${response.body}");
+         CustomToast.showError(context, "Registration Failed: ${ApiService.getErrorMessage(response.body)}");
       }
     } catch (e) {
        if (mounted) {
@@ -442,7 +517,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _processPaymentAndRegister,
+                onPressed: _initiatePayment,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),

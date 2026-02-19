@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 
 class ApiService {
   static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+  // static const String baseUrl = "http://localhost:5000/api";
   static String? _authToken;
 
   static String? get userToken => _authToken;
@@ -50,10 +51,13 @@ class ApiService {
 
       // Global Redirection using navigatorKey
       if (navigatorKey.currentState != null) {
-        navigatorKey.currentState!.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-          (route) => false,
-        );
+        // Schedule navigation to the next frame to avoid build conflicts
+        Future.delayed(const Duration(milliseconds: 100), () {
+             navigatorKey.currentState?.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+              (route) => false,
+            );
+        });
       }
     }
     return response;
@@ -77,10 +81,29 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
+  static Future<http.Response> createPaymentOrder(double amount) async {
+    final uri = Uri.parse("$baseUrl/payment/create-order");
+    return _handleSession(await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'amount': amount,
+        'currency': 'INR',
+      }),
+    ));
+  }
+
   static Future<http.Response> registerUser({
     required RegistrationPayload payload,
     required String dpin,
-    String? referralCode,
+    String? referralCode, 
+    String? razorpayPaymentId,
+    String? razorpayOrderId,
+    String? razorpaySignature,
+    double? amount,
+
   }) async {
     final uri = Uri.parse("$baseUrl/auth/register");
     final request = http.MultipartRequest("POST", uri);
@@ -94,6 +117,12 @@ class ApiService {
     
     if (referralCode != null && referralCode.isNotEmpty) {
       fields["referralCode"] = referralCode;
+    }
+    if (razorpayPaymentId != null) {
+      fields["razorpay_payment_id"] = razorpayPaymentId;
+      fields["razorpay_order_id"] = razorpayOrderId!;
+      fields["razorpay_signature"] = razorpaySignature!;
+      fields["amount"] = amount.toString();
     }
     
     request.fields.addAll(fields);
@@ -415,32 +444,4 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
-  /// Checks if a user exists by attempting a login with a dummy password.
-  /// Returns YES if user exists (Invalid Credentials/Success), NO if User Not Found.
-  static Future<bool> checkUserExists(String phone) async {
-    try {
-      // using a dummy password that is unlikely to be correct
-      final response = await loginUser(
-        loginCode: "DUMMY_PASSWORD_CHECK_123", 
-        phoneNum: phone
-      );
-
-      if (response.statusCode == 200) {
-         return true; // Exists (and somehow password matched??)
-      } else if (response.statusCode == 404) {
-         return false; // User not found
-      } else {
-         // 400, 401 usually mean Invalid Credentials => User Exists
-         // We need to be careful about other errors, but typically:
-         // "User not found" is distinctive.
-         final body = jsonDecode(response.body);
-         if (body['message'] == "User not found") {
-           return false;
-         }
-         return true; // Default to assuming exist if other error (like wrong password)
-      }
-    } catch (_) {
-      return false; // Assume not exist or network error (fail safe to allow try)
-    }
-  }
 }

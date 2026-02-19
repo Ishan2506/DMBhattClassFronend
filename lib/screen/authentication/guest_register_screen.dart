@@ -514,20 +514,9 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       }
 
                     // Validate Phone != Parent Phone
+                    // Validate Phone != Parent Phone
                     if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
                       CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
-                      return;
-                    }
-
-                    // Check if User Exists
-                    CustomLoader.show(context);
-                    final exists = await ApiService.checkUserExists(_phoneController.text);
-                    
-                    if (!mounted) return;
-                    CustomLoader.hide(context);
-                    
-                    if (exists) {
-                      CustomToast.showError(context, "Mobile number already registered. Please login.");
                       return;
                     }
 

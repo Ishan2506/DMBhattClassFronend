@@ -518,15 +518,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return;
                     }
 
-                    // Check if User Exists
-                    CustomLoader.show(context);
-                    final exists = await ApiService.checkUserExists(_phoneController.text);
-                    
-                    if (!mounted) return;
-                    CustomLoader.hide(context);
-                    
-                    if (exists) {
-                      CustomToast.showError(context, "Mobile number already registered. Please login.");
+                    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
+                      CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
                       return;
                     }
 
