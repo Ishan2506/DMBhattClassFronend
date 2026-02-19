@@ -81,7 +81,6 @@ class ApiService {
     required RegistrationPayload payload,
     required String dpin,
     String? referralCode,
-    String? paymentId,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/register");
     final request = http.MultipartRequest("POST", uri);
@@ -95,10 +94,6 @@ class ApiService {
     
     if (referralCode != null && referralCode.isNotEmpty) {
       fields["referralCode"] = referralCode;
-    }
-
-    if (paymentId != null && paymentId.isNotEmpty) {
-      fields["paymentId"] = paymentId;
     }
     
     request.fields.addAll(fields);

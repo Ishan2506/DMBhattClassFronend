@@ -1,6 +1,6 @@
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
-import 'package:dm_bhatt_tutions/screen/authentication/payment_screen.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'dart:convert';
@@ -531,10 +531,10 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       return;
                     }
 
-                    // Construct Payload
                     // Split Name
                     final nameParts = _nameController.text.trim().split(' ');
                     final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
+
 
                     final payload = RegistrationPayload(
                       role: 'guest',
@@ -552,16 +552,33 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       files: [],
                     );
 
-                    // Navigate to Payment Screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PaymentScreen(
-                          payload: payload,
-                          password: _passwordController.text,
-                        ),
-                      ),
-                    );
+                    try {
+                      CustomLoader.show(context); // Show Loader
+                      final response = await ApiService.registerUser(
+                        payload: payload, 
+                        dpin: _passwordController.text
+                      );
+
+                      if (!mounted) return;
+                      CustomLoader.hide(context); // Hide Loader
+
+                      if (response.statusCode == 201 || response.statusCode == 200) {
+                        final l10n = AppLocalizations.of(context)!;
+                        CustomToast.showSuccess(context, l10n.guestRegistrationSuccessful);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      } else {
+                        final l10n = AppLocalizations.of(context)!;
+                        CustomToast.showError(context, l10n.registrationFailed + response.body);
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        CustomLoader.hide(context);
+                        CustomToast.showError(context, "Error: $e");
+                      }
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(

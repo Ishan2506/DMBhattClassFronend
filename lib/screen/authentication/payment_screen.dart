@@ -5,8 +5,6 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:flutter/material.dart';
-import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 
@@ -37,33 +35,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
   
   String get _std => widget.payload.fields['std'].toString();
   String get _medium => widget.payload.fields['medium'].toString();
-  
-  late RazorpayHelper _razorpayHelper;
 
   @override
   void initState() {
     super.initState();
     _calculateInitialAmount();
-    _razorpayHelper = RazorpayHelper(
-      context: context,
-      onSuccess: _handlePaymentSuccess,
-      onFailure: _handlePaymentFailure,
-    );
-  }
-  
-  @override
-  void dispose() {
-    _razorpayHelper.dispose();
-    super.dispose();
-  }
-
-  void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    CustomToast.showSuccess(context, "Payment Successful: ${response.paymentId}");
-    _processRegistration(paymentId: response.paymentId);
-  }
-
-  void _handlePaymentFailure(PaymentFailureResponse response) {
-    CustomToast.showError(context, "Payment Failed: ${response.message}");
   }
 
   void _calculateInitialAmount() {
@@ -183,23 +159,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
-  void _initiatePayment() {
-    if (_finalAmount <= 0) {
-      // If amount is 0 (e.g. 100% discount), skip payment
-      _processRegistration(paymentId: "FREE_PLAN");
-      return;
-    }
-
-    _razorpayHelper.openCheckout(
-      amount: _finalAmount,
-      name: "DM Bhatt Tuitions",
-      description: "Standard $_std Membership",
-      contact: widget.payload.fields['phoneNum'] ?? '',
-      email: widget.payload.fields['email'] ?? '',
-    );
-  }
-
-  Future<void> _processRegistration({String? paymentId}) async {
+  Future<void> _processPaymentAndRegister() async {
     // Get referral code if provided and valid
     final referralCode = _referralCodeController.text.trim();
     final shouldIncludeReferral = referralCode.isNotEmpty && _isReferralValid == true;
@@ -211,7 +171,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
         payload: widget.payload,
         dpin: widget.password,
         referralCode: shouldIncludeReferral ? referralCode : null,
-        paymentId: paymentId,
       );
       
       if (!mounted) return;
@@ -483,7 +442,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _initiatePayment,
+                onPressed: _processPaymentAndRegister,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),

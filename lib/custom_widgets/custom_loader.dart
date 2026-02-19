@@ -62,8 +62,6 @@ class CustomLoader extends StatelessWidget {
 
   // Static method to hide loader dialog
   static void hide(BuildContext context) {
-    if (Navigator.of(context, rootNavigator: true).canPop()) {
-      Navigator.of(context, rootNavigator: true).pop();
-    }
+    Navigator.of(context, rootNavigator: true).pop();
   }
 }
