@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum AppThemeStyle {
   classic,
@@ -24,9 +26,25 @@ class ThemeState {
 
   factory ThemeState.initial() {
     return const ThemeState(
-      themeMode: ThemeMode.light,
+      themeMode: ThemeMode.system,
       locale: Locale('en'),
       selectedStyle: AppThemeStyle.classic,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'themeMode': themeMode.index,
+      'locale': locale.languageCode,
+      'selectedStyle': selectedStyle.index,
+    };
+  }
+
+  factory ThemeState.fromMap(Map<String, dynamic> map) {
+    return ThemeState(
+      themeMode: ThemeMode.values[map['themeMode'] ?? ThemeMode.system.index],
+      locale: Locale(map['locale'] ?? 'en'),
+      selectedStyle: AppThemeStyle.values[map['selectedStyle'] ?? AppThemeStyle.classic.index],
     );
   }
 
@@ -45,18 +63,41 @@ class ThemeState {
 
 // --- Cubit ---
 class ThemeCubit extends Cubit<ThemeState> {
-  ThemeCubit() : super(ThemeState.initial());
+  final SharedPreferences prefs;
+  static const String _storageKey = 'theme_settings';
+
+  ThemeCubit(this.prefs) : super(_loadInitialState(prefs));
+
+  static ThemeState _loadInitialState(SharedPreferences prefs) {
+    final String? data = prefs.getString(_storageKey);
+    if (data != null) {
+      try {
+        final Map<String, dynamic> map = Map<String, dynamic>.from(jsonDecode(data));
+        return ThemeState.fromMap(map);
+      } catch (e) {
+        debugPrint("Error loading persistent theme: $e");
+      }
+    }
+    return ThemeState.initial();
+  }
+
+  void _saveState() {
+    prefs.setString(_storageKey, jsonEncode(state.toMap()));
+  }
 
   void changeTheme(ThemeMode mode) {
     emit(state.copyWith(themeMode: mode));
+    _saveState();
   }
 
   void changeLocale(Locale locale) {
     emit(state.copyWith(locale: locale));
+    _saveState();
   }
 
   void changeStyle(AppThemeStyle style) {
     emit(state.copyWith(selectedStyle: style));
+    _saveState();
   }
 }
   

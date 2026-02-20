@@ -6,6 +6,7 @@ import 'package:dm_bhatt_tutions/utils/text_theme.dart';
 import 'package:dm_bhatt_tutions/utils/app_theme_extensions.dart'; // Import extension
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 
 import 'constant/app_constant.dart';
@@ -16,12 +17,14 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
   // await _secureScreen();
-  runApp(const MyApp());
+  runApp(MyApp(prefs: prefs));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final SharedPreferences prefs;
+  const MyApp({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +37,7 @@ class MyApp extends StatelessWidget {
           create: (context) => AuthenticationCubit(),
         ),
         BlocProvider<ThemeCubit>(
-          create: (context) => ThemeCubit(),
+          create: (context) => ThemeCubit(prefs),
         ),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
