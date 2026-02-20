@@ -156,7 +156,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const CustomLoader()
           : Column(
               children: [
                 // Date Range and Subject Filter

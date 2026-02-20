@@ -367,7 +367,7 @@ class _PdfCoverState extends State<_PdfCover> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const CustomLoader();
     }
     if (_hasError || _imageBytes == null) {
        return const Center(

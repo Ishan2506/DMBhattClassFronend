@@ -127,7 +127,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: CustomAppBar(title: "Odd One Out", centerTitle: true),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const CustomLoader(),
       );
     }
 

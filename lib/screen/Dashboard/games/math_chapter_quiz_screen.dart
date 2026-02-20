@@ -213,7 +213,7 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
         ],
       ),
       body: _isLoading 
-          ? const Center(child: CircularProgressIndicator()) 
+          ? const CustomLoader() 
           : _selectedChapter == null 
               ? _buildChapterSelection() 
               : _buildQuiz(),

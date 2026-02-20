@@ -186,7 +186,7 @@ class _MysteryBoxGameScreenState extends State<MysteryBoxGameScreen> {
          ],
        ),
        body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Colors.white))
+        ? const CustomLoader()
         : _selectedSubject == null 
             ? _buildSubjectSelection()
             : _buildGameGrid(),

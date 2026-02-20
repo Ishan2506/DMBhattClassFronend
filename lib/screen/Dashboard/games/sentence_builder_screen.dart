@@ -194,7 +194,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: CustomAppBar(title: "Sentence Builder", centerTitle: true),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const CustomLoader(),
       );
     }
     

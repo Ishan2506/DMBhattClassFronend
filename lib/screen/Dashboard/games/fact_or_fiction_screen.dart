@@ -152,7 +152,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: CustomAppBar(title: "Fact or Fiction?", centerTitle: true),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const CustomLoader(),
       );
     }
     

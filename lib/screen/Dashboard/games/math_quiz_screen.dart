@@ -180,7 +180,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
         ],
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
+        ? const CustomLoader()
         : _allQuestions.isEmpty 
             ? Center(child: Text("No questions available", style: GoogleFonts.poppins()))
             : Padding(

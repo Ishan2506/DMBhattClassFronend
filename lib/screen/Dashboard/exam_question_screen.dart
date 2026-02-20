@@ -165,6 +165,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
 
     Future<void> submitAndNavigate() async {
       try {
+        CustomLoader.show(context);
         // Token managed internally
         final response = await ApiService.submitExamResult(
           examId: widget.examId,
@@ -187,6 +188,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
       }
 
       if (mounted) {
+        CustomLoader.hide(context);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -225,7 +227,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     final theme = Theme.of(context);
     
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: CustomLoader());
     }
 
     if (_questions.isEmpty) {

@@ -191,7 +191,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
         ],
       ),
        body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
+        ? const CustomLoader()
         : _allQuestions.isEmpty 
             ? Center(child: Text("No questions available", style: GoogleFonts.poppins()))
             : Padding(

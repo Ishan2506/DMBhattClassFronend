@@ -140,7 +140,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const CustomLoader()
           : errorMessage != null
               ? Center(
                   child: Column(

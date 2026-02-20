@@ -154,7 +154,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
           // Page viewer
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const CustomLoader()
                 : PageView.builder(
                     controller: _pageController,
                     onPageChanged: (index) {
@@ -194,12 +194,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                                       loadingBuilder: (context, child, loadingProgress) {
                                         if (loadingProgress == null) return child;
                                         return Center(
-                                          child: CircularProgressIndicator(
-                                            value: loadingProgress.expectedTotalBytes != null
-                                                ? loadingProgress.cumulativeBytesLoaded /
-                                                    loadingProgress.expectedTotalBytes!
-                                                : null,
-                                          ),
+                                          child: const CustomLoader(),
                                         );
                                       },
                                       errorBuilder: (context, error, stackTrace) =>
@@ -358,7 +353,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
       future: _getRasterizedPage(widget.product['image'], pageNumber),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const CustomLoader();
         }
         if (snapshot.hasData && snapshot.data != null) {
           return Image.memory(snapshot.data!, fit: BoxFit.contain);
