@@ -334,6 +334,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
       // Fetch Profile
       final profileResponse = await ApiService.getProfile();
+      if (!mounted) return;
       if (profileResponse.statusCode == 200) {
         final data = jsonDecode(profileResponse.body);
         final user = data['user'];
@@ -357,6 +358,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
       // Fetch Dashboard Data (Points & Exams)
       final dashboardResponse = await ApiService.getDashboardData();
+      if (!mounted) return;
       if (dashboardResponse.statusCode == 200) {
          final data = jsonDecode(dashboardResponse.body);
          setState(() {
@@ -366,7 +368,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       }
 
     } catch (e) {
-      CustomToast.showError(context, "Error: $e");
+      if (mounted) {
+        CustomToast.showError(context, "Error: $e");
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

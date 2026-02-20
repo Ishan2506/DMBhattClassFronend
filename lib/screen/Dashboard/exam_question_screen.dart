@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
@@ -57,11 +58,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
         if (mounted) {
           setState(() {
             _questions = questionsData.map((q) {
-                // Parse options which might be List<dynamic> of objects {key, text}
-                // or might need adaptation based on backend response structure.
-                
                 final optionsList = (q['options'] as List).map((o) => o['text'].toString()).toList();
-                
                 return {
                   'question': q['questionText'],
                   'answers': optionsList, 

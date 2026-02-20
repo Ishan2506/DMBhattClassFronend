@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
@@ -119,8 +120,18 @@ class ExamResultScreen extends StatelessWidget {
             ...List.generate(questions.length, (index) {
               final question = questions[index];
               final userAns = selectedAnswers[index];
-              final correctAns = question['correctAnswer'];
-              final isCorrect = userAns == correctAns;
+              final optionsRaw = question['optionsRaw'] as List? ?? [];
+              final correctKey = question['correctAnswerKey'] ?? question['correctAnswer'];
+              
+              String resolvedCorrectText = "";
+              try {
+                final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
+                resolvedCorrectText = correctOption['text'].toString();
+              } catch (e) {
+                resolvedCorrectText = question['correctAnswer'].toString();
+              }
+
+              final isCorrect = userAns == resolvedCorrectText;
               final isSkipped = userAns == null;
 
               return pw.Container(
@@ -143,7 +154,7 @@ class ExamResultScreen extends StatelessWidget {
                      ),
                      if (!isCorrect)
                        pw.Text(
-                         "Correct Answer: $correctAns",
+                         "Correct Answer: $resolvedCorrectText",
                          style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green),
                        ),
                      pw.Divider(color: PdfColors.grey200),
@@ -185,7 +196,7 @@ class ExamResultScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA), // Softer background
+      backgroundColor: theme.colorScheme.surface, // Softer background
       appBar: CustomAppBar(
         title: "Exam Result",
         automaticallyImplyLeading: false, // Prevent going back to exam
@@ -244,7 +255,7 @@ class ExamResultScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: theme.colorScheme.onPrimary.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -308,11 +319,11 @@ class ExamResultScreen extends StatelessWidget {
               // 2. Stats Grid - Clean Cards
               Row(
                 children: [
-                  Expanded(child: _buildStatCard("Correct", "$correctAnswers", Colors.green.shade500, Icons.check_circle_outline)),
+                  Expanded(child: _buildStatCard(context, "Correct", "$correctAnswers", Colors.green.shade500, Icons.check_circle_outline)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildStatCard("Wrong", "$wrongAnswers", Colors.red.shade400, Icons.cancel_outlined)),
+                  Expanded(child: _buildStatCard(context, "Wrong", "$wrongAnswers", Colors.red.shade400, Icons.cancel_outlined)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildStatCard("Skipped", "$skippedAnswers", Colors.orange.shade400, Icons.help_outline)),
+                  Expanded(child: _buildStatCard(context, "Skipped", "$skippedAnswers", Colors.orange.shade400, Icons.help_outline)),
                 ],
               ),
 
@@ -332,7 +343,7 @@ class ExamResultScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -347,22 +358,26 @@ class ExamResultScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final question = questions[index];
                   final userAns = selectedAnswers[index];
-                  final correctAns = question['correctAnswer'];
-                  final isCorrect = userAns == correctAns;
+                  final optionsRaw = question['optionsRaw'] as List? ?? [];
+                  final correctKey = question['correctAnswerKey'] ?? question['correctAnswer'];
+
+                  String resolvedCorrectText = "";
+                  try {
+                    final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
+                    resolvedCorrectText = correctOption['text'].toString();
+                  } catch (e) {
+                    resolvedCorrectText = question['correctAnswer'].toString();
+                  }
+
+                  final isCorrect = userAns == resolvedCorrectText;
                   final isSkipped = userAns == null;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
                     ),
                     child: Column(
                       children: [
@@ -392,7 +407,7 @@ class ExamResultScreen extends StatelessWidget {
                                     "Question ${index + 1}",
                                     style: GoogleFonts.poppins(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                   ),
                                 ],
@@ -400,13 +415,13 @@ class ExamResultScreen extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: theme.colorScheme.surface,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
                                 ),
                                 child: Text(
                                   "1 Mark",
-                                  style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
+                                  style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurfaceVariant),
                                 ),
                               ),
                             ],
@@ -423,7 +438,7 @@ class ExamResultScreen extends StatelessWidget {
                                 style: GoogleFonts.poppins(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500, 
-                                  color: Colors.black87
+                                  color: theme.colorScheme.onSurface
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -432,18 +447,18 @@ class ExamResultScreen extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
+                                  color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     if (!isSkipped)
-                                      _buildAnswerRow("Your Answer", userAns!, isCorrect ? Colors.green : Colors.red),
+                                      _buildAnswerRow(context, "Your Answer", userAns!, isCorrect ? Colors.green : Colors.red),
                                     
                                     if (!isCorrect) ...[
                                       if (!isSkipped) const SizedBox(height: 8),
-                                      _buildAnswerRow("Correct Answer", correctAns, Colors.green),
+                                      _buildAnswerRow(context, "Correct Answer", resolvedCorrectText, Colors.green),
                                     ]
                                   ],
                                 ),
@@ -483,7 +498,7 @@ class ExamResultScreen extends StatelessWidget {
                 child: Text(
                   "Back to Dashboard",
                   style: GoogleFonts.poppins(
-                    color: Colors.grey.shade600,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -496,7 +511,8 @@ class ExamResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAnswerRow(String label, String text, Color color) {
+  Widget _buildAnswerRow(BuildContext context, String label, String text, Color color) {
+    final theme = Theme.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -506,7 +522,7 @@ class ExamResultScreen extends StatelessWidget {
             label,
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -525,19 +541,14 @@ class ExamResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String count, Color color, IconData icon) {
+  Widget _buildStatCard(BuildContext context, String title, String count, Color color, IconData icon) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
       ),
       child: Column(
         children: [
@@ -548,14 +559,14 @@ class ExamResultScreen extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           Text(
             title,
             style: GoogleFonts.poppins(
               fontSize: 11,
-              color: Colors.grey.shade500,
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
