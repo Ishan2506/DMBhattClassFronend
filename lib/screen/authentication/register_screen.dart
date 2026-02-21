@@ -336,25 +336,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Institute Dropdown
-            _buildDropdown(
-              context,
-              hint: l10n.instituteName,
-              icon: Icons.business,
-              value: _selectedInstitute,
-              items: _institutes,
-              onChanged: (val) {
-                setState(() {
-                  _selectedInstitute = val;
-                  if (val == "The Learning Institute") {
-                    _schoolNameController.text = "The Learning Institute";
-                  } else {
-                    _schoolNameController.text = "";
-                  }
-                });
-              },
-            ),
-            const SizedBox(height: 16),
 
              // School Name Autocomplete (Visible only if Other is selected)
              if (_selectedInstitute == "Other") 

@@ -444,4 +444,114 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
+  // --- Product Purchase & History ---
+
+  static Future<http.Response> createProductOrder(String productId, double amount) async {
+    final uri = Uri.parse("$baseUrl/payment/product/create-order");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        'productId': productId,
+        'amount': amount,
+        'currency': 'INR',
+      }),
+    ));
+  }
+
+  static Future<http.Response> verifyProductPayment({
+    required String productId,
+    required String razorpayPaymentId,
+    required String razorpayOrderId,
+    required String razorpaySignature,
+    required double amount,
+  }) async {
+    final uri = Uri.parse("$baseUrl/payment/product/verify");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        'productId': productId,
+        'razorpay_payment_id': razorpayPaymentId,
+        'razorpay_order_id': razorpayOrderId,
+        'razorpay_signature': razorpaySignature,
+        'amount': amount,
+      }),
+    ));
+  }
+
+  static Future<http.Response> getPurchasedProducts() async {
+    final uri = Uri.parse("$baseUrl/profile/purchased-products");
+    return _handleSession(await http.get(
+      uri,
+      headers: _addAuth({
+        'Accept': 'application/json',
+      }),
+    ));
+  }
+
+  // --- Plan Upgrade ---
+
+  static Future<http.Response> createUpgradeOrder({
+    required double amount,
+    required String newStandard,
+    required String medium,
+    String? stream,
+  }) async {
+    final uri = Uri.parse("$baseUrl/payment/upgrade/create-order");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        'amount': amount,
+        'newStandard': newStandard,
+        'medium': medium,
+        'stream': stream,
+      }),
+    ));
+  }
+
+  static Future<http.Response> verifyUpgradePayment({
+    required String razorpayPaymentId,
+    required String razorpayOrderId,
+    required String razorpaySignature,
+    required double amount,
+    required String newStandard,
+    required String medium,
+    String? stream,
+  }) async {
+    final uri = Uri.parse("$baseUrl/payment/upgrade/verify");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        'razorpay_payment_id': razorpayPaymentId,
+        'razorpay_order_id': razorpayOrderId,
+        'razorpay_signature': razorpaySignature,
+        'amount': amount,
+        'newStandard': newStandard,
+        'medium': medium,
+        'stream': stream,
+      }),
+    ));
+  }
+
+  static Future<http.Response> getUpgradeHistory() async {
+    final uri = Uri.parse("$baseUrl/profile/upgrade-history");
+    return _handleSession(await http.get(
+      uri,
+      headers: _addAuth({
+        'Accept': 'application/json',
+      }),
+    ));
+  }
+
 }

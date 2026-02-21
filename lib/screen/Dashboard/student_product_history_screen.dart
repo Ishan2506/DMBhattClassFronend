@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
@@ -6,50 +10,74 @@ import 'package:flutter/services.dart';
 import 'dart:typed_data';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
+import 'package:http/http.dart' as http;
 
-class StudentProductHistoryScreen extends StatelessWidget {
+class StudentProductHistoryScreen extends StatefulWidget {
   const StudentProductHistoryScreen({super.key});
+
+  @override
+  State<StudentProductHistoryScreen> createState() => _StudentProductHistoryScreenState();
+}
+
+class _StudentProductHistoryScreenState extends State<StudentProductHistoryScreen> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _materials = [];
+  List<Map<String, dynamic>> _products = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistory();
+  }
+
+  Future<void> _fetchHistory() async {
+    try {
+      final response = await ApiService.getPurchasedProducts();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        
+        setState(() {
+          // Assuming the API returns a list of purchases
+          // Filter into materials (PDFs) and products (Image/Other)
+          final purchases = data.map((item) => {
+            "id": item['productId']['_id'],
+            "title": item['productId']['name'] ?? "Unknown Product",
+            "date": _formatDate(item['createdAt']),
+            "type": item['productId']['category'] ?? "Material",
+            "price": "₹${item['amount']}",
+            "transactionId": item['razorpay_payment_id'] ?? "N/A",
+            "image": item['productId']['image'] ?? "",
+            "isPdf": item['productId']['image'].toString().toLowerCase().contains('.pdf'),
+          }).toList().cast<Map<String, dynamic>>();
+
+          _materials = purchases.where((p) => p['isPdf']).toList();
+          _products = purchases.where((p) => !p['isPdf']).toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+        CustomToast.showError(context, "Failed to load history");
+      }
+    } catch (e) {
+      debugPrint("Error fetching history: $e");
+      setState(() => _isLoading = false);
+      CustomToast.showError(context, "Error: $e");
+    }
+  }
+
+  String _formatDate(String isoString) {
+    try {
+      final date = DateTime.parse(isoString);
+      return "${date.day}/${date.month}/${date.year}";
+    } catch (_) {
+      return isoString;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    // Mock Data for Materials (PDFs)
-    final List<Map<String, dynamic>> materials = [
-      {
-        "title": "Science Chapter 1 - Notes",
-        "date": "Jan 10, 2025",
-        "type": "PDF",
-        "price": "₹49",
-        "transactionId": "TXN123456789"
-      },
-      {
-        "title": "Maths Formulas",
-        "date": "Dec 15, 2024",
-        "type": "PDF",
-        "price": "₹99",
-        "transactionId": "TXN987654321"
-      },
-    ];
-
-    // Mock Data for Products (Physical/Other)
-    final List<Map<String, dynamic>> products = [
-      {
-        "title": "Science Kit - Standard 10",
-        "date": "Jan 05, 2025",
-        "type": "Physical",
-        "price": "₹499",
-        "transactionId": "TXN456123789"
-      },
-      {
-        "title": "Academy T-Shirt",
-        "date": "Nov 20, 2024",
-        "type": "Merch",
-        "price": "₹299",
-        "transactionId": "TXN789123456"
-      },
-    ];
 
     return DefaultTabController(
       length: 2,
@@ -78,12 +106,14 @@ class StudentProductHistoryScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _buildHistoryList(context, materials, isMaterial: true),
-            _buildHistoryList(context, products, isMaterial: false),
-          ],
-        ),
+        body: _isLoading 
+          ? const Center(child: CustomLoader())
+          : TabBarView(
+              children: [
+                _buildHistoryList(context, _materials, isMaterial: true),
+                _buildHistoryList(context, _products, isMaterial: false),
+              ],
+            ),
       ),
     );
   }
@@ -162,7 +192,7 @@ class StudentProductHistoryScreen extends StatelessWidget {
             trailing: isMaterial 
               ? ElevatedButton(
                   onPressed: () {
-                    _openSecurePdf(context, item['title']);
+                    _openSecurePdf(context, item);
                   },
                    style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
@@ -172,33 +202,46 @@ class StudentProductHistoryScreen extends StatelessWidget {
                   ),
                   child: Text("Read", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                 )
-              : null, // No action for physical products yet
+              : null,
           ),
         );
       },
     );
   }
 
-  void _openSecurePdf(BuildContext context, String title) {
+  void _openSecurePdf(BuildContext context, Map<String, dynamic> item) {
+    // Navigate to a screen that shows the full PDF
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SecurePdfViewer(title: title),
+        builder: (context) => FullPdfViewerScreen(product: {
+          'name': item['title'],
+          'image': item['image'],
+        }),
       ),
     );
   }
 }
 
-class SecurePdfViewer extends StatelessWidget {
-  final String title;
-  const SecurePdfViewer({super.key, required this.title});
+class FullPdfViewerScreen extends StatelessWidget {
+  final Map<String, dynamic> product;
+  const FullPdfViewerScreen({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: title),
+      appBar: CustomAppBar(
+        title: product['name'] ?? 'View PDF',
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: PdfPreview(
-        build: (format) => _generateDummyPdf(format, title),
+        build: (format) async {
+          final response = await http.get(Uri.parse(product['image']));
+          return response.bodyBytes;
+        },
         useActions: false, 
         allowPrinting: false,
         allowSharing: false,
@@ -206,30 +249,5 @@ class SecurePdfViewer extends StatelessWidget {
         canChangePageFormat: false,
       ),
     );
-  }
-
-  Future<Uint8List> _generateDummyPdf(PdfPageFormat format, String title) async {
-    final pdf = pw.Document();
-
-    pdf.addPage(
-      pw.Page(
-        pageFormat: format,
-        build: (pw.Context context) {
-          return pw.Center(
-            child: pw.Column(
-              mainAxisAlignment: pw.MainAxisAlignment.center,
-              children: [
-                pw.Text(title, style: pw.TextStyle(fontSize: 40)),
-                pw.SizedBox(height: 20),
-                pw.Text("This is a secured PDF content.", style: pw.TextStyle(fontSize: 20)),
-                pw.Text("Sharing is disabled.", style: pw.TextStyle(fontSize: 14, color: PdfColors.grey)),
-              ]
-            )
-          );
-        },
-      ),
-    );
-
-    return pdf.save();
   }
 }
