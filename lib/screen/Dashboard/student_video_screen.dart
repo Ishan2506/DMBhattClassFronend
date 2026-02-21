@@ -91,7 +91,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomAppBar(
-        title: "DM Bhatt Education",
+        title: "Educational Videos",
       ),
       body: Column(
         children: [

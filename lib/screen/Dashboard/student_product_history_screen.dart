@@ -43,7 +43,7 @@ class StudentProductHistoryScreen extends StatelessWidget {
         "transactionId": "TXN456123789"
       },
       {
-        "title": "DM Bhatt T-Shirt",
+        "title": "Academy T-Shirt",
         "date": "Nov 20, 2024",
         "type": "Merch",
         "price": "₹299",

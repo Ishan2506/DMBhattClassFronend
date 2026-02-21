@@ -2,6 +2,7 @@ import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SocialMediaAdDialog extends StatelessWidget {
   const SocialMediaAdDialog({super.key});
@@ -78,7 +79,7 @@ class SocialMediaAdDialog extends StatelessWidget {
             screenWidth,
             l10n.followOnInstagram,
             l10n.clickHere,
-            Icons.camera_alt_outlined, // Instagram generic icon
+            FontAwesomeIcons.instagram, // Instagram real logo
             [const Color(0xFF833AB4), const Color(0xFFE1306C), const Color(0xFFF77737)], // Insta Gradients
             "https://www.instagram.com/bondbyte.in/",
           ),

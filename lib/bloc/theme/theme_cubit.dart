@@ -26,7 +26,7 @@ class ThemeState {
 
   factory ThemeState.initial() {
     return const ThemeState(
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       locale: Locale('en'),
       selectedStyle: AppThemeStyle.classic,
     );
@@ -73,7 +73,9 @@ class ThemeCubit extends Cubit<ThemeState> {
     if (data != null) {
       try {
         final Map<String, dynamic> map = Map<String, dynamic>.from(jsonDecode(data));
-        return ThemeState.fromMap(map);
+        ThemeState state = ThemeState.fromMap(map);
+        // Force Light Mode on every startup as requested
+        return state.copyWith(themeMode: ThemeMode.light);
       } catch (e) {
         debugPrint("Error loading persistent theme: $e");
       }

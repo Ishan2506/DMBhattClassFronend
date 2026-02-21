@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_phone_screen.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -189,6 +190,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (profile != null && profile['std'] != null) {
                                   await prefs.setString('std', profile['std']);
                                 }
+
+                                // Sync this account to the saved accounts list
+                                await StudentProfileScreen.ensureCurrentAccountSaved(
+                                  prefs,
+                                  name: "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim(),
+                                  phone: user['phoneNum'] ?? "",
+                                  pic: user['photoPath'] ?? "",
+                                );
                               }
                             } catch (e) {
                               print('Error fetching profile: $e');

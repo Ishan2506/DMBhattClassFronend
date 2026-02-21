@@ -389,8 +389,16 @@ class SettingsScreen extends StatelessWidget {
               Navigator.pop(context); // Close dialog
               
               // Clear session
+              // Clear active session ONLY, preserve saved accounts and settings
               final prefs = await SharedPreferences.getInstance();
+              final savedAccounts = prefs.getStringList('saved_accounts');
+              final themeSettings = prefs.getString('theme_settings');
+              
               await prefs.clear();
+              
+              // Restore preserved data
+              if (savedAccounts != null) await prefs.setStringList('saved_accounts', savedAccounts);
+              if (themeSettings != null) await prefs.setString('theme_settings', themeSettings);
               
               // Navigate to Welcome Screen
               if (context.mounted) {

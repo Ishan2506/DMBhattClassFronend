@@ -31,7 +31,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
-  final TextEditingController _schoolNameController = TextEditingController(text: "D.M.BHATT Institute");
+  final TextEditingController _schoolNameController = TextEditingController(text: "The Learning Institute");
 
   // Selection States
   String? _selectedStandard;
@@ -39,13 +39,13 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   String? _selectedStream;
   String? _selectedState;
   String? _selectedCity;
-  String? _selectedInstitute = "D.M.BHATT Institute";
+  String? _selectedInstitute = "The Learning Institute";
   String? _selectedBoard;
   String? _selectedRole = "Student";
 
   // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
-  final List<String> _institutes = ["D.M.BHATT Institute", "Other"];
+  final List<String> _institutes = ["The Learning Institute", "Other"];
 
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
@@ -66,7 +66,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
         title: Text("Terms and Conditions", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: SingleChildScrollView(
           child: Text(
-            "1. By registering as a guest, you agree to abide by the rules and regulations of DM Bhatt Classes.\n\n"
+            "1. By registering as a guest, you agree to abide by the rules and regulations of our Learning Academy.\n\n"
             "2. Ensure all provided information is accurate and up-to-date.\n\n"
             "3. The institute reserves the right to modify the curriculum and schedule as needed.\n\n"
             "4. Respectful behavior towards staff and fellow students is mandatory.\n\n"
@@ -92,7 +92,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
     
     try {
       final response = await http.get(url, headers: {
-        'User-Agent': 'DMBhattClasses/1.0', 
+        'User-Agent': 'LearningApp/1.0', 
       });
 
       if (response.statusCode == 200) {

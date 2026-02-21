@@ -551,7 +551,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeToDmBhatt.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to DM Bhatt Classes'**
+  /// **'Welcome to Our Learning Platform'**
   String get welcomeToDmBhatt;
 
   /// No description provided for @academicPath.
@@ -1181,31 +1181,31 @@ abstract class AppLocalizations {
   /// No description provided for @shareTextWeb.
   ///
   /// In en, this message translates to:
-  /// **'Join D. M. Bhatt Tuitions using my referral code: {code} and get amazing benefits! Download now: {url}'**
+  /// **'Join our learning platform using my referral code: {code} and get amazing benefits! Download now: {url}'**
   String shareTextWeb(Object code, Object url);
 
   /// No description provided for @shareTextMobile.
   ///
   /// In en, this message translates to:
-  /// **'Hello! I am gifting you a special discount on Padhaku App. Use my code \"{code}\" at the time of registration to claim it! Download: {url}'**
+  /// **'Hello! I am gifting you a special discount on our Learning App. Use my code \"{code}\" at the time of registration to claim it! Download: {url}'**
   String shareTextMobile(Object code, Object url);
 
   /// No description provided for @aboutUsHeader.
   ///
   /// In en, this message translates to:
-  /// **'D. M. Bhatt Tuition Classes'**
+  /// **'Empowering Your Future'**
   String get aboutUsHeader;
 
   /// No description provided for @aboutUsDescription.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to D. M. Bhatt Tuition Classes, your partner in academic excellence. We are dedicated to providing high-quality education and guidance to students, helping them achieve their potential and secure a bright future.\n\nOur experienced faculty and comprehensive curriculum ensure that every student receives personalized attention and support. Join us to embark on a journey of learning and success.'**
+  /// **'We are committed to providing top-quality education and modern learning resources to help every student excel. Our mission is to simplify complex concepts and inspire a lifelong love for learning.\n\nWith a focus on interactive teaching and student success, we provide the tools and support needed to reach academic goals and beyond.'**
   String get aboutUsDescription;
 
   /// No description provided for @influencerName.
   ///
   /// In en, this message translates to:
-  /// **'D.M. Bhatt Sir'**
+  /// **'Our Lead Educator'**
   String get influencerName;
 
   /// No description provided for @followOnInstagram.
@@ -1733,7 +1733,7 @@ abstract class AppLocalizations {
   /// No description provided for @dmBhattGroupTuition.
   ///
   /// In en, this message translates to:
-  /// **'DM Bhatt Group Tuition'**
+  /// **'The Learning Academy'**
   String get dmBhattGroupTuition;
 
   /// No description provided for @excellenceInEducation.
