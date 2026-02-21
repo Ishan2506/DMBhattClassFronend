@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class WordBridgeScreen extends StatefulWidget {
   const WordBridgeScreen({super.key});
@@ -14,77 +17,46 @@ class WordBridgeScreen extends StatefulWidget {
 class _WordBridgeScreenState extends State<WordBridgeScreen> {
   final MindGameService _gameService = MindGameService();
 
-  // Defines a level: Start Word, Target Word, and a sequence of choices.
-  // Each step has `options` and the `correct` choice which becomes the next "Current Word".
-  final List<Map<String, dynamic>> _levels = [
-    {
-      "start": "Rain",
-      "target": "Bread",
-      "path": ["Rain", "Water", "Flour", "Bread"],
-      "options_pool": [
-        ["Cloud", "Water", "Umbrella"], // Rain -> ?
-        ["Fire", "Flour", "Ice"],       // Water -> ?
-        ["Sandwich", "Dough", "Bread"]  // Flour -> ? (Flour makes Bread)
-      ]
-    },
-    // Let's refine the logic to be "Connect the concepts"
-    {
-      "start": "Forest",
-      "target": "Table",
-      "path": ["Forest", "Tree", "Wood", "Table"],
-      "options_pool": [
-        ["River", "Tree", "Mountain"], // Forest -> ?
-        ["Leaf", "Wood", "Root"],      // Tree -> ?
-        ["Table", "Paper", "Ash"]      // Wood -> ?
-      ]
-    },
-    {
-      "start": "Cow",
-      "target": "Omelette",
-      "path": ["Cow", "Grass", "Chicken", "Egg", "Omelette"], 
-      // Cow eats Grass ?? No. 
-      // Cow -> Milk -> Cheese -> Omelette? Yes.
-      // Cow -> Milk -> Cheese -> Omelette.
-      "options_pool": [
-        ["Milk", "Beef", "Leather"],   // Cow -> ?
-        ["Cheese", "Yogurt", "White"], // Milk -> ?
-        ["Pizza", "Mouse", "Omelette"] // Cheese -> ? (Cheesy Omelette) or maybe closer relation.
-      ]
-    },
-    {
-       "start": "Sand",
-       "target": "Window",
-       "path": ["Sand", "Glass", "Window"],
-       "options_pool": [
-         ["Beach", "Glass", "Desert"], // Sand -> ?
-         ["Door", "Wall", "Window"]    // Glass -> ?
-       ]
-    },
-    {
-       "start": "Sun",
-       "target": "Toast",
-       "path": ["Sun", "Heat", "Toaster", "Toast"],
-       "options_pool": [
-         ["Moon", "Heat", "Star"],     // Sun -> ?
-         ["Cold", "Toaster", "Oven"],  // Heat -> ?
-         ["Bread", "Butter", "Toast"]  // Toaster -> ?
-       ]
-    }
-  ];
-
-  int _currentLevelIndex = 0;
-  int _currentStepIndex = 0;
+  List<GameQuestion> _allQuestions = [];
+  int _currentIndex = 0;
   String _currentWord = "";
-  bool _isGameOver = false;
   int _score = 0;
   bool _showFeedback = false;
   bool _lastChoiceCorrect = false;
+  String _selectedOption = "";
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _startLevel();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Word Bridge');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allQuestions = data.map((json) => GameQuestion.fromJson(json)).toList();
+          _allQuestions.shuffle();
+          _isLoading = false;
+        });
+        if (_allQuestions.isNotEmpty) {
+          _startLevel();
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching questions: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -94,58 +66,61 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
   }
 
   void _startLevel() {
+    if (_allQuestions.isEmpty) return;
+    
+    // For Word Bridge, we split the analogy "A : B :: C : ?"
+    // questionText = "Photosynthesis : Chlorophyll :: Respiration : ?"
+    // _currentWord becomes the part before the bridge "Respiration" (from text or logic)
+    // Actually, let's keep it simple: Show the whole analogy but highlight the current challenge word.
+    
+    final q = _allQuestions[_currentIndex];
+    final text = q.questionText;
+    final parts = text.split("::");
+    
     setState(() {
-      _currentWord = _levels[_currentLevelIndex]["start"];
-      _currentStepIndex = 0;
+      if (parts.length > 1) {
+        // "Respiration : ?"
+        _currentWord = parts[1].split(":")[0].trim();
+      } else {
+        _currentWord = text;
+      }
       _showFeedback = false;
     });
   }
 
   void _handleOptionTap(String option) {
-    if (_showFeedback) return;
+    if (_showFeedback || _allQuestions.isEmpty) return;
 
-    // Determine correct answer for current step
-    // The "path" array has the full chain: [Start, Step1, Step2, ..., Target]
-    // _currentStepIndex 0 corresponds to finding path[1]
-    
-    List<String> path = _levels[_currentLevelIndex]["path"] as List<String>;
-    String correctAnswer = path[_currentStepIndex + 1];
-
-    bool correct = (option == correctAnswer);
+    final question = _allQuestions[_currentIndex];
+    bool correct = (option == question.correctAnswer);
 
     setState(() {
       _showFeedback = true;
       _lastChoiceCorrect = correct;
+      _selectedOption = option;
     });
 
     Future.delayed(const Duration(seconds: 1), () {
       if (!mounted) return;
+      
+      if (correct) {
+        _score += 10;
+      }
+      
       setState(() {
         _showFeedback = false;
-        if (correct) {
-          _score += 10;
-          _currentWord = correctAnswer;
-          _currentStepIndex++;
-          
-          // Check if reached target
-          if (_currentWord == _levels[_currentLevelIndex]["target"]) {
-            _nextLevel();
-          }
-        } else {
-           // Wrong choice feedback handled, just reset feedback to let them try again?
-           // Or restart level? Let's just let them try again.
-        }
+        _selectedOption = "";
       });
+
+      // Move to next question even if wrong, to allow progression
+      _nextLevel();
     });
   }
 
   void _nextLevel() {
-    if (_currentLevelIndex < _levels.length - 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Chain Complete! Next Level..."), backgroundColor: Colors.green, duration: Duration(milliseconds: 800))
-      );
+    if (_currentIndex < _allQuestions.length - 1) {
       setState(() {
-        _currentLevelIndex++;
+        _currentIndex++;
         _startLevel();
       });
     } else {
@@ -176,14 +151,26 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final levelData = _levels[_currentLevelIndex];
-    final target = levelData["target"];
-    final optionsPool = levelData["options_pool"] as List<List<String>>;
     
-    // Safety check
-    if (_currentStepIndex >= optionsPool.length) return const SizedBox();
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Word Bridge", centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-    final currentOptions = optionsPool[_currentStepIndex];
+    if (_allQuestions.isEmpty) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Word Bridge", centerTitle: true),
+        body: Center(child: Text("No questions found", style: GoogleFonts.poppins())),
+      );
+    }
+
+    final question = _allQuestions[_currentIndex];
+    final currentOptions = question.options;
+    final analogyText = question.questionText.split("::")[0].trim();
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -210,7 +197,7 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
              ClipRRect(
                borderRadius: BorderRadius.circular(10),
                child: LinearProgressIndicator(
-                 value: (_currentLevelIndex + 1) / _levels.length,
+                 value: (_currentIndex + 1) / _allQuestions.length,
                  backgroundColor: theme.dividerColor.withOpacity(0.1),
                  color: theme.colorScheme.primary,
                  minHeight: 8,
@@ -222,7 +209,7 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
              Row(
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                children: [
-                 _buildStone(_levels[_currentLevelIndex]["start"], isActive: true, theme: theme),
+                 _buildStone(analogyText, isActive: true, theme: theme),
                  Expanded(
                    child: Divider(
                      thickness: 2, 
@@ -240,14 +227,14 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                      endIndent: 10
                    )
                  ),
-                 _buildStone(target, isActive: false, theme: theme), // Target
+                 _buildStone("?", isActive: false, theme: theme), // Target
                ],
              ),
              
              const Spacer(),
              
              Text(
-               "Current Concept:",
+               "Current Analogy:",
                style: GoogleFonts.poppins(
                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)
                ),
@@ -256,10 +243,11 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
              Text(
                _currentWord,
                style: GoogleFonts.poppins(
-                 fontSize: 32, 
+                 fontSize: 28, 
                  fontWeight: FontWeight.bold, 
                  color: theme.colorScheme.primary
                ),
+               textAlign: TextAlign.center,
              ),
              const SizedBox(height: 8),
              Icon(
@@ -284,13 +272,13 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                 Color textColor = theme.colorScheme.onSurface;
                 
                 if (_showFeedback) {
-                   List<String> path = _levels[_currentLevelIndex]["path"] as List<String>;
-                   String correct = path[_currentStepIndex + 1];
+                   String correct = _allQuestions[_currentIndex].correctAnswer;
                    if (opt == correct) {
                      btnColor = Colors.green;
                      textColor = Colors.white;
-                   } else if (_lastChoiceCorrect == false && opt == _currentWord) {
-                     // Feedback for wrong choice could be here if needed
+                   } else if (opt == _selectedOption && !_lastChoiceCorrect) {
+                     btnColor = Colors.red;
+                     textColor = Colors.white;
                    }
                 }
 

@@ -19,6 +19,7 @@ class MathQuizScreen extends StatefulWidget {
 }
 
 class _MathQuizScreenState extends State<MathQuizScreen> {
+  final MindGameService _gameService = MindGameService();
   int _score = 0;
   int _timeLeft = 30; // 30 seconds per round
   Timer? _timer;
@@ -35,7 +36,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
   @override
   void initState() {
     super.initState();
-    MindGameService().startSession(context);
+    _gameService.startSession(context);
     _fetchQuestions();
   }
 
@@ -68,7 +69,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
 
   @override
   void dispose() {
-    MindGameService().stopSession();
+    _gameService.stopSession();
     _timer?.cancel();
     super.dispose();
   }
@@ -129,7 +130,9 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
     } else {
       setState(() {
         _timeLeft = max(0, _timeLeft - 5);
+        _currentQuestionIndex++; // Move to next question even on wrong answer
       });
+      _loadQuestion(); // Load the next question
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Wrong! -5 seconds", style: GoogleFonts.poppins()),
