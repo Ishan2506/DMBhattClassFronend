@@ -135,7 +135,8 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
   void _submitAnswer() {
     if (_isGameOver) return;
     
-    if (_controller.text.trim().toUpperCase() == _currentWord) {
+    final input = _controller.text.trim().toUpperCase();
+    if (input == _currentWord) {
        setState(() {
          _score += 10;
          _timeLeft += 5; // Bonus time
@@ -147,9 +148,15 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
        );
        _loadQuestion();
     } else {
+       setState(() {
+         _timeLeft = max(0, _timeLeft - 3); // Penalty
+         _controller.clear();
+         _currentQuestionIndex++;
+       });
        ScaffoldMessenger.of(context).showSnackBar(
-         const SnackBar(content: Text("Wrong! Try again."), backgroundColor: Colors.red, duration: Duration(milliseconds: 500))
+         SnackBar(content: Text("Wrong! The word was $_currentWord (-3s)"), backgroundColor: Colors.red, duration: const Duration(seconds: 1))
        );
+       _loadQuestion();
     }
   }
 

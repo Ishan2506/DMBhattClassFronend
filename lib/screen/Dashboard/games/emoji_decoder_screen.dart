@@ -30,7 +30,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
   @override
   void initState() {
     super.initState();
-    MindGameService().startSession(context);
+    _gameService.startSession(context);
     _fetchQuestions();
   }
 
@@ -93,16 +93,21 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
 
     if (isCorrect) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Correct! +20 Points"), backgroundColor: Colors.green)
+        const SnackBar(content: Text("Correct! +20 Points"), backgroundColor: Colors.green, duration: Duration(seconds: 1))
       );
       setState(() {
         _score += 20;
       });
-      _nextLevel();
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) _nextLevel();
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Not quite! Try again."), backgroundColor: Colors.red)
+        SnackBar(content: Text("Wrong! The correct answer was: $correct"), backgroundColor: Colors.red, duration: const Duration(seconds: 2))
       );
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) _nextLevel();
+      });
     }
   }
 

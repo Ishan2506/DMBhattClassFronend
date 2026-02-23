@@ -329,7 +329,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                       : null,
                   icon: const Icon(Icons.arrow_forward),
                   label: Text(
-                    'Next',
+                    _currentPage == _freePages - 1 ? 'Unlock All' : 'Next',
                     style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(

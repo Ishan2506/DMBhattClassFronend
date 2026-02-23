@@ -1,20 +1,127 @@
 import 'dart:ui' as ui;
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
-import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'dart:typed_data';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
-class MaterialDetailScreen extends StatelessWidget {
+class MaterialDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
 
   const MaterialDetailScreen({super.key, required this.product});
+
+  @override
+  State<MaterialDetailScreen> createState() => _MaterialDetailScreenState();
+}
+
+class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
+  late RazorpayHelper _razorpayHelper;
+  bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpayHelper = RazorpayHelper(
+      context: context,
+      onSuccess: _handlePaymentSuccess,
+      onFailure: _handlePaymentFailure,
+    );
+  }
+
+  @override
+  void dispose() {
+    _razorpayHelper.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    setState(() => _isProcessing = true);
+    _verifyPayment(response);
+  }
+
+  void _handlePaymentFailure(PaymentFailureResponse response) {
+    setState(() => _isProcessing = false);
+    // RazorpayHelper already shows a toast
+  }
+
+  Future<void> _verifyPayment(PaymentSuccessResponse response) async {
+    try {
+      final verifyResponse = await ApiService.verifyProductPayment(
+        productId: widget.product['id'],
+        razorpayPaymentId: response.paymentId ?? '',
+        razorpayOrderId: response.orderId ?? '',
+        razorpaySignature: response.signature ?? '',
+        amount: (widget.product['price'] as num).toDouble(),
+      );
+
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+
+      if (verifyResponse.statusCode == 200) {
+        CustomToast.showSuccess(context, "Purchase Successful!");
+        // Optionally redirect to history or refresh
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const StudentProductHistoryScreen()),
+        );
+      } else {
+        CustomToast.showError(context, "Verification Failed: ${verifyResponse.body}");
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        CustomToast.showError(context, "Error verifying payment: $e");
+      }
+    }
+  }
+
+  Future<void> _initiatePurchase() async {
+    setState(() => _isProcessing = true);
+    try {
+      final orderResponse = await ApiService.createProductOrder(
+        widget.product['id'],
+        (widget.product['price'] as num).toDouble(),
+      );
+
+      if (!mounted) return;
+
+      if (orderResponse.statusCode == 200) {
+        final orderData = jsonDecode(orderResponse.body);
+        final String orderId = orderData['id'];
+
+        // Get user profile for prefill (optional but better)
+        // For now using empty for prefill or we could fetch it
+        
+        _razorpayHelper.openCheckout(
+          amount: (widget.product['price'] as num).toDouble(),
+          name: "D.M. Bhatt classes",
+          description: widget.product['name'],
+          contact: '', // Ideally from user profile
+          email: '',   // Ideally from user profile
+          orderId: orderId,
+        );
+      } else {
+        setState(() => _isProcessing = false);
+        final errorMsg = ApiService.getErrorMessage(orderResponse.body);
+        CustomToast.showError(context, "Failed: $errorMsg");
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        CustomToast.showError(context, "Error: $e");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,249 +130,230 @@ class MaterialDetailScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: "Product Details",
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        centerTitle: true,
-      ),
-      backgroundColor: theme.colorScheme.surface,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 1. Hero Image
-            Container(
-               width: double.infinity,
-               height: screenHeight * 0.4,
-               padding: const EdgeInsets.all(32),
-               decoration: BoxDecoration(
-                 color: theme.colorScheme.surfaceContainerLowest,
-                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
-                 boxShadow: [
-                   BoxShadow(
-                     color: Colors.black.withOpacity(0.05),
-                     blurRadius: 10,
-                     offset: const Offset(0, 5),
-                   )
-                 ],
-               ),
-                child: ImageFiltered(
-                  imageFilter: ui.ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-                  child: Hero(
-                    tag: product['id'],
-                    child: () {
-                       final String imageUrl = product['image'].toString();
-                       // 1. Check if it's a Cloudinary PDF - Use fast image transformation
-                       if (imageUrl.toLowerCase().contains('.pdf') && imageUrl.contains('/upload/')) {
-                          final parts = imageUrl.split('/upload/');
-                          if (parts.length == 2) {
-                            final transformedUrl = '${parts[0]}/upload/pg_1,f_jpg/${parts[1]}';
-                            return Image.network(
-                              transformedUrl,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                            );
-                          }
-                       }
-                       
-                       // 2. Check if it's a non-Cloudinary PDF - Use rasterization (slower)
-                       if (imageUrl.toLowerCase().contains('.pdf')) {
-                         return _PdfCover(url: imageUrl);
-                       }
-   
-                       // 3. Standard Image
-                       if (imageUrl.startsWith('http')) {
-                         return Image.network(
-                           imageUrl,
-                           fit: BoxFit.contain,
-                           errorBuilder: (context, error, stackTrace) =>
-                               const Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                         );
-                       }
-   
-                       // 4. Asset Image
-                       return Image.asset(
-                         imageUrl,
-                         fit: BoxFit.contain,
-                       );
-                     }(),
-                  ),
-                ),
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: CustomAppBar(
+            title: "Product Details",
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-
-            // 2. Content Body
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                    // Badge (Subject > Category fallback)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        product['subject']?.toUpperCase() ?? product['category']?.toUpperCase() ?? "MATERIAL",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                          letterSpacing: 0.5,
-                        ),
+            centerTitle: true,
+          ),
+          backgroundColor: theme.colorScheme.surface,
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                // 1. Hero Image
+                Container(
+                   width: double.infinity,
+                   height: screenHeight * 0.4,
+                   padding: const EdgeInsets.all(32),
+                   decoration: BoxDecoration(
+                     color: theme.colorScheme.surfaceContainerLowest,
+                     borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+                     boxShadow: [
+                       BoxShadow(
+                         color: Colors.black.withOpacity(0.05),
+                         blurRadius: 10,
+                         offset: const Offset(0, 5),
+                       )
+                     ],
+                   ),
+                    child: ImageFiltered(
+                      imageFilter: ui.ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                      child: Hero(
+                        tag: widget.product['id'],
+                        child: () {
+                           final String imageUrl = widget.product['image'].toString();
+                           // 1. Check if it's a Cloudinary PDF - Use fast image transformation
+                           if (imageUrl.toLowerCase().contains('.pdf') && imageUrl.contains('/upload/')) {
+                              final parts = imageUrl.split('/upload/');
+                              if (parts.length == 2) {
+                                final transformedUrl = '${parts[0]}/upload/pg_1,f_jpg/${parts[1]}';
+                                return Image.network(
+                                  transformedUrl,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                                );
+                              }
+                           }
+                           
+                           // 2. Check if it's a non-Cloudinary PDF - Use rasterization (slower)
+                           if (imageUrl.toLowerCase().contains('.pdf')) {
+                             return _PdfCover(url: imageUrl);
+                           }
+       
+                           // 3. Standard Image
+                           if (imageUrl.startsWith('http')) {
+                             return Image.network(
+                               imageUrl,
+                               fit: BoxFit.contain,
+                               errorBuilder: (context, error, stackTrace) =>
+                                   const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                             );
+                           }
+       
+                           // 4. Asset Image
+                           return Image.asset(
+                             imageUrl,
+                             fit: BoxFit.contain,
+                           );
+                         }(),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Subject Row
-                    if (product['subject'] != null && product['subject'].toString().isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Text(
-                          "Subject: ${product['subject']}",
+                ),
+
+                // 2. Content Body
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                        // Badge (Subject > Category fallback)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            widget.product['subject']?.toUpperCase() ?? widget.product['category']?.toUpperCase() ?? "MATERIAL",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Subject Row
+                        if (widget.product['subject'] != null && widget.product['subject'].toString().isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Text(
+                              "Subject: ${widget.product['subject']}",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+
+                        // Title
+                        Text(
+                          widget.product['name'],
+                          style: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Price Section
+                        // Price Section
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              "₹${widget.product['price']}",
+                              style: GoogleFonts.poppins(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary, // Use theme color
+                              ),
+                            ),
+                             const SizedBox(width: 12),
+                             if ((widget.product['originalPrice'] as num) > (widget.product['price'] as num))
+                              Text(
+                                "₹${widget.product['originalPrice']}",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  decoration: TextDecoration.lineThrough,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                             const SizedBox(width: 8),
+                             Container(
+                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                               decoration: BoxDecoration(
+                                 color: Colors.green.shade50,
+                                 borderRadius: BorderRadius.circular(4),
+                               ),
+                               child: Text(
+                                 "${widget.product['discount']}% OFF",
+                                 style: GoogleFonts.poppins(
+                                   fontSize: 12,
+                                   fontWeight: FontWeight.bold,
+                                   color: Colors.green.shade700
+                                 ),
+                               ),
+                             ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 32),
+
+                         // Description
+                        Text(
+                          "About this item",
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.product['description'] ?? "No description available.",
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            height: 1.6,
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 32),
+                        
+                        // --- Action Buttons Section ---
+                        Text(
+                          "Actions",
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.primary,
+                            color: isDark ? Colors.white70 : Colors.black54,
                           ),
                         ),
-                      ),
-
-                    // Title
-                    Text(
-                      product['name'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Price Section
-                    // Price Section
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          "₹${product['price']}",
-                          style: GoogleFonts.poppins(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary, // Use theme color
-                          ),
+                        const SizedBox(height: 16),
+                        
+                        // 1. Buy Now (Prominent)
+                        _buildActionButton(
+                          context: context,
+                          label: "Buy Now ₹${widget.product['price']}",
+                          icon: Icons.shopping_cart_outlined,
+                          color: theme.colorScheme.primary, // Use theme color
+                          isPrimary: true,
+                          onPressed: _initiatePurchase,
                         ),
-                         const SizedBox(width: 12),
-                         if ((product['originalPrice'] as num) > (product['price'] as num))
-                          Text(
-                            "₹${product['originalPrice']}",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              decoration: TextDecoration.lineThrough,
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
-                         const SizedBox(width: 8),
-                         Container(
-                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                           decoration: BoxDecoration(
-                             color: Colors.green.shade50,
-                             borderRadius: BorderRadius.circular(4),
-                           ),
-                           child: Text(
-                             "${product['discount']}% OFF",
-                             style: GoogleFonts.poppins(
-                               fontSize: 12,
-                               fontWeight: FontWeight.bold,
-                               color: Colors.green.shade700
-                             ),
-                           ),
-                         ),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 32),
 
-                     // Description
-                    Text(
-                      "About this item",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      product['description'] ?? "No description available.",
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        height: 1.6,
-                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // --- Action Buttons Section ---
-                    Text(
-                      "Actions",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white70 : Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Preview PDF (Only for PDFs)
-                    if (product['image'] != null && product['image'].toString().toLowerCase().contains('.pdf'))
-                      _buildActionButton(
-                        context: context,
-                        label: "Preview PDF",
-                        icon: Icons.visibility_outlined,
-                        color: theme.colorScheme.secondary,
-                        isPrimary: false,
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PdfPreviewScreen(product: product),
-                            ),
-                          );
-                        },
-                      ),
-                    
-                    if (product['image'] != null && product['image'].toString().toLowerCase().contains('.pdf'))
-                      const SizedBox(height: 12),
-                    
-                    // 1. Download PDF (Prominent)
-                    _buildActionButton(
-                      context: context,
-                      label: "Download PDF",
-                      icon: Icons.file_download_outlined,
-                      color: theme.colorScheme.primary, // Use theme color
-                      isPrimary: true,
-                      onPressed: () {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(content: Text("Downloading PDF...")),
-                         );
-                      },
-                    ),
-
-                    const SizedBox(height: 40), // Bottom padding
-                ],
-              ),
+                        const SizedBox(height: 40), // Bottom padding
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (_isProcessing)
+          const CustomLoader(),
+      ],
     );
   }
 

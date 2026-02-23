@@ -23,8 +23,6 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
-  bool _isUpdating = false;
   
   // Controllers
   final TextEditingController _nameController = TextEditingController();
@@ -69,7 +67,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _fetchProfile() async {
-    setState(() => _isLoading = true);
+    CustomLoader.show(context);
     try {
       // Token is managed internally by ApiService
 
@@ -102,15 +100,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                }
             }
             _currentPhotoPath = user['photoPath'];
-            _isLoading = false;
         });
       } else {
         CustomToast.showError(context, "Failed to fetch profile: ${ApiService.getErrorMessage(response.body)}");
-        setState(() => _isLoading = false);
       }
     } catch (e) {
       CustomToast.showError(context, "Error: $e");
-      setState(() => _isLoading = false);
+    } finally {
+      CustomLoader.hide(context);
     }
   }
 
@@ -123,7 +120,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
-    setState(() => _isUpdating = true);
+    CustomLoader.show(context);
 
     try {
       // Token is managed internally
@@ -153,9 +150,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       CustomToast.showError(context, "Error: $e");
     } finally {
-      if (mounted) {
-        setState(() => _isUpdating = false);
-      }
+      CustomLoader.hide(context);
     }
   }
 
@@ -232,8 +227,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           Column(
             children: [
-              if (_isLoading)
-                const LinearProgressIndicator(minHeight: 2),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
@@ -540,7 +533,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     width: double.infinity,
                     height: MediaQuery.of(context).size.height * 0.07,
                     child: ElevatedButton(
-                      onPressed: _isUpdating ? null : _updateProfile,
+                      onPressed: _updateProfile,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         shape: RoundedRectangleBorder(
@@ -565,14 +558,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ],
           ),
-          
-          if (_isUpdating)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: const Center(
-                child: CustomLoader(),
-              ),
-            ),
         ],
       ),
     );

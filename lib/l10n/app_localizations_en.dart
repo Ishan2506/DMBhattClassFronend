@@ -234,7 +234,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dontHaveAccount => 'Don\'t have an account?';
 
   @override
-  String get welcomeToDmBhatt => 'Welcome to DM Bhatt Classes';
+  String get welcomeToDmBhatt => 'Welcome to Our Learning Platform';
 
   @override
   String get academicPath => 'Your path to academic excellence starts here.';
@@ -561,23 +561,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shareTextWeb(Object code, Object url) {
-    return 'Join D. M. Bhatt Tuitions using my referral code: $code and get amazing benefits! Download now: $url';
+    return 'Join our learning platform using my referral code: $code and get amazing benefits! Download now: $url';
   }
 
   @override
   String shareTextMobile(Object code, Object url) {
-    return 'Hello! I am gifting you a special discount on Padhaku App. Use my code \"$code\" at the time of registration to claim it! Download: $url';
+    return 'Hello! I am gifting you a special discount on our Learning App. Use my code \"$code\" at the time of registration to claim it! Download: $url';
   }
 
   @override
-  String get aboutUsHeader => 'D. M. Bhatt Tuition Classes';
+  String get aboutUsHeader => 'Empowering Your Future';
 
   @override
   String get aboutUsDescription =>
-      'Welcome to D. M. Bhatt Tuition Classes, your partner in academic excellence. We are dedicated to providing high-quality education and guidance to students, helping them achieve their potential and secure a bright future.\n\nOur experienced faculty and comprehensive curriculum ensure that every student receives personalized attention and support. Join us to embark on a journey of learning and success.';
+      'We are committed to providing top-quality education and modern learning resources to help every student excel. Our mission is to simplify complex concepts and inspire a lifelong love for learning.\n\nWith a focus on interactive teaching and student success, we provide the tools and support needed to reach academic goals and beyond.';
 
   @override
-  String get influencerName => 'D.M. Bhatt Sir';
+  String get influencerName => 'Our Lead Educator';
 
   @override
   String get followOnInstagram => 'Follow on Instagram';
@@ -870,7 +870,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clickHere => 'Click here';
 
   @override
-  String get dmBhattGroupTuition => 'DM Bhatt Group Tuition';
+  String get dmBhattGroupTuition => 'The Learning Academy';
 
   @override
   String get excellenceInEducation => 'Excellence in Education';

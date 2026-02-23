@@ -87,7 +87,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
   void _initializeChat() {
     final userStd = _authenticationCubit.state.formState.studentStandard;
     
-    const welcomeMsg = "Hello! I am your DM AI Assistant. I don't save our chat history, so every session is a fresh start.";
+    const welcomeMsg = "Hello! I am your AI Learning Assistant. I don't save our chat history, so every session is a fresh start.";
     _addBotMessage(welcomeMsg);
     
     if (userStd.isNotEmpty) {
@@ -170,7 +170,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
     } else {
       _addBotMessage("I couldn't find a direct link for '$text'. Try searching the full channel below:");
       _addVideoMessage({
-        "title": "Search DM Bhatt Education",
+        "title": "Search Education Channel",
         "description": "Search for '$text' on YouTube",
         "url": "https://www.youtube.com/@dmbhatteducationchannel/search?query=${Uri.encodeComponent(text)}",
         "std": "General"

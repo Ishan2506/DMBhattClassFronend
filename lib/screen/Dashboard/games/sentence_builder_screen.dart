@@ -96,28 +96,19 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
       }
     });
 
-    if (correct) {
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        if (mounted) {
-          if (_currentIndex < _allQuestions.length - 1) {
-            setState(() {
-              _currentIndex++;
-            });
-            _startLevel();
-          } else {
-            _showWinDialog();
-          }
-        }
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Incorrect! Try rearranging the words.", style: GoogleFonts.poppins()),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 1),
-        ),
-      );
-    }
+    // Wait and move to next question regardless of correctness
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (!mounted) return;
+      
+      if (_currentIndex < _allQuestions.length - 1) {
+        setState(() {
+          _currentIndex++;
+        });
+        _startLevel();
+      } else {
+        _showWinDialog();
+      }
+    });
   }
 
   void _showWinDialog() {
@@ -338,7 +329,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                width: double.infinity,
                height: 55,
                child: ElevatedButton(
-                 onPressed: _isCorrect ? null : _checkOrder,
+                 onPressed: _isChecked ? null : _checkOrder,
                  style: ElevatedButton.styleFrom(
                    backgroundColor: _isCorrect ? Colors.green : theme.colorScheme.primary,
                    foregroundColor: theme.colorScheme.onPrimary,

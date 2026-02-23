@@ -42,43 +42,48 @@ class MoreScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(screenWidth * 0.04),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section 1: Student Activities
-            _MoreScreenItem(
-              title: l10n.studentActivities,
-              value: "",
-              icon: Icons.school,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const _StudentActivitiesScreen()),
-                );
-              },
+            // Main Navigation Grid
+            Text(
+              "Explore Features",
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            Row(
+              children: [
+                Expanded(
+                  child: _FeatureGridItem(
+                    title: l10n.studentActivities,
+                    icon: Icons.school_rounded,
+                    color: Colors.blue,
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const _StudentActivitiesScreen())),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _FeatureGridItem(
+                    title: l10n.appInformation,
+                    icon: Icons.info_rounded,
+                    color: Colors.orange,
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const _AppInfoScreen())),
+                  ),
+                ),
+              ],
             ),
 
-            // Section 2: App Information
-            _MoreScreenItem(
-              title: l10n.appInformation,
-              value: "",
-              icon: Icons.info_outline_rounded,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const _AppInfoScreen()),
-                );
-              },
-            ),
+            const SizedBox(height: 32),
 
-            const SizedBox(height: 30),
-
-            // Meet Our Influencer Section
+            // Uniquely Identified Influencer Section
             const _InfluencerCarousel(),
-
-
+            
             const SizedBox(height: 40),
           ],
         ),
@@ -381,18 +386,7 @@ class _AppInfoScreen extends StatelessWidget {
                 );
               },
             ),
-            _MoreScreenItem(
-              title: l10n.settings,
-              value: "",
-              icon: Icons.settings,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const SettingsScreen()),
-                );
-              },
-            ),
+          
             _MoreScreenItem(
               title: l10n.shareApp,
               value: "",
@@ -410,6 +404,18 @@ class _AppInfoScreen extends StatelessWidget {
               value: "",
               icon: Icons.rss_feed_rounded,
               onTap: () => _showFollowUsSheet(context),
+            ),
+              _MoreScreenItem(
+              title: l10n.settings,
+              value: "",
+              icon: Icons.settings,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SettingsScreen()),
+                );
+              },
             ),
           ],
         ),
@@ -454,8 +460,8 @@ class _RateUsDialogState extends State<_RateUsDialog> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF1565C0), // Deep Blue
-                  const Color(0xFF42A5F5), // Lighter Blue
+                  colorScheme.primary,
+                  colorScheme.primary.withOpacity(0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -467,14 +473,14 @@ class _RateUsDialogState extends State<_RateUsDialog> {
             ),
             child: Column(
               children: [
-                const Icon(Icons.star_rounded, color: Colors.white, size: 48),
+                Icon(Icons.star_rounded, color: colorScheme.onPrimary, size: 48),
                 const SizedBox(height: 8),
                 Text(
                   l10n.rateYourExperience,
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
-                    color: Colors.white,
+                    color: colorScheme.onPrimary,
                   ),
                 ),
               ],
@@ -508,7 +514,10 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                           children: [
                             Text(
                               e['icon'],
-                              style: const TextStyle(fontSize: 32),
+                              style: TextStyle(
+                                fontSize: 32,
+                                color: isSelected ? null : colorScheme.onSurface.withOpacity(0.5),
+                              ),
                             ),
                           ],
                         ),
@@ -534,10 +543,14 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                   decoration: InputDecoration(
                     hintText: l10n.feedbackHint,
                     hintStyle:
-                        GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
+                        GoogleFonts.poppins(fontSize: 13, color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderSide: BorderSide(color: colorScheme.outlineVariant),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -560,7 +573,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                         ),
                         child: Text(l10n.cancel,
                             style: GoogleFonts.poppins(
-                                color: Colors.grey, fontWeight: FontWeight.w600)),
+                                color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -585,7 +598,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                         ),
                         child: Text(l10n.submit,
                             style: GoogleFonts.poppins(
-                                color: Colors.white,
+                                color: colorScheme.onPrimary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16)),
                       ),
@@ -763,40 +776,73 @@ class _InfluencerCarousel extends StatefulWidget {
 class _InfluencerCarouselState extends State<_InfluencerCarousel> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  // Timer is implicitly handled by recursive Future loop.
 
-  
+  final List<Map<String, String>> _teamMembers = [
+    {
+      "name": "D.M.BHATT",
+      "role": "Visionary & Mentor",
+      "description": "Inspiring Excellence in Education",
+      "imagePath": imgInfluencerDmBhattNew,
+      "instagramUrl": "https://www.instagram.com/dmbhattsir/"
+    },
+    {
+      "name": "Hetvi Bhatt",
+      "role": "Academic Specialist",
+      "description": "Mastering Foundation Learning",
+      "imagePath": imgInfluencerKeyur, // TODO: Update image if available
+      "instagramUrl": "https://www.instagram.com/hetvee_bhatt_/"
+    },
+    {
+      "name": "Keyur Suthar",
+      "role": "Academic Specialist",
+      "description": "Mastering Foundation Learning",
+      "imagePath": imgInfluencerKeyur,
+      "instagramUrl": "https://www.instagram.com/keyur.s.99/"
+    },
+    {
+      "name": "Ravi Shah",
+      "role": "Academic Specialist",
+      "description": "Mastering Foundation Learning",
+      "imagePath": imgInfluencerKeyur, // TODO: Update image if available
+      "instagramUrl": "https://www.instagram.com/ravi_maths_/"
+    },
+    {
+      "name": "Ankit Kayastha",
+      "role": "Digital Educator",
+      "description": "Engaging Future Technology Experts",
+      "imagePath": imgInfluencerAnkit,
+      "instagramUrl": "https://www.instagram.com/ak94sir/"
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
-    // Auto-scroll logic
-    // We need to import dart:async for Timer if not already imported. 
-    // It is likely not imported or masked. Let's rely on standard Timer availability or add import if needed.
-    // However, I can't add imports easily without scrolling up. 
-    // I'll assume dart:async is available or I'll implement a simple Future loop or just use Future.delayed recursively.
-    // Recursive Future.delayed is safer if I'm unsure about Timer imports.
     _startAutoScroll();
   }
 
   void _startAutoScroll() async {
     while (mounted) {
-      await Future.delayed(const Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 4));
       if (mounted) {
         int nextPage = _currentPage + 1;
-        if (nextPage >= 3) {
+        if (nextPage >= _teamMembers.length) {
           nextPage = 0;
-          _pageController.animateToPage(
-            nextPage,
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeIn, 
-            // Jump to 0 for continuous loop effect ? Or animate back. Animate back is standard.
-          );
+          if (_pageController.hasClients) {
+            _pageController.animateToPage(
+              nextPage,
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeIn,
+            );
+          }
         } else {
-          _pageController.animateToPage(
-            nextPage,
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeInOut,
-          );
+          if (_pageController.hasClients) {
+            _pageController.animateToPage(
+              nextPage,
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeInOut,
+            );
+          }
         }
         setState(() {
           _currentPage = nextPage;
@@ -813,151 +859,287 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
 
   @override
   Widget build(BuildContext context) {
-      final colorScheme = Theme.of(context).colorScheme;
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              AppLocalizations.of(context)!.meetOurInfluencer.toUpperCase(),
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface.withOpacity(0.6),
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 250, // Height for the content
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
-                children: [
-                  _buildInfluencerContent(
-                    context, 
-                    name: "D.M. Bhatt Sir", 
-                    imagePath: imgInfluencerDmBhattNew, 
-                    instagramUrl: "https://www.instagram.com/dmbhattsir/"
-                  ),
-                  _buildInfluencerContent(
-                    context, 
-                    name: "Ankit Sir", 
-                    imagePath: imgInfluencerAnkit, 
-                    instagramUrl: "https://www.instagram.com/ak94sir/"
-                  ),
-                  _buildInfluencerContent(
-                    context, 
-                    name: "Keyur Sir", 
-                    imagePath: imgInfluencerKeyur, 
-                    instagramUrl: "https://www.instagram.com/keyur.s.99/"
-                  ),
-                ],
-              ),
-            ),
-             // Page Indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(3, (index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentPage == index
-                        ? colorScheme.primary
-                        : colorScheme.outlineVariant,
-                  ),
-                );
-              }),
-            ),
-          ],
-        ),
-      );
-  }
-
-  Widget _buildInfluencerContent(BuildContext context, {required String name, required String imagePath, required String instagramUrl}) {
-     final colorScheme = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: () async {
-        if (await canLaunchUrl(Uri.parse(instagramUrl))) {
-          await launchUrl(Uri.parse(instagramUrl), mode: LaunchMode.externalApplication);
-        }
-      },
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           Container(
-            width: 110,
-            height: 110,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: colorScheme.surface, width: 3),
-              image: DecorationImage(
-                image: AssetImage(imagePath),
-                fit: BoxFit.cover,
+              color: colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              "OUR EDUCATIONAL TEAM",
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: colorScheme.primary,
+                letterSpacing: 1.5,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            name,
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 280,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: _teamMembers.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                final member = _teamMembers[index];
+                return _buildUniqueInfluencerCard(
+                  context,
+                  name: member["name"]!,
+                  role: member["role"]!,
+                  description: member["description"]!,
+                  imagePath: member["imagePath"]!,
+                  instagramUrl: member["instagramUrl"]!,
+                );
+              },
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 20, vertical: 10),
+          // Modern Dot Indicator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_teamMembers.length, (index) {
+              bool isActive = _currentPage == index;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: isActive ? 20 : 8,
+                height: 6,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: isActive
+                      ? colorScheme.primary
+                      : colorScheme.primary.withOpacity(0.2),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUniqueInfluencerCard(BuildContext context, {
+    required String name, 
+    required String role,
+    required String description,
+    required String imagePath, 
+    required String instagramUrl
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer glow
+            Container(
+              width: 135,
+              height: 135,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colorScheme.primary.withOpacity(0.05),
+              ),
+            ),
+            // Decorative ring
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: colorScheme.primary.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            // Profile image with thick border
+            Container(
+              width: 105,
+              height: 105,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  )
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset(imagePath, fit: BoxFit.cover),
+              ),
+            ),
+            // Verified Badge
+            Positioned(
+              bottom: 5,
+              right: 5,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(Icons.check, color: Colors.white, size: 10),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          name,
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        Text(
+          role,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            color: colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          description,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: colorScheme.onSurface.withOpacity(0.8),
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 12),
+        InkWell(
+          onTap: () async {
+            if (await canLaunchUrl(Uri.parse(instagramUrl))) {
+              await launchUrl(Uri.parse(instagramUrl), mode: LaunchMode.externalApplication);
+            }
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(30),
+              gradient: LinearGradient(
+                colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.link, size: 18,
-                    color: colorScheme.onPrimaryContainer),
+                const Icon(FontAwesomeIcons.instagram, color: Colors.white, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  "Follow on Instagram",
+                  "Connect",
                   style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+class _FeatureGridItem extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _FeatureGridItem({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        height: 130,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

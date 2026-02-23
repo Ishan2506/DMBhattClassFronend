@@ -49,20 +49,12 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
         if (mounted) {
           setState(() {
             _achievers = data.map((json) {
-              Color cardColor = Colors.blue.shade800;
-              int index = data.indexOf(json);
-              
-              if (index % 4 == 0) cardColor = Colors.blue.shade800;
-              else if (index % 4 == 1) cardColor = Colors.red.shade800;
-              else if (index % 4 == 2) cardColor = Colors.teal.shade800;
-              else cardColor = Colors.orange.shade800;
-
               return AchieverModel(
                 name: json['studentName'] ?? '',
                 marks: "${json['percentage']}/100", 
                 subject: json['subject'] ?? '',
                 rank: json['rank'] ?? '',
-                color: cardColor,
+                color: Colors.transparent, // Color will be handled in build
               );
             }).toList();
             _isLoading = false;
@@ -134,7 +126,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                 height: screenHeight * 0.025,
                 width: 4,
                 decoration: BoxDecoration(
-                  color: Colors.redAccent,
+                  color: theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -176,7 +168,9 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
               width: _currentPage == index ? 24 : 8,
               height: 8,
               decoration: BoxDecoration(
-                color: _currentPage == index ? Colors.blue : Colors.grey.shade300,
+                color: _currentPage == index 
+                    ? theme.colorScheme.primary 
+                    : theme.colorScheme.primary.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -213,7 +207,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
             top: -20,
             child: CircleAvatar(
               radius: screenWidth * 0.1, // Reduced decoration radius
-              backgroundColor: achiever.color.withOpacity(0.1),
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.05),
             ),
           ),
           
@@ -226,7 +220,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: achiever.color, width: 2),
+                    border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3), width: 2),
                   ),
                   child: CircleAvatar(
                     radius: screenWidth * 0.08, // Reduced avatar radius
@@ -245,15 +239,15 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                        Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: achiever.color,
+                          color: theme.colorScheme.primary.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           "${achiever.subject} • ${achiever.rank}",
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color: theme.colorScheme.primary,
                             fontSize: screenWidth * 0.022, // Slightly reduced font size
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -276,7 +270,7 @@ class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
                               style: GoogleFonts.poppins(
                                 fontSize: screenWidth * 0.05, // Reduced font size
                                 fontWeight: FontWeight.bold,
-                                color: achiever.color,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                             TextSpan(
@@ -306,7 +300,7 @@ class YouTubeChannelAd extends StatelessWidget {
   const YouTubeChannelAd({super.key});
 
   Future<void> _launchURL() async {
-    final Uri url = Uri.parse('https://www.youtube.com/@DMBhattClasses'); // Replace with actual URL if known
+    final Uri url = Uri.parse('https://www.youtube.com/@DMBhattSir'); // Replace with actual URL if known
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       throw Exception('Could not launch $url');
     }

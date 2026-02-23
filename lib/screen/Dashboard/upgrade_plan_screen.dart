@@ -9,6 +9,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:intl/intl.dart';
+
 class UpgradePlanScreen extends StatefulWidget {
   const UpgradePlanScreen({super.key});
 
@@ -34,18 +38,80 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   double _pointsDiscount = 0;
   bool _isPromoApplied = false;
   
-  // Simulated available points (In real app, fetch from user profile)
+  // Simulated available points
   int _availablePoints = 0; 
   
   String? _currentStandard;
   bool _isLoading = true;
   bool _isGuest = false;
 
+  late RazorpayHelper _razorpayHelper;
+
   @override
   void initState() {
     super.initState();
     _fetchUserProfile();
     _fetchBonusPoints();
+    _razorpayHelper = RazorpayHelper(
+      context: context,
+      onSuccess: _handlePaymentSuccess,
+      onFailure: _handlePaymentFailure,
+    );
+  }
+
+  @override
+  void dispose() {
+    _razorpayHelper.dispose();
+    _promoCodeController.dispose();
+    _rewardPointsController.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentFailure(PaymentFailureResponse response) {
+    CustomToast.showError(context, "Payment Failed: ${response.message}");
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    _verifyUpgrade(
+      paymentId: response.paymentId!,
+      orderId: response.orderId!,
+      signature: response.signature!,
+    );
+  }
+
+  Future<void> _verifyUpgrade({
+    required String paymentId,
+    required String orderId,
+    required String signature,
+  }) async {
+    try {
+      CustomLoader.show(context);
+      final response = await ApiService.verifyUpgradePayment(
+        razorpayPaymentId: paymentId,
+        razorpayOrderId: orderId,
+        razorpaySignature: signature,
+        amount: _finalAmount,
+        newStandard: _selectedStandard!,
+        medium: _selectedMedium!,
+        stream: _selectedStream,
+      );
+
+      if (!mounted) return;
+      CustomLoader.hide(context);
+
+      if (response.statusCode == 200) {
+        CustomToast.showSuccess(context, AppLocalizations.of(context)!.planUpgradeSuccess);
+        Navigator.pop(context);
+      } else {
+        final errorMsg = ApiService.getErrorMessage(response.body);
+        CustomToast.showError(context, "Verification Failed: $errorMsg");
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomLoader.hide(context);
+        CustomToast.showError(context, "Error: $e");
+      }
+    }
   }
 
   Future<void> _fetchUserProfile() async {
@@ -58,7 +124,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         final profile = data['profile'];
         
         if (profile != null) {
-          _currentStandard = profile['std'];
+          setState(() {
+            _currentStandard = profile['std'];
+          });
         }
       }
     } catch (e) {
@@ -246,21 +314,140 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
     try {
       CustomLoader.show(context);
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      
+      final response = await ApiService.createUpgradeOrder(
+        amount: _finalAmount,
+        newStandard: _selectedStandard!,
+        medium: _selectedMedium!,
+        stream: _selectedStream,
+      );
+
       if (!mounted) return;
       CustomLoader.hide(context);
 
-      final l10n = AppLocalizations.of(context)!;
-      CustomToast.showSuccess(context, l10n.planUpgradeSuccess);
-      Navigator.pop(context);
+      if (response.statusCode == 200) {
+        final orderData = jsonDecode(response.body);
+        final String orderId = orderData['id'];
+
+        _razorpayHelper.openCheckout(
+          amount: _finalAmount,
+          name: "Standard Upgrade",
+          description: "Upgrade to Standard $_selectedStandard",
+          contact: '', // Ideally from user profile
+          email: '',   // Ideally from user profile
+          orderId: orderId,
+        );
+      } else {
+        final errorMsg = ApiService.getErrorMessage(response.body);
+        CustomToast.showError(context, "Failed: $errorMsg");
+      }
     } catch (e) {
        if (mounted) {
          CustomLoader.hide(context);
          CustomToast.showError(context, "Error: $e");
        }
     }
+  }
+
+  void _showUpgradeHistory() async {
+    try {
+      CustomLoader.show(context);
+      final response = await ApiService.getUpgradeHistory();
+      
+      if (!mounted) return;
+      CustomLoader.hide(context);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> history = jsonDecode(response.body);
+        if (history.isEmpty) {
+          CustomToast.showInfo(context, "No upgrade history found.");
+          return;
+        }
+
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => _buildHistoryModal(history),
+        );
+      } else {
+        CustomToast.showError(context, "Failed to fetch history");
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomLoader.hide(context);
+        CustomToast.showError(context, "Error: $e");
+      }
+    }
+  }
+
+  Widget _buildHistoryModal(List<dynamic> history) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Upgrade History",
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              )
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              itemCount: history.length,
+              itemBuilder: (context, index) {
+                final item = history[index];
+                final date = DateTime.parse(item['createdAt']);
+                final formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(date);
+                
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    title: Text(
+                      "Standard ${item['oldStandard']} ➔ ${item['newStandard']}",
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Medium: ${item['medium']}${item['stream'] != null ? ' (${item['stream']})' : ''}"),
+                        const SizedBox(height: 4),
+                        Text("Date: $formattedDate", style: const TextStyle(fontSize: 12)),
+                        Text("Transaction ID: ${item['razorpayPaymentId']}", style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                      ],
+                    ),
+                    trailing: Text(
+                      "₹${item['amount']}",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -280,6 +467,13 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       appBar: CustomAppBar(
         title: l10n.upgradePlan,
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: _showUpgradeHistory,
+            icon: const Icon(Icons.history),
+            tooltip: "Upgrade History",
+          ),
+        ],
       ),
       body: SingleChildScrollView(
               padding: const EdgeInsets.all(24),

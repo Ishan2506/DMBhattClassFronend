@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class GrammarGuardianScreen extends StatefulWidget {
   const GrammarGuardianScreen({super.key});
@@ -13,31 +17,42 @@ class GrammarGuardianScreen extends StatefulWidget {
 
 class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
   final MindGameService _gameService = MindGameService();
-
-  final List<Map<String, dynamic>> _questions = [
-    {"q": "The cat is sitting ___ the table.", "options": ["on", "in"], "a": "on"},
-    {"q": "She ___ to the market yesterday.", "options": ["go", "went"], "a": "went"},
-    {"q": "___ house is beautiful.", "options": ["Their", "There", "They're"], "a": "Their"},
-    {"q": "I ___ breakfast every morning.", "options": ["eat", "ate"], "a": "eat"},
-    {"q": "He is ___ tallest boy in class.", "options": ["a", "an", "the"], "a": "the"},
-    {"q": "They have ___ played this game.", "options": ["already", "yet"], "a": "already"},
-    {"q": "___ you like some coffee?", "options": ["Wood", "Would"], "a": "Would"},
-    {"q": "The sun ___ in the east.", "options": ["rise", "rises"], "a": "rises"},
-    {"q": "I have ___ money left.", "options": ["little", "a few"], "a": "little"},
-    {"q": "Please ___ the door.", "options": ["close", "closed"], "a": "close"},
-  ];
-
+  List<GameQuestion> _allQuestions = [];
   int _currentIndex = 0;
   int _score = 0;
   bool _isAnswered = false;
   String? _selectedOption;
   bool _isCorrect = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _questions.shuffle();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Grammar Guardian');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allQuestions = data.map((json) => GameQuestion.fromJson(json)).toList();
+          _allQuestions.shuffle();
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching questions: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -47,9 +62,10 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
   }
 
   void _handleAnswer(String option) {
-    if (_isAnswered) return;
+    if (_isAnswered || _allQuestions.isEmpty) return;
 
-    bool correct = option == _questions[_currentIndex]['a'];
+    final question = _allQuestions[_currentIndex];
+    bool correct = option == question.correctAnswer;
     setState(() {
       _isAnswered = true;
       _selectedOption = option;
@@ -57,9 +73,9 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
       if (correct) _score++;
     });
 
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
-        if (_currentIndex < _questions.length - 1) {
+        if (_currentIndex < _allQuestions.length - 1) {
           setState(() {
             _currentIndex++;
             _isAnswered = false;
@@ -81,11 +97,11 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("You scored $_score / ${_questions.length}", style: GoogleFonts.poppins(fontSize: 18)),
+            Text("You scored $_score / ${_allQuestions.length}", style: GoogleFonts.poppins(fontSize: 18)),
             const SizedBox(height: 10),
-            if (_score == _questions.length)
+            if (_score == _allQuestions.length)
               const Text("Perfect Grammar!", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
-            else if (_score > _questions.length / 2)
+            else if (_score > _allQuestions.length / 2)
               const Text("Good Job!", style: TextStyle(color: Colors.blue))
             else
               const Text("Keep Practicing!", style: TextStyle(color: Colors.orange)),
@@ -106,7 +122,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                 _currentIndex = 0;
                 _score = 0;
                 _isAnswered = false;
-                _questions.shuffle();
+                _allQuestions.shuffle();
               });
             },
             child: const Text("Replay"),
@@ -119,7 +135,24 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final question = _questions[_currentIndex];
+    
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Grammar Guardian", centerTitle: true),
+        body: const CustomLoader(),
+      );
+    }
+    
+    if (_allQuestions.isEmpty) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CustomAppBar(title: "Grammar Guardian", centerTitle: true),
+        body: Center(child: Text("No questions available", style: GoogleFonts.poppins())),
+      );
+    }
+
+    final question = _allQuestions[_currentIndex];
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -135,7 +168,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
-                value: (_currentIndex + 1) / _questions.length,
+                value: (_currentIndex + 1) / _allQuestions.length,
                 backgroundColor: theme.dividerColor.withOpacity(0.1),
                 color: theme.colorScheme.primary,
                 minHeight: 8,
@@ -165,7 +198,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                 ],
               ),
               child: Text(
-                question['q'],
+                question.questionText,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 22, 
@@ -177,14 +210,14 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
             
             const Spacer(),
             
-            ...question['options'].map<Widget>((option) {
+            ...question.options.map<Widget>((option) {
               bool isSelected = _selectedOption == option;
-              bool showColor = _isAnswered && (isSelected || option == question['a']);
+              bool showColor = _isAnswered && (isSelected || option == question.correctAnswer);
               Color color = theme.cardColor;
               Color textColor = theme.colorScheme.onSurface;
 
               if (showColor) {
-                if (option == question['a']) {
+                if (option == question.correctAnswer) {
                   color = Colors.green;
                   textColor = Colors.white;
                 } else if (isSelected) {
@@ -224,7 +257,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                         ),
                         if (showColor)
                            Icon(
-                             option == question['a'] ? Icons.check_circle : Icons.cancel,
+                             option == question.correctAnswer ? Icons.check_circle : Icons.cancel,
                              color: Colors.white,
                            )
                          else

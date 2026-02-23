@@ -47,7 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
-  final List<String> _institutes = ["D.M.BHATT Institute"];
+  final List<String> _institutes = ["The Learning Institute"];
 
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
@@ -67,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: Text("Terms and Conditions", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: SingleChildScrollView(
           child: Text(
-            "1. By registering, you agree to abide by the rules and regulations of DM Bhatt Classes.\n\n"
+            "1. By registering, you agree to abide by the rules and regulations of our Learning Academy.\n\n"
             "2. Ensure all provided information is accurate and up-to-date.\n\n"
             "3. The institute reserves the right to modify the curriculum and schedule as needed.\n\n"
             "4. Fees once paid are non-refundable under any circumstances.\n\n"
@@ -95,7 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     
     try {
       final response = await http.get(url, headers: {
-        'User-Agent': 'DMBhattClasses/1.0', 
+        'User-Agent': 'LearningApp/1.0', 
       });
 
       if (response.statusCode == 200) {
@@ -336,25 +336,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Institute Dropdown
-            _buildDropdown(
-              context,
-              hint: l10n.instituteName,
-              icon: Icons.business,
-              value: _selectedInstitute,
-              items: _institutes,
-              onChanged: (val) {
-                setState(() {
-                  _selectedInstitute = val;
-                  if (val == "D.M.BHATT Institute") {
-                    _schoolNameController.text = "D.M.BHATT Institute";
-                  } else {
-                    _schoolNameController.text = "";
-                  }
-                });
-              },
-            ),
-            const SizedBox(height: 16),
 
              // School Name Autocomplete (Visible only if Other is selected)
              if (_selectedInstitute == "Other") 

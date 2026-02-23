@@ -26,7 +26,7 @@ class StudentProfileScreen extends StatefulWidget {
     final prefs = await SharedPreferences.getInstance();
     
     // Ensure current user is in the list with UPDATED details
-    await _ensureCurrentAccountSaved(prefs, name: name, phone: phone, pic: pic);
+    await ensureCurrentAccountSaved(prefs, name: name, phone: phone, pic: pic);
 
     List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
     List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
@@ -188,7 +188,7 @@ class StudentProfileScreen extends StatefulWidget {
     );
   }
 
-  static Future<void> _ensureCurrentAccountSaved(SharedPreferences prefs, {String? name, String? phone, String? pic}) async {
+  static Future<void> ensureCurrentAccountSaved(SharedPreferences prefs, {String? name, String? phone, String? pic}) async {
     String token = prefs.getString('auth_token') ?? "";
     if (token.isEmpty) return;
     
@@ -353,6 +353,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
              // Check parentPhone, then parentNo, then maybe in user object?
              parentMobile = profile['parentPhone'] ?? (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
           }
+
+          // Update saved accounts list with latest info
+          SharedPreferences.getInstance().then((prefs) {
+            StudentProfileScreen.ensureCurrentAccountSaved(
+              prefs, 
+              name: studentName, 
+              phone: mobileNo, 
+              pic: _photoPath,
+            );
+          });
         });
       }
 
@@ -802,7 +812,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         onTap: () async {
                            // Save the CURRENT user state first so we don't lose it
                            final prefs = await SharedPreferences.getInstance();
-                           await StudentProfileScreen._ensureCurrentAccountSaved(
+                           await StudentProfileScreen.ensureCurrentAccountSaved(
                              prefs, 
                              name: studentName, 
                              phone: mobileNo, 
@@ -849,7 +859,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
                       // Ensure current profile is updated before adding a new one
-                      await StudentProfileScreen._ensureCurrentAccountSaved(
+                      await StudentProfileScreen.ensureCurrentAccountSaved(
                         prefs,
                         name: studentName,
                         phone: mobileNo,

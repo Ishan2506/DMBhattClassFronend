@@ -888,7 +888,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get clickHere => 'Click here';
 
   @override
-  String get dmBhattGroupTuition => 'DM Bhatt Group Tuition';
+  String get dmBhattGroupTuition => 'The Learning Academy';
 
   @override
   String get excellenceInEducation => 'Excellence in Education';
