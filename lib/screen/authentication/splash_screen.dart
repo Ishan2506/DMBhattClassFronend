@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart'; // Import LandingScreen
+import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
+import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:convert';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
@@ -59,6 +62,57 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     await ApiService.loadToken();
     final prefs = await SharedPreferences.getInstance();
+    
+    // Check if language is already selected
+    final themeSettings = prefs.getString('theme_settings');
+    bool languageSelected = false;
+    if (themeSettings != null) {
+      final map = jsonDecode(themeSettings);
+      if (map['locale'] != null) {
+        languageSelected = true;
+      }
+    }
+
+    if (!languageSelected) {
+      if (mounted) {
+        _showLanguageDialog(prefs);
+      }
+      return; // Wait for dialog to proceed
+    }
+
+    _proceedToNextScreen(prefs);
+  }
+
+  void _showLanguageDialog(SharedPreferences prefs) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Select Language / ભાષા પસંદ કરો"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text("English"),
+              onTap: () => _setLanguage(context, const Locale('en'), prefs),
+            ),
+            ListTile(
+              title: const Text("ગુજરાતી (Gujarati)"),
+              onTap: () => _setLanguage(context, const Locale('gu'), prefs),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _setLanguage(BuildContext context, Locale locale, SharedPreferences prefs) {
+    context.read<ThemeCubit>().changeLocale(locale);
+    Navigator.pop(context);
+    _proceedToNextScreen(prefs);
+  }
+
+  Future<void> _proceedToNextScreen(SharedPreferences prefs) async {
     final token = prefs.getString('auth_token');
 
     if (token != null && token.isNotEmpty) {

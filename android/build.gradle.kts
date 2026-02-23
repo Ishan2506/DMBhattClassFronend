@@ -2,6 +2,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // Fallback for older artifacts
+        maven { url = uri("https://jitpack.io") }
     }
 }
 

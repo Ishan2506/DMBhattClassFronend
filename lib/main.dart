@@ -12,14 +12,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'constant/app_constant.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
+  
+  // Request Microphone permission at start
+  await _requestPermissions();
+  
   // await _secureScreen();
   runApp(MyApp(prefs: prefs));
+}
+
+Future<void> _requestPermissions() async {
+  await Permission.microphone.request();
 }
 
 class MyApp extends StatelessWidget {

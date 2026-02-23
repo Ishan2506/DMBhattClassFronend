@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_dashboard_widgets.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_exam_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StudentHomeScreen extends StatelessWidget {
@@ -316,6 +317,85 @@ class StudentHomeScreen extends StatelessWidget {
                        errorBuilder: (context, error, stackTrace) => 
                           Icon(Icons.timer_outlined, size: 60, color: Colors.white.withOpacity(0.8)),
                      ),
+                   ),
+                ],
+              ),
+            ),
+          ),
+          blankVerticalSpace24,
+
+          // One-Liner Exam Section
+           Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                     Colors.orange.shade700,
+                     Colors.orange.shade400
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                   Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "One-Liner Exam",
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.045, 
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Speak your answer and test your knowledge!",
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.032,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                         const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                             Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const OneLinerExamScreen(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.orange.shade700,
+                             shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          ),
+                          child: Text("Start Speaking", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                   ),
+                   const SizedBox(
+                     height: 100,
+                     width: 90,
+                     child: Icon(Icons.mic_external_on, size: 60, color: Colors.white),
                    ),
                 ],
               ),
