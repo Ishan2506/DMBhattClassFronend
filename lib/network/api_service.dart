@@ -382,8 +382,13 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
-  static Future<http.Response> getAllExams() async {
-    final uri = Uri.parse("$baseUrl/exam/all");
+  static Future<http.Response> getAllExams({String? std, String? medium, String? subject}) async {
+    final queryParams = <String, String>{};
+    if (std != null) queryParams['std'] = std;
+    if (medium != null) queryParams['medium'] = medium;
+    if (subject != null) queryParams['subject'] = subject;
+
+    final uri = Uri.parse("$baseUrl/exam/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(uri));
   }
 

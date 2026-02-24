@@ -40,66 +40,57 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   String? _selectedTitle;
   List<String> _takenTestTitles = [];
   String? _userRole;
-  String? _userStandard;
-  String? _userStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchExams();
-  }
+  String? _userMedium;
 
   Future<void> _fetchExams() async {
     try {
-      final response = await ApiService.getAllExams();
+      final prefs = await SharedPreferences.getInstance();
+      _userRole = prefs.getString('user_role');
+      final token = ApiService.userToken;
+
+      // Fetch user profile to filter exams
+      if (token != null) {
+        final profileResponse = await ApiService.getProfile();
+        if (profileResponse.statusCode == 200) {
+          final profileData = jsonDecode(profileResponse.body);
+          final profile = profileData['profile'];
+          _userStandard = profile?['std']?.toString();
+          _userMedium = profile?['medium']?.toString();
+          _userStream = profile?['stream']?.toString();
+        }
+      }
+
+      // Fetch history to check for taken tests
+      final historyResponse = await ApiService.getDashboardData();
+      if (historyResponse.statusCode == 200) {
+        final historyData = jsonDecode(historyResponse.body);
+        final List<dynamic> results = historyData['examResults'] ?? [];
+        _takenTestTitles = results.map((e) => e['title'].toString().toLowerCase()).toList();
+      }
+
+      // Use backend filters if possible, or fetch all and filter locally
+      final response = await ApiService.getAllExams(
+        std: _userStandard,
+        medium: _userMedium,
+      );
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
-        _userRole = prefs.getString('user_role');
-        
-        // Fetch history to check for taken tests
-        // Fetch history to check for taken tests
-        // Token managed internally
-        final token = ApiService.userToken;
-        final historyResponse = await ApiService.getDashboardData();
-        if (historyResponse.statusCode == 200) {
-          final historyData = jsonDecode(historyResponse.body);
-          final List<dynamic> results = historyData['examResults'] ?? [];
-          _takenTestTitles = results.map((e) => e['title'].toString().toLowerCase()).toList();
-        }
-
-        // Fetch user profile to filter exams
-        if (token != null) {
-          final profileResponse = await ApiService.getProfile();
-          if (profileResponse.statusCode == 200) {
-            final profileData = jsonDecode(profileResponse.body);
-            final profile = profileData['profile'];
-            _userStandard = profile?['std']?.toString();
-            _userStream = profile?['stream']?.toString();
-          }
-        }
 
         setState(() {
-          _allExams = data;
-          
-          // Filter exams based on standard and stream
-          final filteredExams = _allExams.where((e) {
-            final examStd = e['std']?.toString();
+          // Filter locally for stream if necessary (backend doesn't support stream filter yet)
+          _allExams = data.where((e) {
             final examStream = e['stream']?.toString();
-            
-            // Match Standard
-            if (_userStandard != null && examStd != _userStandard) return false;
             
             // Match Stream if Std is 11 or 12
             if (_userStandard != null && (int.tryParse(_userStandard!) ?? 0) >= 11) {
                if (_userStream != null && examStream != null && examStream != _userStream) return false;
             }
-            
             return true;
           }).toList();
 
           // Extract unique subjects from filtered exams
-          _subjects = filteredExams
+          _subjects = _allExams
               .map((e) => e['subject'].toString())
               .toSet()
               .toList();
