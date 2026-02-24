@@ -554,4 +554,10 @@ class ApiService {
     ));
   }
 
+  // --- Mind Map ---
+  static Future<http.Response> getAllMindMaps() async {
+    final uri = Uri.parse("$baseUrl/mindmap/all");
+    return _handleSession(await http.get(uri));
+  }
+
 }

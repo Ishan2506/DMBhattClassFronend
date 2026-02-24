@@ -97,12 +97,13 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
     });
   }
 
-  void _addBot(String text, {List<String>? options, List<Map<String, String>>? videos}) {
+  void _addBot(String text, {List<String>? options, List<Map<String, String>>? videos, Map<String, String>? contact}) {
     _messages.add(ChatMessage(
       text: text, 
       isUser: false, 
       options: options,
-      videos: videos
+      videos: videos,
+      contact: contact,
     ));
     _scrollToBottom();
     // _speak(text);
@@ -166,6 +167,15 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
       _addBot("Hi $name! 👋 I'm here to help with your studies. Which class are you in?",
           options: ['Std 8', 'Std 9', 'Std 10', 'Std 11', 'Std 12']);
       _resetQuery(); // Ensure we start fresh
+      return;
+    }
+
+    if (lowerInput.contains('contact professor') || lowerInput.contains('teacher number')) {
+      _addBot("Sure! Here are the contact details for our professors. You can chat with them directly on WhatsApp:");
+      _addBot("English Professor", contact: {"name": "Prof. English", "number": "98251 89540"});
+      _addBot("Science Professor", contact: {"name": "Prof. Science", "number": "90332 39340"});
+      _addBot("Maths Professor", contact: {"name": "Prof. Maths", "number": "78783 21090"});
+      _addBot("How else can I help you?", options: ['Std 8', 'Std 9', 'Std 10', 'Std 11', 'Std 12']);
       return;
     }
 
@@ -274,6 +284,25 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
           videos: videos,
         );
         
+        // Give contact number according to subject
+        Map<String, String>? subjectContact;
+        final sub = _subject?.toLowerCase() ?? "";
+        
+        if (sub.contains('math') || sub.contains('state')) {
+          subjectContact = {"name": "Prof. Maths", "number": "78783 21090"};
+        } else if (sub.contains('science') || sub.contains('physics') || sub.contains('chemistry') || sub.contains('bio')) {
+          subjectContact = {"name": "Prof. Science", "number": "90332 39340"};
+        } else if (sub.contains('english')) {
+          subjectContact = {"name": "Prof. English", "number": "98251 89540"};
+        }
+
+        if (subjectContact != null) {
+          _addBot(
+            "If you have more doubts in $sub, you can chat with our professor:",
+            contact: subjectContact
+          );
+        }
+
         // ✅ AUTO RESET FLOW FOR NEXT QUESTION
         _resetQuery();
         _addBot(

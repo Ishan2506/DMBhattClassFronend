@@ -1,300 +1,128 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/explore_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/leaderboard_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AchieverModel {
-  final String name;
-  final String marks;
-  final String subject;
-  final String rank;
-  final Color color;
+class QuickAccessCategories extends StatelessWidget {
+  const QuickAccessCategories({super.key});
 
-  AchieverModel({
-    required this.name,
-    required this.marks,
-    required this.subject,
-    required this.rank,
-    required this.color,
-  });
-}
-
-class StudentAchieverSlider extends StatefulWidget {
-  const StudentAchieverSlider({super.key});
-
-  @override
-  State<StudentAchieverSlider> createState() => _StudentAchieverSliderState();
-}
-
-class _StudentAchieverSliderState extends State<StudentAchieverSlider> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-  Timer? _timer;
-  List<AchieverModel> _achievers = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchRankers();
-  }
-
-  Future<void> _fetchRankers() async {
-    try {
-      final response = await ApiService.getAllTopRankers();
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        if (mounted) {
-          setState(() {
-            _achievers = data.map((json) {
-              return AchieverModel(
-                name: json['studentName'] ?? '',
-                marks: "${json['percentage']}/100", 
-                subject: json['subject'] ?? '',
-                rank: json['rank'] ?? '',
-                color: Colors.transparent, // Color will be handled in build
-              );
-            }).toList();
-            _isLoading = false;
-          });
-          if (_achievers.isNotEmpty) {
-            _startAutoScroll();
-          }
-        }
-      } else {
-        if (mounted) {
-           setState(() => _isLoading = false);
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching rankers: $e");
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _startAutoScroll() {
-    _timer = Timer.periodic(const Duration(seconds: 3), (Timer timer) {
-      if (_achievers.isEmpty) return;
-      if (_currentPage < _achievers.length - 1) {
-        _currentPage++;
-      } else {
-        _currentPage = 0;
-      }
-
-      if (_pageController.hasClients) {
-        _pageController.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _pageController.dispose();
-    super.dispose();
-  }
+  final List<Map<String, dynamic>> _categories = const [
+    {
+      "title": "Material",
+      "icon": Icons.import_contacts_rounded,
+      "color": Color(0xFF4A90E2),
+      "screen": ExploreScreen(),
+    },
+    {
+      "title": "Mind Games",
+      "icon": Icons.extension_rounded,
+      "color": Color(0xFF50E3C2),
+      "screen": MindGamesScreen(),
+    },
+    {
+      "title": "Mind Maps",
+      "icon": Icons.hub_rounded,
+      "color": Color(0xFFBD10E0),
+      "screen": MindMapSelectionScreen(),
+    },
+    {
+      "title": "Leaderboard",
+      "icon": Icons.leaderboard_rounded,
+      "color": Color(0xFFF5A623),
+      "screen": LeaderboardScreen(),
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final theme = Theme.of(context);
-
-    if (_isLoading && _achievers.isEmpty) {
-      return const SizedBox.shrink(); // Or a loading indicator
-    }
-
-    if (_achievers.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.01),
-          child: Row(
-            children: [
-               Container(
-                height: screenHeight * 0.025,
-                width: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                "Top Rankers",
-                style: GoogleFonts.poppins(
-                  fontSize: screenWidth * 0.045,
-                  fontWeight: FontWeight.bold,
-                  color: theme.textTheme.titleLarge?.color, // Adapted to theme
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: screenHeight * 0.18, // Reduced height (was 0.22)
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-            },
-            itemCount: _achievers.length,
-            itemBuilder: (context, index) {
-              final achiever = _achievers[index];
-              return _buildAchieverCard(context, achiever);
-            },
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            _achievers.length,
-            (index) => Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: _currentPage == index ? 24 : 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: _currentPage == index 
-                    ? theme.colorScheme.primary 
-                    : theme.colorScheme.primary.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: _categories.map((cat) => _buildCategoryItem(context, cat)).toList(),
+      ),
     );
   }
 
-  Widget _buildAchieverCard(BuildContext context, AchieverModel achiever) {
+  Widget _buildCategoryItem(BuildContext context, Map<String, dynamic> cat) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade100),
-      ),
-      child: Stack(
-        children: [
-          // Background Decoration
-          Positioned(
-            right: -20,
-            top: -20,
-            child: CircleAvatar(
-              radius: screenWidth * 0.1, // Reduced decoration radius
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.05),
-            ),
-          ),
-          
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenWidth * 0.015), // Reduced vertical padding
-            child: Row(
-              children: [
-                // Avatar Placeholder
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3), width: 2),
-                  ),
-                  child: CircleAvatar(
-                    radius: screenWidth * 0.08, // Reduced avatar radius
-                    backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                    child: Icon(Icons.person, size: screenWidth * 0.08, color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
-                  ),
+    // Calculate a dynamic size based on screen width to ensure 4 icons fit comfortably
+    final double iconSize = screenWidth * 0.16; // Approx 60-70px on most phones
+    
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => cat['screen']),
+        );
+      },
+      child: SizedBox(
+        width: screenWidth * 0.22, // Ensure equal spacing for 4 items
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: iconSize,
+              width: iconSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    cat['color'],
+                    cat['color'].withOpacity(0.7),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                SizedBox(width: screenWidth * 0.04),
-                
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          "${achiever.subject} • ${achiever.rank}",
-                          style: GoogleFonts.poppins(
-                            color: theme.colorScheme.primary,
-                            fontSize: screenWidth * 0.022, // Slightly reduced font size
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 2), // Reduced spacing
-                      Text(
-                        achiever.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: screenWidth * 0.035, // Reduced font size
-                          fontWeight: FontWeight.bold,
-                          color: theme.textTheme.bodyLarge?.color,
-                        ),
-                      ),
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: achiever.marks,
-                              style: GoogleFonts.poppins(
-                                fontSize: screenWidth * 0.05, // Reduced font size
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                            TextSpan(
-                              text: " Marks",
-                              style: GoogleFonts.poppins(
-                                fontSize: screenWidth * 0.028, // Slightly reduced font size
-                                fontWeight: FontWeight.w500,
-                                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: cat['color'].withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.2),
+                    blurRadius: 2,
+                    offset: const Offset(-2, -2),
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.white24,
+                  width: 1,
                 ),
-              ],
+              ),
+              child: Icon(
+                cat['icon'],
+                color: Colors.white,
+                size: iconSize * 0.45,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              cat['title'],
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+
 
 class YouTubeChannelAd extends StatelessWidget {
   const YouTubeChannelAd({super.key});

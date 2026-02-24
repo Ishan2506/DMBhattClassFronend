@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../model/chat_message.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -183,6 +184,67 @@ class ChatBubble extends StatelessWidget {
                     ),
                   );
                 },
+              ),
+            ),
+
+          // 📞 CONTACT CARD
+          if (message.contact != null)
+            Container(
+              margin: const EdgeInsets.only(top: 8, bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: scheme.outlineVariant),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: scheme.primaryContainer,
+                    child: Icon(Icons.person, color: scheme.primary),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message.contact!['name'] ?? 'Professor',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                        Text(
+                          message.contact!['number'] ?? '',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      final number = message.contact!['number']!.replaceAll(RegExp(r'[^0-9]'), '');
+                      _openLink('https://wa.me/91$number');
+                    },
+                    icon: const FaIcon(
+                      FontAwesomeIcons.whatsapp,
+                      color: Color(0xFF25D366),
+                      size: 28,
+                    ),
+                  ),
+                ],
               ),
             ),
         ],

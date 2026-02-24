@@ -63,54 +63,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     await ApiService.loadToken();
     final prefs = await SharedPreferences.getInstance();
     
-    // Check if language is already selected
-    final themeSettings = prefs.getString('theme_settings');
-    bool languageSelected = false;
-    if (themeSettings != null) {
-      final map = jsonDecode(themeSettings);
-      if (map['locale'] != null) {
-        languageSelected = true;
-      }
-    }
-
-    if (!languageSelected) {
-      if (mounted) {
-        _showLanguageDialog(prefs);
-      }
-      return; // Wait for dialog to proceed
-    }
-
     _proceedToNextScreen(prefs);
   }
 
-  void _showLanguageDialog(SharedPreferences prefs) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("Select Language / ભાષા પસંદ કરો"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text("English"),
-              onTap: () => _setLanguage(context, const Locale('en'), prefs),
-            ),
-            ListTile(
-              title: const Text("ગુજરાતી (Gujarati)"),
-              onTap: () => _setLanguage(context, const Locale('gu'), prefs),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _setLanguage(BuildContext context, Locale locale, SharedPreferences prefs) {
-    context.read<ThemeCubit>().changeLocale(locale);
-    Navigator.pop(context);
-    _proceedToNextScreen(prefs);
-  }
 
   Future<void> _proceedToNextScreen(SharedPreferences prefs) async {
     final token = prefs.getString('auth_token');

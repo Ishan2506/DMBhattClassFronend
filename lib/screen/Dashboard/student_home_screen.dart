@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_dashboard_widgets.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_exam_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StudentHomeScreen extends StatelessWidget {
@@ -78,9 +79,9 @@ class StudentHomeScreen extends StatelessWidget {
           ),
 
             
-            // Student Achievers Slider
-            const SizedBox(height: 24),
-            const StudentAchieverSlider(),
+            // Quick Access Categories
+            const SizedBox(height: 16),
+            const QuickAccessCategories(),
             
             // YouTube Ad
             const YouTubeChannelAd(),
@@ -401,6 +402,87 @@ class StudentHomeScreen extends StatelessWidget {
               ),
             ),
           ),
+          blankVerticalSpace24,
+          
+           // Mind Map Section
+           Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                     Colors.purple.shade700,
+                     Colors.purple.shade400
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purple.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                   Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Mind Map",
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.045, 
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Visualize your learning with interactive mind maps!",
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.032,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                         const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                             // Import should be handled but I'll add it to the top
+                             Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MindMapSelectionScreen(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.purple.shade700,
+                             shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          ),
+                          child: Text("Explore Maps", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                   ),
+                   const SizedBox(
+                     height: 100,
+                     width: 90,
+                     child: Icon(Icons.hub_outlined, size: 60, color: Colors.white),
+                   ),
+                ],
+              ),
+            ),
+          ),
+
           blankVerticalSpace24,
 
           // Meet Our Influencer Section

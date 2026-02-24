@@ -22,6 +22,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/school_papers_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/board_paper_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/ready_reporting_card_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_exam_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -176,6 +177,18 @@ class _StudentActivitiesScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const BoardPaperScreen()),
+                );
+              },
+            ),
+             _MoreScreenItem(
+              title: "Mind Map", 
+              value: "",
+              icon: Icons.hub_outlined,
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MindMapSelectionScreen()), // Need to ensure it's imported
                 );
               },
             ),

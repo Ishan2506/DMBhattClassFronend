@@ -1,4 +1,6 @@
 import 'package:dm_bhatt_tutions/network/ai_service.dart';
+import 'package:dm_bhatt_tutions/widget/chat_bubble.dart';
+import 'package:dm_bhatt_tutions/model/chat_message.dart';
 import 'package:flutter/material.dart';
 
 class AIChatScreen extends StatefulWidget {
@@ -56,29 +58,52 @@ class _AIChatScreenState extends State<AIChatScreen> {
     });
     _scrollToBottom();
 
-    // try {
-    //   final response = await _aiService.processStudentQuery(query);
-    //   if (mounted) {
-    //     setState(() {
-    //       _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
-    //       _messages.add(ChatMessage(text: response, isUser: false));
-    //       _isLoading = false;
-    //     });
-    //     _scrollToBottom();
-    //   }
-    // } catch (e) {
-    //   if (mounted) {
-    //     setState(() {
-    //       _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
-    //       _messages.add(ChatMessage(
-    //         text: "Oops! I ran into a little problem: ${e.toString()}",
-    //         isUser: false,
-    //       ));
-    //       _isLoading = false;
-    //     });
-    //     _scrollToBottom();
-    //   }
-    // }
+    if (query.toLowerCase().contains('contact professor') || query.toLowerCase().contains('teacher number')) {
+      setState(() {
+        _isLoading = false;
+        _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
+        _messages.add(ChatMessage(text: "Sure! Here are the contact details for our professors. You can chat with them directly on WhatsApp:", isUser: false));
+        _messages.add(ChatMessage(text: "English Professor", isUser: false, contact: {"name": "Prof. English", "number": "98251 89540"}));
+        _messages.add(ChatMessage(text: "Science Professor", isUser: false, contact: {"name": "Prof. Science", "number": "90332 39340"}));
+        _messages.add(ChatMessage(text: "Maths Professor", isUser: false, contact: {"name": "Prof. Maths", "number": "78783 21090"}));
+        _messages.add(ChatMessage(text: "How else can I help you?", isUser: false));
+      });
+      _scrollToBottom();
+      return;
+    }
+
+    // Existing AI logic (mocked)
+    Future.delayed(Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
+          
+          String responseText = "I'm still learning about your specific query! For now, I can help you find videos for your subjects.";
+          Map<String, String>? subjectContact;
+
+          if (query.toLowerCase().contains('math')) {
+            subjectContact = {"name": "Prof. Maths", "number": "78783 21090"};
+          } else if (query.toLowerCase().contains('science') || query.toLowerCase().contains('physics') || query.toLowerCase().contains('chemistry')) {
+            subjectContact = {"name": "Prof. Science", "number": "90332 39340"};
+          } else if (query.toLowerCase().contains('english')) {
+            subjectContact = {"name": "Prof. English", "number": "98251 89540"};
+          }
+
+          _messages.add(ChatMessage(text: responseText, isUser: false));
+          
+          if (subjectContact != null) {
+            _messages.add(ChatMessage(
+              text: "If you have more doubts in this subject, you can contact our professor:",
+              isUser: false,
+              contact: subjectContact
+            ));
+          }
+          
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    });
   }
 
   void _sendTestQuery(String testQuery) {
@@ -101,7 +126,13 @@ class _AIChatScreenState extends State<AIChatScreen> {
               controller: _scrollController,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               itemCount: _messages.length,
-              itemBuilder: (context, index) => _buildMessageBubble(_messages[index]),
+              itemBuilder: (context, index) => ChatBubble(
+                message: _messages[index],
+                onOptionSelected: (option) {
+                  _controller.text = option;
+                  _sendMessage();
+                },
+              ),
             ),
           ),
           
@@ -164,7 +195,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
                      ),
                    ),
                   _buildTestButton("📺 Std 11 Account Ch2"),
-                  _buildTestButton("❓ How to study?"),
                   _buildTestButton("📝 Balance sheet"),
                 ],
               ),
@@ -195,78 +225,12 @@ class _AIChatScreenState extends State<AIChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message) {
-    final isUser = message.isUser;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isUser) ...[
-            CircleAvatar(
-              radius: 18,
-              backgroundImage: AssetImage('assets/images/dmai_helper_lady.png'),
-              backgroundColor: Colors.white,
-            ),
-            SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                color: isUser 
-                    ? Color(0xFF5C6BC0) 
-                    : (isDark ? Color(0xFF1E1E1E) : Colors.white),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                  bottomLeft: isUser ? Radius.circular(20) : Radius.circular(5),
-                  bottomRight: isUser ? Radius.circular(5) : Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-                    blurRadius: 5,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  color: isUser 
-                      ? Colors.white 
-                      : (isDark ? Colors.white.withOpacity(0.9) : Colors.black87),
-                  fontSize: 16,
-                  height: 1.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-          if (isUser) ...[
-             SizedBox(width: 8),
-             CircleAvatar(
-               radius: 16,
-               backgroundColor: Colors.transparent, // Transparent to let image show fully if needed
-               backgroundImage: AssetImage('assets/images/user_placeholder.png'),
-             ),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildInputField() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 24), // Extra padding at bottom for iOS home bar etc
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
         color: isDark ? Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.only(
@@ -323,11 +287,4 @@ class _AIChatScreenState extends State<AIChatScreen> {
       ),
     );
   }
-}
-
-class ChatMessage {
-  final String text;
-  final bool isUser;
-
-  ChatMessage({required this.text, required this.isUser});
 }
