@@ -41,6 +41,8 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   List<String> _takenTestTitles = [];
   String? _userRole;
   String? _userMedium;
+  String? _userStandard;
+  String? _userStream;
 
   Future<void> _fetchExams() async {
     try {
