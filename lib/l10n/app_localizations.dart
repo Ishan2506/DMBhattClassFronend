@@ -818,6 +818,18 @@ abstract class AppLocalizations {
   /// **'Student Activities'**
   String get studentActivities;
 
+  /// No description provided for @material.
+  ///
+  /// In en, this message translates to:
+  /// **'Material'**
+  String get material;
+
+  /// No description provided for @images.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get images;
+
   /// No description provided for @appInformation.
   ///
   /// In en, this message translates to:

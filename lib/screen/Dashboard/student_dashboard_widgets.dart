@@ -5,7 +5,9 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/explore_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/leaderboard_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
 import 'package:flutter/material.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,7 +19,7 @@ class QuickAccessCategories extends StatelessWidget {
       "title": "Material",
       "icon": Icons.import_contacts_rounded,
       "color": Color(0xFF4A90E2),
-      "screen": ExploreScreen(),
+      "screen": MaterialScreen(),
     },
     {
       "title": "Mind Games",

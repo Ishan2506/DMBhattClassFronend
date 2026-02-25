@@ -372,6 +372,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get studentActivities => 'Student Activities';
 
   @override
+  String get material => 'Material';
+
+  @override
+  String get images => 'Images';
+
+  @override
   String get appInformation => 'App Information';
 
   @override

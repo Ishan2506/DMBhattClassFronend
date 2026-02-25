@@ -381,6 +381,12 @@ class AppLocalizationsTa extends AppLocalizations {
   String get studentActivities => 'மாணவர் செயல்பாடுகள்';
 
   @override
+  String get material => 'Material';
+
+  @override
+  String get images => 'Images';
+
+  @override
   String get appInformation => 'செயலித் தகவல்';
 
   @override
