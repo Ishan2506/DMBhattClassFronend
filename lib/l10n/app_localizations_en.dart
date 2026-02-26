@@ -683,6 +683,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noExamsFound => 'No exams found';
 
   @override
+  String get noProductsFound => 'No products found';
+
+  @override
   String dateLabel(Object date) {
     return 'Date: $date';
   }

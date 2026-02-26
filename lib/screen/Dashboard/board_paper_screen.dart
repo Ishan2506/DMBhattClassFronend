@@ -5,6 +5,7 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -276,14 +277,26 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           ),
           IconButton(
             icon: Icon(Icons.visibility_outlined, color: colorScheme.primary),
-            onPressed: () {
+            onPressed: () async {
                if (_isGuest) {
                   GuestUtils.showGuestRestrictionDialog(context, message: "Register to view board papers!");
                   return;
                }
+
+               final productId = paper['_id']?.toString() ?? paper['id']?.toString() ?? paper['title'] ?? paper['name'];
+               final prefs = await SharedPreferences.getInstance();
+               final alreadyUsed = prefs.getBool('preview_used_$productId') ?? false;
+
+               if (alreadyUsed) {
+                 if (!mounted) return;
+                 CustomToast.showError(context, "Free preview already used for this paper. Please purchase to view.");
+                 return;
+               }
+
                final pdfPaper = Map<String, dynamic>.from(paper);
                if (pdfPaper['image'] == null) pdfPaper['image'] = pdfPaper['url'];
                
+               if (!mounted) return;
                Navigator.push(
                   context,
                   MaterialPageRoute(

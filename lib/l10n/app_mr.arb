@@ -208,6 +208,7 @@
   "regularExams": "नियमित परीक्षा",
   "fiveMinQuiz": "5 मिनिटांची प्रश्नमंजुषा",
   "noExamsFound": "कोणतीही परीक्षा आढळली नाही",
+  "noProductsFound": "कोणतीही उत्पादने आढळली नाहीत",
   "dateLabel": "दिनांक: {date}",
   "marksLabel": "गुण",
   "download": "डाउनलोड",

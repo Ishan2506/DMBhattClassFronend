@@ -8,12 +8,14 @@ import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MaterialDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -27,6 +29,7 @@ class MaterialDetailScreen extends StatefulWidget {
 class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   late RazorpayHelper _razorpayHelper;
   bool _isProcessing = false;
+  bool _previewUsed = false;
 
   @override
   void initState() {
@@ -36,6 +39,19 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
       onSuccess: _handlePaymentSuccess,
       onFailure: _handlePaymentFailure,
     );
+    _checkPreviewStatus();
+  }
+
+  Future<void> _checkPreviewStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final productId = widget.product['id']?.toString() ?? widget.product['name'];
+      setState(() {
+        _previewUsed = prefs.getBool('preview_used_$productId') ?? false;
+      });
+    } catch (e) {
+      debugPrint('Error checking preview status: $e');
+    }
   }
 
   @override
@@ -342,6 +358,27 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
                           isPrimary: true,
                           onPressed: _initiatePurchase,
                         ),
+
+                        const SizedBox(height: 16),
+
+                        // 2. Free Preview (Secondary)
+                        if (!_previewUsed && widget.product['image'] != null && widget.product['image'].toString().toLowerCase().contains('.pdf'))
+                          _buildActionButton(
+                            context: context,
+                            label: "Free Preview (30 Sec)",
+                            icon: Icons.visibility_outlined,
+                            color: theme.colorScheme.secondary,
+                            isOutlined: true,
+                            onPressed: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PdfPreviewScreen(product: widget.product),
+                                ),
+                              );
+                              _checkPreviewStatus(); // Refresh status after returning
+                            },
+                          ),
 
                         const SizedBox(height: 40), // Bottom padding
                     ],

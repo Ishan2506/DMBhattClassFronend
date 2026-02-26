@@ -689,6 +689,9 @@ class AppLocalizationsGu extends AppLocalizations {
   String get noExamsFound => 'કોઈ પરીક્ષા મળી નથી';
 
   @override
+  String get noProductsFound => 'કોઈ ઉત્પાદનો મળ્યા નથી';
+
+  @override
   String dateLabel(Object date) {
     return 'તારીખ: $date';
   }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -161,61 +162,34 @@ class _ExploreScreenState extends State<ExploreScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
-                             borderRadius: BorderRadius.circular(16),
-                             boxShadow: [
-                               BoxShadow(
-                                 color: Colors.black.withOpacity(0.05),
-                                 blurRadius: 10,
-                                 offset: const Offset(0, 4),
-                               )
-                             ]
-                          ),
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: (value) => setState(() => _searchQuery = value),
-                            style: GoogleFonts.poppins(color: isDark ? Colors.white : Colors.black87),
-                            decoration: InputDecoration(
-                              hintText: l10n.search,
-                              hintStyle: GoogleFonts.poppins(
-                                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
-                                fontSize: 16,
-                              ),
-                             border: InputBorder.none,
-                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                             prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),)
-                            ),
-                          ),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                       borderRadius: BorderRadius.circular(16),
+                       boxShadow: [
+                         BoxShadow(
+                           color: Colors.black.withOpacity(0.05),
+                           blurRadius: 10,
+                           offset: const Offset(0, 4),
+                         )
+                       ]
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) => setState(() => _searchQuery = value),
+                      style: GoogleFonts.poppins(color: isDark ? Colors.white : Colors.black87),
+                      decoration: InputDecoration(
+                        hintText: l10n.search,
+                        hintStyle: GoogleFonts.poppins(
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                          fontSize: 16,
                         ),
+                       border: InputBorder.none,
+                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                       prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),)
                       ),
-                      const SizedBox(width: 16),
-                      // Camera Button (Floating Style)
-                      GestureDetector(
-                        onTap: () {
-                           // _pickImage(); // Uncomment if/when ML Kit logic is restored
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.colorScheme.primary.withOpacity(0.4),
-                                blurRadius: 12,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 24),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -270,7 +244,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
             // Product List
             Expanded(
-              child: displayedProducts.isEmpty 
+              child: _isLoading 
+              ? const Center(child: CustomLoader())
+              : displayedProducts.isEmpty 
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -278,7 +254,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
                       const SizedBox(height: 16),
                        Text(
-                        AppLocalizations.of(context)!.noExamsFound, // Generic
+                        AppLocalizations.of(context)!.noProductsFound,
                         style: GoogleFonts.poppins(
                           color: Colors.grey.shade600, 
                           fontSize: 16

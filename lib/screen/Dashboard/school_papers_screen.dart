@@ -6,6 +6,7 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SchoolPapersScreen extends StatefulWidget {
   const SchoolPapersScreen({super.key});
@@ -237,11 +238,23 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
           // View Button
           IconButton(
             icon: Icon(Icons.visibility_outlined, color: colorScheme.primary),
-            onPressed: () {
+            onPressed: () async {
                if (_isGuest) {
                   GuestUtils.showGuestRestrictionDialog(context, message: "Register to view school papers!");
                   return;
                }
+
+               final productId = paper['id']?.toString() ?? paper['name'];
+               final prefs = await SharedPreferences.getInstance();
+               final alreadyUsed = prefs.getBool('preview_used_$productId') ?? false;
+
+               if (alreadyUsed) {
+                 if (!mounted) return;
+                 CustomToast.showError(context, "Free preview already used for this paper. Please purchase to view.");
+                 return;
+               }
+
+               if (!mounted) return;
                Navigator.push(
                   context,
                   MaterialPageRoute(

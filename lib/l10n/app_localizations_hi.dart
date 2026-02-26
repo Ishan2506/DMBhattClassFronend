@@ -689,6 +689,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noExamsFound => 'कोई परीक्षा नहीं मिली';
 
   @override
+  String get noProductsFound => 'कोई उत्पाद नहीं मिला';
+
+  @override
   String dateLabel(Object date) {
     return 'दिनांक: $date';
   }

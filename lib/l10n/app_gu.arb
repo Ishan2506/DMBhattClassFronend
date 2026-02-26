@@ -214,6 +214,7 @@
   "regularExams": "નિયમિત પરીક્ષાઓ",
   "fiveMinQuiz": "5 મિનિટ ક્વિઝ",
   "noExamsFound": "કોઈ પરીક્ષા મળી નથી",
+  "noProductsFound": "કોઈ ઉત્પાદનો મળ્યા નથી",
   "dateLabel": "તારીખ: {date}",
   "marksLabel": "ગુણ",
   "download": "ડાઉનલોડ",

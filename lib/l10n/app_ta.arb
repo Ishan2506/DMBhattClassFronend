@@ -208,6 +208,7 @@
   "regularExams": "சாதாரண தேர்வுகள்",
   "fiveMinQuiz": "5 நிமிட வினாடி வினா",
   "noExamsFound": "தேர்வுகள் எதுவும் காணப்படவில்லை",
+  "noProductsFound": "தயாரிப்புகள் எதுவும் காணப்படவில்லை",
   "dateLabel": "தேதி: {date}",
   "marksLabel": "மதிப்பெண்கள்",
   "download": "பதிவிறக்க",
