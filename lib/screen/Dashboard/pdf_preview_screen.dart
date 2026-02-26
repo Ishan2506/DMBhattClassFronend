@@ -70,7 +70,12 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
   Future<void> _loadPdfInfo() async {
     try {
-      final response = await http.get(Uri.parse(widget.product['image']));
+      final String? pdfUrl = widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
+      if (pdfUrl == null || pdfUrl.isEmpty) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+      final response = await http.get(Uri.parse(pdfUrl));
       if (response.statusCode == 200) {
         _pdfBytes = response.bodyBytes;
         
@@ -116,15 +121,15 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   }
 
   /// Generate Cloudinary URL for specific PDF page
-  String _getPdfPageUrl(String pdfUrl, int pageNumber) {
-    if (pdfUrl.contains('/upload/')) {
+  String _getPdfPageUrl(String? pdfUrl, int pageNumber) {
+    if (pdfUrl != null && pdfUrl.contains('/upload/')) {
       // Insert transformation: pg_<pageNumber>,f_jpg
       return pdfUrl.replaceFirst(
         '/upload/',
         '/upload/pg_$pageNumber,f_jpg/',
       );
     }
-    return pdfUrl;
+    return pdfUrl ?? "";
   }
 
   @override
@@ -256,7 +261,8 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                     itemBuilder: (context, index) {
                       final pageNumber = index + 1;
                       final isLocked = pageNumber > _freePages;
-                      final bool isCloudinary = widget.product['image'].contains('/upload/');
+                      final String? pdfUrl = widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
+                      final bool isCloudinary = pdfUrl != null && pdfUrl.contains('/upload/');
 
                       return Container(
                         margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -278,7 +284,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                               borderRadius: BorderRadius.circular(16),
                               child: isCloudinary
                                   ? Image.network(
-                                      _getPdfPageUrl(widget.product['image'], pageNumber),
+                                      _getPdfPageUrl(pdfUrl, pageNumber),
                                       fit: BoxFit.contain,
                                       width: double.infinity,
                                       loadingBuilder: (context, child, loadingProgress) {
@@ -528,8 +534,9 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   }
 
   Widget _buildRasterizedFallback(int pageNumber) {
+    final String? pdfUrl = widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
     return FutureBuilder<Uint8List?>(
-      future: _getRasterizedPage(widget.product['image'], pageNumber),
+      future: _getRasterizedPage(pdfUrl ?? '', pageNumber),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const CustomLoader();

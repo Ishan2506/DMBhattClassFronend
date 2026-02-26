@@ -26,7 +26,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   String? _selectedYear;
 
   final List<String> _mediums = ["Gujarati", "English"];
-  final List<String> _stds = ["10", "12"];
+  final List<String> _stds = ["9", "10", "11", "12"];
   final List<String> _streams = ["Science", "Commerce", "Arts"]; // Only for 12
   final List<String> _years = List.generate(10, (index) => (DateTime.now().year - index).toString());
   final List<String> _subjects = ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
@@ -351,7 +351,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _papers = data['papers'] ?? [];
+          _papers = data; // Backend returns a list of materials直接
         });
         if (_papers.isEmpty) {
            CustomToast.showSuccess(context, AppLocalizations.of(context)!.noExamsFound);

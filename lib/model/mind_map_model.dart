@@ -30,12 +30,16 @@ class MindMapModel {
   final String id;
   final String subject;
   final String unit;
+  final String title;
+  final String std;
   final MindMapNode root;
 
   MindMapModel({
     required this.id,
     required this.subject,
     required this.unit,
+    required this.title,
+    required this.std,
     required this.root,
   });
 
@@ -44,6 +48,8 @@ class MindMapModel {
       id: json['_id'] ?? '',
       subject: json['subject'] ?? '',
       unit: json['unit'] ?? '',
+      title: json['title'] ?? '',
+      std: json['std'] ?? '',
       root: MindMapNode.fromJson(json['data'] ?? {}),
     );
   }

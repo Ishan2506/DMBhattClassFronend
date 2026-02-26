@@ -11,8 +11,8 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 
 class ApiService {
-  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-  // static const String baseUrl = "http://localhost:5000/api";
+  // static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+  static const String baseUrl = "http://localhost:5000/api";
   static String? _authToken;
 
   static String? get userToken => _authToken;
@@ -275,13 +275,33 @@ class ApiService {
     required String year,
   }) async {
     final queryParams = {
+      'type': 'BoardPaper',
       'medium': medium,
       'std': std,
       'year': year,
       if (stream != null) 'stream': stream,
     };
     
-    final uri = Uri.parse("$baseUrl/materials/board-papers").replace(queryParameters: queryParams);
+    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
+    
+    return _handleSession(await http.get(
+      uri,
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
+    ));
+  }
+
+  static Future<http.Response> getSchoolPapers({
+    String? subject,
+  }) async {
+    final queryParams = {
+      'type': 'SchoolPaper',
+      if (subject != null) 'subject': subject,
+    };
+    
+    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
     
     return _handleSession(await http.get(
       uri,
@@ -570,10 +590,11 @@ class ApiService {
     required String unit,
   }) async {
     final queryParams = {
+      'type': 'ImageMaterial',
       'subject': subject,
       'unit': unit,
     };
-    final uri = Uri.parse("$baseUrl/materials/images").replace(queryParameters: queryParams);
+    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(
       uri,
       headers: _addAuth({
