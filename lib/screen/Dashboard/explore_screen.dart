@@ -330,24 +330,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                             _getImageUrl(product['image']),
                                             fit: BoxFit.contain,
                                             width: screenWidth * 0.5,
+                                            loadingBuilder: (context, child, loadingProgress) {
+                                              if (loadingProgress == null) return child;
+                                              return Center(
+                                                child: CircularProgressIndicator(
+                                                  value: loadingProgress.expectedTotalBytes != null
+                                                      ? loadingProgress.cumulativeBytesLoaded /
+                                                          loadingProgress.expectedTotalBytes!
+                                                      : null,
+                                                  strokeWidth: 2,
+                                                ),
+                                              );
+                                            },
                                             errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 50, color: Colors.grey.shade400,),
-                                          ),
-                                        ),
-                                      ),
-                                      // Heart Icon
-                                      Positioned(
-                                        top: 20,
-                                        right: 20,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            Icons.favorite_border,
-                                            size: 20,
-                                            color: Colors.grey.shade400,
                                           ),
                                         ),
                                       ),
