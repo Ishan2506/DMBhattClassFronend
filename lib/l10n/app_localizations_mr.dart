@@ -376,6 +376,12 @@ class AppLocalizationsMr extends AppLocalizations {
   String get studentActivities => 'विद्यार्थी क्रियाकलाप';
 
   @override
+  String get material => 'Material';
+
+  @override
+  String get images => 'Images';
+
+  @override
   String get appInformation => 'अॅप माहिती';
 
   @override

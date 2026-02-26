@@ -376,6 +376,12 @@ class AppLocalizationsGu extends AppLocalizations {
   String get studentActivities => 'વિદ્યાર્થી પ્રવૃત્તિઓ';
 
   @override
+  String get material => 'Material';
+
+  @override
+  String get images => 'Images';
+
+  @override
   String get appInformation => 'એપ્લિકેશન માહિતી';
 
   @override

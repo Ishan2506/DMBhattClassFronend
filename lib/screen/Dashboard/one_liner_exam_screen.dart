@@ -3,14 +3,30 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
-import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/matching_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_result_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 
 class OneLinerExamScreen extends StatefulWidget {
-  const OneLinerExamScreen({super.key});
+  final String subject;
+  final String unit;
+  final String title;
+  final String examId;
+
+  const OneLinerExamScreen({
+    super.key,
+    required this.subject,
+    required this.unit,
+    required this.title,
+    required this.examId,
+  });
 
   @override
   State<OneLinerExamScreen> createState() => _OneLinerExamScreenState();
@@ -25,65 +41,62 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
   int _currentQuestionIndex = 0;
   final Map<int, String> _spokenAnswers = {};
   
-  // Static question and answer list with multilingual Support and Synonyms
-  final List<Map<String, dynamic>> _questions = [
-    {
-      "question": {
-        "en": "What is matter?",
-        "gu": "દ્રવ્ય એટલે શું?"
-      },
-      "answer": {
-        "en": "Matter is anything that has mass and occupies space.",
-        "gu": "દ્રવ્ય એ એવી વસ્તુ છે જે દળ ધરાવે છે અને જગ્યા રોકે છે."
-      }
-    },
-    {
-      "question": {
-        "en": "What are the three states of matter?",
-        "gu": "દ્રવ્યની ત્રણ અવસ્થાઓ કઈ છે?"
-      },
-      "answer": {
-        "en": "The three states of matter are solid, liquid and gas.",
-        "gu": "દ્રવ્યની ત્રણ અવસ્થાઓ ઘન, પ્રવાહી અને વાયુ છે."
-      }
-    },
-    {
-      "question": {
-        "en": "What is diffusion?",
-        "gu": "પ્રસરણ એટલે શું?"
-      },
-      "answer": {
-        "en": "Diffusion is the intermixing of particles of two substances due to their random motion.",
-        "gu": "પ્રસરણ એટલે બે પદાર્થોના કણોની તેમની યાદચ્છિક ગતિને કારણે એકબીજામાં ભળી જવાની પ્રક્રિયા."
-      }
-    },
-    {
-      "question": {
-        "en": "Why are gases highly compressible?",
-        "gu": "વાયુઓ શા માટે વધુ દબનીય હોય છે?"
-      },
-      "answer": {
-        "en": "Gases are highly compressible because the particles have large spaces between them.",
-        "gu": "વાયુઓ વધુ દબનીય હોય છે કારણ કે કણો વચ્ચે મોટી જગ્યાઓ હોય છે."
-      }
-    },
-    {
-      "question": {
-        "en": "What is sublimation?",
-        "gu": "ઉર્ધ્વપાતન એટલે શું?"
-      },
-      "answer": {
-        "en": "Sublimation is the direct change of a solid into gas without passing through the liquid state.",
-        "gu": "ઉર્ધ્વપાતન એટલે ઘન પદાર્થનું પ્રવાહી અવસ્થામાં આવ્યા વિના સીધું વાયુમાં રૂપાંતર થવાની પ્રક્રિયા."
-      }
-    }
-  ];
+  List<Map<String, dynamic>> _questions = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
     _checkPermission();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getOneLinerExamById(widget.examId);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> backendQuestions = data['questions'] ?? [];
+        
+        setState(() {
+          _questions = backendQuestions.map((q) {
+            return {
+              "question": {
+                "en": q['questionText'] ?? "",
+                "gu": q['questionText'] ?? ""
+              },
+              "answer": {
+                "en": q['correctAnswer'] ?? "",
+                "gu": q['correctAnswer'] ?? ""
+              }
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      } else {
+        _useFallbackQuestions();
+      }
+    } catch (e) {
+      debugPrint("Error fetching one-liner questions: $e");
+      _useFallbackQuestions();
+    }
+  }
+
+  void _useFallbackQuestions() {
+    setState(() {
+      _questions = [
+        {
+          "question": {"en": "What is matter?", "gu": "દ્રવ્ય એટલે શું?"},
+          "answer": {"en": "Matter is anything that has mass and occupies space.", "gu": "દ્રવ્ય એ એવી વસ્તુ છે જે દળ ધરાવે છે અને જગ્યા રોકે છે."}
+        },
+        {
+          "question": {"en": "What are the three states of matter?", "gu": "દ્રવ્યની ત્રણ અવસ્થાઓ કઈ છે?"},
+          "answer": {"en": "The three states of matter are solid, liquid and gas.", "gu": "દ્રવ્યની ત્રણ અવસ્થાઓ ઘન, પ્રવાહી અને વાયુ છે."}
+        }
+      ];
+      _isLoading = false;
+    });
   }
 
   @override
@@ -176,73 +189,43 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
       }
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("Exam Completed"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Total Score: $score / ${_questions.length}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text("Average Accuracy: ${(totalPartialScore / _questions.length * 100).toStringAsFixed(1)}%", style: const TextStyle(color: Colors.blueGrey, fontSize: 14)),
-              const SizedBox(height: 16),
-              const Text("Detailed Review:", style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _questions.length,
-                  itemBuilder: (context, index) {
-                    final matchScore = MatchingUtils.getMatchScore(_spokenAnswers[index] ?? "", _getAnswer(index));
-                    final isCorrect = matchScore >= 0.7;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Q${index + 1}: ${_questions[index]['question']['en']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                          Text("Answer: ${_getAnswer(index)}", style: const TextStyle(color: Colors.blue, fontSize: 12)),
-                          RichText(
-                            text: TextSpan(
-                              style: const TextStyle(color: Colors.black, fontSize: 12),
-                              children: [
-                                const TextSpan(text: "You said: ", style: TextStyle(fontStyle: FontStyle.italic)),
-                                TextSpan(
-                                  text: _spokenAnswers[index] ?? "N/A",
-                                  style: TextStyle(color: isCorrect ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
-                                ),
-                                TextSpan(
-                                  text: " (${(matchScore * 100).toStringAsFixed(0)}% match)",
-                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 10, fontWeight: FontWeight.normal),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+    final int accuracy = (totalPartialScore / _questions.length * 100).round();
+    _saveToHistory(score, accuracy);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OneLinerResultScreen(
+          totalQuestions: _questions.length,
+          correctAnswers: score,
+          averageAccuracy: totalPartialScore / _questions.length * 100,
+          questions: _questions,
+          spokenAnswers: _spokenAnswers,
+          subject: widget.subject,
+          title: widget.title,
+          unit: widget.unit,
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back from exam
-            },
-            child: const Text("Exit"),
-          ),
-        ],
       ),
     );
+  }
+
+  Future<void> _saveToHistory(int score, int accuracy) async {
+    final prefs = await SharedPreferences.getInstance();
+    final historyStr = prefs.getString('one_liner_history') ?? '[]';
+    final List<dynamic> history = jsonDecode(historyStr);
+
+    final newEntry = {
+      'subject': widget.subject,
+      'unit': widget.unit,
+      'title': widget.title,
+      'score': score,
+      'total': _questions.length,
+      'accuracy': accuracy,
+      'date': DateTime.now().toIso8601String(),
+    };
+
+    history.add(newEntry);
+    await prefs.setString('one_liner_history', jsonEncode(history));
   }
 
   @override
@@ -257,9 +240,22 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
       appBar: CustomAppBar(
         title: lang == 'gu' ? "એક લીટી પરીક્ષા" : "One-Liner Exam",
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const OneLinerHistoryScreen()),
+              );
+            },
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: _isLoading
+          ? const Center(child: CustomLoader())
+          : SingleChildScrollView(
+              child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

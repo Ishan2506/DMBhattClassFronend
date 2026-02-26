@@ -21,8 +21,11 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/school_papers_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/board_paper_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/ready_reporting_card_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_exam_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_selection_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
+
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -120,18 +123,18 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 );
               },
             ),
-            _MoreScreenItem(
-              title: l10n.events,
-              value: "",
-              icon: Icons.event,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const EventsScreen()),
-                );
-              },
-            ),
+            // _MoreScreenItem(
+            //   title: l10n.events,
+            //   value: "",
+            //   icon: Icons.event,
+            //   onTap: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //           builder: (context) => const EventsScreen()),
+            //     );
+            //   },
+            // ),
             _MoreScreenItem(
               title: l10n.history,
               value: "",
@@ -145,6 +148,18 @@ class _StudentActivitiesScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
+              title: l10n.material,
+              value: "",
+              icon: Icons.auto_stories_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MaterialScreen()),
+                );
+              },
+            ),
+            _MoreScreenItem(
               title: l10n.mindGames,
               value: "",
               icon: Icons.games_outlined,
@@ -153,30 +168,6 @@ class _StudentActivitiesScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const MindGamesScreen()),
-                );
-              },
-            ),
-            _MoreScreenItem(
-              title: l10n.schoolPapers,
-              value: "",
-              icon: Icons.note_alt_outlined,
-              onTap: () {
-                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const SchoolPapersScreen()),
-                );
-              },
-            ),
-            _MoreScreenItem(
-              title: l10n.boardPapers,
-              value: "",
-              icon: Icons.assignment_outlined,
-              onTap: () {
-                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const BoardPaperScreen()),
                 );
               },
             ),
@@ -204,18 +195,18 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 );
               },
             ),
-            _MoreScreenItem(
-              title: "One-Liner Exam",
-              value: "",
-              icon: Icons.mic_external_on,
-              onTap: () {
-                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const OneLinerExamScreen()),
-                );
-              },
-            ),
+            // _MoreScreenItem(
+            //   title: "One-Liner Exam",
+            //   value: "",
+            //   icon: Icons.mic_external_on,
+            //   onTap: () {
+            //      Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //           builder: (context) => const OneLinerSelectionScreen()),
+            //     );
+            //   },
+            // ),
           ],
         ),
       ),
@@ -704,6 +695,18 @@ class _HistoryMenuScreen extends StatelessWidget {
                   );
                 },
               ),
+              _MoreScreenItem(
+                title: "One-Liner History",
+                value: "",
+                icon: Icons.history_rounded,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const OneLinerHistoryScreen()),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -802,7 +805,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
       "name": "Hetvi Bhatt",
       "role": "Academic Specialist",
       "description": "Mastering Foundation Learning",
-      "imagePath": imgInfluencerKeyur, // TODO: Update image if available
+      "imagePath": imgInfluencerHetvi, // TODO: Update image if available
       "instagramUrl": "https://www.instagram.com/hetvee_bhatt_/"
     },
     {
@@ -816,7 +819,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
       "name": "Ravi Shah",
       "role": "Academic Specialist",
       "description": "Mastering Foundation Learning",
-      "imagePath": imgInfluencerKeyur, // TODO: Update image if available
+      "imagePath": imgInfluencerRavi, // TODO: Update image if available
       "instagramUrl": "https://www.instagram.com/ravi_maths_/"
     },
     {

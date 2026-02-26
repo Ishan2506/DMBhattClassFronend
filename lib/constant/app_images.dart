@@ -9,4 +9,6 @@ const imgInfluencer = 'assets/images/influencer_dm_bhatt.png';
 const imgInfluencerDmBhattNew = 'assets/images/influencer_dm_bhatt.png';
 const imgInfluencerAnkit = 'assets/images/influencer_anki_sir.png';
 const imgInfluencerKeyur = 'assets/images/influencer_keyur_sir.png';
+const imgInfluencerHetvi = 'assets/images/influencer_hetvi_maam.png';
+const imgInfluencerRavi = 'assets/images/influencer_ravi_sir.png';
 const imgSciencePatternBg = 'assets/images/science_pattern_bg.png';

@@ -377,6 +377,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get studentActivities => 'छात्र गतिविधियां';
 
   @override
+  String get material => 'Material';
+
+  @override
+  String get images => 'Images';
+
+  @override
   String get appInformation => 'ऐप जानकारी';
 
   @override
