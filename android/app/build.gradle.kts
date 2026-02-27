@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.bondbyte.dmbhattclasses.dm_bhatt_tutions"
+    namespace = "com.bondbyte.students"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
@@ -39,7 +39,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.bondbyte.dmbhattclasses.dm_bhatt_tutions"
+        applicationId = "com.bondbyte.students"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

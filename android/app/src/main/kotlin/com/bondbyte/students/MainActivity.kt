@@ -1,4 +1,4 @@
-package com.bondbyte.dmbhattclasses.dm_bhatt_tutions
+package com.bondbyte.students
 
 import io.flutter.embedding.android.FlutterActivity
 
