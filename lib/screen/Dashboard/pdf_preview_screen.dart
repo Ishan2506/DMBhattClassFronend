@@ -37,7 +37,6 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     super.initState();
     _loadPdfInfo();
     _startTimer();
-    _markPreviewAsUsed(); // Mark as used immediately upon opening
   }
 
   void _startTimer() {
@@ -71,7 +70,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
   Future<void> _loadPdfInfo() async {
     try {
-      final String? pdfUrl = widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
+      final String? pdfUrl = widget.product['file'] ?? widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
       if (pdfUrl == null || pdfUrl.isEmpty) {
         if (mounted) setState(() => _isLoading = false);
         return;
@@ -262,7 +261,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                     itemBuilder: (context, index) {
                       final pageNumber = index + 1;
                       final isLocked = pageNumber > _freePages;
-                      final String? pdfUrl = widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
+                      final String? pdfUrl = widget.product['file'] ?? widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
                       final bool isCloudinary = pdfUrl != null && pdfUrl.contains('/upload/');
 
                       return Container(
@@ -535,7 +534,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   }
 
   Widget _buildRasterizedFallback(int pageNumber) {
-    final String? pdfUrl = widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
+    final String? pdfUrl = widget.product['file'] ?? widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
     return FutureBuilder<Uint8List?>(
       future: _getRasterizedPage(pdfUrl ?? '', pageNumber),
       builder: (context, snapshot) {
