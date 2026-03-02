@@ -21,9 +21,11 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
 
   String? _selectedSubject;
   String? _selectedUnit;
+  String? _selectedTitle;
 
   List<String> _subjects = [];
   List<String> _units = [];
+  List<String> _titles = [];
 
   @override
   void initState() {
@@ -32,86 +34,26 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
   }
 
   Future<void> _fetchMindMaps() async {
-    // Add dummy data for testing
-    final dummyData = [
-      MindMapModel(
-        id: "dummy1",
-        subject: "Science",
-        unit: "Light - Reflection & Vision",
-        root: MindMapNode(
-          name: "Light",
-          children: [
-            MindMapNode(
-              name: "Vision",
-            ),
-            MindMapNode(
-              name: "Reflection of Light",
-              children: [
-                MindMapNode(name: "Virtual and erect"),
-                MindMapNode(name: "Same size as object"),
-                MindMapNode(name: "Equal distance"),
-                MindMapNode(name: "Lateral inversion"),
-              ],
-            ),
-            MindMapNode(
-              name: "Plane Mirror Images",
-            ),
-            MindMapNode(
-              name: "Multiple Reflection",
-              children: [
-                MindMapNode(name: "Multiple images"),
-                MindMapNode(name: "Periscope"),
-                MindMapNode(
-                  name: "Kaleidoscope",
-                  children: [
-                    MindMapNode(name: "Three mirror strips"),
-                    MindMapNode(name: "Infinite patterns"),
-                  ],
-                ),
-              ],
-            ),
-            MindMapNode(
-              name: "Sunlight",
-              children: [
-                MindMapNode(name: "Dispersion"),
-                MindMapNode(name: "Seven colors"),
-                MindMapNode(name: "Rainbow"),
-              ],
-            ),
-            MindMapNode(name: "Human Eye"),
-            MindMapNode(name: "Braille System"),
-          ],
-        ),
-      ),
-    ];
-
+    setState(() => _isLoading = true);
     try {
       final response = await ApiService.getAllMindMaps();
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
           _allMindMaps = data.map((e) => MindMapModel.fromJson(e)).toList();
-          // Merge with dummy data if needed or just use dummy if empty
-          if (_allMindMaps.isEmpty) {
-            _allMindMaps = dummyData;
-          } else {
-            _allMindMaps.addAll(dummyData);
-          }
           _subjects = _allMindMaps.map((e) => e.subject).toSet().toList();
           _isLoading = false;
         });
       } else {
         setState(() {
-          _allMindMaps = dummyData;
-          _subjects = _allMindMaps.map((e) => e.subject).toSet().toList();
+          _allMindMaps = [];
           _isLoading = false;
         });
       }
     } catch (e) {
       debugPrint("Error fetching mind maps: $e");
       setState(() {
-        _allMindMaps = dummyData;
-        _subjects = _allMindMaps.map((e) => e.subject).toSet().toList();
+        _allMindMaps = [];
         _isLoading = false;
       });
     }
@@ -121,6 +63,7 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
     setState(() {
       _selectedSubject = subject;
       _selectedUnit = null;
+      _selectedTitle = null;
       if (subject != null) {
         _units = _allMindMaps
             .where((e) => e.subject == subject)
@@ -129,6 +72,23 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
             .toList();
       } else {
         _units = [];
+      }
+      _titles = [];
+    });
+  }
+
+  void _onUnitChanged(String? unit) {
+    setState(() {
+      _selectedUnit = unit;
+      _selectedTitle = null;
+      if (unit != null && _selectedSubject != null) {
+        _titles = _allMindMaps
+            .where((e) => e.subject == _selectedSubject && e.unit == unit)
+            .map((e) => e.title)
+            .toSet()
+            .toList();
+      } else {
+        _titles = [];
       }
     });
   }
@@ -175,18 +135,27 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
                     value: _selectedUnit,
                     items: _units,
                     itemLabelBuilder: (String item) => item,
-                    onChanged: (val) => setState(() => _selectedUnit = val),
+                    onChanged: _onUnitChanged,
+                  ),
+                  const SizedBox(height: 24),
+                  CustomDropdown<String>(
+                    labelText: "Title",
+                    hintText: "Select Mind Map Title",
+                    value: _selectedTitle,
+                    items: _titles,
+                    itemLabelBuilder: (String item) => item,
+                    onChanged: (val) => setState(() => _selectedTitle = val),
                   ),
                   const Spacer(),
                   SizedBox(
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: (_selectedSubject == null || _selectedUnit == null)
+                      onPressed: (_selectedSubject == null || _selectedUnit == null || _selectedTitle == null)
                           ? null
                           : () {
                               final mindMap = _allMindMaps.firstWhere(
-                                (e) => e.subject == _selectedSubject && e.unit == _selectedUnit,
+                                (e) => e.subject == _selectedSubject && e.unit == _selectedUnit && e.title == _selectedTitle,
                               );
                               Navigator.push(
                                 context,

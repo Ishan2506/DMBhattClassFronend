@@ -275,13 +275,33 @@ class ApiService {
     required String year,
   }) async {
     final queryParams = {
+      'type': 'BoardPaper',
       'medium': medium,
       'std': std,
       'year': year,
       if (stream != null) 'stream': stream,
     };
     
-    final uri = Uri.parse("$baseUrl/materials/board-papers").replace(queryParameters: queryParams);
+    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
+    
+    return _handleSession(await http.get(
+      uri,
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
+    ));
+  }
+
+  static Future<http.Response> getSchoolPapers({
+    String? subject,
+  }) async {
+    final queryParams = {
+      'type': 'SchoolPaper',
+      if (subject != null) 'subject': subject,
+    };
+    
+    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
     
     return _handleSession(await http.get(
       uri,
@@ -565,33 +585,14 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
-  static Future<http.Response> getMaterialImages({
-    required String subject,
-    required String unit,
-  }) async {
-    final queryParams = {
-      'subject': subject,
-      'unit': unit,
-    };
-    final uri = Uri.parse("$baseUrl/materials/images").replace(queryParameters: queryParams);
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
-  }
-
-  // --- One-Liner Exam APIs ---
-
+  // --- One Liner Exam ---
   static Future<http.Response> getAllOneLinerExams({String? std, String? medium, String? subject}) async {
     final queryParams = <String, String>{};
     if (std != null) queryParams['std'] = std;
     if (medium != null) queryParams['medium'] = medium;
     if (subject != null) queryParams['subject'] = subject;
 
-    final uri = Uri.parse("$baseUrl/exam/one-liner/all").replace(queryParameters: queryParams);
+    final uri = Uri.parse("$baseUrl/onelinerexam/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(
       uri,
       headers: _addAuth({
@@ -602,7 +603,26 @@ class ApiService {
   }
 
   static Future<http.Response> getOneLinerExamById(String examId) async {
-    final uri = Uri.parse("$baseUrl/exam/one-liner/$examId");
+    final uri = Uri.parse("$baseUrl/onelinerexam/$examId");
+    return _handleSession(await http.get(
+      uri,
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
+    ));
+  }
+
+  static Future<http.Response> getMaterialImages({
+    required String subject,
+    required String unit,
+  }) async {
+    final queryParams = {
+      'type': 'ImageMaterial',
+      'subject': subject,
+      'unit': unit,
+    };
+    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(
       uri,
       headers: _addAuth({
@@ -612,4 +632,3 @@ class ApiService {
     ));
   }
 }
-

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -29,65 +31,34 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
     _isGuest = await GuestUtils.isGuest();
     if (mounted) setState(() {});
   }
-  final List<String> _subjects = [
-    "Mathematics",
-    "Science", 
-    "English",
-    "Gujarati",
-    "Social Science",
-    "Hindi",
-    "Sanskrit",
-    "Computer"
-  ];
+  final List<String> _subjects = ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+  
+  bool _isLoading = false;
+  List<dynamic> _displayPapers = [];
 
-  // Mock Data
-  final List<Map<String, dynamic>> _allPapers = [
-    {
-      "id": "1",
-      "name": "Unit Test 1 - Maths",
-      "subject": "Mathematics",
-      "date": "10 Aug 2025",
-      "image": "https://pdfobject.com/pdf/sample.pdf", // Mock PDF
-      "price": 49,
-    },
-    {
-      "id": "2",
-      "name": "Mid Term - Maths",
-      "subject": "Mathematics",
-      "date": "15 Oct 2025",
-      "image": "https://pdfobject.com/pdf/sample.pdf",
-      "price": 99,
-    },
-    {
-      "id": "3",
-      "name": "Chapter 5 Worksheet",
-      "subject": "Science",
-      "date": "12 Sep 2025",
-      "image": "https://pdfobject.com/pdf/sample.pdf",
-      "price": 29,
-    },
-    {
-      "id": "4",
-      "name": "English Grammar Test",
-      "subject": "English",
-      "date": "05 Nov 2025",
-      "image": "https://pdfobject.com/pdf/sample.pdf",
-      "price": 39,
-    },
-  ];
-
-  List<Map<String, dynamic>> _displayPapers = [];
-
-  void _filterPapers() {
+  Future<void> _filterPapers() async {
     if (_selectedSubject == null) {
       setState(() {
         _displayPapers = [];
       });
       return;
     }
-    setState(() {
-      _displayPapers = _allPapers.where((p) => p['subject'] == _selectedSubject).toList();
-    });
+    
+    setState(() => _isLoading = true);
+    try {
+      final response = await ApiService.getSchoolPapers(subject: _selectedSubject);
+      if (response.statusCode == 200) {
+        setState(() {
+          _displayPapers = jsonDecode(response.body);
+        });
+      } else {
+        CustomToast.showError(context, "Failed to fetch papers");
+      }
+    } catch (e) {
+      CustomToast.showError(context, "Error: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -166,7 +137,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                    ),
                  ),
                )
-            else if (_displayPapers.isEmpty)
+            else if (_displayPapers.isEmpty && !_isLoading)
                Center(
                  child: Padding(
                    padding: const EdgeInsets.only(top: 40),
@@ -179,6 +150,8 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                    ),
                  ),
                )
+            else if (_isLoading)
+               const Center(child: CircularProgressIndicator())
             else
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,11 +197,11 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  paper['name'],
+                  paper['title'] ?? 'School Paper',
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15, color: colorScheme.onSurface),
                 ),
                 Text(
-                  paper['date'],
+                  paper['subject'] ?? '',
                   style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
               ],
@@ -292,7 +265,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       // Given the user's request "i just want to know Actual we support the download functionlity",
       // implementing a functional download is the goal.
       
-      final String url = paper['image'];
+      final String url = paper['url'] ?? paper['fileUrl'] ?? '';
       final Uri uri = Uri.parse(url);
       
       if (await canLaunchUrl(uri)) {
