@@ -37,6 +37,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     super.initState();
     _loadPdfInfo();
     _startTimer();
+    _markPreviewAsUsed(); // Mark as used immediately upon opening
   }
 
   void _startTimer() {
