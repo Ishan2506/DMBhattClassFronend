@@ -57,8 +57,16 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
           final profileData = jsonDecode(profileResponse.body);
           final profile = profileData['profile'];
           _userStandard = profile?['std']?.toString();
+          // Backward compatibility: If the DB has "11 Science", split it.
+          if (_userStandard != null && _userStandard!.contains(' ')) {
+             final parts = _userStandard!.split(' ');
+             _userStandard = parts[0];
+             if (_userStream == null || _userStream == '-' || _userStream!.isEmpty) {
+                 _userStream = parts.skip(1).join(' ');
+             }
+          }
           _userMedium = profile?['medium']?.toString();
-          _userStream = profile?['stream']?.toString();
+          _userStream = profile?['stream']?.toString() ?? _userStream;
         }
       }
 
@@ -85,8 +93,16 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
             final examStream = e['stream']?.toString();
             
             // Match Stream if Std is 11 or 12
-            if (_userStandard != null && (int.tryParse(_userStandard!) ?? 0) >= 11) {
-               if (_userStream != null && examStream != null && examStream != _userStream) return false;
+            if (_userStandard != null) {
+              // Extract numeric part of standard (e.g. from "11 Science" to "11" if user still has old data)
+              final numMatch = RegExp(r'\d+').firstMatch(_userStandard!);
+              int stdNum = 0;
+              if (numMatch != null) {
+                 stdNum = int.tryParse(numMatch.group(0) ?? '0') ?? 0;
+              }
+              if (stdNum >= 11) {
+                 if (_userStream != null && examStream != null && examStream != _userStream && examStream.isNotEmpty && examStream != "-") return false;
+              }
             }
             return true;
           }).toList();

@@ -87,11 +87,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
            
             if (profile != null) {
                _selectedStandard = profile['std'];
+               
+               if (_selectedStandard != null && _selectedStandard!.contains(' ')) {
+                   final parts = _selectedStandard!.split(' ');
+                   _selectedStandard = parts[0];
+                   _selectedStream = parts.skip(1).join(' ');
+               }
+               if (!_standards.contains(_selectedStandard)) _selectedStandard = null;
+               
                _selectedMedium = profile['medium'];
+               if (!_mediums.contains(_selectedMedium)) _selectedMedium = null;
+               
+               _selectedStream = profile['stream'] ?? _selectedStream;
+               if (!_streams.contains(_selectedStream)) _selectedStream = null;
+
                _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
                _parentPhoneController.text = profile['parentPhone'] ?? (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
                _selectedBoard = profile['board'];
+               if (!_boards.contains(_selectedBoard)) _selectedBoard = null;
+
                _selectedRole = user['loginAs'];
+               if (!_roles.contains(_selectedRole)) _selectedRole = null;
                
                if (_schoolNameController.text == "D.M.BHATT Institute") {
                  _selectedInstitute = "D.M.BHATT Institute";
@@ -132,6 +148,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'phoneNum': _phoneController.text,
         'school': _schoolNameController.text,
         'std': _selectedStandard,
+        'stream': _selectedStream,
         'medium': _selectedMedium,
         'board': _selectedBoard,
         'loginAs': _selectedRole,

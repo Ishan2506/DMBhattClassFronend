@@ -55,6 +55,9 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           // Fetch profile to get name and details
           String name = "User";
           String std = "";
+          String medium = "";
+          String board = "";
+          String stream = "";
           String userId = "";
           String profilePic = "";
 
@@ -73,6 +76,9 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                }
                if (profile != null) {
                  std = profile['std'] ?? "";
+                 medium = profile['medium'] ?? "";
+                 board = profile['board'] ?? "";
+                 stream = profile['stream'] ?? "";
                  profilePic = profile['profile_pic'] ?? (user != null ? user['photoPath'] : "") ?? "";
                }
              }
@@ -95,6 +101,9 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
             'name': name,
             'userId': userId,
             'std': std,
+            'medium': medium,
+            'board': board,
+            'stream': stream,
             'profilePic': profilePic,
           };
 
@@ -113,8 +122,11 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           // Switch to this new account (Update root prefs)
           await prefs.setString('auth_token', token);
           await prefs.setString('user_password', _passwordController.text);
-          if (userId.isNotEmpty) await prefs.setString('userId', userId);
-          if (std.isNotEmpty) await prefs.setString('std', std);
+          if (userId.isNotEmpty) await prefs.setString('userId', userId); else await prefs.remove('userId');
+          if (std.isNotEmpty) await prefs.setString('std', std); else await prefs.remove('std');
+          if (medium.isNotEmpty) await prefs.setString('medium', medium); else await prefs.remove('medium');
+          if (board.isNotEmpty) await prefs.setString('board', board); else await prefs.remove('board');
+          if (stream.isNotEmpty) await prefs.setString('stream', stream); else await prefs.remove('stream');
 
           if (mounted) {
             CustomToast.showSuccess(context, "Account Added & Switched");
@@ -145,18 +157,32 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Reusing styles from LoginScreen
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black54),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.primary,
+                theme.colorScheme.primary.withOpacity(0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         elevation: 0,
-        title: Text(l10n.addAccount, style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: Text(l10n.addAccount, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -168,22 +194,26 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.blue.shade50, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: isDark ? theme.colorScheme.primary.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.05),
+                  shape: BoxShape.circle
+                ),
                 child: Image.asset(imgDmBhattClassesLogo, height: 80, width: 80),
               ),
               const SizedBox(height: 32),
               Text(
                 l10n.addAnotherAccount,
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.enterDetailsToAdd,
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54),
+                style: GoogleFonts.poppins(fontSize: 14, color: isDark ? Colors.grey.shade400 : Colors.black54),
               ),
               const SizedBox(height: 40),
 
                _buildTextField(
+                context: context,
                 controller: _phoneController,
                 hint: l10n.phoneNumber, 
                 icon: Icons.phone_outlined, 
@@ -200,6 +230,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               ),
               const SizedBox(height: 16),
               _buildTextField(
+                context: context,
                 controller: _passwordController,
                 hint: l10n.password,
                 icon: Icons.lock_outline,
@@ -217,8 +248,9 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 child: ElevatedButton(
                   onPressed: _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
+                    backgroundColor: theme.colorScheme.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    elevation: 2,
                   ),
                   child: Text(
                     l10n.loginAndAdd,
@@ -231,7 +263,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("${l10n.dontHaveAccount} ", style: GoogleFonts.poppins(color: Colors.black54)),
+                  Text("${l10n.dontHaveAccount} ", style: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.black54)),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -242,7 +274,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     child: Text(
                       l10n.register,
                       style: GoogleFonts.poppins(
-                        color: Colors.blue.shade700,
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,
                       ),
@@ -258,6 +290,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   }
   
   Widget _buildTextField({
+    required BuildContext context,
     required String hint, 
     required IconData icon, 
     TextEditingController? controller,
@@ -268,11 +301,13 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
       ),
       child: TextFormField(
         controller: controller,
@@ -280,14 +315,14 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
-        style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 16),
+        style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.w600, fontSize: 16),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.normal),
-          prefixIcon: Icon(icon, color: Colors.black54),
+          hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey, fontWeight: FontWeight.normal),
+          prefixIcon: Icon(icon, color: isDark ? Colors.grey : Colors.black54),
           suffixIcon: isPassword 
               ? IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: isDark ? Colors.grey.shade400 : Colors.grey),
                   onPressed: onVisibilityChanged,
                 ) 
               : null,

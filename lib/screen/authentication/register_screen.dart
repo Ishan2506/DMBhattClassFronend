@@ -484,7 +484,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       CustomToast.showError(context, l10n.pleaseAgreeTerms);
                       return;
                     }
-                    if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedInstitute == null || _selectedBoard == null || _selectedRole == null) {
+                    if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedBoard == null || _selectedRole == null) {
                         CustomToast.showError(context, l10n.pleaseSelectAllFields);
                       return;
                     }

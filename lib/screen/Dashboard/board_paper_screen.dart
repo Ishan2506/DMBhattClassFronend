@@ -294,7 +294,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                }
 
                final pdfPaper = Map<String, dynamic>.from(paper);
-               if (pdfPaper['image'] == null) pdfPaper['image'] = pdfPaper['url'];
+               if (pdfPaper['image'] == null) pdfPaper['image'] = pdfPaper['file'] ?? pdfPaper['url'];
                
                if (!mounted) return;
                Navigator.push(
@@ -312,7 +312,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                   GuestUtils.showGuestRestrictionDialog(context, message: "Register to download board papers!");
                   return;
               }
-              _launchURL(paper['url'] ?? ""); 
+              _launchURL(paper['file'] ?? paper['url'] ?? ""); 
             }, 
           ),
         ],

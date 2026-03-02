@@ -153,7 +153,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
 
   Widget _buildImageCard(dynamic imageData, ColorScheme colorScheme) {
     return GestureDetector(
-      onTap: () => _viewImage(imageData['url']),
+      onTap: () => _viewImage(imageData['file']),
       child: Container(
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerLow,
@@ -166,7 +166,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 child: Image.network(
-                  imageData['url'],
+                  imageData['file'],
                   fit: BoxFit.cover,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),

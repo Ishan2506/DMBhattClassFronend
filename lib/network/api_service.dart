@@ -11,8 +11,8 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 
 class ApiService {
-  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-  // static const String baseUrl = "http://localhost:5000/api";
+  //static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+   static const String baseUrl = "http://localhost:5000/api";
   static String? _authToken;
 
   static String? get userToken => _authToken;
@@ -268,19 +268,35 @@ class ApiService {
     ));
   }
 
+  static Future<Map<String, String>> _getDefaultQueryParams() async {
+    final prefs = await SharedPreferences.getInstance();
+    final std = prefs.getString('std');
+    final medium = prefs.getString('medium');
+    final board = prefs.getString('board');
+    final stream = prefs.getString('stream');
+    
+    final params = <String, String>{};
+    if (std != null && std.isNotEmpty) params['std'] = std;
+    if (medium != null && medium.isNotEmpty) params['medium'] = medium;
+    if (board != null && board.isNotEmpty) params['board'] = board;
+    if (stream != null && stream.isNotEmpty && stream != "None" && stream != "-") params['stream'] = stream;
+    
+    return params;
+  }
+
   static Future<http.Response> getBoardPapers({
     required String medium,
     required String std,
     String? stream,
     required String year,
   }) async {
-    final queryParams = {
-      'type': 'BoardPaper',
-      'medium': medium,
-      'std': std,
-      'year': year,
-      if (stream != null) 'stream': stream,
-    };
+    final queryParams = await _getDefaultQueryParams();
+    queryParams['type'] = 'BoardPaper';
+    queryParams['year'] = year;
+    // std, medium, stream might be overridden here if explicitly required
+    if (std.isNotEmpty) queryParams['std'] = std;
+    if (medium.isNotEmpty) queryParams['medium'] = medium;
+    if (stream != null && stream.isNotEmpty && stream != "None" && stream != "-") queryParams['stream'] = stream;
     
     final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
     
@@ -296,10 +312,9 @@ class ApiService {
   static Future<http.Response> getSchoolPapers({
     String? subject,
   }) async {
-    final queryParams = {
-      'type': 'SchoolPaper',
-      if (subject != null) 'subject': subject,
-    };
+    final queryParams = await _getDefaultQueryParams();
+    queryParams['type'] = 'SchoolPaper';
+    if (subject != null) queryParams['subject'] = subject;
     
     final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
     
@@ -403,10 +418,10 @@ class ApiService {
   }
 
   static Future<http.Response> getAllExams({String? std, String? medium, String? subject}) async {
-    final queryParams = <String, String>{};
-    if (std != null) queryParams['std'] = std;
-    if (medium != null) queryParams['medium'] = medium;
-    if (subject != null) queryParams['subject'] = subject;
+    final queryParams = await _getDefaultQueryParams();
+    if (std != null && std.isNotEmpty) queryParams['std'] = std;
+    if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
+    if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
 
     final uri = Uri.parse("$baseUrl/exam/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(uri));
@@ -418,7 +433,8 @@ class ApiService {
   }
 
   static Future<http.Response> getAllFiveMinTests() async {
-    final uri = Uri.parse("$baseUrl/fiveMinTest/all");
+    final queryParams = await _getDefaultQueryParams();
+    final uri = Uri.parse("$baseUrl/fiveMinTest/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(uri));
   }
 
@@ -581,16 +597,17 @@ class ApiService {
 
   // --- Mind Map ---
   static Future<http.Response> getAllMindMaps() async {
-    final uri = Uri.parse("$baseUrl/mindmap/all");
+    final queryParams = await _getDefaultQueryParams();
+    final uri = Uri.parse("$baseUrl/mindmap/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(uri));
   }
 
   // --- One Liner Exam ---
   static Future<http.Response> getAllOneLinerExams({String? std, String? medium, String? subject}) async {
-    final queryParams = <String, String>{};
-    if (std != null) queryParams['std'] = std;
-    if (medium != null) queryParams['medium'] = medium;
-    if (subject != null) queryParams['subject'] = subject;
+    final queryParams = await _getDefaultQueryParams();
+    if (std != null && std.isNotEmpty) queryParams['std'] = std;
+    if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
+    if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
 
     final uri = Uri.parse("$baseUrl/onelinerexam/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(
@@ -617,11 +634,11 @@ class ApiService {
     required String subject,
     required String unit,
   }) async {
-    final queryParams = {
-      'type': 'ImageMaterial',
-      'subject': subject,
-      'unit': unit,
-    };
+    final queryParams = await _getDefaultQueryParams();
+    queryParams['type'] = 'ImageMaterial';
+    queryParams['subject'] = subject;
+    queryParams['unit'] = unit;
+    
     final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
     return _handleSession(await http.get(
       uri,

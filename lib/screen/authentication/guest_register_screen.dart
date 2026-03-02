@@ -504,7 +504,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       return;
                     }
                     // Validate Dropdowns
-                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedInstitute == null || _selectedBoard == null || _selectedRole == null) {
+                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedBoard == null) {
                         CustomToast.showError(context, l10n.pleaseSelectAllFields);
                       return;
                      }
@@ -535,7 +535,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                         "std": _selectedStandard!,
                         "medium": _selectedMedium!,
                         "board": _selectedBoard!,
-                        "loginAs": _selectedRole!,
+                        "stream": _selectedStream ?? "-",
                         "schoolName": _schoolNameController.text,
                       },
                       files: [],

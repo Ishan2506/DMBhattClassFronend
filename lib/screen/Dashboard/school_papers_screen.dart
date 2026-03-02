@@ -265,7 +265,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       // Given the user's request "i just want to know Actual we support the download functionlity",
       // implementing a functional download is the goal.
       
-      final String url = paper['url'] ?? paper['fileUrl'] ?? '';
+      final String url = paper['file'] ?? paper['url'] ?? paper['fileUrl'] ?? '';
       final Uri uri = Uri.parse(url);
       
       if (await canLaunchUrl(uri)) {

@@ -212,6 +212,9 @@ class StudentProfileScreen extends StatefulWidget {
          'password': prefs.getString('user_password') ?? "",
          'userId': prefs.getString('userId') ?? "",
          'std': prefs.getString('std') ?? "",
+         'medium': prefs.getString('medium') ?? "",
+         'board': prefs.getString('board') ?? "",
+         'stream': prefs.getString('stream') ?? "",
          'profilePic': pic ?? "",
     };
 
@@ -227,6 +230,9 @@ class StudentProfileScreen extends StatefulWidget {
          'password': prefs.getString('user_password') ?? existing['password'],
          'userId': prefs.getString('userId') ?? existing['userId'],
          'std': prefs.getString('std') ?? existing['std'],
+         'medium': prefs.getString('medium') ?? existing['medium'],
+         'board': prefs.getString('board') ?? existing['board'],
+         'stream': prefs.getString('stream') ?? existing['stream'],
        };
     } else {
        // Prevent duplicates if by chance token changed but phone is same (handled by phone check above),
@@ -285,9 +291,12 @@ class StudentProfileScreen extends StatefulWidget {
 
        // 2. Set Active Session
        await ApiService.setAuthToken(token);
-       if (account['password'] != null) await prefs.setString('user_password', account['password']);
-       if (account['userId'] != null) await prefs.setString('userId', account['userId']);
-       if (account['std'] != null) await prefs.setString('std', account['std']);
+       if (account['password'] != null) await prefs.setString('user_password', account['password']); else await prefs.remove('user_password');
+       if (account['userId'] != null) await prefs.setString('userId', account['userId']); else await prefs.remove('userId');
+       if (account['std'] != null && account['std'].toString().isNotEmpty) await prefs.setString('std', account['std']); else await prefs.remove('std');
+       if (account['medium'] != null && account['medium'].toString().isNotEmpty) await prefs.setString('medium', account['medium']); else await prefs.remove('medium');
+       if (account['board'] != null && account['board'].toString().isNotEmpty) await prefs.setString('board', account['board']); else await prefs.remove('board');
+       if (account['stream'] != null && account['stream'].toString().isNotEmpty) await prefs.setString('stream', account['stream']); else await prefs.remove('stream');
        
        if (context.mounted) {
          CustomLoader.hide(context);
