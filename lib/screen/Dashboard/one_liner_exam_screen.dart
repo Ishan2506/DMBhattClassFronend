@@ -184,9 +184,10 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
     for (int i = 0; i < _questions.length; i++) {
       final matchScore = MatchingUtils.getMatchScore(_spokenAnswers[i] ?? "", _getAnswer(i));
       totalPartialScore += matchScore;
-      if (matchScore >= 0.7) {
+      if (matchScore >= 0.5) {
         score++;
       }
+
     }
 
     final int accuracy = (totalPartialScore / _questions.length * 100).round();
