@@ -43,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _selectedCity;
   String? _selectedInstitute;
   String? _selectedBoard;
-  String? _selectedRole;
+  String? _selectedRole = "Student";
 
   // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
@@ -52,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
   final List<String> _boards = ["GSEB", "CBSE"];
-  final List<String> _roles = ["Student", "Teacher"];
+
   
   final Map<String, List<String>> _stateCityMap = {
     "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
@@ -419,19 +419,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   );
                 }
-              ), // Login As Dropdown
-            _buildDropdown(
-              context,
-              hint: l10n.loginAs,
-              icon: Icons.person_pin_outlined,
-              value: _selectedRole,
-              items: _roles,
-              onChanged: (val) {
-                setState(() {
-                  _selectedRole = val;
-                });
-              },
-            ),
+              ),
+            const SizedBox(height: 0),
             const SizedBox(height: 24),
 
             // Terms Checkbox
@@ -484,7 +473,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       CustomToast.showError(context, l10n.pleaseAgreeTerms);
                       return;
                     }
-                    if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedBoard == null || _selectedRole == null) {
+                    if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedBoard == null) {
                         CustomToast.showError(context, l10n.pleaseSelectAllFields);
                       return;
                     }
