@@ -27,7 +27,7 @@ class RazorpayHelper {
 
   void _handlePaymentError(PaymentFailureResponse response) {
     onFailure(response);
-    CustomToast.showError(context, "Payment Failed: ${response.message}");
+    CustomToast.showError(context, "Payment Cancelled");
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {

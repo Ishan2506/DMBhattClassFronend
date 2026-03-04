@@ -68,7 +68,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   }
 
   void _handlePaymentFailure(PaymentFailureResponse response) {
-    CustomToast.showError(context, "Payment Failed: ${response.message}");
+    CustomToast.showError(context, "Payment Cancelled");
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {

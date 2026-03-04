@@ -59,7 +59,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _handlePaymentFailure(PaymentFailureResponse response) {
-    CustomToast.showError(context, "Payment Failed: ${response.message}");
+    CustomToast.showError(context, "Payment Cancelled");
   }
 
   void _calculateInitialAmount() {
