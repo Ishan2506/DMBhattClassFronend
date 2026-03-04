@@ -276,6 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
+        
         style: GoogleFonts.poppins(
           color: Colors.black, // Explicitly Black
           fontWeight: FontWeight.w600, // Bold

@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:flutter_windowmanager/flutter_windowmanager.dart';
-
+import 'package:device_preview/device_preview.dart';
 import 'constant/app_constant.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -24,7 +24,9 @@ void main() async {
   await _requestPermissions();
   
   // await _secureScreen();
-  runApp(MyApp(prefs: prefs));
+  runApp(DevicePreview(
+    builder: (context) => MyApp(prefs: prefs),
+  ));
 }
 
 Future<void> _requestPermissions() async {
@@ -56,13 +58,16 @@ class MyApp extends StatelessWidget {
           
           return MaterialApp(
             navigatorKey: navigatorKey,
+            useInheritedMediaQuery: true,
+            locale: DevicePreview.locale(context),
+            builder: DevicePreview.appBuilder,
             debugShowCheckedModeBanner: false,
             title: appName,
             // Use extension method to get theme based on style and brightness
             theme: theme.getThemeForStyle(styleName, false), // Light
             darkTheme: theme.getThemeForStyle(styleName, true), // Dark
             themeMode: state.themeMode,
-            locale: state.locale,
+            // locale: state.locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const SplashScreen(),
