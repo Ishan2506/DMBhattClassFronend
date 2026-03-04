@@ -37,6 +37,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     super.initState();
     _loadPdfInfo();
     _startTimer();
+    _markPreviewAsUsed(); // Mark as used immediately when entering
   }
 
   void _startTimer() {
@@ -48,7 +49,6 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
           } else {
             _isTimeUp = true;
             _countdownTimer?.cancel();
-            _markPreviewAsUsed();
           }
         });
       }
