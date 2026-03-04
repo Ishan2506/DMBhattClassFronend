@@ -131,8 +131,8 @@ class ExamResultScreen extends StatelessWidget {
                 resolvedCorrectText = question['correctAnswer'].toString();
               }
 
-              final isCorrect = userAns == resolvedCorrectText;
-              final isSkipped = userAns == null;
+              final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
+              final isSkipped = userAns == null || userAns.trim().isEmpty;
 
               return pw.Container(
                 margin: const pw.EdgeInsets.only(bottom: 16),
@@ -369,8 +369,8 @@ class ExamResultScreen extends StatelessWidget {
                     resolvedCorrectText = question['correctAnswer'].toString();
                   }
 
-                  final isCorrect = userAns == resolvedCorrectText;
-                  final isSkipped = userAns == null;
+                  final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
+                  final isSkipped = userAns == null || userAns.trim().isEmpty;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
