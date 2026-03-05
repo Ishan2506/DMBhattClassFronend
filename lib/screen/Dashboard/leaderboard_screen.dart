@@ -111,11 +111,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          "Leaderboard - Standard $userStandard",
+          "Leaderboard",
           style: GoogleFonts.poppins(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -126,12 +127,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                colorScheme.primary,
+                colorScheme.primary.withOpacity(0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
         ),
         elevation: 0,
@@ -204,11 +212,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Theme.of(context).colorScheme.primary,
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withOpacity(0.8),
+                                  colorScheme.primary,
+                                  colorScheme.primary.withOpacity(0.8),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -217,6 +222,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 bottomLeft: Radius.circular(30),
                                 bottomRight: Radius.circular(30),
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colorScheme.primary.withOpacity(0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -301,24 +313,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.grey.shade600,
+                                          color: colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                       const SizedBox(width: 16),
                                       CircleAvatar(
-                                        backgroundColor: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.1),
+                                        backgroundColor: colorScheme.primary.withOpacity(0.1),
                                         radius: 20,
                                         child: Text(
                                           (item['firstName'] ?? 'U')[0]
                                               .toUpperCase(),
                                           style: GoogleFonts.poppins(
                                             fontWeight: FontWeight.bold,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
+                                            color: colorScheme.primary,
                                           ),
                                         ),
                                       ),
@@ -330,7 +337,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                           style: GoogleFonts.poppins(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 14,
-                                            color: Colors.black87,
+                                            color: colorScheme.onSurface,
                                           ),
                                         ),
                                       ),
@@ -383,6 +390,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     double size,
     Color color,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     final firstName = data['firstName'] ?? 'Unknown';
     final points = data['totalRewardPoints'] ?? 0;
 
@@ -404,18 +412,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   )
                 ],
               ),
-              child: CircleAvatar(
-                radius: size / 2,
-                backgroundColor: Colors.white,
-                child: Text(
-                  firstName[0].toUpperCase(),
-                  style: GoogleFonts.poppins(
-                    fontSize: size * 0.4,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+                child: CircleAvatar(
+                  radius: size / 2,
+                  backgroundColor: colorScheme.surface,
+                  child: Text(
+                    firstName[0].toUpperCase(),
+                    style: GoogleFonts.poppins(
+                      fontSize: size * 0.4,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
                   ),
                 ),
-              ),
             ),
             if (rank == 1)
               const Positioned(
@@ -453,7 +461,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         Text(
           firstName.split(' ')[0], // First Name
           style: GoogleFonts.poppins(
-            color: Colors.white,
+            color: colorScheme.onPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
@@ -461,7 +469,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         Text(
           "$points pts",
           style: GoogleFonts.poppins(
-            color: Colors.white70,
+            color: colorScheme.onPrimary.withOpacity(0.8),
             fontSize: 12,
           ),
         ),

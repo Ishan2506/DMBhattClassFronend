@@ -30,14 +30,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
-  final TextEditingController _schoolNameController = TextEditingController();
 
   // Selection States
   String? _selectedStandard;
   String? _selectedMedium;
   String? _selectedStream; 
   String? _selectedState = "Gujarat";
-  String? _selectedInstitute;
   String? _selectedBoard;
   String? _selectedRole;
 
@@ -47,7 +45,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
    // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
-  final List<String> _institutes = ["D.M.BHATT Institute", "Other"];
 
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
@@ -103,19 +100,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                _selectedStream = profile['stream'] ?? _selectedStream;
                if (!_streams.contains(_selectedStream)) _selectedStream = null;
 
-               _schoolNameController.text = profile['school'] ?? (profile['schoolName'] ?? "");
-               _parentPhoneController.text = profile['parentPhone'] ?? (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
+                _parentPhoneController.text = profile['parentPhone'] ?? (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
                _selectedBoard = profile['board'];
                if (!_boards.contains(_selectedBoard)) _selectedBoard = null;
 
                _selectedRole = user['loginAs'];
                if (!_roles.contains(_selectedRole)) _selectedRole = null;
-               
-               if (_schoolNameController.text == "D.M.BHATT Institute") {
-                 _selectedInstitute = "D.M.BHATT Institute";
-               } else if (_schoolNameController.text.isNotEmpty) {
-                 _selectedInstitute = "Other";
-               }
             }
             _currentPhotoPath = user['photoPath'];
         });
@@ -150,7 +140,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'lastName': '',
         'email': _emailController.text,
         'phoneNum': _phoneController.text,
-        'school': _schoolNameController.text,
         'std': _selectedStandard,
         'stream': _selectedStream,
         'medium': _selectedMedium,
@@ -177,28 +166,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  Future<List<String>> _fetchSchools(String query) async {
-    final cityToSearch = _cityController.text.isNotEmpty ? _cityController.text : "Ahmedabad";
-
-    if (query.isEmpty) return [];
-    
-    final url = Uri.parse(
-        'https://nominatim.openstreetmap.org/search?q=$query+school+in+$cityToSearch&format=json&limit=5');
-    
-    try {
-      final response = await http.get(url, headers: {
-        'User-Agent': 'DMBhattClasses/1.0', 
-      });
-
-      if (response.statusCode == 200) {
-        final List data = json.decode(response.body);
-        return data.map<String>((e) => e['display_name'] as String).toList();
-      }
-    } catch (e) {
-      debugPrint("Error fetching schools: $e");
-    }
-    return [];
-  }
 
   Future<void> _pickImage() async {
     try {
@@ -425,118 +392,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   const SizedBox(height: 16),
     
-                  // Institute Dropdown
-                  _buildDropdown(
-                    context,
-                    hint: "Institute Name",
-                    icon: Icons.business,
-                    value: _selectedInstitute,
-                    items: _institutes,
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedInstitute = val;
-                        if (val == "D.M.BHATT Institute") {
-                          _schoolNameController.text = "D.M.BHATT Institute";
-                        } else {
-                          // Keep existing text if switching to Other, or clear it?
-                          // Better to clear if it was "D.M.BHATT Institute" before
-                          if (_schoolNameController.text == "D.M.BHATT Institute") {
-                            _schoolNameController.text = "";
-                          }
-                        }
-                      });
-                    },
-                    isReadOnly: true,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // School Name Autocomplete (Visible only if Other is selected)
-                  if (_selectedInstitute == "Other") ...[
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Autocomplete<String>(
-                          optionsBuilder: (TextEditingValue textEditingValue) {
-                            if (textEditingValue.text == '') {
-                              return const Iterable<String>.empty();
-                            }
-                            return _fetchSchools(textEditingValue.text);
-                          },
-                          onSelected: (String selection) {
-                            _schoolNameController.text = selection;
-                          },
-                          initialValue: TextEditingValue(text: _schoolNameController.text), 
-                          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                             // Sync back to controller immediately when typing manually
-                             textEditingController.addListener(() {
-                                 _schoolNameController.text = textEditingController.text;
-                             });
-                            
-                             // If pre-filled value exists, ensure it's shown
-                             if (_schoolNameController.text.isNotEmpty && textEditingController.text.isEmpty && _schoolNameController.text != "D.M.BHATT Institute") {
-                                 textEditingController.text = _schoolNameController.text;
-                             }
-      
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
-                              ),
-                              child: TextFormField(
-                                controller: textEditingController,
-                                focusNode: focusNode,
-                                 validator: (val) => val == null || val.isEmpty ? "Required" : null,
-                                style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.bold), 
-                                decoration: InputDecoration(
-                                  hintText: "School Name",
-                                  hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey),
-                                  prefixIcon: Icon(Icons.school_outlined, color: isDark ? Colors.grey : Colors.black54),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                ),
-                              ),
-                            );
-                          },
-                          optionsViewBuilder: (context, onSelected, options) {
-                            return Align(
-                              alignment: Alignment.topLeft,
-                              child: Material(
-                                elevation: 4.0,
-                                 borderRadius: BorderRadius.circular(16),
-                                child: Container(
-                                  width: constraints.maxWidth,
-                                  constraints: const BoxConstraints(maxHeight: 200),
-                                  decoration: BoxDecoration(
-                                     color: theme.cardColor,
-                                      borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    itemCount: options.length,
-                                    itemBuilder: (BuildContext context, int index) {
-                                      final String option = options.elementAt(index);
-                                      final displayName = option.split(',')[0]; 
-                                      return InkWell(
-                                        onTap: () {
-                                          onSelected(option);
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Text(displayName, style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color)),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      }
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                  const SizedBox(height: 32),
     
                   // Login As Dropdown
                   /*
