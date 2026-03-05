@@ -12,6 +12,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_exam_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StudentHomeScreen extends StatelessWidget {
@@ -204,13 +205,16 @@ class StudentHomeScreen extends StatelessWidget {
                     width: double.infinity,
                     height: MediaQuery.of(context).size.height * 0.06,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const StudentStartExamForm(),
-                          ),
-                        );
+                      onPressed: () async {
+                        if (!await GuestUtils.canGuestAccessExam(context)) return;
+                        if (context.mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const StudentStartExamForm(),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
@@ -286,13 +290,16 @@ class StudentHomeScreen extends StatelessWidget {
                         ),
                          const SizedBox(height: 16),
                         ElevatedButton(
-                          onPressed: () {
-                             Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const FiveMinTestSelectionScreen(),
-                              ),
-                            );
+                          onPressed: () async {
+                            if (!await GuestUtils.canGuestAccessExam(context)) return;
+                             if (context.mounted) {
+                               Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const FiveMinTestSelectionScreen(),
+                                ),
+                              );
+                             }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: colorScheme.surface,
@@ -373,13 +380,16 @@ class StudentHomeScreen extends StatelessWidget {
                         ),
                          const SizedBox(height: 16),
                         ElevatedButton(
-                          onPressed: () {
-                             Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const OneLinerSelectionScreen(),
-                              ),
-                            );
+                          onPressed: () async {
+                             if (!await GuestUtils.canGuestAccessExam(context)) return;
+                             if (context.mounted) {
+                               Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const OneLinerSelectionScreen(),
+                                ),
+                              );
+                             }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,

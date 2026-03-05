@@ -342,9 +342,6 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                           : () async {
                               if (!await GuestUtils.canGuestAccessExam(context)) return;
                               
-                              if (await GuestUtils.isGuest()) {
-                                await GuestUtils.incrementGuestExamCount();
-                              }
                               if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
                                 showDialog(
                                   context: context,

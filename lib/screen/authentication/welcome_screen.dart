@@ -1,7 +1,9 @@
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
-import 'package:dm_bhatt_tutions/screen/authentication/guest_register_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,10 +21,27 @@ class WelcomeScreen extends StatelessWidget {
           // Background Pattern
           Positioned.fill(
             child: Opacity(
-              opacity: 0.2, // Darker background
+              opacity: 0.2,
               child: Image.asset(
                 "assets/images/science_pattern_bg.png",
                 repeat: ImageRepeat.repeat,
+              ),
+            ),
+          ),
+
+          // Skip Button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            right: 16,
+            child: TextButton(
+              onPressed: () => _handleSkip(context),
+              child: Text(
+                l10n.skip,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue.shade700,
+                ),
               ),
             ),
           ),
@@ -120,27 +139,6 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
-
-                   // Register as Guest Button
-                  TextButton(
-                    onPressed: () {
-                       Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const GuestRegisterScreen()),
-                      );
-                    }, 
-                    child: Text(
-                      l10n.registerGuest,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                        decoration: TextDecoration.underline,
-                      ),
-                    )
-                  ),
-                  
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                 ],
               ),
@@ -148,6 +146,24 @@ class WelcomeScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _handleSkip(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await ApiService.setGuestMode(true);
+    
+    // Set default guest preferences
+    await prefs.setString('std', '10');
+    await prefs.setString('medium', 'English');
+    await prefs.setString('board', 'GSEB');
+    await prefs.setString('stream', 'None');
+
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LandingScreen()),
+      (route) => false,
     );
   }
 }

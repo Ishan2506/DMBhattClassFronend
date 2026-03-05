@@ -69,8 +69,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   Future<void> _proceedToNextScreen(SharedPreferences prefs) async {
     final token = prefs.getString('auth_token');
+    final isGuest = prefs.getString('user_role') == 'guest';
 
-    if (token != null && token.isNotEmpty) {
+    if ((token != null && token.isNotEmpty) || isGuest) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LandingScreen()),

@@ -218,10 +218,6 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                     onPressed: _selectedTest != null 
                         ? () async {
                             if (!await GuestUtils.canGuestAccessExam(context)) return;
-
-                            if (await GuestUtils.isGuest()) {
-                              await GuestUtils.incrementGuestExamCount();
-                            }
                             
                             if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
                               if (mounted) {

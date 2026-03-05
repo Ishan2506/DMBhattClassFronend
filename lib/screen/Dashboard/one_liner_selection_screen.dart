@@ -179,10 +179,6 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
 
     if (!await GuestUtils.canGuestAccessExam(context)) return;
 
-    if (await GuestUtils.isGuest()) {
-      await GuestUtils.incrementGuestExamCount();
-    }
-
     Navigator.push(
       context,
       MaterialPageRoute(

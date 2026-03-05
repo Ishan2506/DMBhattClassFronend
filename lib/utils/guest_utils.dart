@@ -1,3 +1,5 @@
+import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,17 +29,13 @@ class GuestUtils {
   static Future<bool> canGuestAccessExam(BuildContext context) async {
     if (!await isGuest()) return true;
 
-    final count = await getGuestExamCount();
-    if (count >= maxGuestExams) {
-      if (context.mounted) {
-        showGuestRestrictionDialog(
-          context,
-          message: "Guests are limited to $maxGuestExams free exams. Please register as a student to unlock unlimited exams.",
-        );
-      }
-      return false;
+    if (context.mounted) {
+      showGuestRestrictionDialog(
+        context,
+        message: "Please login or register first to give an exam.",
+      );
     }
-    return true;
+    return false;
   }
 
   static void showGuestRestrictionDialog(BuildContext context, {String? message}) {
@@ -49,34 +47,57 @@ class GuestUtils {
           children: [
             const Icon(Icons.lock_person, color: Colors.orange),
             const SizedBox(width: 10),
-            Text("Guest Restriction", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            Text("Access Restricted", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
           ],
         ),
         content: Text(
-          message ?? "This feature is only available for registered students. Please register to unlock full access.",
+          message ?? "This feature is only available for registered students. Please login or register to continue.",
           style: GoogleFonts.poppins(),
         ),
+        actionsOverflowButtonSpacing: 8,
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Later", style: GoogleFonts.poppins(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.clear(); // Clear everything for a fresh registration
-              if (!context.mounted) return;
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                (route) => false,
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text("Register Now", style: GoogleFonts.poppins(color: Colors.white)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Later", style: GoogleFonts.poppins(color: Colors.grey)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  foregroundColor: Theme.of(context).primaryColor,
+                  elevation: 0,
+                  side: BorderSide(color: Theme.of(context).primaryColor),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: Text("Login", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: Text("Register", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ],
       ),

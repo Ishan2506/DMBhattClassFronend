@@ -339,6 +339,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   Future<void> _fetchProfile({bool forceRefresh = false}) async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Handle Guest mode
+    if (ApiService.isGuest) {
+      setState(() {
+        studentName = "Guest User";
+        mobileNo = "Guest Mode";
+        studentStandard = "N/A";
+        schoolName = "N/A";
+        _isLoading = false;
+      });
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       if (!mounted) return;
@@ -475,6 +489,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () async {
+                              if (ApiService.isGuest) {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                                  (route) => false,
+                                );
+                                return;
+                              }
                               final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const EditProfileScreen()),
@@ -687,11 +709,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextButton.icon(
                 onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.remove('auth_token');
-                  await prefs.remove('user_password');
-                  await prefs.remove('userId');
-                  await prefs.remove('std');
+                  await ApiService.clearAuthToken();
                   if (!mounted) return;
                   Navigator.pushAndRemoveUntil(
                     context,

@@ -435,21 +435,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 }
               ),
             const SizedBox(height: 16),
-             // Login As Dropdown
-            _buildDropdown(
-              context,
-              hint: l10n.loginAs,
-              icon: Icons.person_pin_outlined,
-              value: _selectedRole,
-              items: _roles,
-              onChanged: (val) {
-                setState(() {
-                  _selectedRole = val;
-                });
-              },
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 24),
 
             // Terms Checkbox
             Row(

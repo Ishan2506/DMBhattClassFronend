@@ -11,15 +11,29 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 
 class ApiService {
-  static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-   //static const String baseUrl = "http://localhost:9657/api";
+  // static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+   static const String baseUrl = "http://localhost:5000/api";
+  static const String guestToken = "DMBHATT_GUEST_ACCESS_TOKEN_2024";
   static String? _authToken;
+  static bool _isGuest = false;
 
   static String? get userToken => _authToken;
+  static bool get isGuest => _isGuest;
 
   static Future<void> loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     _authToken = prefs.getString('auth_token');
+    _isGuest = prefs.getString('user_role') == 'guest';
+  }
+
+  static Future<void> setGuestMode(bool guest) async {
+    _isGuest = guest;
+    final prefs = await SharedPreferences.getInstance();
+    if (guest) {
+      await prefs.setString('user_role', 'guest');
+    } else {
+      await prefs.remove('user_role');
+    }
   }
 
   static Future<void> setAuthToken(String token) async {
@@ -30,20 +44,24 @@ class ApiService {
 
   static Future<void> clearAuthToken() async {
     _authToken = null;
+    _isGuest = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    await prefs.remove('user_role');
   }
 
   static Map<String, String> _addAuth(Map<String, String> headers) {
     if (_authToken != null) {
       headers['Authorization'] = 'Bearer $_authToken';
     }
+    if (_isGuest) {
+      headers['X-Guest-Token'] = guestToken;
+    }
     return headers;
   }
 
-  /// Centralized check for 401 Unauthorized errors
   static http.Response _handleSession(http.Response response) {
-    if (response.statusCode == 401) {
+    if (response.statusCode == 401 && !_isGuest) {
       debugPrint("Session expired (401). Redirecting to WelcomeScreen.");
       
       // Clear token to prevent infinite loop or persistent bad state
@@ -53,10 +71,10 @@ class ApiService {
       if (navigatorKey.currentState != null) {
         // Schedule navigation to the next frame to avoid build conflicts
         Future.delayed(const Duration(milliseconds: 100), () {
-             navigatorKey.currentState?.pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-              (route) => false,
-            );
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+            (route) => false,
+          );
         });
       }
     }
