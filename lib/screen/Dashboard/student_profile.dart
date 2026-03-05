@@ -332,17 +332,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fetchProfile();
+    });
   }
 
-  Future<void> _fetchProfile() async {
+  Future<void> _fetchProfile({bool forceRefresh = false}) async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      // Token managed internally
-
-
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       // Fetch Profile
-      final profileResponse = await ApiService.getProfile();
+      final profileResponse = await ApiService.getProfile(forceRefresh: forceRefresh);
       if (!mounted) return;
       if (profileResponse.statusCode == 200) {
         final data = jsonDecode(profileResponse.body);
@@ -356,7 +358,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           _photoPath = user['photoPath'];
           
           if (profile != null) {
-             studentStandard = "${profile['std'] ?? 'N/A'}${AppLocalizations.of(context)!.th} - ${profile['medium'] ?? ''}";
+             studentStandard = "${profile['std'] ?? 'N/A'}${l10n.th} - ${profile['medium'] ?? ''}";
              schoolName = profile['school'] ?? (profile['schoolName'] ?? 'N/A'); 
              profilePic = user['photoPath'] ?? ""; // Use photoPath from user
              // Check parentPhone, then parentNo, then maybe in user object?
@@ -364,15 +366,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           }
 
           // Update saved accounts list with latest info
-          SharedPreferences.getInstance().then((prefs) {
+          debugPrint("Fetched student name: $studentName");
+        });
+        final prefs = await SharedPreferences.getInstance();
+
             StudentProfileScreen.ensureCurrentAccountSaved(
               prefs, 
               name: studentName, 
               phone: mobileNo, 
               pic: _photoPath,
             );
-          });
-        });
       }
 
       // Fetch Dashboard Data (Points & Exams)
@@ -476,8 +479,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                 context,
                                 MaterialPageRoute(builder: (context) => const EditProfileScreen()),
                               );
-                              if (result == true) {
-                                _fetchProfile();
+                              debugPrint("Returned from edit screen: $result");
+                               if (result == true) {
+                                if (!mounted) return;
+                                // Delay to allow backend propagation + force refresh to bypass cache
+                                await Future.delayed(const Duration(seconds: 1));
+                                if (!mounted) return;
+                                await _fetchProfile(forceRefresh: true);
                               }
                             },
                             child: Container(

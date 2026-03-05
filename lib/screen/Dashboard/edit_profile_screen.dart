@@ -67,7 +67,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _fetchProfile() async {
-    CustomLoader.show(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) CustomLoader.show(context);
+    });
     try {
       // Token is managed internally by ApiService
 
@@ -80,7 +82,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         final profile = data['profile'];
 
         setState(() {
-           _nameController.text = user['firstName'] ?? "";
+           _nameController.text = "${user['firstName'] ?? ""} ${user['middleName'] ?? ""} ${user['lastName'] ?? ""}".trim();
            _emailController.text = user['email'] ?? (profile?['email'] ?? "");
            _phoneController.text = user['phoneNum'] ?? "";
            _cityController.text = user['address']?['city'] ?? "";
@@ -143,7 +145,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
 
       final Map<String, dynamic> data = {
-        'firstName': _nameController.text,
+        'firstName': _nameController.text.trim(),
+        'middleName': '',
+        'lastName': '',
         'email': _emailController.text,
         'phoneNum': _phoneController.text,
         'school': _schoolNameController.text,
@@ -167,7 +171,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       CustomToast.showError(context, "Error: $e");
     } finally {
-      CustomLoader.hide(context);
+      if (mounted) {
+        CustomLoader.hide(context);
+      }
     }
   }
 

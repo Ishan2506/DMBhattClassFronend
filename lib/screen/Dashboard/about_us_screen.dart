@@ -129,7 +129,7 @@ class AboutUsScreen extends StatelessWidget {
                     name: "Hetvi Bhatt",
                     role: "Foundation Specialist",
                     description: "Specializing in building strong academic fundamentals for students.",
-                    image: imgInfluencerKeyur, 
+                    image: imgInfluencerHetvi, 
                     isRightAligned: true,
                   ),
                   
@@ -140,7 +140,7 @@ class AboutUsScreen extends StatelessWidget {
                     name: "Ravi Shah",
                     role: "Modern Tech Educator",
                     description: "Integrating modern technology with traditional teaching methods.",
-                    image: imgInfluencerAnkit, 
+                    image: imgInfluencerRavi, 
                     isRightAligned: false,
                   ),
 

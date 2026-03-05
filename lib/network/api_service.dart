@@ -181,8 +181,11 @@ class ApiService {
     return _handleSession(response);
   }
 
-  static Future<http.Response> getProfile() async {
-    final uri = Uri.parse("$baseUrl/profile");
+  static Future<http.Response> getProfile({bool forceRefresh = false}) async {
+    var uri = Uri.parse("$baseUrl/profile");
+    if (forceRefresh) {
+      uri = uri.replace(queryParameters: {'t': DateTime.now().millisecondsSinceEpoch.toString()});
+    }
     return _handleSession(await http.get(
       uri,
       headers: _addAuth({
