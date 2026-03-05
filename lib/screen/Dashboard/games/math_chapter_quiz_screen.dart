@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 
 class MathChapterQuizScreen extends StatefulWidget {
   const MathChapterQuizScreen({super.key});
@@ -221,6 +222,7 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
   }
 
   Widget _buildChapterSelection() {
+    final theme = Theme.of(context);
     List<String> chapters = _chaptersByStd[_std] ?? ["General Math", "Logic"];
     
     return Padding(
@@ -266,6 +268,7 @@ class _MathChapterQuizScreenState extends State<MathChapterQuizScreen> {
   }
 
   Widget _buildQuiz() {
+    final theme = Theme.of(context);
     if (_isGameOver) {
       return Center(
         child: Column(

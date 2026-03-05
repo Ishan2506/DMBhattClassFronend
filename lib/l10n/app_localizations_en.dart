@@ -909,5 +909,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readyReportingCard => 'Ready Reporting Card';
 
   @override
-  String get comingSoon => 'Coming Soon...';
+  String get comingSoon => 'Coming Soon';
 }

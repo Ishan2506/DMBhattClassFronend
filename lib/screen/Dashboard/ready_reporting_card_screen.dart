@@ -545,8 +545,8 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                  children: [
                     if (_selectedDateRange != null)
-                      pw.Text("Period: ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.start)} - ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.end)}", style: const pw.TextStyle(fontSize: 10)),
-                    pw.Text("Subject: $_selectedSubject", style: const pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                      pw.Text("Period: ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.start)} - ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.end)}", style: pw.TextStyle(fontSize: 10)),
+                    pw.Text("Subject: $_selectedSubject", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
                  ]
                ),
                

@@ -281,5 +281,8 @@
   "notApplicable": "N/A",
   "year": "Year",
   "search": "Search...",
-  "view": "View"
+  "view": "View",
+  "readyReportingCard": "Ready Reporting Card",
+  "comingSoon": "Coming Soon"
 }
+

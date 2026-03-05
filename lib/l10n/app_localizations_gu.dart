@@ -910,8 +910,8 @@ class AppLocalizationsGu extends AppLocalizations {
   String get view => 'View';
 
   @override
-  String get readyReportingCard => 'તૈયાર રિપોર્ટ કાર્ડ';
+  String get readyReportingCard => 'તૈયાર રિપોર્ટિંગ કાર્ડ';
 
   @override
-  String get comingSoon => 'ટૂંક સમયમાં આવી રહ્યું છે...';
+  String get comingSoon => 'ટૂંક સમયમાં';
 }

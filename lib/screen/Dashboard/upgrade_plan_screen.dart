@@ -67,13 +67,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     super.dispose();
   }
 
-<<<<<<< Updated upstream
-  void _handlePaymentFailure(PaymentFailureResponse response) {
-    CustomToast.showError(context, "Payment Cancelled");
-=======
   void _handlePaymentFailure(dynamic response) {
     CustomToast.showError(context, "Payment Failed: ${response.message}");
->>>>>>> Stashed changes
   }
 
   void _handlePaymentSuccess(dynamic response) {

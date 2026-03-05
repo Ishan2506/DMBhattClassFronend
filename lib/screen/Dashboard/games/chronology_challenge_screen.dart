@@ -231,7 +231,7 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12), 
-                    borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1))
+                    side: BorderSide(color: theme.dividerColor.withOpacity(0.1))
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

@@ -927,5 +927,5 @@ class AppLocalizationsTa extends AppLocalizations {
   String get readyReportingCard => 'தயார் அறிக்கை அட்டை';
 
   @override
-  String get comingSoon => 'விரைவில் வருகிறது...';
+  String get comingSoon => 'விரைவில் வருகிறது';
 }

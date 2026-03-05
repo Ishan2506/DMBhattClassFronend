@@ -912,8 +912,8 @@ class AppLocalizationsMr extends AppLocalizations {
   String get view => 'पहा';
 
   @override
-  String get readyReportingCard => 'तयार रिपोर्ट कार्ड';
+  String get readyReportingCard => 'तयार रिपोर्टिंग कार्ड';
 
   @override
-  String get comingSoon => 'लवकरच येत आहे...';
+  String get comingSoon => 'लवकरच येत आहे';
 }

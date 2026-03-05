@@ -52,6 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
   final List<String> _boards = ["GSEB", "CBSE"];
+  final List<String> _roles = ["Student", "Teacher"];
 
   
   final Map<String, List<String>> _stateCityMap = {
@@ -432,11 +433,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   );
                 }
-<<<<<<< Updated upstream
               ),
-            const SizedBox(height: 0),
-=======
-              ), // Login As Dropdown
+            const SizedBox(height: 16),
+             // Login As Dropdown
             _buildDropdown(
               context,
               hint: l10n.loginAs,
@@ -450,7 +449,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               },
               colorScheme: colorScheme,
             ),
->>>>>>> Stashed changes
             const SizedBox(height: 24),
 
             // Terms Checkbox
@@ -585,7 +583,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     ),
   );
-  }
+}
 
   Widget _buildTextField({
     required String hint, 

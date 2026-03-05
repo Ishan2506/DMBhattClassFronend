@@ -196,10 +196,7 @@ class _McqScreenState extends State<McqScreen> {
          } else {
             if(mounted) CustomToast.showError(context, "Failed to submit result");
          }
-      } else {
-         if(mounted) CustomToast.showError(context, "Session expired");
-      }
-    } catch (e) {
+      } catch (e) {
       if(mounted) CustomToast.showError(context, "Error: $e");
     } finally {
       if(mounted) setState(() => _isSubmitting = false);

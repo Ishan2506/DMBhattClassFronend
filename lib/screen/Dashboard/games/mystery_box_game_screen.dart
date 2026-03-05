@@ -168,6 +168,7 @@ class _MysteryBoxGameScreenState extends State<MysteryBoxGameScreen> {
 
   @override
   Widget build(BuildContext context) {
+     final theme = Theme.of(context);
      return Scaffold(
        backgroundColor: theme.brightness == Brightness.dark ? theme.scaffoldBackgroundColor : const Color(0xFF3E2723), // Dark Brown Bookshelf BG or System Dark
        appBar: CustomAppBar(
@@ -362,6 +363,7 @@ class _QuestionDialog extends StatefulWidget {
 class _QuestionDialogState extends State<_QuestionDialog> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: theme.cardColor,

@@ -1811,7 +1811,7 @@ abstract class AppLocalizations {
   /// No description provided for @comingSoon.
   ///
   /// In en, this message translates to:
-  /// **'Coming Soon...'**
+  /// **'Coming Soon'**
   String get comingSoon;
 }
 

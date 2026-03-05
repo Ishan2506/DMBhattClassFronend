@@ -160,6 +160,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = theme.colorScheme;
     
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -260,7 +261,6 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    elevation: 2,
                     elevation: 2,
                   ),
                   child: Text(
