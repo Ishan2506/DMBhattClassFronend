@@ -910,4 +910,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get view => 'View';
+
+  @override
+  String get readyReportingCard => 'तैयार रिपोर्ट कार्ड';
+
+  @override
+  String get comingSoon => 'जल्द ही आ रहा है...';
 }

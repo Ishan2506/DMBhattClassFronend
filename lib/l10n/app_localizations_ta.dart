@@ -922,4 +922,10 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get view => 'View';
+
+  @override
+  String get readyReportingCard => 'தயார் அறிக்கை அட்டை';
+
+  @override
+  String get comingSoon => 'விரைவில் வருகிறது...';
 }

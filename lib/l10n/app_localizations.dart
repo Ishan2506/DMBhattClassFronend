@@ -1801,6 +1801,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View'**
   String get view;
+
+  /// No description provided for @readyReportingCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready Reporting Card'**
+  String get readyReportingCard;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon...'**
+  String get comingSoon;
 }
 
 class _AppLocalizationsDelegate

@@ -20,7 +20,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/school_papers_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/board_paper_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/ready_reporting_card_screen.dart';
+// import 'package:dm_bhatt_tutions/screen/Dashboard/ready_reporting_card_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
@@ -184,15 +184,11 @@ class _StudentActivitiesScreen extends StatelessWidget {
               },
             ),
             _MoreScreenItem(
-              title: "Ready Reporting Card", // TODO: Add to l10n
+              title: l10n.readyReportingCard,
               value: "",
               icon: Icons.bar_chart_rounded,
               onTap: () {
-                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ReadyReportingCardScreen()),
-                );
+                 CustomToast.showInfo(context, l10n.comingSoon);
               },
             ),
             // _MoreScreenItem(

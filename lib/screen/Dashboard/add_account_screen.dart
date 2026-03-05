@@ -186,12 +186,13 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
               const SizedBox(height: 20),
+              // Logo in a Container
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -201,6 +202,12 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 child: Image.asset(imgDmBhattClassesLogo, height: 80, width: 80),
               ),
               const SizedBox(height: 32),
+
+              // Title Header (Matching Login/Register style)
+              Text(
+                l10n.heyThere,
+                style: GoogleFonts.poppins(fontSize: 16, color: colorScheme.onSurfaceVariant),
+              ),
               Text(
                 l10n.addAnotherAccount,
                 style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color),
@@ -227,6 +234,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                   if (value.length != 10) return l10n.phoneMustBeTenDigits;
                   return null;
                 },
+                colorScheme: colorScheme,
               ),
               const SizedBox(height: 16),
               _buildTextField(
@@ -238,28 +246,33 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 isVisible: _isPasswordVisible,
                 onVisibilityChanged: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                 validator: (value) => (value == null || value.isEmpty) ? l10n.pleaseEnterPassword : null,
+                colorScheme: colorScheme,
               ),
                
               const SizedBox(height: 40),
 
+              // Action Button
               SizedBox(
                 width: double.infinity,
-                height: 55,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     elevation: 2,
+                    elevation: 2,
                   ),
                   child: Text(
                     l10n.loginAndAdd,
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
                   ),
                 ),
               ),
 
               const SizedBox(height: 24),
+              
+              // Register Link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -282,6 +295,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -300,6 +314,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     TextInputType inputType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    required ColorScheme colorScheme,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;

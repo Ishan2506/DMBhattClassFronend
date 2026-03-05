@@ -29,20 +29,16 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black54),
+          icon: Icon(Icons.arrow_back_ios, color: colorScheme.onSurfaceVariant),
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        // title: Text(
-        //   "Back",
-        //   style: GoogleFonts.poppins(color: Colors.black54, fontSize: 16),
-        // ),
-       // titleSpacing: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -57,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
              Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: colorScheme.primaryContainer,
                 shape: BoxShape.circle,
               ),
                child: Image.asset(
@@ -70,14 +66,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
             Text(
               l10n.heyThere,
-              style: GoogleFonts.poppins(fontSize: 16, color: Colors.black54),
+              style: GoogleFonts.poppins(fontSize: 16, color: colorScheme.onSurfaceVariant),
             ),
             Text(
               l10n.welcomeBack,
               style: GoogleFonts.poppins(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87
+                color: colorScheme.onSurface
               ),
             ),
             const SizedBox(height: 24),
@@ -94,6 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
               validator: ValidationUtils.validateIndianPhoneNumber,
                errorMaxLines: 2,
+               colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -116,6 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 return null;
               },
                errorMaxLines: 2,
+               colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -129,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 l10n.forgotPasswordQuestion,
                 style: GoogleFonts.poppins(
-                  color: Colors.black54,
+                  color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                   decoration: TextDecoration.underline,
                 ),
@@ -226,10 +224,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade700, // Blue Theme
+                  backgroundColor: colorScheme.primary, // Blue Theme
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
-                    side: const BorderSide(color: Colors.black12),
                   ),
                   elevation: 2,
                 ),
@@ -238,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 18.0, // Fixed font size
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colorScheme.onPrimary,
                   ),
                 ),
               ),
@@ -263,12 +260,13 @@ class _LoginScreenState extends State<LoginScreen> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
     int? errorMaxLines,
+    required ColorScheme colorScheme,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: TextFormField(
         controller: controller,
@@ -278,17 +276,17 @@ class _LoginScreenState extends State<LoginScreen> {
         validator: validator,
         
         style: GoogleFonts.poppins(
-          color: Colors.black, // Explicitly Black
+          color: colorScheme.onSurface, 
           fontWeight: FontWeight.w600, // Bold
           fontSize: 16,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey, fontWeight: FontWeight.normal),
-          prefixIcon: Icon(icon, color: Colors.black54),
+          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.6), fontWeight: FontWeight.normal),
+          prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: colorScheme.onSurfaceVariant),
                   onPressed: onVisibilityChanged,
                 )
               : null,

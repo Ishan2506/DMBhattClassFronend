@@ -10,8 +10,8 @@ import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_receipt_screen.dart';
 
 class UpgradePlanScreen extends StatefulWidget {
   const UpgradePlanScreen({super.key});
@@ -67,11 +67,16 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     super.dispose();
   }
 
+<<<<<<< Updated upstream
   void _handlePaymentFailure(PaymentFailureResponse response) {
     CustomToast.showError(context, "Payment Cancelled");
+=======
+  void _handlePaymentFailure(dynamic response) {
+    CustomToast.showError(context, "Payment Failed: ${response.message}");
+>>>>>>> Stashed changes
   }
 
-  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+  void _handlePaymentSuccess(dynamic response) {
     _verifyUpgrade(
       paymentId: response.paymentId!,
       orderId: response.orderId!,
@@ -419,6 +424,15 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(16),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UpgradeReceiptScreen(historyItem: item as Map<String, dynamic>),
+                        ),
+                      );
+                    },
                     title: Text(
                       "Standard ${item['oldStandard']} ➔ ${item['newStandard']}",
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
@@ -470,7 +484,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         actions: [
           IconButton(
             onPressed: _showUpgradeHistory,
-            icon: const Icon(Icons.history),
+            icon: const Icon(Icons.history, color: Colors.white),
             tooltip: "Upgrade History",
           ),
         ],

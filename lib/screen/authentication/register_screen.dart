@@ -61,10 +61,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   };
 
   void _showTermsDialog() {
+    final colorScheme = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Terms and Conditions", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        backgroundColor: colorScheme.surface,
+        title: Text("Terms and Conditions", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
         content: SingleChildScrollView(
           child: Text(
             "1. By registering, you agree to abide by the rules and regulations of our Learning Academy.\n\n"
@@ -74,13 +76,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             "5. Respectful behavior towards staff and fellow students is mandatory.\n\n"
             "6. Unauthorized sharing of study material is strictly prohibited.\n\n"
             "7. Regular attendance and participation in assessments are expected for optimal performance.",
-            style: GoogleFonts.poppins(fontSize: 14),
+            style: GoogleFonts.poppins(fontSize: 14, color: colorScheme.onSurface),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Close", style: GoogleFonts.poppins(color: Colors.blue)),
+            child: Text("Close", style: GoogleFonts.poppins(color: colorScheme.primary)),
           ),
         ],
       ),
@@ -111,11 +113,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black54),
+          icon: Icon(Icons.arrow_back_ios, color: colorScheme.onSurfaceVariant),
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.transparent,
@@ -131,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
              Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: colorScheme.primaryContainer,
                 shape: BoxShape.circle,
               ),
                child: Image.asset(
@@ -144,14 +147,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
             
             Text(
               l10n.heyThere,
-              style: GoogleFonts.poppins(fontSize: 16, color: Colors.black54),
+              style: GoogleFonts.poppins(fontSize: 16, color: colorScheme.onSurfaceVariant),
             ),
             Text(
               l10n.register,
               style: GoogleFonts.poppins(
                 fontSize: 24, 
                 fontWeight: FontWeight.bold, 
-                color: Colors.black87
+                color: colorScheme.onSurface
               ),
             ),
             const SizedBox(height: 32),
@@ -170,6 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 }
                 return null;
               },
+              colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -190,6 +194,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 }
                 return null;
               },
+              colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -204,6 +209,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 LengthLimitingTextInputFormatter(10),
               ],
               validator: ValidationUtils.validateIndianPhoneNumber,
+              colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -220,6 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 });
               },
               validator: (value) => ValidationUtils.noFieldError(value, l10n),
+              colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -234,6 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 LengthLimitingTextInputFormatter(10),
               ],
               validator: ValidationUtils.validateIndianPhoneNumber,
+              colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
             
@@ -254,6 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   }
                 });
               },
+              colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -270,6 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _selectedStream = val;
                   });
                 },
+                colorScheme: colorScheme,
               ),
               const SizedBox(height: 16),
             ],
@@ -286,6 +296,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _selectedMedium = val;
                 });
               },
+              colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -301,6 +312,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _selectedBoard = val;
                 });
               },
+              colorScheme: colorScheme,
             ),
 
             const SizedBox(height: 16),
@@ -318,6 +330,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _selectedCity = null; // Reset city when state changes
                 });
               },
+              colorScheme: colorScheme,
             ),
              const SizedBox(height: 16),
 
@@ -333,6 +346,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _selectedCity = val;
                 });
               },
+              colorScheme: colorScheme,
             ),
             const SizedBox(height: 16),
 
@@ -355,12 +369,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       textEditingController.addListener(() {
                          _schoolNameController.text = textEditingController.text;
                       });
-
                       return Container(
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: colorScheme.surfaceContainer,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: colorScheme.outlineVariant),
                         ),
                         child: TextFormField(
                           controller: textEditingController,
@@ -371,11 +384,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             }
                             return null;
                           },
-                          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
                           decoration: InputDecoration(
                             hintText: l10n.schoolName,
-                            hintStyle: GoogleFonts.poppins(color: Colors.grey),
-                            prefixIcon: const Icon(Icons.school_outlined, color: Colors.black54),
+                            hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+                            prefixIcon: Icon(Icons.school_outlined, color: colorScheme.onSurfaceVariant),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           ),
@@ -392,7 +405,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             width: constraints.maxWidth,
                             constraints: const BoxConstraints(maxHeight: 200),
                             decoration: BoxDecoration(
-                               color: Colors.white,
+                               color: colorScheme.surface,
                                 borderRadius: BorderRadius.circular(16),
                             ),
                             child: ListView.builder(
@@ -408,7 +421,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
-                                    child: Text(displayName, style: GoogleFonts.poppins(color: Colors.black87)),
+                                    child: Text(displayName, style: GoogleFonts.poppins(color: colorScheme.onSurface)),
                                   ),
                                 );
                                },
@@ -419,8 +432,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   );
                 }
+<<<<<<< Updated upstream
               ),
             const SizedBox(height: 0),
+=======
+              ), // Login As Dropdown
+            _buildDropdown(
+              context,
+              hint: l10n.loginAs,
+              icon: Icons.person_pin_outlined,
+              value: _selectedRole,
+              items: _roles,
+              onChanged: (val) {
+                setState(() {
+                  _selectedRole = val;
+                });
+              },
+              colorScheme: colorScheme,
+            ),
+>>>>>>> Stashed changes
             const SizedBox(height: 24),
 
             // Terms Checkbox
@@ -428,7 +458,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 Checkbox(
                   value: _agreedToTerms, 
-                  activeColor: Colors.blue.shade700,
+                  activeColor: colorScheme.primary,
                   onChanged: (val) {
                     setState(() {
                       _agreedToTerms = val!;
@@ -437,7 +467,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 Text(
                   l10n.agreeTerms,
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
+                  style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
                 GestureDetector(
                   onTap: _showTermsDialog,
@@ -445,7 +475,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     l10n.termsConditions,
                     style: GoogleFonts.poppins(
                       fontSize: 12, 
-                      color: Colors.blue.shade700, 
+                      color: colorScheme.primary, 
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
                     ),
@@ -534,10 +564,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade700,
+                  backgroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
-                    side: const BorderSide(color: Colors.black12),
                   ),
                   elevation: 2,
                 ),
@@ -546,7 +575,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colorScheme.onPrimary,
                   ),
                 ),
               ),
@@ -568,12 +597,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     TextInputType inputType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    required ColorScheme colorScheme,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: TextFormField(
         controller: controller,
@@ -581,14 +611,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
-        style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), // Black Bold Input
+        style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold), // Black Bold Input
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey),
-          prefixIcon: Icon(icon, color: Colors.black54),
+          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
+          prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant),
           suffixIcon: isPassword 
               ? IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: colorScheme.onSurfaceVariant),
                   onPressed: onVisibilityChanged,
                 ) 
               : null,
@@ -605,27 +635,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String? value,
     required List<String> items,
     required Function(String?) onChanged,
+    required ColorScheme colorScheme,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           isExpanded: true,
           hint: Row(
             children: [
-              Icon(icon, color: Colors.black54),
+              Icon(icon, color: colorScheme.onSurfaceVariant),
               const SizedBox(width: 12),
-              Text(hint, style: GoogleFonts.poppins(color: Colors.grey)),
+              Text(hint, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
             ],
           ),
           value: value,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
-          dropdownColor: Colors.white, // Cleaner White Background
+          icon: Icon(Icons.keyboard_arrow_down, color: colorScheme.onSurfaceVariant),
+          dropdownColor: colorScheme.surface, // Cleaner White Background
           selectedItemBuilder: (BuildContext context) {
             return items.map<Widget>((String item) {
               final l10n = AppLocalizations.of(context)!;
@@ -636,11 +667,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                  alignment: Alignment.centerLeft,
                  child: Row(
                    children: [
-                     Icon(icon, color: Colors.black54), 
+                     Icon(icon, color: colorScheme.onSurfaceVariant), 
                      const SizedBox(width: 12),
                      Text(
                        label,
-                       style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), 
+                       style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold), 
                      ),
                    ],
                  ),
@@ -656,7 +687,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               value: value,
               child: Text(
                 label, 
-                style: GoogleFonts.poppins(color: Colors.black87), // Black text for readability
+                style: GoogleFonts.poppins(color: colorScheme.onSurface), // Black text for readability
               ),
             );
           }).toList(),

@@ -1,9 +1,10 @@
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class RazorpayHelper {
-  final Razorpay _razorpay = Razorpay();
+  late Razorpay _razorpay;
   final BuildContext context;
   final Function(PaymentSuccessResponse) onSuccess;
   final Function(PaymentFailureResponse) onFailure;
@@ -16,9 +17,12 @@ class RazorpayHelper {
     required this.onSuccess,
     required this.onFailure,
   }) {
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    if (!kIsWeb) {
+      _razorpay = Razorpay();
+      _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+      _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+      _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    }
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
@@ -42,6 +46,11 @@ class RazorpayHelper {
     required String email,
     String? orderId,
   }) {
+    if (kIsWeb) {
+      _showWebMockPayment(amount);
+      return;
+    }
+
     var options = {
       'key': _keyId,
       'amount': (amount * 100).toInt(),
@@ -69,7 +78,32 @@ class RazorpayHelper {
     }
   }
 
+  void _showWebMockPayment(double amount) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Web Payment Simulation"),
+        content: Text("Razorpay plugin is not supported on Web. Do you want to simulate a successful payment for ₹$amount?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onSuccess(PaymentSuccessResponse("pay_mock_123", "order_mock_123", "sig_mock_123", {}));
+            },
+            child: const Text("Simulate Success"),
+          ),
+        ],
+      ),
+    );
+  }
+
   void dispose() {
-    _razorpay.clear();
+    if (!kIsWeb) {
+      _razorpay.clear();
+    }
   }
 }
