@@ -13,6 +13,9 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'dart:convert';
 
 class StudentFiveMinHistoryScreen extends StatelessWidget {
   const StudentFiveMinHistoryScreen({super.key});
@@ -96,19 +99,66 @@ class StudentFiveMinHistoryScreen extends StatelessWidget {
   }
 
   Future<void> _generateAndOpenPdf(BuildContext context, Map<String, dynamic> exam) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExamPdfViewer(exam: exam),
-      ),
-    );
+    final examId = exam['examId'] ?? exam['id'] ?? exam['_id'];
+    
+    if (examId == null) {
+      // If no ID, it's likely local mock data from ExamHistoryData singleton
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ExamPdfViewer(exam: exam),
+        ),
+      );
+      return;
+    }
+
+    CustomLoader.show(context);
+    try {
+       // Since this is Five Min History, we fetch from FiveMinTest endpoint
+      final response = await ApiService.getFiveMinTestById(examId);
+
+      if (context.mounted) {
+        CustomLoader.hide(context);
+        if (response.statusCode == 200) {
+          final fullExam = jsonDecode(response.body);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ExamPdfViewer(
+                exam: exam,
+                fullExam: fullExam,
+              ),
+            ),
+          );
+        } else {
+           // Fallback to just opening with what we have
+           Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ExamPdfViewer(exam: exam),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        CustomLoader.hide(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ExamPdfViewer(exam: exam),
+          ),
+        );
+      }
+    }
   }
 }
 
-// Reusing ExamPdfViewer Logic (Duplicated for standalone capability as requested "generate like this class")
+// Reusing ExamPdfViewer Logic
 class ExamPdfViewer extends StatelessWidget {
   final Map<String, dynamic> exam;
-  const ExamPdfViewer({super.key, required this.exam});
+  final Map<String, dynamic>? fullExam;
+  const ExamPdfViewer({super.key, required this.exam, this.fullExam});
 
   @override
   Widget build(BuildContext context) {
@@ -227,20 +277,35 @@ class ExamPdfViewer extends StatelessWidget {
                   ),
                   pw.SizedBox(height: 20),
                   pw.Center(
-                    child: pw.Text(exam['title'], style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                    child: pw.Text(exam['title'] ?? "", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.SizedBox(height: 10),
-                  pw.Center(child: pw.Text("Marks Obtained: ${exam['marks']}", style: const pw.TextStyle(fontSize: 16))),
+                  pw.Center(
+                    child: pw.Text(
+                      "Marks Obtained: ${exam['marks'] ?? (exam['obtainedMarks'] != null ? "${exam['obtainedMarks']}/${exam['totalMarks']}" : "N/A")}",
+                      style: const pw.TextStyle(fontSize: 16),
+                    ),
+                  ),
                   pw.Divider(),
                   pw.SizedBox(height: 20),
                   pw.Text("Questions:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(height: 10),
-                  // Mock Questions (Generic for now, as history doesn't store full Q&A detailed list in this simple mock)
-                  _buildQuestionItem(1, "Question 1 content placeholder..."),
-                  _buildQuestionItem(2, "Question 2 content placeholder..."),
-                  _buildQuestionItem(3, "Question 3 content placeholder..."),
-                  _buildQuestionItem(4, "Question 4 content placeholder..."),
-                  _buildQuestionItem(5, "Question 5 content placeholder..."),
+                  // Render Dynamic Questions if available
+                  if (fullExam != null && fullExam!['questions'] != null)
+                    ...List.generate((fullExam!['questions'] as List).length, (index) {
+                      final q = fullExam!['questions'][index];
+                       // Handle both Exam (questionText) and FiveMinTest (question) formats
+                      final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
+                      return _buildQuestionItem(index + 1, qText);
+                    })
+                  else ...[
+                    // Mock Questions (Generic for now, as history doesn't store full Q&A detailed list in this simple mock)
+                    _buildQuestionItem(1, "Question 1 content placeholder..."),
+                    _buildQuestionItem(2, "Question 2 content placeholder..."),
+                    _buildQuestionItem(3, "Question 3 content placeholder..."),
+                    _buildQuestionItem(4, "Question 4 content placeholder..."),
+                    _buildQuestionItem(5, "Question 5 content placeholder..."),
+                  ],
                 ],
               ),
             ],

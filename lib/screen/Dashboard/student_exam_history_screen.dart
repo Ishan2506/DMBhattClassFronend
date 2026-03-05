@@ -168,18 +168,49 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
   }
 
   Future<void> _generateAndOpenPdf(BuildContext context, Map<String, dynamic> exam) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExamPdfViewer(exam: exam),
-      ),
-    );
+    final examId = exam['examId'];
+    if (examId == null) {
+      CustomToast.showError(context, "Exam ID not found");
+      return;
+    }
+
+    CustomLoader.show(context);
+    try {
+      final bool isOnline = exam['isOnline'] ?? true;
+      final response = isOnline 
+          ? await ApiService.getExamById(examId) 
+          : await ApiService.getFiveMinTestById(examId);
+
+      if (context.mounted) {
+        CustomLoader.hide(context);
+        if (response.statusCode == 200) {
+          final fullExam = jsonDecode(response.body);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ExamPdfViewer(
+                exam: exam,
+                fullExam: fullExam,
+              ),
+            ),
+          );
+        } else {
+          CustomToast.showError(context, "Failed to load exam details");
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        CustomLoader.hide(context);
+        CustomToast.showError(context, "Error: $e");
+      }
+    }
   }
 }
 
 class ExamPdfViewer extends StatelessWidget {
   final Map<String, dynamic> exam;
-  const ExamPdfViewer({super.key, required this.exam});
+  final Map<String, dynamic>? fullExam;
+  const ExamPdfViewer({super.key, required this.exam, this.fullExam});
 
   @override
   Widget build(BuildContext context) {
@@ -302,20 +333,35 @@ class ExamPdfViewer extends StatelessWidget {
                   ),
                   pw.SizedBox(height: 20),
                   pw.Center(
-                    child: pw.Text(exam['title'], style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                    child: pw.Text(exam['title'] ?? "", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.SizedBox(height: 10),
-                  pw.Center(child: pw.Text("Marks Obtained: ${exam['marks']}", style: const pw.TextStyle(fontSize: 16))),
+                  pw.Center(
+                    child: pw.Text(
+                      "Marks Obtained: ${exam['marks'] ?? (exam['obtainedMarks'] != null ? "${exam['obtainedMarks']}/${exam['totalMarks']}" : "N/A")}",
+                      style: const pw.TextStyle(fontSize: 16),
+                    ),
+                  ),
                   pw.Divider(),
                   pw.SizedBox(height: 20),
                   pw.Text("Questions:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(height: 10),
-                  // Mock Questions
-                  _buildQuestionItem(1, "Explain the laws of motion."),
-                  _buildQuestionItem(2, "What is photosynthesis?"),
-                  _buildQuestionItem(3, "Solve: 2x + 5 = 15"),
-                  _buildQuestionItem(4, "Define Kinetic Energy."),
-                  _buildQuestionItem(5, "Write a short note on Indian Constitution."),
+                  // Render Dynamic Questions if available
+                  if (fullExam != null && fullExam!['questions'] != null)
+                    ...List.generate((fullExam!['questions'] as List).length, (index) {
+                      final q = fullExam!['questions'][index];
+                      // Handle both Exam (questionText) and FiveMinTest (question) formats
+                      final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
+                      return _buildQuestionItem(index + 1, qText);
+                    })
+                  else ...[
+                    // Fallback to Mock Questions if no detailed data
+                    _buildQuestionItem(1, "Explain the laws of motion."),
+                    _buildQuestionItem(2, "What is photosynthesis?"),
+                    _buildQuestionItem(3, "Solve: 2x + 5 = 15"),
+                    _buildQuestionItem(4, "Define Kinetic Energy."),
+                    _buildQuestionItem(5, "Write a short note on Indian Constitution."),
+                  ],
                 ],
               ),
             ],

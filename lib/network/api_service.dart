@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 
 class ApiService {
   static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-  // static const String baseUrl = "http://localhost:5000/api";
+   //static const String baseUrl = "http://localhost:9657/api";
   static String? _authToken;
 
   static String? get userToken => _authToken;
@@ -438,6 +438,11 @@ class ApiService {
   static Future<http.Response> getAllFiveMinTests() async {
     final queryParams = await _getDefaultQueryParams();
     final uri = Uri.parse("$baseUrl/fiveMinTest/all").replace(queryParameters: queryParams);
+    return _handleSession(await http.get(uri));
+  }
+
+  static Future<http.Response> getFiveMinTestById(String testId) async {
+    final uri = Uri.parse("$baseUrl/fiveMinTest/$testId");
     return _handleSession(await http.get(uri));
   }
 
