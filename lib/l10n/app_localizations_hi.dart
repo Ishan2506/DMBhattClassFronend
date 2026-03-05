@@ -695,6 +695,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noExamsFound => 'कोई परीक्षा नहीं मिली';
 
   @override
+  String noPapersFoundForSubject(Object subject) {
+    return '$subject के लिए कोई पेपर नहीं मिला';
+  }
+
+  @override
   String get noProductsFound => 'कोई उत्पाद नहीं मिला';
 
   @override

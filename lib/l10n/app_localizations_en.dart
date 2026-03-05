@@ -689,6 +689,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noExamsFound => 'No exams found';
 
   @override
+  String noPapersFoundForSubject(Object subject) {
+    return 'No papers found for $subject';
+  }
+
+  @override
   String get noProductsFound => 'No products found';
 
   @override

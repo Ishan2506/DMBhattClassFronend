@@ -88,7 +88,12 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       final response = await ApiService.getSchoolPapers(subject: _selectedSubject);
       if (response.statusCode == 200) {
         setState(() {
-          _displayPapers = jsonDecode(response.body);
+          final List<dynamic> allPapers = jsonDecode(response.body);
+          if (_isGuest && allPapers.length > 2) {
+            _displayPapers = allPapers.sublist(0, 2);
+          } else {
+            _displayPapers = allPapers;
+          }
         });
       } else {
         CustomToast.showError(context, "Failed to fetch papers");
@@ -184,7 +189,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                      children: [
                        Icon(Icons.description_outlined, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                        const SizedBox(height: 16),
-                       Text("${l10n.noExamsFound} ${l10n.forLabel} $_selectedSubject", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+                        Text(l10n.noPapersFoundForSubject(_selectedSubject!), style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                      ],
                    ),
                  ),

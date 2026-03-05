@@ -4,10 +4,40 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class GuestUtils {
+  static const int maxGuestExams = 3;
+  static const String guestExamCountKey = 'guest_exam_count';
+
   static Future<bool> isGuest() async {
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString('user_role');
     return role == 'guest';
+  }
+
+  static Future<int> getGuestExamCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(guestExamCountKey) ?? 0;
+  }
+
+  static Future<void> incrementGuestExamCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentCount = await getGuestExamCount();
+    await prefs.setInt(guestExamCountKey, currentCount + 1);
+  }
+
+  static Future<bool> canGuestAccessExam(BuildContext context) async {
+    if (!await isGuest()) return true;
+
+    final count = await getGuestExamCount();
+    if (count >= maxGuestExams) {
+      if (context.mounted) {
+        showGuestRestrictionDialog(
+          context,
+          message: "Guests are limited to $maxGuestExams free exams. Please register as a student to unlock unlimited exams.",
+        );
+      }
+      return false;
+    }
+    return true;
   }
 
   static void showGuestRestrictionDialog(BuildContext context, {String? message}) {

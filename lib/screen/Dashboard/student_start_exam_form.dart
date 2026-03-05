@@ -340,12 +340,10 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                       onPressed: _selectedExamId == null
                           ? null
                           : () async {
-                              if (_userRole == 'guest' && _takenTestTitles.length >= 2) {
-                                GuestUtils.showGuestRestrictionDialog(
-                                  context, 
-                                  message: "Guests are limited to 2 free exams. Please register as a student to unlock unlimited exams."
-                                );
-                                return;
+                              if (!await GuestUtils.canGuestAccessExam(context)) return;
+                              
+                              if (await GuestUtils.isGuest()) {
+                                await GuestUtils.incrementGuestExamCount();
                               }
                               if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
                                 showDialog(

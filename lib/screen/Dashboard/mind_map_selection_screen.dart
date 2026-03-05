@@ -7,6 +7,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/model/mind_map_model.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 
 class MindMapSelectionScreen extends StatefulWidget {
   const MindMapSelectionScreen({super.key});
@@ -18,6 +19,7 @@ class MindMapSelectionScreen extends StatefulWidget {
 class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
   List<MindMapModel> _allMindMaps = [];
   bool _isLoading = true;
+  bool _isGuest = false;
 
   String? _selectedSubject;
   String? _selectedUnit;
@@ -30,7 +32,13 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
   @override
   void initState() {
     super.initState();
+    _checkGuest();
     _fetchMindMaps();
+  }
+
+  Future<void> _checkGuest() async {
+    _isGuest = await GuestUtils.isGuest();
+    if (mounted) setState(() {});
   }
 
   Future<void> _fetchMindMaps() async {
@@ -40,7 +48,12 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          _allMindMaps = data.map((e) => MindMapModel.fromJson(e)).toList();
+          final List<MindMapModel> allMaps = data.map((e) => MindMapModel.fromJson(e)).toList();
+          if (_isGuest && allMaps.length > 2) {
+            _allMindMaps = allMaps.sublist(0, 2);
+          } else {
+            _allMindMaps = allMaps;
+          }
           _subjects = _allMindMaps.map((e) => e.subject).toSet().toList();
           _isLoading = false;
         });
@@ -153,7 +166,11 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
                     child: ElevatedButton(
                       onPressed: (_selectedSubject == null || _selectedUnit == null || _selectedTitle == null)
                           ? null
-                          : () {
+                          : () async {
+                              if (_isGuest) {
+                                GuestUtils.showGuestRestrictionDialog(context, message: "Register as a student to view full mind maps!");
+                                return;
+                              }
                               final mindMap = _allMindMaps.firstWhere(
                                 (e) => e.subject == _selectedSubject && e.unit == _selectedUnit && e.title == _selectedTitle,
                               );

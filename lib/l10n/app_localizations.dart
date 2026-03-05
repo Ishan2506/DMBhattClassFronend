@@ -1406,6 +1406,12 @@ abstract class AppLocalizations {
   /// **'No exams found'**
   String get noExamsFound;
 
+  /// No description provided for @noPapersFoundForSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'No papers found for {subject}'**
+  String noPapersFoundForSubject(Object subject);
+
   /// No description provided for @noProductsFound.
   ///
   /// In en, this message translates to:

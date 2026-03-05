@@ -536,7 +536,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                         "medium": _selectedMedium!,
                         "board": _selectedBoard!,
                         "stream": _selectedStream ?? "-",
-                        "schoolName": _schoolNameController.text,
+                        // "schoolName": _schoolNameController.text,
                       },
                       files: [],
                     );

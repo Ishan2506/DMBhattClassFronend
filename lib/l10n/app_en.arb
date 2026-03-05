@@ -216,6 +216,7 @@
   "regularExams": "Regular Exams",
   "fiveMinQuiz": "5 Min Quiz",
   "noExamsFound": "No exams found",
+  "noPapersFoundForSubject": "No papers found for {subject}",
   "noProductsFound": "No products found",
   "dateLabel": "Date: {date}",
   "marksLabel": "Marks",
