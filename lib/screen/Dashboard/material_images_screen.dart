@@ -7,6 +7,7 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MaterialImagesScreen extends StatefulWidget {
   const MaterialImagesScreen({super.key});
@@ -18,9 +19,43 @@ class MaterialImagesScreen extends StatefulWidget {
 class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
   String? _selectedSubject;
   String? _selectedUnit;
+  String? _std;
+  String? _stream;
 
-  final List<String> _subjects = ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
   final List<String> _units = List.generate(20, (index) => (index + 1).toString());
+
+  List<String> _getFilteredSubjects() {
+    // If guest, show a broad set
+    if (_isGuest) {
+      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+    }
+
+    // Parse Standard
+    int? stdNum;
+    if (_std != null) {
+      final match = RegExp(r'(\d+)').firstMatch(_std!);
+      if (match != null) stdNum = int.tryParse(match.group(1)!);
+    }
+
+    // 1. Lower Standards (1-10)
+    if (stdNum != null && stdNum <= 10) {
+      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Hindi", "Sanskrit", "Computer"];
+    }
+
+    // 2. Higher Secondary (11-12)
+    if (stdNum != null && (stdNum == 11 || stdNum == 12)) {
+      if (_stream == "Science") {
+        return ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Gujarati", "Hindi", "Computer"];
+      } else if (_stream == "Commerce") {
+        return ["Accounts", "Statistics", "Economics", "BA", "SPCC", "English", "Gujarati", "Hindi", "Computer"];
+      } else if (_stream == "Arts") {
+        return ["Sociology", "Psychology", "History", "Geography", "Philosophy", "English", "Gujarati", "Hindi"];
+      }
+    }
+
+    // Fallback
+    return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+  }
 
   bool _isLoading = false;
   bool _hasSearched = false;
@@ -35,6 +70,10 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
 
   Future<void> _checkGuest() async {
     _isGuest = await GuestUtils.isGuest();
+    final prefs = await SharedPreferences.getInstance();
+    _std = prefs.getString('std');
+    _stream = prefs.getString('stream');
+    if (mounted) setState(() {});
   }
 
   @override
@@ -80,7 +119,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
       ),
       child: Column(
         children: [
-          _buildDropdown(l10n.selectSubject, _subjects, _selectedSubject, (val) => setState(() => _selectedSubject = val)),
+          _buildDropdown(l10n.selectSubject, _getFilteredSubjects(), _selectedSubject, (val) => setState(() => _selectedSubject = val)),
           const SizedBox(height: 12),
           _buildDropdown(l10n.selectUnit, _units, _selectedUnit, (val) => setState(() => _selectedUnit = val)),
           const SizedBox(height: 20),
