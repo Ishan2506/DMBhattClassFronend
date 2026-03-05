@@ -705,6 +705,11 @@ class AppLocalizationsTa extends AppLocalizations {
   String get noExamsFound => 'தேர்வுகள் எதுவும் காணப்படவில்லை';
 
   @override
+  String noPapersFoundForSubject(Object subject) {
+    return '$subject க்கான தாள்கள் எதுவும் காணப்படவில்லை';
+  }
+
+  @override
   String get noProductsFound => 'தயாரிப்புகள் எதுவும் காணப்படவில்லை';
 
   @override

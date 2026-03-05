@@ -1,4 +1,3 @@
-import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -54,7 +53,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
   bool _isLoading = false;
   bool _isProfileLoading = true;
-  bool _isGuest = false;
   List<dynamic> _papers = [];
   bool _hasSearched = false;
 
@@ -91,7 +89,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     } catch (e) {
       debugPrint("Error fetching profile: $e");
     } finally {
-      _isGuest = await GuestUtils.isGuest();
       if (mounted) setState(() => _isProfileLoading = false);
     }
   }
@@ -314,11 +311,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           IconButton(
             icon: Icon(Icons.visibility_outlined, color: colorScheme.primary),
             onPressed: () async {
-               if (_isGuest) {
-                  GuestUtils.showGuestRestrictionDialog(context, message: "Register to view board papers!");
-                  return;
-               }
-
                final productId = paper['_id']?.toString() ?? paper['id']?.toString() ?? paper['title'] ?? paper['name'];
                final prefs = await SharedPreferences.getInstance();
                final alreadyUsed = prefs.getBool('preview_used_$productId') ?? false;
@@ -344,10 +336,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           IconButton(
             icon: Icon(Icons.download_rounded, color: colorScheme.secondary),
             onPressed: () {
-              if (_isGuest) {
-                  GuestUtils.showGuestRestrictionDialog(context, message: "Register to download board papers!");
-                  return;
-              }
               _launchURL(paper['file'] ?? paper['url'] ?? ""); 
             }, 
           ),

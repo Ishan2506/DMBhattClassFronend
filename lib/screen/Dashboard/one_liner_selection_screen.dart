@@ -9,6 +9,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OneLinerSelectionScreen extends StatefulWidget {
@@ -170,10 +171,16 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
     });
   }
 
-  void _startExam() {
+  Future<void> _startExam() async {
     if (_selectedExamId == null) {
       CustomToast.showError(context, "Please select all details");
       return;
+    }
+
+    if (!await GuestUtils.canGuestAccessExam(context)) return;
+
+    if (await GuestUtils.isGuest()) {
+      await GuestUtils.incrementGuestExamCount();
     }
 
     Navigator.push(

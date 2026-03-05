@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // --- Screen 1: Selection ---
@@ -216,20 +217,28 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                   child: ElevatedButton(
                     onPressed: _selectedTest != null 
                         ? () async {
+                            if (!await GuestUtils.canGuestAccessExam(context)) return;
+
+                            if (await GuestUtils.isGuest()) {
+                              await GuestUtils.incrementGuestExamCount();
+                            }
+                            
                             if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text("Already Taken"),
-                                  content: const Text("You have already performed this test. Students can only take each test once."),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text("OK"),
-                                    ),
-                                  ],
-                                ),
-                              );
+                              if (mounted) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text("Already Taken"),
+                                    content: const Text("You have already performed this test. Students can only take each test once."),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text("OK"),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
                               return;
                             }
                             

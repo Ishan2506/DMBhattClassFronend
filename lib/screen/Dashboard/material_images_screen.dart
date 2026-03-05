@@ -270,9 +270,13 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final List<dynamic> allImages = jsonDecode(response.body);
         setState(() {
-          _images = data; // Backend returns a list
+          if (_isGuest && allImages.length > 2) {
+            _images = allImages.sublist(0, 2);
+          } else {
+            _images = allImages;
+          }
         });
       } else {
         CustomToast.showError(context, "Failed to fetch images");

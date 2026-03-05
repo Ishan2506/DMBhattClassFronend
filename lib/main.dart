@@ -24,9 +24,7 @@ void main() async {
   await _requestPermissions();
   
   // await _secureScreen();
-  runApp(DevicePreview(
-    builder: (context) => MyApp(prefs: prefs),
-  ));
+  runApp(MyApp(prefs: prefs));
 }
 
 Future<void> _requestPermissions() async {
@@ -59,8 +57,8 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             navigatorKey: navigatorKey,
             useInheritedMediaQuery: true,
-            locale: DevicePreview.locale(context),
-            builder: DevicePreview.appBuilder,
+            // locale: DevicePreview.locale(context),
+            // builder: DevicePreview.appBuilder,
             debugShowCheckedModeBanner: false,
             title: appName,
             // Use extension method to get theme based on style and brightness

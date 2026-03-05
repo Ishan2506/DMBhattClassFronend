@@ -544,7 +544,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         "stream": _selectedStream ?? "",
                         "board": _selectedBoard!,
                         "loginAs": _selectedRole!,
-                        "school": _schoolNameController.text,
                       },
                       files: [], 
                     );
