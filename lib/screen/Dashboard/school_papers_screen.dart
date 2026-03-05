@@ -20,18 +20,57 @@ class SchoolPapersScreen extends StatefulWidget {
 class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   String? _selectedSubject;
   bool _isGuest = false;
+  String? _std;
+  String? _stream;
 
   @override
   void initState() {
     super.initState();
-    _checkGuestStatus();
+    _loadProfileAndCheckGuest();
   }
 
-  Future<void> _checkGuestStatus() async {
+  Future<void> _loadProfileAndCheckGuest() async {
     _isGuest = await GuestUtils.isGuest();
+    final prefs = await SharedPreferences.getInstance();
+    _std = prefs.getString('std');
+    _stream = prefs.getString('stream');
     if (mounted) setState(() {});
   }
-  final List<String> _subjects = ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+
+  List<String> _getFilteredSubjects() {
+    // If guest, show a general set of subjects
+    if (_isGuest) {
+      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+    }
+
+    // Parse Standard for logged-in students
+    int? stdNum;
+    if (_std != null) {
+      final match = RegExp(r'(\d+)').firstMatch(_std!);
+      if (match != null) {
+        stdNum = int.tryParse(match.group(1)!);
+      }
+    }
+
+    // 1. Lower Standards (1-10)
+    if (stdNum != null && stdNum <= 10) {
+      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Hindi", "Sanskrit", "Computer"];
+    }
+
+    // 2. Higher Secondary (11-12)
+    if (stdNum != null && (stdNum == 11 || stdNum == 12)) {
+      if (_stream == "Science") {
+        return ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Gujarati", "Hindi", "Computer", "Sanskrit"];
+      } else if (_stream == "Commerce") {
+        return ["Accounts", "Statistics", "Economics", "BA", "SPCC", "English", "Gujarati", "Hindi", "Computer"];
+      } else if (_stream == "Arts") {
+        return ["Sociology", "Psychology", "History", "Geography", "Philosophy", "English", "Gujarati", "Hindi", "Sanskrit"];
+      }
+    }
+
+    // Fallback if std unknown or parsing fails
+    return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+  }
   
   bool _isLoading = false;
   List<dynamic> _displayPapers = [];
@@ -102,7 +141,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                   DropdownButtonFormField<String>(
                     value: _selectedSubject,
                     hint: Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
-                    items: _subjects.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    items: _getFilteredSubjects().map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                     onChanged: (val) {
                       _selectedSubject = val;
                       _filterPapers();

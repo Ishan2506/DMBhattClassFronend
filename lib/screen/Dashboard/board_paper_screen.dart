@@ -26,11 +26,31 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   String? _selectedYear;
 
   final List<String> _mediums = ["Gujarati", "English"];
-  final List<String> _stds = ["9", "10", "11", "12"];
+  final List<String> _stds = ["10", "12"];
   final List<String> _streams = ["Science", "Commerce", "Arts"]; // Only for 12
-  final List<String> _years = List.generate(10, (index) => (DateTime.now().year - index).toString());
-  final List<String> _subjects = ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+  final List<String> _years = List.generate(10, (index) => (DateTime.now().year - 1 - index).toString());
   String? _selectedSubject;
+
+  List<String> _getFilteredSubjects() {
+    // 10th Standard: Only general subjects
+    if (_selectedStd == '10') {
+      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Hindi", "Sanskrit", "Computer"];
+    }
+    // 12th Standard: filter by stream
+    if (_selectedStd == '12') {
+      if (_selectedStream == 'Science') {
+        return ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Gujarati", "Hindi", "Computer"];
+      } else if (_selectedStream == 'Commerce') {
+        return ["Accounts", "Statistics", "Economics", "BA", "SPCC", "English", "Gujarati", "Hindi", "Computer"];
+      } else if (_selectedStream == 'Arts') {
+        return ["Sociology", "Psychology", "History", "Geography", "Philosophy", "English", "Gujarati", "Hindi"];
+      }
+      // 12th but no stream selected yet - show all
+      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+    }
+    // Fallback
+    return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+  }
 
   bool _isLoading = false;
   bool _isProfileLoading = true;
@@ -52,10 +72,19 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
         final data = jsonDecode(response.body);
         final profile = data['profile'];
         if (profile != null) {
+          // Extract the numeric part of std (e.g., "7th" -> "7", "10" -> "10")
+          final rawStd = profile['std']?.toString() ?? '';
+          final stdMatch = RegExp(r'(\d+)').firstMatch(rawStd);
+          final stdNum = stdMatch != null ? stdMatch.group(1) : null;
+          
+          // Board papers only available for std 10 and 12
+          final validBoardStd = (stdNum == '10' || stdNum == '12') ? stdNum : null;
+
           setState(() {
             _selectedMedium = profile['medium'];
-            _selectedStd = profile['std'];
-            _selectedStream = profile['stream']; 
+            _selectedStd = validBoardStd;
+            // Only carry stream if it's a valid 12th standard stream
+            _selectedStream = (validBoardStd == '12') ? profile['stream'] : null;
           });
         }
       }
@@ -172,7 +201,11 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                   l10n.standard, 
                   _stds.map((e) => "$e${l10n.th}").toList(), 
                   _selectedStd != null ? "$_selectedStd${l10n.th}" : null, 
-                  (val) => setState(() => _selectedStd = val?.replaceAll(l10n.th, ""))
+                  (val) => setState(() {
+                    _selectedStd = val?.replaceAll(l10n.th, "");
+                    _selectedSubject = null; // Reset subject when std changes
+                    _selectedStream = null;  // Reset stream when std changes
+                  })
                 ),
               ),
             ],
@@ -184,7 +217,10 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               l10n.stream, 
               _streams, 
               _selectedStream, 
-              (val) => setState(() => _selectedStream = val)
+              (val) => setState(() {
+                _selectedStream = val;
+                _selectedSubject = null; // Reset subject when stream changes
+              })
             ),
           if (_selectedStd == "12") const SizedBox(height: 12),
 
@@ -198,7 +234,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           
           _buildDropdown(
             l10n.subject, 
-            _subjects, 
+            _getFilteredSubjects(), 
             _selectedSubject, 
             (val) => setState(() => _selectedSubject = val)
           ),
