@@ -50,8 +50,6 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
         final List<dynamic> data = jsonDecode(response.body);
         
         // Fetch history to check for taken tests
-        // Fetch history to check for taken tests
-        // Token managed internally
         final historyResponse = await ApiService.getDashboardData();
         if (historyResponse.statusCode == 200) {
              final historyData = jsonDecode(historyResponse.body);
@@ -66,6 +64,10 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
             _subjects = _allTests.map((e) => e['subject'].toString()).toSet().toList();
             _isLoading = false;
           });
+
+          if (_subjects.isEmpty) {
+            _showNoTestDialog();
+          }
         }
       } else {
         if (mounted) setState(() => _isLoading = false);
@@ -74,6 +76,28 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       debugPrint("Error fetching 5 min tests: $e");
+    }
+  }
+
+  void _showNoTestDialog() {
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text("No 5 Min Tests Available"),
+          content: const Text("No 5 min tests available for your standard. Please try again later."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back
+              },
+              child: const Text("OK"),
+            )
+          ],
+        ),
+      );
     }
   }
 
@@ -162,9 +186,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
       ),
       body: _isLoading 
         ? const CustomLoader() 
-        : _allTests.isEmpty 
-           ? const Center(child: Text("No tests available."))
-           : Padding(
+        : Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
