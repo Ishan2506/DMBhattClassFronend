@@ -242,74 +242,76 @@ class ExamPdfViewer extends StatelessWidget {
     final logoImage = pw.MemoryImage(logoData.buffer.asUint8List());
 
     pdf.addPage(
-      pw.Page(
-        pageFormat: format,
-        theme: pw.ThemeData.withFont(
-           base: await PdfGoogleFonts.poppinsRegular(),
-           bold: await PdfGoogleFonts.poppinsBold(),
-        ),
-        build: (pw.Context context) {
-          return pw.Stack(
-            children: [
-              // White Background Container
-              pw.Positioned.fill(child: pw.Container(color: PdfColors.white)),
-              
-              // Watermark
-              pw.Center(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          pageFormat: format,
+          theme: pw.ThemeData.withFont(
+             base: await PdfGoogleFonts.poppinsRegular(),
+             bold: await PdfGoogleFonts.poppinsBold(),
+             fontFallback: [
+               await PdfGoogleFonts.notoSansGujaratiRegular(),
+               await PdfGoogleFonts.notoSansDevanagariRegular(),
+             ],
+          ),
+          buildBackground: (pw.Context context) {
+            return pw.FullPage(
+              ignoreMargins: true,
+              child: pw.Center(
                 child: pw.Opacity(
                   opacity: 0.1,
                   child: pw.Image(logoImage, width: 300),
                 ),
               ),
-              // Content
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
+            );
+          },
+        ),
+        build: (pw.Context context) {
+          return [
+            pw.Header(
+              level: 0,
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                   pw.Header(
-                    level: 0,
-                    child: pw.Row(
-                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                      children: [
-                        pw.Text("D. M. Bhatt Tuition Classes", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                        pw.Text("Date: ${exam['date']}"),
-                      ]
-                    )
-                  ),
-                  pw.SizedBox(height: 20),
-                  pw.Center(
-                    child: pw.Text(exam['title'] ?? "", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-                  ),
-                  pw.SizedBox(height: 10),
-                  pw.Center(
-                    child: pw.Text(
-                      "Marks Obtained: ${exam['marks'] ?? (exam['obtainedMarks'] != null ? "${exam['obtainedMarks']}/${exam['totalMarks']}" : "N/A")}",
-                      style: const pw.TextStyle(fontSize: 16),
-                    ),
-                  ),
-                  pw.Divider(),
-                  pw.SizedBox(height: 20),
-                  pw.Text("Questions:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                  pw.SizedBox(height: 10),
-                  // Render Dynamic Questions if available
-                  if (fullExam != null && fullExam!['questions'] != null)
-                    ...List.generate((fullExam!['questions'] as List).length, (index) {
-                      final q = fullExam!['questions'][index];
-                       // Handle both Exam (questionText) and FiveMinTest (question) formats
-                      final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
-                      return _buildQuestionItem(index + 1, qText);
-                    })
-                  else ...[
-                    // Mock Questions (Generic for now, as history doesn't store full Q&A detailed list in this simple mock)
-                    _buildQuestionItem(1, "Question 1 content placeholder..."),
-                    _buildQuestionItem(2, "Question 2 content placeholder..."),
-                    _buildQuestionItem(3, "Question 3 content placeholder..."),
-                    _buildQuestionItem(4, "Question 4 content placeholder..."),
-                    _buildQuestionItem(5, "Question 5 content placeholder..."),
-                  ],
-                ],
+                  pw.Text("D. M. Bhatt Tuition Classes", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Date: ${exam['date']}"),
+                ]
+              )
+            ),
+            pw.SizedBox(height: 20),
+            pw.Center(
+              child: pw.Text(exam['title'] ?? "", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Center(
+              child: pw.Text(
+                "Marks Obtained: ${exam['marks'] ?? (exam['obtainedMarks'] != null ? "${exam['obtainedMarks']}/${exam['totalMarks']}" : "N/A")}",
+                style: const pw.TextStyle(fontSize: 16),
               ),
+            ),
+            pw.Divider(),
+            pw.SizedBox(height: 20),
+            pw.Text("Questions:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            // Render Dynamic Questions if available
+            if (fullExam != null && fullExam!['questions'] != null)
+              ...List.generate((fullExam!['questions'] as List).length, (index) {
+                final q = fullExam!['questions'][index];
+                 // Handle both Exam (questionText) and FiveMinTest (question) formats
+                final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
+                return pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 8),
+                  child: _buildQuestionItem(index + 1, qText),
+                );
+              })
+            else ...[
+              // Mock Questions (Generic for now, as history doesn't store full Q&A detailed list in this simple mock)
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(1, "Question 1 content placeholder...")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(2, "Question 2 content placeholder...")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(3, "Question 3 content placeholder...")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(4, "Question 4 content placeholder...")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(5, "Question 5 content placeholder...")),
             ],
-          );
+          ];
         },
       ),
     );

@@ -168,35 +168,43 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
   }
 
   Future<void> _generateAndOpenPdf(BuildContext context, Map<String, dynamic> exam) async {
-    final examId = exam['examId'];
-    if (examId == null) {
-      CustomToast.showError(context, "Exam ID not found");
-      return;
-    }
+    // examId can be a plain string or a nested object like {'_id': '...'}
+    final rawId = exam['examId'];
+    final examId = rawId is Map ? rawId['_id']?.toString() : rawId?.toString();
 
     CustomLoader.show(context);
     try {
-      final bool isOnline = exam['isOnline'] ?? true;
-      final response = isOnline 
-          ? await ApiService.getExamById(examId) 
-          : await ApiService.getFiveMinTestById(examId);
+      Map<String, dynamic>? fullExam;
 
+      if (examId != null && examId.isNotEmpty) {
+        final bool isOnline = exam['isOnline'] ?? true;
+        final response = isOnline
+            ? await ApiService.getExamById(examId)
+            : await ApiService.getFiveMinTestById(examId);
+
+        debugPrint("Exam fetch: ${response.statusCode} for examId=$examId");
+
+        if (response.statusCode == 200) {
+          fullExam = jsonDecode(response.body) as Map<String, dynamic>;
+        } else {
+          // 404 = exam was deleted from server — just show history data (no questions)
+          // Other errors — log but still show what we have
+          debugPrint("Exam fetch non-200: ${response.statusCode} — ${response.body}");
+        }
+      }
+
+      // Always open the PDF viewer with whatever data we have
       if (context.mounted) {
         CustomLoader.hide(context);
-        if (response.statusCode == 200) {
-          final fullExam = jsonDecode(response.body);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ExamPdfViewer(
-                exam: exam,
-                fullExam: fullExam,
-              ),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ExamPdfViewer(
+              exam: exam,
+              fullExam: fullExam, // null = no questions section shown
             ),
-          );
-        } else {
-          CustomToast.showError(context, "Failed to load exam details");
-        }
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
@@ -298,74 +306,76 @@ class ExamPdfViewer extends StatelessWidget {
     final logoImage = pw.MemoryImage(logoData.buffer.asUint8List());
 
     pdf.addPage(
-      pw.Page(
-        pageFormat: format,
-        theme: pw.ThemeData.withFont(
-           base: await PdfGoogleFonts.poppinsRegular(),
-           bold: await PdfGoogleFonts.poppinsBold(),
-        ),
-        build: (pw.Context context) {
-          return pw.Stack(
-            children: [
-              // White Background Container
-              pw.Positioned.fill(child: pw.Container(color: PdfColors.white)),
-              
-              // Watermark
-              pw.Center(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          pageFormat: format,
+          theme: pw.ThemeData.withFont(
+             base: await PdfGoogleFonts.poppinsRegular(),
+             bold: await PdfGoogleFonts.poppinsBold(),
+             fontFallback: [
+               await PdfGoogleFonts.notoSansGujaratiRegular(),
+               await PdfGoogleFonts.notoSansDevanagariRegular(),
+             ],
+          ),
+          buildBackground: (pw.Context context) {
+            return pw.FullPage(
+              ignoreMargins: true,
+              child: pw.Center(
                 child: pw.Opacity(
                   opacity: 0.1,
                   child: pw.Image(logoImage, width: 300),
                 ),
               ),
-              // Content
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
+            );
+          },
+        ),
+        build: (pw.Context context) {
+          return [
+            pw.Header(
+              level: 0,
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                   pw.Header(
-                    level: 0,
-                    child: pw.Row(
-                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                      children: [
-                        pw.Text("D. M. Bhatt Tuition Classes", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                        pw.Text("Date: ${exam['date']}"),
-                      ]
-                    )
-                  ),
-                  pw.SizedBox(height: 20),
-                  pw.Center(
-                    child: pw.Text(exam['title'] ?? "", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-                  ),
-                  pw.SizedBox(height: 10),
-                  pw.Center(
-                    child: pw.Text(
-                      "Marks Obtained: ${exam['marks'] ?? (exam['obtainedMarks'] != null ? "${exam['obtainedMarks']}/${exam['totalMarks']}" : "N/A")}",
-                      style: const pw.TextStyle(fontSize: 16),
-                    ),
-                  ),
-                  pw.Divider(),
-                  pw.SizedBox(height: 20),
-                  pw.Text("Questions:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                  pw.SizedBox(height: 10),
-                  // Render Dynamic Questions if available
-                  if (fullExam != null && fullExam!['questions'] != null)
-                    ...List.generate((fullExam!['questions'] as List).length, (index) {
-                      final q = fullExam!['questions'][index];
-                      // Handle both Exam (questionText) and FiveMinTest (question) formats
-                      final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
-                      return _buildQuestionItem(index + 1, qText);
-                    })
-                  else ...[
-                    // Fallback to Mock Questions if no detailed data
-                    _buildQuestionItem(1, "Explain the laws of motion."),
-                    _buildQuestionItem(2, "What is photosynthesis?"),
-                    _buildQuestionItem(3, "Solve: 2x + 5 = 15"),
-                    _buildQuestionItem(4, "Define Kinetic Energy."),
-                    _buildQuestionItem(5, "Write a short note on Indian Constitution."),
-                  ],
-                ],
+                  pw.Text("D. M. Bhatt Tuition Classes", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Date: ${exam['date']}"),
+                ]
+              )
+            ),
+            pw.SizedBox(height: 20),
+            pw.Center(
+              child: pw.Text(exam['title'] ?? "", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Center(
+              child: pw.Text(
+                "Marks Obtained: ${exam['marks'] ?? (exam['obtainedMarks'] != null ? "${exam['obtainedMarks']}/${exam['totalMarks']}" : "N/A")}",
+                style: const pw.TextStyle(fontSize: 16),
               ),
+            ),
+            pw.Divider(),
+            pw.SizedBox(height: 20),
+            pw.Text("Questions:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            // Render Dynamic Questions if available
+            if (fullExam != null && fullExam!['questions'] != null)
+              ...List.generate((fullExam!['questions'] as List).length, (index) {
+                final q = fullExam!['questions'][index];
+                // Handle both Exam (questionText) and FiveMinTest (question) formats
+                final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
+                return pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 8),
+                  child: _buildQuestionItem(index + 1, qText),
+                );
+              })
+            else ...[
+              // Fallback to Mock Questions if no detailed data
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(1, "Explain the laws of motion.")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(2, "What is photosynthesis?")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(3, "Solve: 2x + 5 = 15")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(4, "Define Kinetic Energy.")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(5, "Write a short note on Indian Constitution.")),
             ],
-          );
+          ];
         },
       ),
     );
