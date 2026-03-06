@@ -23,13 +23,33 @@ class _OneLinerHistoryScreenState extends State<OneLinerHistoryScreen> {
   }
 
   Future<void> _loadHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final historyStr = prefs.getString('one_liner_history') ?? '[]';
-    final List<dynamic> decoded = jsonDecode(historyStr);
-    setState(() {
-      _history = List<Map<String, dynamic>>.from(decoded).reversed.toList();
-      _isLoading = false;
-    });
+    try {
+      final response = await ApiService.getDashboardData();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> results = data['examResults'] ?? [];
+        
+        setState(() {
+          _history = results
+              .where((e) => e['type'] == 'ONELINER')
+              .map((e) => {
+                'title': e['title'],
+                'date': e['date'],
+                'accuracy': e['accuracy'] ?? 0,
+                'score': e['obtainedMarks'],
+                'total': e['totalMarks'],
+              })
+              .toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error loading one-liner history from API: $e");
+      // Fallback to local if API fails? For now just stop loading
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -76,67 +96,58 @@ class _OneLinerHistoryScreenState extends State<OneLinerHistoryScreen> {
   Widget _buildHistoryCard(Map<String, dynamic> item) {
     final colorScheme = Theme.of(context).colorScheme;
     final date = DateTime.parse(item['date']);
-    final formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(date);
+    final formattedDate = DateFormat('MMM dd, yyyy').format(date);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  item['title'] ?? "One-Liner Exam",
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  "${item['score']}/${item['total']}",
-                  style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+    return Card(
+      elevation: 0,
+      color: colorScheme.surfaceContainer,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          const SizedBox(height: 4),
-          Text(
-            "${item['subject']} • Unit ${item['unit']}",
-            style: GoogleFonts.poppins(fontSize: 13, color: colorScheme.onSurfaceVariant),
-          ),
-          const Divider(height: 24),
-          Row(
-            children: [
-              Icon(Icons.calendar_today_rounded, size: 14, color: colorScheme.onSurfaceVariant),
-              const SizedBox(width: 6),
-              Text(
-                formattedDate,
-                style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
+          child: Icon(Icons.assignment, color: colorScheme.primary),
+        ),
+        title: Text(
+          item['title'] ?? "One-Liner Exam",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Date: $formattedDate",
+              style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
+            ),
+            Text(
+              "Accuracy: ${item['accuracy']}%",
+              style: GoogleFonts.poppins(
+                fontSize: 12, 
+                fontWeight: FontWeight.w600,
+                color: (item['accuracy'] as num) >= 70 ? Colors.green : Colors.orange
               ),
-              const Spacer(),
-              Text(
-                "${item['accuracy']}% Accuracy",
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: (item['accuracy'] as num) >= 70 ? Colors.green : Colors.orange,
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              "Marks",
+              style: GoogleFonts.poppins(fontSize: 10, color: colorScheme.onSurfaceVariant),
+            ),
+            Text(
+              "${item['score']}/${item['total']}",
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: colorScheme.primary, fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }

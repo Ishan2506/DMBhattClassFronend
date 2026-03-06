@@ -662,6 +662,30 @@ class ApiService {
     ));
   }
 
+  static Future<http.Response> submitOneLinerExamResult({
+    required String examId,
+    required String title,
+    required int obtainedMarks,
+    required int totalMarks,
+    required double accuracy,
+  }) async {
+    final uri = Uri.parse("$baseUrl/onelinerexam/submit");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
+      body: jsonEncode({
+        'examId': examId,
+        'title': title,
+        'obtainedMarks': obtainedMarks,
+        'totalMarks': totalMarks,
+        'accuracy': accuracy,
+      }),
+    ));
+  }
+
   static Future<http.Response> getMaterialImages({
     required String subject,
     required String unit,

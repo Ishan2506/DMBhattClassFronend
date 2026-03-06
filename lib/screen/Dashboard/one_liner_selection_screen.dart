@@ -27,11 +27,14 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
   String? _selectedSubject;
   String? _selectedUnit;
   String? _selectedTitle;
+  String? _selectedMarks;
 
   // Dropdown Options
   List<String> _subjects = [];
   List<String> _units = [];
   List<String> _titles = [];
+  List<String> _marksOptions = [];
+  List<String> _takenTestTitles = [];
 
   String? _selectedExamId;
 
@@ -65,6 +68,19 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+
+        // Fetch history to see which exams are already taken
+        try {
+          final historyResponse = await ApiService.getDashboardData();
+          if (historyResponse.statusCode == 200) {
+            final historyData = jsonDecode(historyResponse.body);
+            final List<dynamic> results = historyData['examResults'] ?? [];
+            _takenTestTitles = results.map((e) => e['title'].toString().toLowerCase()).toList();
+          }
+        } catch (e) {
+          debugPrint("Error fetching dashboard data for one-liner: $e");
+        }
+
         setState(() {
           _allOneLinerExams = data;
           _subjects = _allOneLinerExams
@@ -114,7 +130,11 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
       _selectedSubject = subject;
       _selectedUnit = null;
       _selectedTitle = null;
+      _selectedMarks = null;
       _selectedExamId = null;
+      _units = [];
+      _titles = [];
+      _marksOptions = [];
 
       if (subject != null) {
         _units = _allOneLinerExams
@@ -122,10 +142,7 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
             .map((e) => e['unit']?.toString() ?? '1')
             .toSet()
             .toList();
-      } else {
-        _units = [];
       }
-      _titles = [];
     });
   }
 
@@ -133,7 +150,10 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
     setState(() {
       _selectedUnit = unit;
       _selectedTitle = null;
+      _selectedMarks = null;
       _selectedExamId = null;
+      _titles = [];
+      _marksOptions = [];
 
       if (unit != null) {
         _titles = _allOneLinerExams
@@ -148,21 +168,55 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
           _selectedTitle = _titles.first;
           _onTitleChanged(_selectedTitle);
         }
-      } else {
-        _titles = [];
       }
     });
   }
 
   void _onTitleChanged(String? title) {
+    String? newMarks;
+    String? newExamId;
+    List<String> newMarksOptions = [];
+
+    if (title != null) {
+      final matchingExams = _allOneLinerExams.where((e) =>
+          e['subject'] == _selectedSubject &&
+          (e['unit']?.toString() ?? '1') == _selectedUnit &&
+          (e['title']?.toString() ?? 'Untitled Exam') == title);
+
+      newMarksOptions = matchingExams
+          .map((e) => (e['totalMarks'] ?? 20).toString())
+          .toSet()
+          .toList();
+      debugPrint("newMarksOptions: $newMarksOptions");
+      if (newMarksOptions.length == 1) {
+        newMarks = newMarksOptions.first;
+        try {
+          final exam = matchingExams.firstWhere((e) => (e['totalMarks'] ?? 20).toString() == newMarks);
+          newExamId = exam['_id'];
+        } catch (e) {
+          newExamId = null;
+        }
+      }
+    }
+
     setState(() {
       _selectedTitle = title;
-      if (title != null && _selectedSubject != null && _selectedUnit != null) {
+      _marksOptions = newMarksOptions;
+      _selectedMarks = newMarks;
+      _selectedExamId = newExamId;
+    });
+  }
+
+  void _onMarksChanged(String? marks) {
+    setState(() {
+      _selectedMarks = marks;
+      if (marks != null && _selectedSubject != null && _selectedUnit != null && _selectedTitle != null) {
         try {
           final exam = _allOneLinerExams.firstWhere((e) =>
               e['subject'] == _selectedSubject &&
               (e['unit']?.toString() ?? '1') == _selectedUnit &&
-              (e['title']?.toString() ?? 'Untitled Exam') == title);
+              (e['title']?.toString() ?? 'Untitled Exam') == _selectedTitle &&
+              (e['totalMarks'] ?? 20).toString() == marks);
           _selectedExamId = exam['_id'];
         } catch (e) {
           _selectedExamId = null;
@@ -178,6 +232,25 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
     }
 
     if (!await GuestUtils.canGuestAccessExam(context)) return;
+
+    if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Already Taken"),
+            content: const Text("You have already performed this exam. Students can only take each exam once."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
 
     Navigator.push(
       context,
@@ -241,6 +314,15 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
                     items: _titles,
                     itemLabelBuilder: (String item) => item,
                     onChanged: _onTitleChanged,
+                  ),
+                  blankVerticalSpace16,
+                  CustomDropdown<String>(
+                    labelText: "Marks",
+                    hintText: "Select Marks",
+                    value: _selectedMarks,
+                    items: _marksOptions,
+                    itemLabelBuilder: (String item) => item,
+                    onChanged: _onMarksChanged,
                   ),
                   const Spacer(),
                   Container(

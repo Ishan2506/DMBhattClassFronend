@@ -96,9 +96,9 @@ class OneLinerResultScreen extends StatelessWidget {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                 children: [
-                  _buildPdfStat("Total Qns", "$totalQuestions", fontBold),
-                  _buildPdfStat("Passed", "$correctAnswers", fontBold, color: PdfColors.green),
-                  _buildPdfStat("Avg. Accuracy", "${averageAccuracy.toStringAsFixed(1)}%", fontBold, color: PdfColors.blue),
+                   _buildPdfStat("Total Qns", "$totalQuestions", fontBold),
+                   _buildPdfStat("Marks", "$correctAnswers/$totalQuestions", fontBold, color: PdfColors.green),
+                   _buildPdfStat("Avg. Accuracy", "${averageAccuracy.toStringAsFixed(1)}%", fontBold, color: PdfColors.blue),
                 ],
               ),
             ),
@@ -188,10 +188,11 @@ class OneLinerResultScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   const SizedBox(height: 16),
-                  Row(
+                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildSummaryStat("Score", "$correctAnswers/$totalQuestions", Colors.white),
+                      _buildSummaryStat("Correct", "$correctAnswers/$totalQuestions", Colors.white),
+                      _buildSummaryStat("Marks", "$correctAnswers", Colors.white),
                       _buildSummaryStat("Accuracy", "${averageAccuracy.toStringAsFixed(1)}%", Colors.white),
                     ],
                   ),

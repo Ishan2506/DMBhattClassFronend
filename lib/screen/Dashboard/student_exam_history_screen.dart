@@ -47,11 +47,15 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
         final List<dynamic> results = data['examResults'] ?? [];
         
         setState(() {
-          _regularExams = results.where((e) => e['isOnline'] == true).toList();
-          // Assuming five min quizzes might be filtered differently later, 
-          // but for now isOnline=true covers our regular online exams.
-          // If there's a specific flag for five min quiz, we'd use it here.
-          _fiveMinQuizzes = results.where((e) => e['isOnline'] == false).toList(); 
+          // Filter to only include appropriate types for each tab
+          _regularExams = results.where((e) => 
+            e['isOnline'] == true && e['type'] != 'ONELINER'
+          ).toList();
+          
+          _fiveMinQuizzes = results.where((e) => 
+            e['isOnline'] == false && e['type'] != 'ONELINER'
+          ).toList(); 
+          
           _isLoading = false;
         });
       }

@@ -178,7 +178,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
     return _questions[index]['answer'][lang] ?? _questions[index]['answer']['en'];
   }
 
-  void _showResult() {
+  void _showResult() async {
     int score = 0;
     double totalPartialScore = 0.0;
     for (int i = 0; i < _questions.length; i++) {
@@ -187,27 +187,44 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
       if (matchScore >= 0.5) {
         score++;
       }
-
     }
 
-    final int accuracy = (totalPartialScore / _questions.length * 100).round();
-    _saveToHistory(score, accuracy);
+    final double avgAccuracy = totalPartialScore / _questions.length * 100;
+    final int accuracyInt = avgAccuracy.round();
+    
+    // Save to local history
+    _saveToHistory(score, accuracyInt);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OneLinerResultScreen(
-          totalQuestions: _questions.length,
-          correctAnswers: score,
-          averageAccuracy: totalPartialScore / _questions.length * 100,
-          questions: _questions,
-          spokenAnswers: _spokenAnswers,
-          subject: widget.subject,
-          title: widget.title,
-          unit: widget.unit,
+    // Sync to backend (Fire and forget or wait? Better wait for better UX)
+    try {
+      await ApiService.submitOneLinerExamResult(
+        examId: widget.examId,
+        title: widget.title,
+        obtainedMarks: score,
+        totalMarks: _questions.length,
+        accuracy: avgAccuracy,
+      );
+    } catch (e) {
+      debugPrint("Error syncing one-liner result: $e");
+    }
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OneLinerResultScreen(
+            totalQuestions: _questions.length,
+            correctAnswers: score,
+            averageAccuracy: avgAccuracy,
+            questions: _questions,
+            spokenAnswers: _spokenAnswers,
+            subject: widget.subject,
+            title: widget.title,
+            unit: widget.unit,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Future<void> _saveToHistory(int score, int accuracy) async {
