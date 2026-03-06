@@ -99,7 +99,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _applyPromoCode() {
     final code = _promoCodeController.text.trim().toUpperCase();
-    final expectedCode = "OFFER$_std";
+    final expectedCode = "DMBHATT$_std";
 
     if (code == expectedCode) {
       setState(() {
@@ -385,7 +385,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     child: TextField(
                       controller: _promoCodeController,
                       decoration: InputDecoration(
-                        hintText: "Enter Code (e.g. OFFER7)",
+                        hintText: "Enter Code (e.g. DMBHATT7)",
                         hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
                         border: InputBorder.none,
                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),

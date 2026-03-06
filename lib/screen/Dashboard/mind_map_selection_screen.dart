@@ -57,6 +57,10 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
           _subjects = _allMindMaps.map((e) => e.subject).toSet().toList();
           _isLoading = false;
         });
+
+        if (_subjects.isEmpty) {
+          _showNoMindMapDialog();
+        }
       } else {
         setState(() {
           _allMindMaps = [];
@@ -104,6 +108,28 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
         _titles = [];
       }
     });
+  }
+
+  void _showNoMindMapDialog() {
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text("No Mind Maps Available"),
+          content: const Text("No mind maps available for your standard. Please try again later."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back
+              },
+              child: const Text("OK"),
+            )
+          ],
+        ),
+      );
+    }
   }
 
   @override

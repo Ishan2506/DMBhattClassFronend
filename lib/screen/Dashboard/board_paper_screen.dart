@@ -378,7 +378,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           _papers = data; // Backend returns a list of materials直接
         });
         if (_papers.isEmpty) {
-           CustomToast.showSuccess(context, AppLocalizations.of(context)!.noExamsFound);
+           CustomToast.showSuccess(context, AppLocalizations.of(context)!.noPapersFound);
         }
       } else {
          CustomToast.showError(context, "Failed to fetch papers: ${ApiService.getErrorMessage(response.body)}");

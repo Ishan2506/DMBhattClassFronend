@@ -3,16 +3,47 @@ import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/board_paper_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/school_papers_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_images_screen.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class MaterialScreen extends StatelessWidget {
+class MaterialScreen extends StatefulWidget {
   const MaterialScreen({super.key});
+
+  @override
+  State<MaterialScreen> createState() => _MaterialScreenState();
+}
+
+class _MaterialScreenState extends State<MaterialScreen> {
+  String? _std;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserStd();
+  }
+
+  Future<void> _loadUserStd() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawStd = prefs.getString('std') ?? '';
+    // Extract numeric part (e.g., "10th" -> "10")
+    final stdMatch = RegExp(r'(\d+)').firstMatch(rawStd);
+    if (mounted) {
+      setState(() {
+        _std = stdMatch?.group(1);
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+
+    bool showBoardPapers = _std == "10" || _std == "12";
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -20,7 +51,9 @@ class MaterialScreen extends StatelessWidget {
         title: l10n.material,
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
+      body: _isLoading 
+        ? const CustomLoader()
+        : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -35,17 +68,18 @@ class MaterialScreen extends StatelessWidget {
                 );
               },
             ),
-            _buildMaterialItem(
-              context,
-              title: l10n.boardPapers,
-              icon: Icons.assignment_outlined,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const BoardPaperScreen()),
-                );
-              },
-            ),
+            if (showBoardPapers)
+              _buildMaterialItem(
+                context,
+                title: l10n.boardPapers,
+                icon: Icons.assignment_outlined,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const BoardPaperScreen()),
+                  );
+                },
+              ),
             _buildMaterialItem(
               context,
               title: l10n.images,
