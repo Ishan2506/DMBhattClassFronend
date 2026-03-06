@@ -11,8 +11,8 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 
 class ApiService {
-  // static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-   static const String baseUrl = "http://localhost:5000/api";
+   static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+   //static const String baseUrl = "http://localhost:5000/api";
   static const String guestToken = "DMBHATT_GUEST_ACCESS_TOKEN_2024";
   static String? _authToken;
   static bool _isGuest = false;
@@ -450,7 +450,13 @@ class ApiService {
 
   static Future<http.Response> getExamById(String examId) async {
     final uri = Uri.parse("$baseUrl/exam/$examId");
-    return _handleSession(await http.get(uri));
+    return _handleSession(await http.get(
+      uri,
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
+    ));
   }
 
   static Future<http.Response> getAllFiveMinTests() async {

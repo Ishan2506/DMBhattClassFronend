@@ -44,7 +44,15 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   String? _userStandard;
   String? _userStream;
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchExams();
+  }
+
   Future<void> _fetchExams() async {
+    final stopwatch = Stopwatch()..start();
+    debugPrint("=== START EXAM FETCH TIMING ===");
     try {
       final prefs = await SharedPreferences.getInstance();
       _userRole = prefs.getString('user_role');
@@ -52,7 +60,10 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
 
       // Fetch user profile to filter exams
       if (token != null) {
+        debugPrint("[Timing] Starting getProfile at ${stopwatch.elapsedMilliseconds}ms");
         final profileResponse = await ApiService.getProfile();
+        debugPrint("[Timing] Finished getProfile at ${stopwatch.elapsedMilliseconds}ms");
+        
         if (profileResponse.statusCode == 200) {
           final profileData = jsonDecode(profileResponse.body);
           final profile = profileData['profile'];
@@ -71,7 +82,10 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
       }
 
       // Fetch history to check for taken tests
+      debugPrint("[Timing] Starting getDashboardData at ${stopwatch.elapsedMilliseconds}ms");
       final historyResponse = await ApiService.getDashboardData();
+      debugPrint("[Timing] Finished getDashboardData at ${stopwatch.elapsedMilliseconds}ms");
+      
       if (historyResponse.statusCode == 200) {
         final historyData = jsonDecode(historyResponse.body);
         final List<dynamic> results = historyData['examResults'] ?? [];
@@ -79,10 +93,12 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
       }
 
       // Use backend filters if possible, or fetch all and filter locally
+      debugPrint("[Timing] Starting getAllExams at ${stopwatch.elapsedMilliseconds}ms");
       final response = await ApiService.getAllExams(
         std: _userStandard,
         medium: _userMedium,
       );
+      debugPrint("[Timing] Finished getAllExams at ${stopwatch.elapsedMilliseconds}ms");
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -115,6 +131,8 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
           
           _isLoading = false;
         });
+        
+        debugPrint("=== END EXAM FETCH TIMING: Total ${stopwatch.elapsedMilliseconds}ms ===");
 
         if (_subjects.isEmpty) {
            if (mounted) {
@@ -169,58 +187,79 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   }
 
   void _onUnitChanged(String? unit) {
+    String? newTitle;
+    List<String> newTitles = [];
+
+    if (unit != null) {
+      // Filter exams for this subject and unit to get titles
+      final matchingExams = _allExams.where((e) =>
+          e['subject'] == _selectedSubject && (e['unit']?.toString() ?? 'Default Unit') == unit);
+
+      newTitles = matchingExams
+          .map((e) => e['title']?.toString() ?? 'Untitled Exam')
+          .toSet()
+          .toList();
+      
+      if (newTitles.length == 1) {
+         newTitle = newTitles.first;
+      }
+    }
+
     setState(() {
       _selectedUnit = unit;
+      _titles = newTitles;
+      // We do not set title directly here because it has cascading effects.
+      // Instead we let the user select it, or we trigger it post-frame if we want to auto-select it.
+      // Since auto-select title wasn't fully refactored, let's just clear these:
       _selectedTitle = null;
+      _marksOptions = [];
       _selectedMarks = null;
       _selectedExamId = null;
-
-      if (unit != null) {
-        // Filter exams for this subject and unit to get titles
-        final matchingExams = _allExams.where((e) =>
-            e['subject'] == _selectedSubject && (e['unit']?.toString() ?? 'Default Unit') == unit);
-
-        _titles = matchingExams
-            .map((e) => e['title']?.toString() ?? 'Untitled Exam')
-            .toSet()
-            .toList();
-        
-        if (_titles.length == 1) {
-           _selectedTitle = _titles.first;
-           _onTitleChanged(_selectedTitle);
-        }
-      } else {
-        _titles = [];
-      }
-      _marksOptions = [];
     });
+
+    // If there is only one title, auto-select it safely AFTER the build frame
+    if (newTitle != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _onTitleChanged(newTitle);
+        }
+      });
+    }
   }
 
   void _onTitleChanged(String? title) {
+    String? newMarks;
+    String? newExamId;
+    List<String> newMarksOptions = [];
+
+    if (title != null) {
+      // Filter exams for this subject, unit and title to get marks
+      final matchingExams = _allExams.where((e) =>
+          e['subject'] == _selectedSubject && 
+          (e['unit']?.toString() ?? 'Default Unit') == _selectedUnit &&
+          (e['title']?.toString() ?? 'Untitled Exam') == title);
+
+      newMarksOptions = matchingExams
+          .map((e) => e['totalMarks'].toString())
+          .toSet()
+          .toList();
+      
+      if (newMarksOptions.length == 1) {
+         newMarks = newMarksOptions.first;
+         try {
+           final exam = matchingExams.firstWhere((e) => e['totalMarks'].toString() == newMarks);
+           newExamId = exam['_id'];
+         } catch (e) {
+           newExamId = null;
+         }
+      }
+    }
+
     setState(() {
       _selectedTitle = title;
-      _selectedMarks = null;
-      _selectedExamId = null;
-
-      if (title != null) {
-        // Filter exams for this subject, unit and title to get marks
-        final matchingExams = _allExams.where((e) =>
-            e['subject'] == _selectedSubject && 
-            (e['unit']?.toString() ?? 'Default Unit') == _selectedUnit &&
-            (e['title']?.toString() ?? 'Untitled Exam') == title);
-
-        _marksOptions = matchingExams
-            .map((e) => e['totalMarks'].toString())
-            .toSet()
-            .toList();
-        
-        if (_marksOptions.length == 1) {
-           _selectedMarks = _marksOptions.first;
-           _onMarksChanged(_selectedMarks);
-        }
-      } else {
-        _marksOptions = [];
-      }
+      _marksOptions = newMarksOptions;
+      _selectedMarks = newMarks;
+      _selectedExamId = newExamId;
     });
   }
 
