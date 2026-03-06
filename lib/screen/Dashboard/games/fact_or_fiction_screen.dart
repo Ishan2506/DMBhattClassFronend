@@ -119,6 +119,31 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
     });
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. Read the statement shown on the card.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Decide if it's a 'FACT' (True) or 'FICTION' (False).", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. You have 10 seconds for each question.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. Accumulate points for correct answers!", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _endGame() {
     setState(() {
       _isGameOver = true;

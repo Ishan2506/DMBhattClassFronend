@@ -26,6 +26,31 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
     });
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. The game is played on a 3x3 grid.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. You are 'X' and the computer/opponent is 'O'.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Take turns placing your mark in an empty square.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. The first to get 3 marks in a row (horizontal, vertical, or diagonal) wins!", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _onTileTap(int index) {
     if (_board[index] != "" || _winner != "") return;
 
@@ -130,6 +155,12 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       appBar: CustomAppBar(
         title: "Tic Tac Toe",
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
+        ],
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,

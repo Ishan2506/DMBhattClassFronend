@@ -1706,6 +1706,126 @@ abstract class AppLocalizations {
   /// **'Guess the famous idiom or phrase from emojis.'**
   String get emojiDecoderDesc;
 
+  /// No description provided for @sudoku.
+  ///
+  /// In en, this message translates to:
+  /// **'Sudoku'**
+  String get sudoku;
+
+  /// No description provided for @sudokuDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The classic 9x9 number-placement puzzle based on logic.'**
+  String get sudokuDesc;
+
+  /// No description provided for @game2048.
+  ///
+  /// In en, this message translates to:
+  /// **'2048'**
+  String get game2048;
+
+  /// No description provided for @game2048Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide and combine matching numbers to reach the 2048 tile.'**
+  String get game2048Desc;
+
+  /// No description provided for @mathRiddles.
+  ///
+  /// In en, this message translates to:
+  /// **'Math Riddles'**
+  String get mathRiddles;
+
+  /// No description provided for @mathRiddlesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve text-based logical word problems that require mathematical thinking.'**
+  String get mathRiddlesDesc;
+
+  /// No description provided for @kakuro.
+  ///
+  /// In en, this message translates to:
+  /// **'Kakuro (Cross-Sums)'**
+  String get kakuro;
+
+  /// No description provided for @kakuroDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A mathematical crossword. Fill cells to sum up to the edge clues.'**
+  String get kakuroDesc;
+
+  /// No description provided for @mathdoku.
+  ///
+  /// In en, this message translates to:
+  /// **'MathDoku (KenKen)'**
+  String get mathdoku;
+
+  /// No description provided for @mathdokuDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill cells to produce a target number using a specified arithmetic operation.'**
+  String get mathdokuDesc;
+
+  /// No description provided for @numberSeries.
+  ///
+  /// In en, this message translates to:
+  /// **'Number Series'**
+  String get numberSeries;
+
+  /// No description provided for @numberSeriesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Deduce the mathematical rule governing the sequence to find the missing value.'**
+  String get numberSeriesDesc;
+
+  /// No description provided for @numberMastermind.
+  ///
+  /// In en, this message translates to:
+  /// **'Number Mastermind'**
+  String get numberMastermind;
+
+  /// No description provided for @numberMastermindDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A code-breaking game where you guess a hidden multi-digit number.'**
+  String get numberMastermindDesc;
+
+  /// No description provided for @magicSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'Magic Square'**
+  String get magicSquare;
+
+  /// No description provided for @magicSquareDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrange numbers so that every row, column, and diagonal sums to a constant.'**
+  String get magicSquareDesc;
+
+  /// No description provided for @algebraBalancer.
+  ///
+  /// In en, this message translates to:
+  /// **'Algebra Balancer'**
+  String get algebraBalancer;
+
+  /// No description provided for @algebraBalancerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Deduce numerical values of shapes resting on balanced scales.'**
+  String get algebraBalancerDesc;
+
+  /// No description provided for @mentalMathSpeedrun.
+  ///
+  /// In en, this message translates to:
+  /// **'Mental Math Speedrun'**
+  String get mentalMathSpeedrun;
+
+  /// No description provided for @mentalMathSpeedrunDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A rigorous rapid-fire drill of calculation to build speed.'**
+  String get mentalMathSpeedrunDesc;
+
   /// No description provided for @th.
   ///
   /// In en, this message translates to:

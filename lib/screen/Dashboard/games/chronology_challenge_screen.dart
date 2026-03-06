@@ -117,6 +117,31 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
     }
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. You will see a list of historical events or inventions.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Drag and drop the items to arrange them in chronological order.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Oldest events should be at the top, newest at the bottom.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. Click 'Check Order' to see if you are correct!", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _showSuccessDialog() {
     showDialog(
       context: context,
@@ -147,6 +172,10 @@ class _ChronologyChallengeScreenState extends State<ChronologyChallengeScreen> {
         title: "Chronology Challenge",
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
           if (_selectedCategory != null)
              IconButton(
                icon: Badge(

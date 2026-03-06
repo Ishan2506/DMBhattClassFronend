@@ -864,6 +864,76 @@ class AppLocalizationsGu extends AppLocalizations {
       'ઇમોજીસ પરથી પ્રખ્યાત રૂઢિપ્રયોગ અથવા શબ્દસમૂહનો અંદાજ લગાવો.';
 
   @override
+  String get sudoku => 'Sudoku';
+
+  @override
+  String get sudokuDesc =>
+      'The classic 9x9 number-placement puzzle based on logic.';
+
+  @override
+  String get game2048 => '2048';
+
+  @override
+  String get game2048Desc =>
+      'Slide and combine matching numbers to reach the 2048 tile.';
+
+  @override
+  String get mathRiddles => 'Math Riddles';
+
+  @override
+  String get mathRiddlesDesc =>
+      'Solve text-based logical word problems that require mathematical thinking.';
+
+  @override
+  String get kakuro => 'Kakuro (Cross-Sums)';
+
+  @override
+  String get kakuroDesc =>
+      'A mathematical crossword. Fill cells to sum up to the edge clues.';
+
+  @override
+  String get mathdoku => 'MathDoku (KenKen)';
+
+  @override
+  String get mathdokuDesc =>
+      'Fill cells to produce a target number using a specified arithmetic operation.';
+
+  @override
+  String get numberSeries => 'Number Series';
+
+  @override
+  String get numberSeriesDesc =>
+      'Deduce the mathematical rule governing the sequence to find the missing value.';
+
+  @override
+  String get numberMastermind => 'Number Mastermind';
+
+  @override
+  String get numberMastermindDesc =>
+      'A code-breaking game where you guess a hidden multi-digit number.';
+
+  @override
+  String get magicSquare => 'Magic Square';
+
+  @override
+  String get magicSquareDesc =>
+      'Arrange numbers so that every row, column, and diagonal sums to a constant.';
+
+  @override
+  String get algebraBalancer => 'Algebra Balancer';
+
+  @override
+  String get algebraBalancerDesc =>
+      'Deduce numerical values of shapes resting on balanced scales.';
+
+  @override
+  String get mentalMathSpeedrun => 'Mental Math Speedrun';
+
+  @override
+  String get mentalMathSpeedrunDesc =>
+      'A rigorous rapid-fire drill of calculation to build speed.';
+
+  @override
   String get th => 'th';
 
   @override

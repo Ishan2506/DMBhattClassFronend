@@ -90,6 +90,29 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
     });
   }
   
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. Look at the options presented in each level.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Identify the one item that does not belong with the others.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Select the 'Odd One Out' to score points.", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _showGameOver() {
     showDialog(
       context: context,
@@ -148,6 +171,12 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
       appBar: CustomAppBar(
         title: "Odd One Out",
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),

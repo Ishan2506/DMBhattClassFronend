@@ -1,9 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 
 class Game2048Screen extends StatefulWidget {
   const Game2048Screen({super.key});
@@ -12,349 +11,355 @@ class Game2048Screen extends StatefulWidget {
   State<Game2048Screen> createState() => _Game2048ScreenState();
 }
 
+enum SwipeDirection { up, down, left, right }
+
 class _Game2048ScreenState extends State<Game2048Screen> {
-  // 4x4 Grid
-  List<List<int>> grid = [];
-  List<List<int>> previousGrid = [];
-  int score = 0;
-  int highScore = 0;
-  bool isGameOver = false;
-  bool isWon = false;
+  final MindGameService _gameService = MindGameService();
+
+  late List<List<int>> _grid;
+  int _score = 0;
+  bool _isGameOver = false;
 
   @override
   void initState() {
     super.initState();
-    _loadHighScore();
-    _startNewGame();
+    _gameService.startSession(context);
+    _initGame();
   }
 
-  void _loadHighScore() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      highScore = prefs.getInt('2048_high_score') ?? 0;
-    });
+  @override
+  void dispose() {
+    _gameService.stopSession();
+    super.dispose();
   }
 
-  void _saveHighScore() async {
-    if (score > highScore) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('2048_high_score', score);
-      setState(() {
-        highScore = score;
-      });
+  void _initGame() {
+    _grid = List.generate(4, (_) => List.filled(4, 0));
+    _score = 0;
+    _isGameOver = false;
+    _addRandomTile();
+    _addRandomTile();
+    setState(() {});
+  }
+
+  void _addRandomTile() {
+    List<Point<int>> available = [];
+    for (int r = 0; r < 4; r++) {
+      for (int c = 0; c < 4; c++) {
+        if (_grid[r][c] == 0) available.add(Point(r, c));
+      }
+    }
+    if (available.isEmpty) return;
+    
+    var rand = Random();
+    Point<int> cell = available[rand.nextInt(available.length)];
+    // 90% chance for 2, 10% chance for 4
+    _grid[cell.x][cell.y] = rand.nextDouble() < 0.9 ? 2 : 4;
+  }
+
+  void _handleSwipe(SwipeDirection direction) {
+    if (_isGameOver) return;
+    
+    bool changed = false;
+    
+    switch (direction) {
+       case SwipeDirection.left: changed = _moveLeft(); break;
+       case SwipeDirection.right: changed = _moveRight(); break;
+       case SwipeDirection.up: changed = _moveUp(); break;
+       case SwipeDirection.down: changed = _moveDown(); break;
+    }
+
+    if (changed) {
+      _addRandomTile();
+      _checkGameOver();
+      setState(() {});
     }
   }
 
-  void _startNewGame() {
-    setState(() {
-      grid = List.generate(4, (_) => List.generate(4, (_) => 0));
-      score = 0;
-      isGameOver = false;
-      isWon = false;
-      _spawnNewTile();
-      _spawnNewTile();
-    });
-  }
-
-  void _spawnNewTile() {
-    List<Point<int>> emptySpots = [];
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        if (grid[i][j] == 0) {
-          emptySpots.add(Point(i, j));
-        }
-      }
-    }
-
-    if (emptySpots.isNotEmpty) {
-      final random = Random();
-      final point = emptySpots[random.nextInt(emptySpots.length)];
-      // 90% chance of 2, 10% chance of 4
-      grid[point.x][point.y] = random.nextDouble() < 0.9 ? 2 : 4;
-    }
-  }
-
-  // --- Move Logic ---
-
-  void _onSwipeLeft() {
-    setState(() {
-      bool moved = false;
-      for (int i = 0; i < 4; i++) {
-        if (_mergeRowLeft(grid[i])) moved = true;
-      }
-      _afterMove(moved);
-    });
-  }
-
-  void _onSwipeRight() {
-    setState(() {
-      bool moved = false;
-      for (int i = 0; i < 4; i++) {
-        // Reverse row, merge left, reverse back
-        List<int> reversed = grid[i].reversed.toList();
-        if (_mergeRowLeft(reversed)) {
-          grid[i] = reversed.reversed.toList();
-          moved = true;
-        }
-      }
-      _afterMove(moved);
-    });
-  }
-
-  void _onSwipeUp() {
-    setState(() {
-      bool moved = false;
-      for (int col = 0; col < 4; col++) {
-        List<int> column = [grid[0][col], grid[1][col], grid[2][col], grid[3][col]];
-        if (_mergeRowLeft(column)) {
-          for (int row = 0; row < 4; row++) {
-            grid[row][col] = column[row];
+  bool _moveLeft() {
+    bool changed = false;
+    for (int r = 0; r < 4; r++) {
+       List<int> row = _grid[r].where((val) => val != 0).toList();
+       for(int i = 0; i < row.length - 1; i++){
+          if(row[i] == row[i+1]){
+             row[i] *= 2;
+             _score += row[i];
+             row.removeAt(i+1);
           }
-          moved = true;
-        }
-      }
-      _afterMove(moved);
-    });
-  }
-
-  void _onSwipeDown() {
-    setState(() {
-      bool moved = false;
-      for (int col = 0; col < 4; col++) {
-        List<int> column = [grid[0][col], grid[1][col], grid[2][col], grid[3][col]];
-        List<int> reversed = column.reversed.toList();
-        if (_mergeRowLeft(reversed)) {
-          column = reversed.reversed.toList();
-          for (int row = 0; row < 4; row++) {
-            grid[row][col] = column[row];
+       }
+       while(row.length < 4) row.add(0);
+       for(int c=0; c<4; c++){
+          if(_grid[r][c] != row[c]){
+             _grid[r][c] = row[c];
+             changed = true;
           }
-          moved = true;
-        }
-      }
-      _afterMove(moved);
-    });
+       }
+    }
+    return changed;
   }
 
-  bool _mergeRowLeft(List<int> row) {
-    bool moved = false;
-    
-    // 1. Remove Zeros (Shift Left)
-    List<int> newRow = row.where((e) => e != 0).toList();
-    
-    // 2. Merge
-    for (int i = 0; i < newRow.length - 1; i++) {
-      if (newRow[i] == newRow[i + 1]) {
-        newRow[i] *= 2;
-        score += newRow[i];
-        newRow[i + 1] = 0; // Mark for removal
-        moved = true;
-        if (newRow[i] == 2048 && !isWon) isWon = true; 
-      }
+  bool _moveRight() {
+    bool changed = false;
+    for (int r = 0; r < 4; r++) {
+       List<int> row = _grid[r].where((val) => val != 0).toList();
+       for(int i = row.length - 1; i > 0; i--){
+          if(row[i] == row[i-1]){
+             row[i] *= 2;
+             _score += row[i];
+             row.removeAt(i-1);
+             i--; // Skip the merged item
+          }
+       }
+       while(row.length < 4) row.insert(0, 0);
+       for(int c=0; c<4; c++){
+          if(_grid[r][c] != row[c]){
+             _grid[r][c] = row[c];
+             changed = true;
+          }
+       }
     }
-    
-    // 3. Remove Zeros again (after merge)
-    newRow = newRow.where((e) => e != 0).toList();
-    
-    // 4. Pad with zeros
-    while (newRow.length < 4) {
-      newRow.add(0);
-    }
-    
-    // Check if row changed
-    for (int i = 0; i < 4; i++) {
-      if (row[i] != newRow[i]) {
-        row[i] = newRow[i];
-        moved = true;
-      }
-    }
-    
-    return moved;
+    return changed;
   }
 
-  void _afterMove(bool moved) {
-    if (moved) {
-      _spawnNewTile();
-      _saveHighScore();
-      if (_checkGameOver()) {
-        isGameOver = true;
-      }
+  bool _moveUp() {
+    bool changed = false;
+    for (int c = 0; c < 4; c++) {
+       List<int> col = [];
+       for(int r=0; r<4; r++) if(_grid[r][c] != 0) col.add(_grid[r][c]);
+       
+       for(int i = 0; i < col.length - 1; i++){
+          if(col[i] == col[i+1]){
+             col[i] *= 2;
+             _score += col[i];
+             col.removeAt(i+1);
+          }
+       }
+       while(col.length < 4) col.add(0);
+       for(int r=0; r<4; r++){
+          if(_grid[r][c] != col[r]){
+             _grid[r][c] = col[r];
+             changed = true;
+          }
+       }
     }
+    return changed;
   }
 
-  bool _checkGameOver() {
-    // Check for zeros
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        if (grid[i][j] == 0) return false;
-      }
+  bool _moveDown() {
+    bool changed = false;
+     for (int c = 0; c < 4; c++) {
+       List<int> col = [];
+       for(int r=0; r<4; r++) if(_grid[r][c] != 0) col.add(_grid[r][c]);
+       
+       for(int i = col.length - 1; i > 0; i--){
+          if(col[i] == col[i-1]){
+             col[i] *= 2;
+             _score += col[i];
+             col.removeAt(i-1);
+             i--;
+          }
+       }
+       while(col.length < 4) col.insert(0, 0);
+       for(int r=0; r<4; r++){
+          if(_grid[r][c] != col[r]){
+             _grid[r][c] = col[r];
+             changed = true;
+          }
+       }
     }
-    
-    // Check for merges
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        if (j < 3 && grid[i][j] == grid[i][j+1]) return false; // Check right
-        if (i < 3 && grid[i][j] == grid[i+1][j]) return false; // Check down
+    return changed;
+  }
+
+  void _checkGameOver() {
+      // Check for empty spaces
+      for(int r=0; r<4; r++){
+         for(int c=0; c<4; c++){
+             if(_grid[r][c] == 0) return;
+         }
       }
-    }
-    
-    return true;
+      
+      // Check for horizontal merges remaining
+      for(int r=0; r<4; r++){
+         for(int c=0; c<3; c++){
+             if(_grid[r][c] == _grid[r][c+1]) return;
+         }
+      }
+
+      // Check for vertical merges remaining
+      for(int c=0; c<4; c++){
+         for(int r=0; r<3; r++){
+             if(_grid[r][c] == _grid[r+1][c]) return;
+         }
+      }
+      
+      _isGameOver = true;
+      _showResultDialog();
   }
   
-  Color _getTileColor(int value) {
-    switch (value) {
-      case 2: return const Color(0xFFEEE4DA);
-      case 4: return const Color(0xFFEDE0C8);
-      case 8: return const Color(0xFFF2B179);
-      case 16: return const Color(0xFFF59563);
-      case 32: return const Color(0xFFF67C5F);
-      case 64: return const Color(0xFFF65E3B);
-      case 128: return const Color(0xFFEDCF72);
-      case 256: return const Color(0xFFEDCC61);
-      case 512: return const Color(0xFFEDC850);
-      case 1024: return const Color(0xFFEDC53F);
-      case 2048: return const Color(0xFFEDC22E);
-      default: return const Color(0xFFCDC1B4);
-    }
+  void _showResultDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text("Game Over", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text(
+          "No more moves left.\n\nFinal Score: $_score",
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _initGame();
+            },
+            child: const Text("Play Again"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("Exit"),
+          ),
+        ],
+      ),
+    );
   }
 
-  Color _getTextColor(int value) {
-    return value <= 4 ? const Color(0xFF776E65) : Colors.white;
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("1. Objective: Slide identical tiles together to merge them and reach the 2048 tile.", style: GoogleFonts.poppins()),
+            const SizedBox(height: 8),
+            Text("2. Swipe Up, Down, Left, or Right to cleanly slide all tiles on the board.", style: GoogleFonts.poppins()),
+            const SizedBox(height: 8),
+            Text("3. Every time two tiles with the same number touch during a slide, they merge into one with double the value (2+2=4, 4+4=8, etc).", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: CustomAppBar(
-        title: "2048 Puzzle",
+        title: "2048",
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: _startNewGame,
-          )
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
         ],
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Scores
            Padding(
-             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
-             child: Row(
-               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-               children: [
-                 _buildScoreBoard("SCORE", score),
-                 _buildScoreBoard("BEST", highScore),
-               ],
-             ),
-           ),
-           
-           const SizedBox(height: 16),
-           
-           // Grid
-           GestureDetector(
-             onHorizontalDragEnd: (details) {
-               if (details.primaryVelocity! < 0) _onSwipeLeft();
-               else if (details.primaryVelocity! > 0) _onSwipeRight();
-             },
-             onVerticalDragEnd: (details) {
-               if (details.primaryVelocity! < 0) _onSwipeUp();
-               else if (details.primaryVelocity! > 0) _onSwipeDown();
-             },
-             child: Container(
-               width: MediaQuery.of(context).size.width * 0.9,
-               height: MediaQuery.of(context).size.width * 0.9,
-               padding: const EdgeInsets.all(12),
-               decoration: BoxDecoration(
-                 color: theme.colorScheme.primary.withOpacity(0.5),
-                 borderRadius: BorderRadius.circular(8),
-               ),
-               child: GridView.builder(
-                 physics: const NeverScrollableScrollPhysics(),
-                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                   crossAxisCount: 4,
-                   crossAxisSpacing: 8,
-                   mainAxisSpacing: 8,
-                 ),
-                 itemCount: 16,
-                 itemBuilder: (context, index) {
-                   int row = index ~/ 4;
-                   int col = index % 4;
-                   int value = grid[row][col];
-                   
-                   return AnimatedContainer(
-                     duration: const Duration(milliseconds: 200),
-                     decoration: BoxDecoration(
-                       color: _getTileColor(value),
-                       borderRadius: BorderRadius.circular(4),
-                     ),
-                     child: Center(
-                       child: value == 0 
-                         ? null 
-                         : Text(
-                             "$value",
-                             style: GoogleFonts.poppins(
-                               fontSize: value > 512 ? 24 : 32,
-                               fontWeight: FontWeight.bold,
-                               color: _getTextColor(value),
-                             ),
-                           ),
-                     ),
-                   );
-                 },
-               ),
-             ),
-           ),
-           
-           const SizedBox(height: 32),
-           
-           if (isGameOver)
-             Column(
-               children: [
-                 Text("Game Over!", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF776E65))),
-                 const SizedBox(height: 8),
-                 ElevatedButton(
-                   onPressed: _startNewGame, 
-                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8F7A66)),
-                   child: const Text("Try Again", style: TextStyle(color: Colors.white)),
-                 )
-               ],
-             ),
-             
-          if (isWon)
-             Column(
-               children: [
-                 Text("You Won!", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.orange)),
-               ],
-             ),
-             
-           const SizedBox(height: 24),
-           Text(
-             "Join the numbers and get to the 2048 tile!",
-             style: GoogleFonts.poppins(color: const Color(0xFF776E65)),
-           ),
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Score: $_score", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold)),
+                TextButton.icon(
+                   onPressed: _initGame, 
+                   icon: const Icon(Icons.refresh), 
+                   label: const Text("Restart")
+                ),
+              ],
+            ),
+          ),
+          
+          Expanded(
+             child: Center(
+                child: GestureDetector(
+                   onVerticalDragEnd: (details) {
+                      if (details.primaryVelocity! < 0) _handleSwipe(SwipeDirection.up);
+                      else if (details.primaryVelocity! > 0) _handleSwipe(SwipeDirection.down);
+                   },
+                   onHorizontalDragEnd: (details) {
+                      if (details.primaryVelocity! < 0) _handleSwipe(SwipeDirection.left);
+                      else if (details.primaryVelocity! > 0) _handleSwipe(SwipeDirection.right);
+                   },
+                   child: Container(
+                      margin: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                         color: Colors.brown.shade300,
+                         borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: AspectRatio(
+                         aspectRatio: 1,
+                         child: GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                               crossAxisCount: 4,
+                               crossAxisSpacing: 8,
+                               mainAxisSpacing: 8,
+                            ),
+                            itemCount: 16,
+                            itemBuilder: (context, index) {
+                               int r = index ~/ 4;
+                               int c = index % 4;
+                               int val = _grid[r][c];
+                               
+                               return Container(
+                                  decoration: BoxDecoration(
+                                     color: _getTileColor(val),
+                                     borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                     child: Text(
+                                        val == 0 ? "" : val.toString(),
+                                        style: GoogleFonts.poppins(
+                                           fontSize: val > 512 ? 24 : 32,
+                                           fontWeight: FontWeight.bold,
+                                           color: val <= 4 ? Colors.grey.shade800 : Colors.white,
+                                        ),
+                                     ),
+                                  ),
+                               );
+                            },
+                         ),
+                      ),
+                   )
+                ),
+             )
+          ),
+          Padding(
+             padding: const EdgeInsets.only(bottom: 32.0),
+             child: Text("Swipe to match tiles!", style: GoogleFonts.poppins(color: Colors.grey)),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildScoreBoard(String label, int score) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark ? Colors.grey[800] : theme.colorScheme.primary.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Column(
-        children: [
-          Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: theme.brightness == Brightness.dark ? Colors.grey[400] : const Color(0xFFEEE4DA))),
-          Text("$score", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-        ],
-      ),
-    );
+  Color _getTileColor(int value) {
+     switch (value) {
+        case 2: return Colors.orange.shade50;
+        case 4: return Colors.orange.shade100;
+        case 8: return Colors.orange.shade300;
+        case 16: return Colors.orange.shade500;
+        case 32: return Colors.red.shade400;
+        case 64: return Colors.red.shade600;
+        case 128: return Colors.yellow.shade600;
+        case 256: return Colors.yellow.shade700;
+        case 512: return Colors.yellow.shade800;
+        case 1024: return Colors.green.shade600;
+        case 2048: return Colors.green.shade800;
+        default: return Colors.brown.shade200; // 0 or empty background
+     }
   }
 }

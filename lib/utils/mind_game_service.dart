@@ -45,45 +45,19 @@ class MindGameService {
   }
 
   bool canPlay() {
-    return _dailyUsageSeconds < _maxDailySeconds;
+    return true; // Unlimited play
   }
 
   String getRemainingTime() {
-    int remaining = _maxDailySeconds - _dailyUsageSeconds;
-    if (remaining < 0) remaining = 0;
-    int mins = (remaining / 60).ceil();
-    return "$mins mins left";
+    return ""; // No remaining time to display
   }
 
   void startSession(BuildContext context) {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-       _dailyUsageSeconds++;
-       
-       // Save every minute to avoid heavy IO
-       if (_dailyUsageSeconds % 60 == 0) {
-         final prefs = await SharedPreferences.getInstance();
-         final userId = prefs.getString('userId') ?? "guest";
-         await prefs.setInt('mind_game_seconds_$userId', _dailyUsageSeconds);
-       }
-
-       // Checks
-       if (_dailyUsageSeconds >= _maxDailySeconds) {
-         _stopAndExit(context);
-       } else if (_dailyUsageSeconds > _warningThresholdSeconds) {
-         // Check if we just hit a 10 min marker relative to start (or just absolute markers)
-         // requirement: "after 30 min every 10 min" -> 30, 40, 50.
-         int excess = _dailyUsageSeconds;
-         if (excess == 1800 || excess == 2400 || excess == 3000) {
-            _showWarning(context, (60 - (excess/60).round()));
-         }
-       }
-    });
+    // Timer logic removed to allow unlimited play without tracking
   }
 
   void stopSession() {
-    _timer?.cancel();
-    _saveProgress();
+    // Logic removed
   }
 
   Future<void> _saveProgress() async {

@@ -122,6 +122,31 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
     }
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. A sequence of emojis will represent a common phrase or word.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Type your guess in the text box.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Use hints if you get stuck!", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. Score points for every correct decoding.", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _showWinDialog() {
     showDialog(
       context: context,
@@ -221,6 +246,10 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
         title: "Emoji Decoder",
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
           IconButton(
              icon: Badge(
                isLabelVisible: _hintsRemaining > 0, 

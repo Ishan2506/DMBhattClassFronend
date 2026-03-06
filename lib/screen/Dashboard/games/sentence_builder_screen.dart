@@ -111,6 +111,31 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
     });
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. You will see words from a sentence in a jumbled order.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Drag and drop the words to arrange them into a meaningful sentence.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Click 'Check Sentence' to verify your answer.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. Use the hint icon if you need help with the word order.", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _showWinDialog() {
     showDialog(
       context: context,
@@ -204,6 +229,10 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
         title: "Sentence Builder",
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
           IconButton(
             icon: const Icon(Icons.lightbulb, color: Colors.amber),
             onPressed: () {

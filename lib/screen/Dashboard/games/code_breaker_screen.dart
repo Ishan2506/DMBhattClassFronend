@@ -134,6 +134,33 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
       );
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. Guess the 4-digit secret code using the colors.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Each digit is between 1-6.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Red dot (Bull): Correct digit in the correct position.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. Empty circle (Cow): Correct digit but in the wrong position.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("5. You have 10 attempts to break the code!", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _showLoseDialog() {
        showDialog(
         context: context,
@@ -162,6 +189,10 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
         title: "Code Breaker", // Mastermind
         centerTitle: true,
         actions: [
+             IconButton(
+               icon: const Icon(Icons.info_outline, color: Colors.white),
+               onPressed: _showHowToPlay,
+             ),
              IconButton(
                icon: Badge(
                  label: Text("$_hintsRemaining"),

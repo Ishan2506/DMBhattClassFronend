@@ -166,6 +166,31 @@ class _MysteryBoxGameScreenState extends State<MysteryBoxGameScreen> {
      );
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. Select a subject and you will see a grid of 15 mystery boxes.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Tap a box to reveal a question.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Answer the question correctly to open the box and earn points.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. Try to open as many boxes as you can!", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
      final theme = Theme.of(context);
@@ -175,6 +200,10 @@ class _MysteryBoxGameScreenState extends State<MysteryBoxGameScreen> {
          title: "Knowledge Box",
          centerTitle: true,
          actions: [
+           IconButton(
+             icon: const Icon(Icons.info_outline, color: Colors.white),
+             onPressed: _showHowToPlay,
+           ),
            IconButton(
              icon: const Icon(Icons.refresh, color: Colors.white),
              onPressed: () {

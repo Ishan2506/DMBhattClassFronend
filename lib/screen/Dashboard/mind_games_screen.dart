@@ -11,7 +11,12 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/sentence_builder_screen.
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/grammar_guardian_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/word_bridge_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/emoji_decoder_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/math_riddles_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/number_series_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/magic_square_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/algebra_balancer_screen.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -50,30 +55,13 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
       );
       return;
     }
-    if (_gameService.canPlay()) {
-      Navigator.push(
-        context, 
-        MaterialPageRoute(builder: (context) => gameScreen)
-      ).then((_) {
-        // Refresh when they come back (to update remaining time display)
-        setState(() {});
-      });
-    } else {
-      final l10n = AppLocalizations.of(context)!;
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(l10n.dailyLimitReached),
-          content: Text(l10n.limitQuotaMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.ok),
-            )
-          ],
-        ),
-      );
-    }
+    Navigator.push(
+      context, 
+      MaterialPageRoute(builder: (context) => gameScreen)
+    ).then((_) {
+      // Refresh when they come back
+      setState(() {});
+    });
   }
 
   @override
@@ -84,30 +72,6 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
       appBar: CustomAppBar(
         title: AppLocalizations.of(context)!.mindGames,
         centerTitle: true,
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(12)
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.timer, size: 16, color: Colors.white),
-                    const SizedBox(width: 4),
-                    Text(
-                      _gameService.getRemainingTime(),
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        ],
       ),
       body: Stack(
         children: [
@@ -204,6 +168,42 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                   icon: Icons.emoji_objects_outlined,
                   color: Colors.amber.shade800,
                   onTap: () => _handleGameTap(const EmojiDecoderScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.mathRiddles,
+                  description: l10n.mathRiddlesDesc,
+                  icon: Icons.psychology_alt_rounded,
+                  color: Colors.teal,
+                  onTap: () => _handleGameTap(const MathRiddlesScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.numberSeries,
+                  description: l10n.numberSeriesDesc,
+                  icon: Icons.linear_scale_rounded,
+                  color: Colors.green,
+                  onTap: () => _handleGameTap(const NumberSeriesScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.magicSquare,
+                  description: l10n.magicSquareDesc,
+                  icon: Icons.grid_3x3_rounded,
+                  color: Colors.amber.shade600,
+                  onTap: () => _handleGameTap(const MagicSquareScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.algebraBalancer,
+                  description: l10n.algebraBalancerDesc,
+                  icon: Icons.balance_rounded,
+                  color: Colors.blue.shade600,
+                  onTap: () => _handleGameTap(const AlgebraBalancerScreen()),
                 ),
                 const SizedBox(height: 32),
               ],

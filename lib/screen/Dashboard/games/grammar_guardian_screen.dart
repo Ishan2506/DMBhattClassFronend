@@ -88,6 +88,31 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
     });
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. Read the sentence with a grammatical error or blank.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Select the correct grammatical option from the choices.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Each correct answer increases your score.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. Complete the quiz to see your final score!", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _showGameOver() {
     showDialog(
       context: context,
@@ -159,6 +184,12 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
       appBar: CustomAppBar(
         title: "Grammar Guardian",
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),

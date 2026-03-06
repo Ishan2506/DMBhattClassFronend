@@ -128,6 +128,31 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
     }
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text("1. You will see an analogy: A is to B as C is to ?", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("2. Understand the relationship between the first pair of words.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("3. Choose the option that completes the second pair with the same relationship.", style: GoogleFonts.poppins()),
+             const SizedBox(height: 8),
+             Text("4. Build the bridge by connecting all the concepts!", style: GoogleFonts.poppins()),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
+        ],
+      ),
+    );
+  }
+
   void _showWinDialog() {
     showDialog(
       context: context,
@@ -178,6 +203,10 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
         title: "Word Bridge",
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.only(right: 16), 
