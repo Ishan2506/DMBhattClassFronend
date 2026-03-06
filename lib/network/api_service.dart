@@ -11,8 +11,8 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 
 class ApiService {
-   static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
-   //static const String baseUrl = "http://localhost:5000/api";
+   //static const String baseUrl = "https://dmbhatt-api.onrender.com/api";
+   static const String baseUrl = "http://localhost:5000/api"; // 10.0.2.2 for Android Emulator, use localhost for others
   static const String guestToken = "DMBHATT_GUEST_ACCESS_TOKEN_2024";
   static String? _authToken;
   static bool _isGuest = false;
@@ -86,7 +86,11 @@ class ApiService {
     try {
       final decoded = jsonDecode(body);
       if (decoded is Map) {
-        return decoded['message'] ?? decoded['error'] ?? body;
+        final err = decoded['error'];
+        final msg = decoded['message'];
+        if (err is String && err.isNotEmpty) return err;
+        if (msg is String && msg.isNotEmpty) return msg;
+        return body;
       }
       return body;
     } catch (_) {

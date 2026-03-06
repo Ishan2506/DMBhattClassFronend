@@ -151,17 +151,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final response = await ApiService.updateProfile(data, imageFile: _imageFile);
 
-      if (response.statusCode == 200) {
-        CustomToast.showSuccess(context, 'Profile Updated Successfully');
-        Navigator.pop(context, true); // Pass true to indicate update happened
-      } else {
-        CustomToast.showError(context, "Update Failed: ${ApiService.getErrorMessage(response.body)}");
-      }
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body);
+          
+          // Sync SharedPreferences with new values immediately
+          final prefs = await SharedPreferences.getInstance();
+          final updatedUser = responseData['user'];
+          if (updatedUser != null) {
+              final fullName = "${updatedUser['firstName'] ?? ''} ${updatedUser['middleName'] ?? ''} ${updatedUser['lastName'] ?? ''}".trim();
+              await prefs.setString('userName', fullName);
+              if (updatedUser['phoneNum'] != null) await prefs.setString('userPhone', updatedUser['phoneNum']);
+              if (updatedUser['photoPath'] != null) await prefs.setString('userPic', updatedUser['photoPath']);
+          }
+          
+          final updatedProfile = responseData['profile'];
+          if (updatedProfile != null) {
+            if (updatedProfile['std'] != null) await prefs.setString('std', updatedProfile['std'].toString());
+            if (updatedProfile['medium'] != null) await prefs.setString('medium', updatedProfile['medium'].toString());
+            if (updatedProfile['board'] != null) await prefs.setString('board', updatedProfile['board'].toString());
+            if (updatedProfile['stream'] != null) await prefs.setString('stream', updatedProfile['stream'].toString());
+          }
+
+          if (!mounted) return;
+          CustomLoader.hide(context); // Hide loader before popping
+          CustomToast.showSuccess(context, "Profile updated successfully!");
+          debugPrint("Popping with data: $responseData");
+          Navigator.pop(context, responseData); // Return the full data to StudentProfileScreen
+        } else {
+          CustomLoader.hide(context); // Hide loader on failure too
+          CustomToast.showError(context, "Update Failed: ${ApiService.getErrorMessage(response.body)}");
+        }
     } catch (e) {
-      CustomToast.showError(context, "Error: $e");
-    } finally {
       if (mounted) {
         CustomLoader.hide(context);
+        CustomToast.showError(context, "Error: $e");
       }
     }
   }

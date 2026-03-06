@@ -213,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               (route) => false,
                             );
                         } else {
-                           CustomToast.showError(context, "Login Failed: ${response.body}");
+                           CustomToast.showError(context, "Login Failed: ${ApiService.getErrorMessage(response.body)}");
                         }
                     } catch (e) {
                       if (mounted) {

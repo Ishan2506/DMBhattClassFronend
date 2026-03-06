@@ -207,7 +207,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         );
 
       } else {
-         CustomToast.showError(context, "Failed to create order: ${orderResponse.body}");
+         CustomToast.showError(context, "Failed to create order: ${ApiService.getErrorMessage(orderResponse.body)}");
       }
     } catch (e) {
        if (mounted) {

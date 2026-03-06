@@ -560,7 +560,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                         );
                       } else {
                         final l10n = AppLocalizations.of(context)!;
-                        CustomToast.showError(context, l10n.registrationFailed + response.body);
+                        CustomToast.showError(context, "${l10n.registrationFailed}: ${ApiService.getErrorMessage(response.body)}");
                       }
                     } catch (e) {
                       if (mounted) {

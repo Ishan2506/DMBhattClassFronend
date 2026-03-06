@@ -183,7 +183,7 @@ Future<void> registerUser({
     } else {
       // If still failing, the response body will now show the actual Node.js error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error ${response.statusCode}: ${response.body}")),
+        SnackBar(content: Text("Error ${response.statusCode}: ${ApiService.getErrorMessage(response.body)}")),
       );
     }
   } catch (e) {

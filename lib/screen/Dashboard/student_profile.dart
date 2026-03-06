@@ -502,12 +502,35 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                 MaterialPageRoute(builder: (context) => const EditProfileScreen()),
                               );
                               debugPrint("Returned from edit screen: $result");
-                               if (result == true) {
-                                if (!mounted) return;
-                                // Delay to allow backend propagation + force refresh to bypass cache
-                                await Future.delayed(const Duration(seconds: 1));
-                                if (!mounted) return;
-                                await _fetchProfile(forceRefresh: true);
+                              
+                              if (result != null) {
+                                debugPrint("Profile updated! Result: $result");
+                                // Immediate UI update from result to wow the user
+                                if (result is Map<String, dynamic>) {
+                                  final user = result['user'];
+                                  final profile = result['profile'];
+                                  if (user != null || profile != null) {
+                                    setState(() {
+                                      if (user != null) {
+                                        studentName = "${user['firstName'] ?? ''} ${user['middleName'] ?? ''} ${user['lastName'] ?? ''}".trim();
+                                        mobileNo = user['phoneNum'] ?? "";
+                                        _photoPath = user['photoPath'];
+                                        profilePic = user['photoPath'] ?? "";
+                                      }
+                                      if (profile != null) {
+                                        studentStandard = "${profile['std'] ?? 'N/A'}${l10n.th} - ${profile['medium'] ?? ''}";
+                                        schoolName = profile['school'] ?? (profile['schoolName'] ?? 'N/A');
+                                        parentMobile = profile['parentPhone'] ?? (profile['parentNo'] ?? (user?['parentPhone'] ?? ""));
+                                      }
+                                    });
+                                    debugPrint("Updated local state for: $studentName");
+                                  }
+                                }
+                                
+                                // And then do the full re-fetch in background to ensure total sync
+                                if (mounted) {
+                                  _fetchProfile(forceRefresh: true);
+                                }
                               }
                             },
                             child: Container(
