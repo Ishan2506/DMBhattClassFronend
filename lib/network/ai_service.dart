@@ -143,19 +143,21 @@ class TuitionAIService {
   }) async {
     final channelId = await _getChannelId();
 
+    final streamText = stream != null ? "$stream " : "";
+
     // 1. Specific Search (Best Match)
     var videos = await _searchYouTubeVideo(
-        "$standard $subject $chapter lecture explanation", channelId);
+        "$standard $streamText$subject $chapter lecture explanation", channelId);
     if (videos.isNotEmpty) return videos;
 
     // 2. Broader Search (Standard + Subject + Chapter)
     videos = await _searchYouTubeVideo(
-        "$standard $subject $chapter", channelId);
+        "$standard $streamText$subject $chapter", channelId);
     if (videos.isNotEmpty) return videos;
 
     // 3. Fallback Search (Subject + Chapter only) - As requested
     videos = await _searchYouTubeVideo(
-        "$subject $chapter", channelId);
+        "$streamText$subject $chapter", channelId);
     if (videos.isNotEmpty) return videos;
 
     // 4. Last Resort (Chapter only)

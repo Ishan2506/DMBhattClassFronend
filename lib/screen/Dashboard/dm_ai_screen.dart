@@ -7,7 +7,6 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 
 
@@ -32,9 +31,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
   String? _subject;
   String? _chapter;
   
-  String? _savedStandard;
-  String? _savedStream;
-
+  
   bool _loading = false;
   String? _studentName;
 
@@ -91,6 +88,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
   void _resetQuery() {
     setState(() {
       _standard = null;
+      _stream = null;
       _subject = null;
       _chapter = null;
       _loading = false;
@@ -217,7 +215,6 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
             'English',
             'Biology',
             'Computer',
-            'Physical Education'
           ]);
         } else {
           _addBot("Select your Commerce subject", options: [
@@ -225,7 +222,8 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
             'BA',
             'Eco',
             'English',
-            'State'
+            'State',
+            'Computer'
           ]);
         }
       } else {
@@ -240,9 +238,9 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
         List<String> options = [];
         if (stdNum != null && stdNum >= 11) {
           if (_stream?.toLowerCase() == 'science') {
-            options = ['Physics', 'Chemistry', 'Mathematics', 'English', 'Biology', 'Computer', 'Physical Education'];
+            options = ['Physics', 'Chemistry', 'Mathematics', 'English', 'Biology', 'Computer'];
           } else {
-            options = ['Account', 'BA', 'Eco', 'English', 'State'];
+            options = ['Account', 'BA', 'Eco', 'English', 'State', 'Computer'];
           }
         } else {
           options = ['Maths', 'Science', 'English', 'Social Science', 'Gujarati'];
@@ -276,6 +274,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
         standard: _standard!,
         subject: _subject!,
         chapter: _chapter!,
+        stream: _stream,
       );
 
       if (videos.isNotEmpty) {
