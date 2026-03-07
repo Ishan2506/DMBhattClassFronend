@@ -436,7 +436,68 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       ),
       body: _isLoading 
           ? const Center(child: CustomLoader())
-          : SingleChildScrollView(
+          : ApiService.isGuest 
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.account_circle_outlined, size: 80, color: theme.colorScheme.primary),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          "Welcome, Guest!",
+                          style: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Login or sign up to access your full profile and track your learning progress.",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                                (route) => false,
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 4,
+                            ),
+                            child: Text(
+                              "Login or Signup",
+                              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
         child: Column(
           children: [
             // 1. Premium Header Section
@@ -489,14 +550,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () async {
-                              if (ApiService.isGuest) {
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                                  (route) => false,
-                                );
-                                return;
-                              }
                               final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const EditProfileScreen()),

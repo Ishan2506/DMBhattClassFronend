@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -57,6 +60,7 @@ class MindGamesScreen extends StatefulWidget {
 class _MindGamesScreenState extends State<MindGamesScreen> {
   final MindGameService _gameService = MindGameService();
   bool _isGuest = false;
+  bool _isPaid = false;
   bool _isLoading = true;
 
   @override
@@ -69,17 +73,46 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
     setState(() => _isLoading = true);
     await _gameService.init();
     _isGuest = await GuestUtils.isGuest();
+    
+    if (!_isGuest) {
+      try {
+        final profileResponse = await ApiService.getProfile();
+        if (profileResponse.statusCode == 200) {
+          final profileData = jsonDecode(profileResponse.body);
+          _isPaid = profileData['user']['isPaid'] ?? false;
+        }
+      } catch (e) {
+        debugPrint('Error fetching profile for MindGames: $e');
+      }
+    }
+
     if (mounted) setState(() => _isLoading = false); // Refresh UI
   }
 
   void _handleGameTap(Widget gameScreen, {bool isFree = false}) {
-    if (_isGuest && !isFree) {
+    if (isFree) {
+       Navigator.push(
+        context, 
+        MaterialPageRoute(builder: (context) => gameScreen)
+      ).then((_) {
+        setState(() {});
+      });
+      return;
+    }
+
+    if (_isGuest) {
       GuestUtils.showGuestRestrictionDialog(
         context,
         message: "Only one game is accessible in guest mode. Register to unlock all games!"
       );
       return;
     }
+
+    if (!_isPaid) {
+      _showUpgradeDialog();
+      return;
+    }
+
     Navigator.push(
       context, 
       MaterialPageRoute(builder: (context) => gameScreen)
@@ -87,6 +120,44 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
       // Refresh when they come back
       setState(() {});
     });
+  }
+
+  void _showUpgradeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          "Premium Feature",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "Unlocking all educational games requires a premium plan. Upgrade now to enjoy unlimited access!",
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Later", style: GoogleFonts.poppins(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text("Upgrade Now", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -393,7 +464,7 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
     bool isFree = false,
   }) {
     final theme = Theme.of(context);
-    final isLocked = _isGuest && !isFree;
+    final isLocked = (_isGuest || !_isPaid) && !isFree;
     final isDark = theme.brightness == Brightness.dark;
     
     return InkWell(

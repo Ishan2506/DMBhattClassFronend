@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart' as api;
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
@@ -63,23 +64,33 @@ class MoreScreen extends StatelessWidget {
             
             Row(
               children: [
-                Expanded(
-                  child: _FeatureGridItem(
-                    title: l10n.studentActivities,
-                    icon: Icons.school_rounded,
-                    color: Colors.blue,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const _StudentActivitiesScreen())),
+                if (!api.ApiService.isGuest) ...[
+                  Expanded(
+                    child: _FeatureGridItem(
+                      title: l10n.studentActivities,
+                      icon: Icons.school_rounded,
+                      color: Colors.blue,
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const _StudentActivitiesScreen())),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
+                  const SizedBox(width: 16),
+                ],
                 Expanded(
                   child: _FeatureGridItem(
                     title: l10n.appInformation,
                     icon: Icons.info_rounded,
                     color: Colors.orange,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const _AppInfoScreen())),
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const _AppInfoScreen())),
                   ),
                 ),
+                if (api.ApiService.isGuest) const Spacer(),
               ],
             ),
 
@@ -362,30 +373,32 @@ class _AppInfoScreen extends StatelessWidget {
                 );
               },
             ),
-            _MoreScreenItem(
-              title: l10n.upgradePlan,
-              value: "",
-              icon: Icons.upgrade_rounded,
-               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const UpgradePlanScreen()), // Navigate to Upgrade Plan
-                );
-              },
-            ),
-            _MoreScreenItem(
-              title: l10n.referAndEarn,
-              value: "",
-              icon: Icons.diversity_3,
-              onTap: () {
-                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ReferAndEarnScreen()),
-                );
-              },
-            ),
+            if (!api.ApiService.isGuest) ...[
+              _MoreScreenItem(
+                title: l10n.upgradePlan,
+                value: "",
+                icon: Icons.upgrade_rounded,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const UpgradePlanScreen()),
+                  );
+                },
+              ),
+              _MoreScreenItem(
+                title: l10n.referAndEarn,
+                value: "",
+                icon: Icons.diversity_3,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ReferAndEarnScreen()),
+                  );
+                },
+              ),
+            ],
           
             _MoreScreenItem(
               title: l10n.shareApp,

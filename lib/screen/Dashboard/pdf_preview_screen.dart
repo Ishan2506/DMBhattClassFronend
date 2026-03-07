@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -27,32 +26,11 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   bool _isLoading = true;
   Uint8List? _pdfBytes;
 
-  // Timer logic
-  Timer? _countdownTimer;
-  int _secondsRemaining = 30;
-  bool _isTimeUp = false;
-
   @override
   void initState() {
     super.initState();
     _loadPdfInfo();
-    _startTimer();
     _markPreviewAsUsed(); // Mark as used immediately when entering
-  }
-
-  void _startTimer() {
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          if (_secondsRemaining > 0) {
-            _secondsRemaining--;
-          } else {
-            _isTimeUp = true;
-            _countdownTimer?.cancel();
-          }
-        });
-      }
-    });
   }
 
   Future<void> _markPreviewAsUsed() async {
@@ -115,7 +93,6 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
   @override
   void dispose() {
-    _countdownTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -165,37 +142,6 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                       fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Countdown Timer Chip
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _secondsRemaining <= 10 ? Colors.red.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: _secondsRemaining <= 10 ? Colors.red.withOpacity(0.5) : theme.colorScheme.primary.withOpacity(0.5),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.timer_outlined,
-                        size: 16,
-                        color: _secondsRemaining <= 10 ? Colors.red : theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${_secondsRemaining}s',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: _secondsRemaining <= 10 ? Colors.red : theme.colorScheme.primary,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -381,94 +327,6 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
             ),
           ),
 
-          // Locked overlay for when time is up
-          if (_isTimeUp)
-            Container(
-              color: Colors.black.withOpacity(0.85),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.timer_off_outlined,
-                            size: 80,
-                            color: Colors.redAccent,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        Text(
-                          "Preview Time's Up!",
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "To continue reading, please purchase the full material.",
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 48),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                             // Assuming we can deep link back or trigger purchase from here
-                             // For now, pop is safest as it returns to detail page which has purchase
-                             Navigator.pop(context);
-                          },
-                          icon: const Icon(Icons.shopping_cart_checkout),
-                          label: Text(
-                            'Purchase to Unlock',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 20,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 8,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            'Go Back',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white60,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
           // Navigation controls
           Container(

@@ -4,6 +4,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/model/mind_map_model.dart';
@@ -20,6 +21,7 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
   List<MindMapModel> _allMindMaps = [];
   bool _isLoading = true;
   bool _isGuest = false;
+  bool _isPaid = false;
 
   String? _selectedSubject;
   String? _selectedUnit;
@@ -32,12 +34,23 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
   @override
   void initState() {
     super.initState();
-    _checkGuest();
+    _checkUserStatus();
     _fetchMindMaps();
   }
 
-  Future<void> _checkGuest() async {
+  Future<void> _checkUserStatus() async {
     _isGuest = await GuestUtils.isGuest();
+    if (!_isGuest) {
+      try {
+        final profileResponse = await ApiService.getProfile();
+        if (profileResponse.statusCode == 200) {
+          final profileData = jsonDecode(profileResponse.body);
+          _isPaid = profileData['user']['isPaid'] ?? false;
+        }
+      } catch (e) {
+        debugPrint('Error fetching profile for MindMapSelection: $e');
+      }
+    }
     if (mounted) setState(() {});
   }
 
@@ -49,11 +62,7 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
           final List<MindMapModel> allMaps = data.map((e) => MindMapModel.fromJson(e)).toList();
-          if (_isGuest && allMaps.length > 2) {
-            _allMindMaps = allMaps.sublist(0, 2);
-          } else {
-            _allMindMaps = allMaps;
-          }
+          _allMindMaps = allMaps;
           _subjects = _allMindMaps.map((e) => e.subject).toSet().toList();
           _isLoading = false;
         });
@@ -197,6 +206,10 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
                                 GuestUtils.showGuestRestrictionDialog(context, message: "Register as a student to view full mind maps!");
                                 return;
                               }
+                              if (!_isPaid) {
+                                _showUpgradeDialog();
+                                return;
+                              }
                               final mindMap = _allMindMaps.firstWhere(
                                 (e) => e.subject == _selectedSubject && e.unit == _selectedUnit && e.title == _selectedTitle,
                               );
@@ -225,6 +238,43 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  void _showUpgradeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          "Premium Feature",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          "Mind Maps are available exclusively for premium members. Upgrade your plan to access all mind maps!",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Later", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("Upgrade Now", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 }

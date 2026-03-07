@@ -6,6 +6,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
 import 'package:flutter/material.dart';
@@ -74,8 +75,6 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
             _allTests = data;
             // Extract unique subjects
             _subjects = _allTests.map((e) => e['subject'].toString()).toSet().toList();
-            _isPaid = profileData['user']?['isPaid'] ?? false;
-            _fiveMinTestCount = profileData['examCounts']?['fiveMinTest'] ?? 0;
             _isLoading = false;
           });
 
@@ -253,7 +252,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                   child: ElevatedButton(
                     onPressed: _selectedTest != null 
                         ? () async {
-                            if (!await GuestUtils.canGuestAccessExam(context)) return;
+                            if (!await GuestUtils.canGuestAccessExam(context, 'FIVEMIN')) return;
                             
                             if (!_isPaid && _fiveMinTestCount >= 1) {
                               if (mounted) {
@@ -755,14 +754,22 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
         if (finalTitle.trim().isEmpty) finalTitle = widget.unit;
         if (finalTitle.trim().isEmpty) finalTitle = 'Untitled Test';
 
-        await ApiService.submitFiveMinTestResult(
-          examId: widget.testData['_id'].toString(),
-          title: finalTitle,
-          obtainedMarks: correct,
-          totalMarks: _questions.length,
-          isOnline: true,
-          type: 'QUIZ',
-        );
+        bool isGuest = await GuestUtils.isGuest();
+        if (!isGuest) {
+          await ApiService.submitFiveMinTestResult(
+            examId: widget.testData['_id'].toString(),
+            title: finalTitle,
+            obtainedMarks: correct,
+            totalMarks: _questions.length,
+            isOnline: true,
+            type: 'QUIZ',
+          );
+        }
+
+        // Increment local guest counter if applicable
+        if (isGuest) {
+          await GuestUtils.incrementGuestExamCount('FIVEMIN');
+        }
       } catch (e) {
         debugPrint("Error submitting 5 min result: $e");
       }

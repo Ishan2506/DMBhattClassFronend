@@ -10,6 +10,7 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_payment_confirmation_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
@@ -119,6 +120,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   }
 
   Future<void> _initiatePurchase() async {
+    if (!await GuestUtils.canGuestPurchase(context)) return;
     setState(() => _isProcessing = true);
     try {
       final orderResponse = await ApiService.createProductOrder(

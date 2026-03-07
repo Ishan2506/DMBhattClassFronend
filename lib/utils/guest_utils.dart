@@ -6,36 +6,94 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class GuestUtils {
-  static const int maxGuestExams = 3;
-  static const String guestExamCountKey = 'guest_exam_count';
+  static const int maxGuestExams = 1;
+  static const String keyMainExam = 'guest_main_exam_count';
+  static const String keyFiveMinTest = 'guest_five_min_test_count';
+  static const String keyOneLinerExam = 'guest_one_liner_exam_count';
 
   static Future<bool> isGuest() async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // If we have an auth token, we are definitively NOT a guest
+    final token = prefs.getString('auth_token');
+    if (token != null && token.isNotEmpty) return false;
+
+    final isGuestMode = prefs.getBool('is_guest_mode') ?? false;
     final role = prefs.getString('user_role');
-    return role == 'guest';
+    return isGuestMode || role == 'guest';
   }
 
-  static Future<int> getGuestExamCount() async {
+  static Future<int> getGuestExamCount(String type) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(guestExamCountKey) ?? 0;
+    String key = _getKeyForType(type);
+    return prefs.getInt(key) ?? 0;
   }
 
-  static Future<void> incrementGuestExamCount() async {
+  static Future<void> incrementGuestExamCount(String type) async {
     final prefs = await SharedPreferences.getInstance();
-    final currentCount = await getGuestExamCount();
-    await prefs.setInt(guestExamCountKey, currentCount + 1);
+    String key = _getKeyForType(type);
+    final currentCount = await getGuestExamCount(type);
+    await prefs.setInt(key, currentCount + 1);
   }
 
-  static Future<bool> canGuestAccessExam(BuildContext context) async {
+  static String _getKeyForType(String type) {
+    switch (type.toUpperCase()) {
+      case 'REGULAR':
+      case 'MAIN':
+        return keyMainExam;
+      case 'QUIZ':
+      case 'FIVEMIN':
+        return keyFiveMinTest;
+      case 'ONELINER':
+        return keyOneLinerExam;
+      default:
+        return 'guest_other_count';
+    }
+  }
+
+  static Future<bool> canGuestAccessExam(BuildContext context, String type) async {
+    if (!await isGuest()) return true;
+
+    final count = await getGuestExamCount(type);
+    if (count < maxGuestExams) {
+      return true; // Allow first attempt for this type
+    }
+
+    if (context.mounted) {
+      String typeLabel = _getTypeLabel(type);
+      showGuestRestrictionDialog(
+        context,
+        message: "You have already used your 1 free $typeLabel attempt. Please login or register to continue for unlimited access.",
+      );
+    }
+    return false;
+  }
+
+  static Future<bool> canGuestPurchase(BuildContext context) async {
     if (!await isGuest()) return true;
 
     if (context.mounted) {
       showGuestRestrictionDialog(
         context,
-        message: "Please login or register first to give an exam.",
+        message: "Purchasing materials is only available for registered students. Please login or register to continue.",
       );
     }
     return false;
+  }
+
+  static String _getTypeLabel(String type) {
+    switch (type.toUpperCase()) {
+      case 'REGULAR':
+      case 'MAIN':
+        return "Main Exam";
+      case 'QUIZ':
+      case 'FIVEMIN':
+        return "5-Min Rapid Test";
+      case 'ONELINER':
+        return "One-Liner Exam";
+      default:
+        return "exam";
+    }
   }
 
   static void showGuestRestrictionDialog(BuildContext context, {String? message}) {

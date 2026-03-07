@@ -238,7 +238,7 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
       return;
     }
 
-    if (!await GuestUtils.canGuestAccessExam(context)) return;
+    if (!await GuestUtils.canGuestAccessExam(context, 'ONELINER')) return;
     
     if (!_isPaid && _oneLinerCount >= 1) {
       if (mounted) {

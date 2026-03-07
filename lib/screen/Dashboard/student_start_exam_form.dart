@@ -384,7 +384,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                       onPressed: _selectedExamId == null
                           ? null
                           : () async {
-                              if (!await GuestUtils.canGuestAccessExam(context)) return;
+                              if (!await GuestUtils.canGuestAccessExam(context, 'REGULAR')) return;
                               
                               if (!_isPaid && _mainExamCount >= 1) {
                                 if (context.mounted) {

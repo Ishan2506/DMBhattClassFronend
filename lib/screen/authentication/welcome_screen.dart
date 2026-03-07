@@ -2,7 +2,7 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
-import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/guest_selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -150,20 +150,9 @@ class WelcomeScreen extends StatelessWidget {
   }
 
   Future<void> _handleSkip(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await ApiService.setGuestMode(true);
-    
-    // Set default guest preferences
-    await prefs.setString('std', '10');
-    await prefs.setString('medium', 'English');
-    await prefs.setString('board', 'GSEB');
-    await prefs.setString('stream', 'None');
-
-    if (!context.mounted) return;
-    Navigator.pushAndRemoveUntil(
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const LandingScreen()),
-      (route) => false,
+      MaterialPageRoute(builder: (context) => const GuestSelectionScreen()),
     );
   }
 }

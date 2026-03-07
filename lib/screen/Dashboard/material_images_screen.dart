@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -7,6 +8,7 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MaterialImagesScreen extends StatefulWidget {
@@ -61,18 +63,32 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
   bool _hasSearched = false;
   List<dynamic> _images = [];
   bool _isGuest = false;
+  bool _isPaid = false;
 
   @override
   void initState() {
     super.initState();
-    _checkGuest();
+    _checkUserStatus();
   }
 
-  Future<void> _checkGuest() async {
+  Future<void> _checkUserStatus() async {
     _isGuest = await GuestUtils.isGuest();
     final prefs = await SharedPreferences.getInstance();
     _std = prefs.getString('std');
     _stream = prefs.getString('stream');
+    
+    if (!_isGuest) {
+      try {
+        final profileResponse = await ApiService.getProfile();
+        if (profileResponse.statusCode == 200) {
+          final profileData = jsonDecode(profileResponse.body);
+          _isPaid = profileData['user']['isPaid'] ?? false;
+        }
+      } catch (e) {
+        debugPrint('Error fetching profile for MaterialImages: $e');
+      }
+    }
+    
     if (mounted) setState(() {});
   }
 
@@ -204,12 +220,22 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  imageData['file'],
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),
-                ),
+                child: (_isGuest || !_isPaid) 
+                  ? ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Image.network(
+                        imageData['file'],
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),
+                      ),
+                    )
+                  : Image.network(
+                      imageData['file'],
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),
+                    ),
               ),
             ),
             Padding(
@@ -231,6 +257,10 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
     if (_isGuest) {
        GuestUtils.showGuestRestrictionDialog(context, message: "Register to view images!");
        return;
+    }
+    if (!_isPaid) {
+      _showUpgradeDialog();
+      return;
     }
     showDialog(
       context: context,
@@ -288,5 +318,42 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showUpgradeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          "Premium Feature",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          "This image is available exclusively for premium members. Upgrade your plan to unlock all materials!",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Later", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("Upgrade Now", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 }

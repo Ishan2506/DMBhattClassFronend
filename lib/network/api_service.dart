@@ -31,15 +31,19 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     if (guest) {
       await prefs.setString('user_role', 'guest');
+      await prefs.setBool('is_guest_mode', true);
     } else {
       await prefs.remove('user_role');
+      await prefs.remove('is_guest_mode');
     }
   }
 
   static Future<void> setAuthToken(String token) async {
     _authToken = token;
+    _isGuest = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
+    await prefs.remove('is_guest_mode');
   }
 
   static Future<void> clearAuthToken() async {
@@ -48,6 +52,7 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_role');
+    await prefs.remove('is_guest_mode');
     await prefs.remove('skipped_payment_prompt');
   }
 
@@ -304,7 +309,10 @@ class ApiService {
     final stream = prefs.getString('stream');
     
     final params = <String, String>{};
-    if (std != null && std.isNotEmpty) params['std'] = std;
+    if (std != null && std.isNotEmpty) {
+      params['std'] = std;
+      params['standard'] = std; // Backend uses 'standard' for material filtering
+    }
     if (medium != null && medium.isNotEmpty) params['medium'] = medium;
     if (board != null && board.isNotEmpty) params['board'] = board;
     if (stream != null && stream.isNotEmpty && stream != "None" && stream != "-") params['stream'] = stream;

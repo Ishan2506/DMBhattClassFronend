@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -162,17 +164,26 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
 
     Future<void> submitAndNavigate() async {
       try {
-        CustomLoader.show(context);
-        // Token managed internally
-        final response = await ApiService.submitExamResult(
-          examId: widget.examId,
-          title: widget.title,
-          obtainedMarks: correct,
-          totalMarks: _questions.length,
-          type: 'REGULAR',
-        );
+        bool isGuest = await GuestUtils.isGuest();
+        http.Response? response;
+        if (!isGuest) {
+          CustomLoader.show(context);
+          // Token managed internally
+          response = await ApiService.submitExamResult(
+            examId: widget.examId,
+            title: widget.title,
+            obtainedMarks: correct,
+            totalMarks: _questions.length,
+            type: 'REGULAR',
+          );
+        }
+
+        // Increment local guest counter if applicable
+        if (isGuest) {
+          await GuestUtils.incrementGuestExamCount('REGULAR');
+        }
         
-        if (response.statusCode != 201) {
+        if (response != null && response.statusCode != 201) {
              debugPrint("Submit failed: ${response.body}");
              if (mounted) {
                // Show toast or some feedback if it failed
@@ -186,7 +197,9 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
       }
 
       if (mounted) {
-        CustomLoader.hide(context);
+        if (!await GuestUtils.isGuest()) {
+          CustomLoader.hide(context);
+        }
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(

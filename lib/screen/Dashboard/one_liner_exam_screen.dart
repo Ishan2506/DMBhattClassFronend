@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/utils/matching_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -197,15 +198,23 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
 
     // Sync to backend (Fire and forget or wait? Better wait for better UX)
     try {
-      if (context.mounted) CustomLoader.show(context);
-      await ApiService.submitOneLinerExamResult(
-        examId: widget.examId,
-        title: widget.title,
-        obtainedMarks: score,
-        totalMarks: _questions.length,
-        accuracy: avgAccuracy,
-        type: 'ONELINER',
-      );
+      bool isGuest = await GuestUtils.isGuest();
+      if (!isGuest) {
+        if (context.mounted) CustomLoader.show(context);
+        await ApiService.submitOneLinerExamResult(
+          examId: widget.examId,
+          title: widget.title,
+          obtainedMarks: score,
+          totalMarks: _questions.length,
+          accuracy: avgAccuracy,
+          type: 'ONELINER',
+        );
+      }
+
+      // Increment local guest counter if applicable
+      if (isGuest) {
+        await GuestUtils.incrementGuestExamCount('ONELINER');
+      }
     } catch (e) {
       debugPrint("Error syncing one-liner result: $e");
     } finally {

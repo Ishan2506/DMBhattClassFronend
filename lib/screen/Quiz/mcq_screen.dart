@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/utils/app_theme.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
@@ -151,36 +152,50 @@ class _McqScreenState extends State<McqScreen> {
     });
 
     try {
-         // Token managed internally
-         final response = await ApiService.submitExamResult(
-           examId: "mcq_general", // Dummy ID for general quizzes
-           title: "MCQ Quiz", // Or dynamic title
-           obtainedMarks: score,
-           totalMarks: _totalQuestions, // Assuming 1 mark per question
-           isOnline: true,
-         );
+         bool isGuest = await GuestUtils.isGuest();
+         int earnedPoints = 0;
+         
+         if (!isGuest) {
+           // Token managed internally
+           final response = await ApiService.submitExamResult(
+             examId: "mcq_general", // Dummy ID for general quizzes
+             title: "MCQ Quiz", // Or dynamic title
+             obtainedMarks: score,
+             totalMarks: _totalQuestions, // Assuming 1 mark per question
+             isOnline: true,
+           );
 
-         if (response.statusCode == 201) {
-            final data = jsonDecode(response.body);
-            final earnedPoints = data['earnedPoints'];
-             
-             if (mounted) {
-               showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (ctx) => AlertDialog(
-                  title: Text("Quiz Finished", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text("You scored $score out of $_totalQuestions", style: GoogleFonts.poppins()),
-                      const SizedBox(height: 10),
-                      if (earnedPoints > 0)
-                        Text("You earned $earnedPoints Reward Points!", style: GoogleFonts.poppins(color: Colors.green, fontWeight: FontWeight.bold))
-                      else 
-                        Text("Keep practicing to earn points!", style: GoogleFonts.poppins(color: Colors.orange)),
-                    ],
-                  ),
+           if (response.statusCode == 201) {
+              final data = jsonDecode(response.body);
+              earnedPoints = data['earnedPoints'] ?? 0;
+           } else {
+              if(mounted) CustomToast.showError(context, "Failed to submit result");
+              return; // Stop dialog showing if submission failed for a real user
+           }
+         } else {
+           // Increment local guest counter if applicable
+           await GuestUtils.incrementGuestExamCount('REGULAR');
+         }
+
+         if (mounted) {
+           showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              title: Text("Quiz Finished", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("You scored $score out of $_totalQuestions", style: GoogleFonts.poppins()),
+                  const SizedBox(height: 10),
+                  if (earnedPoints > 0)
+                    Text("You earned $earnedPoints Reward Points!", style: GoogleFonts.poppins(color: Colors.green, fontWeight: FontWeight.bold))
+                  else if (!isGuest)
+                    Text("Keep practicing to earn points!", style: GoogleFonts.poppins(color: Colors.orange))
+                  else
+                    Text("Register to earn points and save your progress!", style: GoogleFonts.poppins(color: Colors.blue)),
+                ],
+              ),
                   actions: [
                     TextButton(
                       onPressed: () {

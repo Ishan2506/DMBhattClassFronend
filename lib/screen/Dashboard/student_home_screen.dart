@@ -28,6 +28,7 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   bool _isPaid = false;
+  bool _isGuest = false;
   Map<String, int> _examCounts = {
     'mainExam': 0,
     'fiveMinTest': 0,
@@ -50,6 +51,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           setState(() {
             debugPrint("[DEBUG] Home Profile Data: $data");
             _isPaid = data['user']['isPaid'] ?? false;
+            _isGuest = ApiService.isGuest;
             if (data['examCounts'] != null) {
               _examCounts = {
                 'mainExam': data['examCounts']['mainExam'] ?? 0,
@@ -73,7 +75,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   void _checkAndNavigate(String type, Widget targetScreen) {
-    if (!_isPaid && (_examCounts[type] ?? 0) >= 1) {
+    if (!_isGuest && !_isPaid && (_examCounts[type] ?? 0) >= 1) {
       _showUpgradeDialog();
       return;
     }
@@ -239,7 +241,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     height: screenHeight * 0.06,
                     child: ElevatedButton(
                       onPressed: () async {
-                        if (!await GuestUtils.canGuestAccessExam(context)) return;
+                        if (!await GuestUtils.canGuestAccessExam(context, 'REGULAR')) return;
                         if (context.mounted) {
                           _checkAndNavigate('mainExam', const StudentStartExamForm());
                         }
@@ -319,7 +321,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () async {
-                            if (!await GuestUtils.canGuestAccessExam(context)) return;
+                            if (!await GuestUtils.canGuestAccessExam(context, 'FIVEMIN')) return;
                             if (context.mounted) {
                               _checkAndNavigate('fiveMinTest', const FiveMinTestSelectionScreen());
                             }
@@ -404,7 +406,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () async {
-                            if (!await GuestUtils.canGuestAccessExam(context)) return;
+                            if (!await GuestUtils.canGuestAccessExam(context, 'ONELINER')) return;
                             if (context.mounted) {
                               _checkAndNavigate('oneLinerExam', const OneLinerSelectionScreen());
                             }

@@ -4,6 +4,7 @@ import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,6 +21,7 @@ class SchoolPapersScreen extends StatefulWidget {
 class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   String? _selectedSubject;
   bool _isGuest = false;
+  bool _isPaid = false;
   String? _std;
   String? _stream;
 
@@ -31,10 +33,55 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
 
   Future<void> _loadProfileAndCheckGuest() async {
     _isGuest = await GuestUtils.isGuest();
+    if (!_isGuest) {
+      try {
+        final profileResponse = await ApiService.getProfile();
+        if (profileResponse.statusCode == 200) {
+          final profileData = jsonDecode(profileResponse.body);
+          _isPaid = profileData['isPaid'] ?? false;
+        }
+      } catch (e) {
+        debugPrint("Error fetching profile: $e");
+      }
+    }
     final prefs = await SharedPreferences.getInstance();
     _std = prefs.getString('std');
     _stream = prefs.getString('stream');
     if (mounted) setState(() {});
+  }
+
+  void _showUpgradeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Premium Material", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text(
+          "This school paper is part of our premium content. Please upgrade your plan to access all papers and materials.",
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Maybe Later", style: GoogleFonts.poppins(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text("Upgrade Now", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   List<String> _getFilteredSubjects() {
@@ -261,6 +308,11 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                   return;
                }
 
+               if (!_isPaid) {
+                 _showUpgradeDialog();
+                 return;
+               }
+
                final productId = paper['id']?.toString() ?? paper['name'];
                final prefs = await SharedPreferences.getInstance();
                final alreadyUsed = prefs.getBool('preview_used_$productId') ?? false;
@@ -281,45 +333,8 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
             },
             tooltip: l10n.view,
           ),
-          
-          // Download Button
-          IconButton(
-            icon: Icon(Icons.download_rounded, color: colorScheme.secondary),
-            onPressed: () {
-               if (_isGuest) {
-                  GuestUtils.showGuestRestrictionDialog(context, message: "Register to download school papers!");
-                  return;
-               }
-               _downloadPaper(paper);
-            },
-             tooltip: l10n.download,
-          ),
         ],
       ),
     );
-  }
-
-  Future<void> _downloadPaper(Map<String, dynamic> paper) async {
-    try {
-      CustomToast.showSuccess(context, "Preparing download for ${paper['name']}...");
-      
-      // We'll use url_launcher as a simple way to "download" since it's a browser-friendly app 
-      // and direct file system access on mobile requires more setup.
-      // Alternatively, we could use dio + path_provider for a real background download.
-      // Given the user's request "i just want to know Actual we support the download functionlity",
-      // implementing a functional download is the goal.
-      
-      final String url = paper['file'] ?? paper['url'] ?? paper['fileUrl'] ?? '';
-      final Uri uri = Uri.parse(url);
-      
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        CustomToast.showSuccess(context, "Download started in browser.");
-      } else {
-        CustomToast.showError(context, "Could not launch download URL.");
-      }
-    } catch (e) {
-      CustomToast.showError(context, "Download failed: $e");
-    }
   }
 }
