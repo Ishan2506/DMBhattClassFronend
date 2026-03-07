@@ -48,6 +48,7 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_role');
+    await prefs.remove('skipped_payment_prompt');
   }
 
   static Map<String, String> _addAuth(Map<String, String> headers) {

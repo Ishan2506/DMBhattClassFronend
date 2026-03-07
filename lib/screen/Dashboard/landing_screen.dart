@@ -86,6 +86,14 @@ class _LandingScreenState extends State<LandingScreen> {
         // Assume 'isPaid' is the field. If backend doesn't provide it, 
         // we might need to check a different field like 'paymentStatus'.
         if (user != null && user['role'] == 'student' && user['isPaid'] == false) {
+           final prefs = await SharedPreferences.getInstance();
+           bool skippedOnce = prefs.getBool('skipped_payment_prompt') ?? false;
+
+           if (skippedOnce) {
+             if (mounted) setState(() { _isLoadingMembership = false; });
+             return;
+           }
+
            if (!mounted) return;
            
            // Redirect to Payment Screen

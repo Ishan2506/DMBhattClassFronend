@@ -359,7 +359,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('skipped_payment_prompt', true);
+              if (context.mounted) Navigator.pop(context);
+            },
             child: Text(
               "Skip",
               style: GoogleFonts.poppins(
