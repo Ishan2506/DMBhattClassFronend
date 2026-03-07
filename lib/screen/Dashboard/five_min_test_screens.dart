@@ -32,7 +32,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
   List<String> _subjects = [];
   List<String> _units = [];
   List<String> _titles = [];
-  List<String> _takenTestTitles = [];
+  List<String> _takenTestIds = [];
   
   bool _isLoading = true;
   dynamic _selectedTest; // The full test object from API
@@ -54,7 +54,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
         if (historyResponse.statusCode == 200) {
              final historyData = jsonDecode(historyResponse.body);
              final List<dynamic> results = historyData['examResults'] ?? [];
-             _takenTestTitles = results.map((e) => e['title'].toString().toLowerCase()).toList();
+             _takenTestIds = results.map((e) => e['examId'].toString()).toList();
         }
 
         if (mounted) {
@@ -241,7 +241,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                         ? () async {
                             if (!await GuestUtils.canGuestAccessExam(context)) return;
                             
-                            if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
+                            if (_takenTestIds.contains(_selectedTest['_id'].toString())) {
                               if (mounted) {
                                 showDialog(
                                   context: context,
@@ -702,12 +702,12 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
       try {
         CustomLoader.show(context);
         // Token managed internally
-        await ApiService.submitExamResult(
-          examId: widget.testData['_id'],
+        await ApiService.submitFiveMinTestResult(
+          examId: widget.testData['_id'].toString(),
           title: widget.testData['title'] ?? widget.unit,
           obtainedMarks: correct,
           totalMarks: _questions.length,
-          isOnline: false,
+          isOnline: true,
           type: 'QUIZ',
         );
       } catch (e) {
