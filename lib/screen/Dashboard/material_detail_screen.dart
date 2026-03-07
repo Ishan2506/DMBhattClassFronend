@@ -8,6 +8,7 @@ import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_payment_confirmation_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -85,10 +86,26 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
 
       if (verifyResponse.statusCode == 200) {
         CustomToast.showSuccess(context, "Purchase Successful!");
-        // Optionally redirect to history or refresh
+        
+        final DateTime now = DateTime.now();
+        final String formattedDate = "${now.day}/${now.month}/${now.year}";
+        
+        final transactionDetails = {
+          "title": widget.product['name'] ?? "Material Purchase",
+          "standard": widget.product['standard'] ?? widget.product['standardId']?['name'] ?? "N/A",
+          "medium": widget.product['medium'] ?? widget.product['mediumId']?['name'] ?? "N/A",
+          "date": formattedDate,
+          "transactionId": response.paymentId ?? "N/A",
+          "amountRaw": widget.product['price'] ?? 0,
+        };
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const StudentProductHistoryScreen()),
+          MaterialPageRoute(
+            builder: (context) => StudentPaymentConfirmationScreen(
+              transactionDetails: transactionDetails,
+            ),
+          ),
         );
       } else {
         CustomToast.showError(context, "Verification Failed: ${verifyResponse.body}");

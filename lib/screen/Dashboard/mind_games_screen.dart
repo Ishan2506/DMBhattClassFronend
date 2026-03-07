@@ -15,9 +15,34 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/math_riddles_screen.dart
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/number_series_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/magic_square_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/algebra_balancer_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/spot_the_difference_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/flag_explorer_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/logic_gates_quest_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/stroop_effect_challenge_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/syllable_scramble_screen.dart';
+
+
+
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/spelling_master_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/synonym_antonym_screen.dart';
+
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/language_translator_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/subject_word_search_screen.dart';
+
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/grammar_sorter_screen.dart';
+
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/capital_city_quest_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/proverb_completer_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/direction_sense_screen.dart';
+
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/gk_quiz_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/sequence_memory_screen.dart';
+
+
+
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -67,7 +92,7 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
   @override
   Widget build(BuildContext context) {
      final l10n = AppLocalizations.of(context)!;
-     final theme = Theme.of(context);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: AppLocalizations.of(context)!.mindGames,
@@ -205,8 +230,151 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                   color: Colors.blue.shade600,
                   onTap: () => _handleGameTap(const AlgebraBalancerScreen()),
                 ),
-                const SizedBox(height: 32),
-              ],
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.spotTheDifference,
+                  description: l10n.spotTheDifferenceDesc,
+                  icon: Icons.search_rounded,
+                  color: Colors.pinkAccent,
+                  onTap: () => _handleGameTap(const SpotTheDifferenceScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.flagExplorer,
+                  description: l10n.flagExplorerDesc,
+                  icon: Icons.flag_circle,
+                  color: Colors.deepOrange,
+                  onTap: () => _handleGameTap(const FlagExplorerScreen()),
+                ),
+                const SizedBox(height: 16),
+
+
+                _buildGameCard(
+                  context,
+                  title: l10n.spellingMaster,
+                  description: l10n.spellingMasterDesc,
+                  icon: Icons.spellcheck_rounded,
+                  color: Colors.indigo,
+                  onTap: () => _handleGameTap(const SpellingMasterScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.synonymAntonym,
+                  description: l10n.synonymAntonymDesc,
+                  icon: Icons.compare_arrows_rounded,
+                  color: Colors.teal.shade700,
+                  onTap: () => _handleGameTap(const SynonymAntonymScreen()),
+                ),
+                const SizedBox(height: 16),
+
+
+                _buildGameCard(
+                  context,
+                  title: l10n.languageTranslator,
+                  description: l10n.languageTranslatorDesc,
+                  icon: Icons.g_translate_rounded,
+                  color: Colors.blueAccent,
+                  onTap: () => _handleGameTap(const LanguageTranslatorScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.subjectWordSearch,
+                  description: l10n.subjectWordSearchDesc,
+                  icon: Icons.find_in_page_rounded,
+                  color: Colors.orange.shade700,
+                  onTap: () => _handleGameTap(const SubjectWordSearchScreen()),
+                ),
+                const SizedBox(height: 16),
+
+
+                _buildGameCard(
+                  context,
+                  title: l10n.grammarSorter,
+                  description: l10n.grammarSorterDesc,
+                  icon: Icons.sort_by_alpha_rounded,
+                  color: Colors.green.shade600,
+                  onTap: () => _handleGameTap(const GrammarSorterScreen()),
+                ),
+                const SizedBox(height: 16),
+
+
+                _buildGameCard(
+                  context,
+                  title: l10n.capitalCityQuest,
+                  description: l10n.capitalCityQuestDesc,
+                  icon: Icons.location_city_rounded,
+                  color: Colors.redAccent.shade400,
+                  onTap: () => _handleGameTap(const CapitalCityQuestScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.proverbCompleter,
+                  description: l10n.proverbCompleterDesc,
+                  icon: Icons.format_quote_rounded,
+                  color: Colors.deepPurple,
+                  onTap: () => _handleGameTap(const ProverbCompleterScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.directionSense,
+                  description: l10n.directionSenseDesc,
+                  icon: Icons.explore_rounded,
+                  color: Colors.blue.shade800,
+                  onTap: () => _handleGameTap(const DirectionSenseScreen()),
+                ),
+                const SizedBox(height: 16),
+
+
+                _buildGameCard(
+                  context,
+                  title: l10n.gkQuiz,
+                  description: l10n.gkQuizDesc,
+                  icon: Icons.quiz_rounded,
+                  color: Colors.amber.shade700,
+                  onTap: () => _handleGameTap(const GKQuizScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.sequenceMemory,
+                  description: l10n.sequenceMemoryDesc,
+                  icon: Icons.memory_rounded,
+                  color: Colors.teal.shade500,
+                  onTap: () => _handleGameTap(const SequenceMemoryScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.syllableScramble,
+                  description: l10n.syllableScrambleDesc,
+                  icon: Icons.text_snippet_rounded,
+                  color: Colors.amberAccent.shade700,
+                  onTap: () => _handleGameTap(const SyllableScrambleScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.logicGatesQuest,
+                  description: l10n.logicGatesQuestDesc,
+                  icon: Icons.settings_input_component_rounded,
+                  color: Colors.orangeAccent,
+                  onTap: () => _handleGameTap(const LogicGatesQuestScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: l10n.stroopEffectChallenge,
+                  description: l10n.stroopEffectChallengeDesc,
+                  icon: Icons.palette_rounded,
+                  color: Colors.greenAccent.shade700,
+                  onTap: () => _handleGameTap(const StroopEffectChallengeScreen()),
+                ),              ],
             ),
           ),
           if (_isLoading)
@@ -238,19 +406,19 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 32),
@@ -273,7 +441,7 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                     description,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

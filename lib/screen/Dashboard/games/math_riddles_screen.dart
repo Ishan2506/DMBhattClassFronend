@@ -25,6 +25,8 @@ class _MathRiddlesScreenState extends State<MathRiddlesScreen> {
   int _score = 0;
   String _currentInput = "";
   bool _showHint = false;
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   final List<MathRiddle> _riddles = [
     MathRiddle(
@@ -89,26 +91,12 @@ class _MathRiddlesScreenState extends State<MathRiddlesScreen> {
   @override
   void dispose() {
     _gameService.stopSession();
+    _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  void _onNumpadTap(String val) {
-    if (val == "C") {
-      setState(() => _currentInput = "");
-    } else if (val == "<") {
-      setState(() {
-        if (_currentInput.isNotEmpty) {
-           _currentInput = _currentInput.substring(0, _currentInput.length - 1);
-        }
-      });
-    } else {
-      setState(() {
-        if (_currentInput.length < 5) {
-            _currentInput += val;
-        }
-      });
-    }
-  }
+
 
   void _checkAnswer() {
     if (_currentInput == _riddles[_currentIndex].answer) {
@@ -131,6 +119,7 @@ class _MathRiddlesScreenState extends State<MathRiddlesScreen> {
       if (_currentIndex < _riddles.length - 1) {
         _currentIndex++;
         _currentInput = "";
+        _textController.clear();
         _showHint = false;
       } else {
         _showWinDialog();
@@ -174,6 +163,161 @@ class _MathRiddlesScreenState extends State<MathRiddlesScreen> {
     );
   }
 
+  void _showHowToPlay() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 10,
+        backgroundColor: theme.cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header with Icon
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.videogame_asset,
+                      color: colorScheme.primary,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    "How to Play",
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: theme.textTheme.titleLarge?.color,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Instructions
+              _buildInstructionRow(theme, "1", "Read the math riddle carefully on the screen."),
+              const SizedBox(height: 12),
+              _buildInstructionRow(theme, "2", "Type your answer using the numpad provided."),
+              const SizedBox(height: 12),
+              _buildInstructionRow(theme, "3", "Tap Submit Answer when you're ready."),
+              const SizedBox(height: 12),
+              _buildInstructionRow(theme, "4", "Stuck? You can use a hint, but it will cost you points!"),
+              const SizedBox(height: 24),
+              // Example Box
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      "Example Riddle",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.tertiary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "What 3 positive numbers give the same result when multiplied and added together?",
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Icon(Icons.arrow_downward_rounded, color: theme.dividerColor, size: 20),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "123 (1+2+3 = 6, 1*2*3 = 6)",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Got it button
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 2,
+                ),
+                child: Text(
+                  "Let's Play!",
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInstructionRow(ThemeData theme, String number, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              number,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.secondary,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              height: 1.4,
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -183,6 +327,12 @@ class _MathRiddlesScreenState extends State<MathRiddlesScreen> {
       appBar: CustomAppBar(
         title: "Math Riddles",
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: _showHowToPlay,
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -211,7 +361,7 @@ class _MathRiddlesScreenState extends State<MathRiddlesScreen> {
                             color: theme.cardColor,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                          ),
                          child: Text(
                             _riddles[_currentIndex].question,
@@ -250,116 +400,68 @@ class _MathRiddlesScreenState extends State<MathRiddlesScreen> {
                            label: const Text("Show Hint (-50 pts)")
                         ),
                         
-                      const SizedBox(height: 32),
-                      
-                      // Answer Display
-                      Container(
-                         width: double.infinity,
-                         padding: const EdgeInsets.symmetric(vertical: 16),
-                         decoration: BoxDecoration(
-                            border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 2)),
-                         ),
-                         child: Center(
-                            child: Text(
-                               _currentInput.isEmpty ? "?" : _currentInput,
-                               style: GoogleFonts.poppins(
-                                  fontSize: 32, 
-                                  fontWeight: FontWeight.bold,
-                                  color: _currentInput.isEmpty ? Colors.grey : theme.textTheme.bodyLarge?.color,
-                               ),
-                            ),
-                         ),
+                      // Input Field
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                        child: TextField(
+                           controller: _textController,
+                           focusNode: _focusNode,
+                           keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
+                           style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                           textAlign: TextAlign.center,
+                           decoration: InputDecoration(
+                              hintText: "Enter your answer",
+                              hintStyle: GoogleFonts.poppins(fontSize: 18, color: Colors.grey.shade400, letterSpacing: 0),
+                              filled: true,
+                              fillColor: theme.cardColor,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                              border: OutlineInputBorder(
+                                 borderRadius: BorderRadius.circular(16),
+                                 borderSide: BorderSide(color: theme.dividerColor),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                 borderRadius: BorderRadius.circular(16),
+                                 borderSide: BorderSide(color: theme.dividerColor),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                 borderRadius: BorderRadius.circular(16),
+                                 borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                              ),
+                           ),
+                           onChanged: (val) {
+                              setState(() {
+                                 _currentInput = val;
+                              });
+                           },
+                           onSubmitted: (_) {
+                              if (_currentInput.isNotEmpty && _currentInput != "-") {
+                                 _checkAnswer();
+                              }
+                           },
+                        ),
                       ),
-                   ],
+                      
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: ElevatedButton(
+                           onPressed: _currentInput.isEmpty || _currentInput == "-" ? null : _checkAnswer,
+                           style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 56),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                           ),
+                           child: Text("Submit Answer", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 48),
+                  ],
                 ),
               ),
              ),
             ),
-            
-            // Custom Numpad
-            Container(
-               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-               child: Column(
-                  children: [
-                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _buildNumpadBtn("1", theme),
-                           _buildNumpadBtn("2", theme),
-                           _buildNumpadBtn("3", theme),
-                        ],
-                     ),
-                     const SizedBox(height: 12),
-                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _buildNumpadBtn("4", theme),
-                           _buildNumpadBtn("5", theme),
-                           _buildNumpadBtn("6", theme),
-                        ],
-                     ),
-                     const SizedBox(height: 12),
-                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _buildNumpadBtn("7", theme),
-                           _buildNumpadBtn("8", theme),
-                           _buildNumpadBtn("9", theme),
-                        ],
-                     ),
-                     const SizedBox(height: 12),
-                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _buildNumpadBtn("C", theme, color: Colors.red.shade100, textColor: Colors.red.shade800),
-                           _buildNumpadBtn("0", theme),
-                           _buildNumpadBtn("<", theme, color: Colors.grey.shade200, textColor: Colors.grey.shade800),
-                        ],
-                     ),
-                     const SizedBox(height: 12),
-                     ElevatedButton(
-                        onPressed: _currentInput.isEmpty ? null : _checkAnswer,
-                        style: ElevatedButton.styleFrom(
-                           minimumSize: const Size(double.infinity, 56),
-                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text("Submit Answer", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-                     )
-                  ],
-               ),
-            )
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildNumpadBtn(String label, ThemeData theme, {Color? color, Color? textColor}) {
-     return InkWell(
-        onTap: () => _onNumpadTap(label),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-           width: MediaQuery.of(context).size.width * 0.22,
-           height: 60,
-           decoration: BoxDecoration(
-              color: color ?? theme.cardColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.dividerColor.withOpacity(0.2)),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))],
-           ),
-           child: Center(
-              child: label == "<" 
-                 ? Icon(Icons.backspace_outlined, color: textColor ?? theme.textTheme.bodyLarge?.color)
-                 : Text(
-                     label, 
-                     style: GoogleFonts.poppins(
-                        fontSize: 24, 
-                        fontWeight: FontWeight.bold,
-                        color: textColor ?? theme.textTheme.bodyLarge?.color,
-                     )
-                   ),
-           ),
-        ),
-     );
   }
 }

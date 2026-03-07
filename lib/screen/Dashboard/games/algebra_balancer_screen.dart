@@ -34,6 +34,8 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
   int _level = 1;
   String _currentInput = "";
   final Random _rand = Random();
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   final List<String> _emojis = ["🍎", "🍌", "🍉", "🍇", "🍓", "🍒", "🍩", "🍕", "🍔", "🍟", "🚗", "🚲", "✈️", "🚀", "🐶", "🐱", "🐰", "🦊"];
 
@@ -47,6 +49,8 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
   @override
   void dispose() {
     _gameService.stopSession();
+    _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -89,24 +93,11 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
      setState(() {
         _currentProblem = AlgebraProblem([var1, var2, var3], eqs, qRow, ans);
         _currentInput = "";
+        _textController.clear();
      });
   }
 
-  void _onNumpadTap(String val) {
-    if (val == "C") {
-      setState(() => _currentInput = "");
-    } else if (val == "<") {
-      setState(() {
-        if (_currentInput.isNotEmpty) {
-           _currentInput = _currentInput.substring(0, _currentInput.length - 1);
-        }
-      });
-    } else {
-      if (_currentInput.length < 5) {
-         setState(() => _currentInput += val);
-      }
-    }
-  }
+
 
   void _checkAnswer() {
     int? inputInt = int.tryParse(_currentInput);
@@ -150,25 +141,155 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
   }
 
   void _showHowToPlay() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("1. Deduce the numbers hidden behind the emojis by solving the first three equations.", style: GoogleFonts.poppins()),
-            const SizedBox(height: 8),
-            Text("2. Once you know what number each emoji represents, solve the final question row.", style: GoogleFonts.poppins()),
-            const SizedBox(height: 8),
-            Text("3. TRICKY PART: Remember the standard mathematical order of operations (BODMAS/PEMDAS). Multiplication (×) comes BEFORE Addition (+).", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.orange.shade800)),
-          ],
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 10,
+        backgroundColor: theme.cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header with Icon
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.videogame_asset,
+                      color: colorScheme.primary,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    "How to Play",
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: theme.textTheme.titleLarge?.color,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Instructions
+              _buildInstructionRow(theme, "1", "Deduce the numbers hidden behind emojis by solving the first 3 equations."),
+              const SizedBox(height: 12),
+              _buildInstructionRow(theme, "2", "Once you know what number each emoji represents, solve the final question row."),
+              const SizedBox(height: 12),
+              _buildInstructionRow(theme, "3", "TRICKY PART: Remember the standard mathematical order of operations (BODMAS/PEMDAS)."),
+              const SizedBox(height: 24),
+              // Example Box
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      "Example",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.tertiary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "🍎 = 3, 🍌 = 2",
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.normal),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "🍎 + 🍎 × 🍌 = ?",
+                      style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    const Icon(Icons.arrow_downward_rounded, size: 20, color: Colors.grey),
+                    const SizedBox(height: 4),
+                    Text(
+                      "3 + (3 × 2) = 9",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Got it button
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 2,
+                ),
+                child: Text(
+                  "Let's Play!",
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
-        ],
       ),
+    );
+  }
+
+  Widget _buildInstructionRow(ThemeData theme, String number, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              number,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.secondary,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              height: 1.4,
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -216,7 +337,7 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
                             color: theme.cardColor,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                          ),
                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -233,7 +354,7 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
                       Container(
                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
+                            color: Colors.blue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.blue.shade300, width: 2),
                          ),
@@ -259,96 +380,69 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
                             ],
                          ),
                       ),
+
+                      // Input Field
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                        child: TextField(
+                           controller: _textController,
+                           focusNode: _focusNode,
+                           keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
+                           style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                           textAlign: TextAlign.center,
+                           decoration: InputDecoration(
+                              hintText: "Enter your answer",
+                              hintStyle: GoogleFonts.poppins(fontSize: 18, color: Colors.grey.shade400, letterSpacing: 0),
+                              filled: true,
+                              fillColor: theme.cardColor,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                              border: OutlineInputBorder(
+                                 borderRadius: BorderRadius.circular(16),
+                                 borderSide: BorderSide(color: theme.dividerColor),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                 borderRadius: BorderRadius.circular(16),
+                                 borderSide: BorderSide(color: theme.dividerColor),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                 borderRadius: BorderRadius.circular(16),
+                                 borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                              ),
+                           ),
+                           onChanged: (val) {
+                              setState(() {
+                                 _currentInput = val;
+                              });
+                           },
+                           onSubmitted: (_) {
+                              if (_currentInput.isNotEmpty && _currentInput != "-") {
+                                 _checkAnswer();
+                              }
+                           },
+                        ),
+                      ),
+                      
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: ElevatedButton(
+                           onPressed: _currentInput.isEmpty || _currentInput == "-" ? null : _checkAnswer,
+                           style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 56),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                           ),
+                           child: Text("Submit Answer", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 48),
                    ],
                 ),
               ),
              ),
             ),
-            
-            // Custom Numpad
-            Container(
-               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-               child: Column(
-                  children: [
-                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _buildNumpadBtn("1", theme),
-                           _buildNumpadBtn("2", theme),
-                           _buildNumpadBtn("3", theme),
-                        ],
-                     ),
-                     const SizedBox(height: 12),
-                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _buildNumpadBtn("4", theme),
-                           _buildNumpadBtn("5", theme),
-                           _buildNumpadBtn("6", theme),
-                        ],
-                     ),
-                     const SizedBox(height: 12),
-                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _buildNumpadBtn("7", theme),
-                           _buildNumpadBtn("8", theme),
-                           _buildNumpadBtn("9", theme),
-                        ],
-                     ),
-                     const SizedBox(height: 12),
-                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _buildNumpadBtn("-", theme, color: Colors.blue.shade50, textColor: Colors.blue.shade800),
-                           _buildNumpadBtn("0", theme),
-                           _buildNumpadBtn("<", theme, color: Colors.grey.shade200, textColor: Colors.grey.shade800),
-                        ],
-                     ),
-                     const SizedBox(height: 12),
-                     ElevatedButton(
-                        onPressed: _currentInput.isEmpty || _currentInput == "-" ? null : _checkAnswer,
-                        style: ElevatedButton.styleFrom(
-                           minimumSize: const Size(double.infinity, 56),
-                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text("Submit Answer", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-                     )
-                  ],
-               ),
-            )
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildNumpadBtn(String label, ThemeData theme, {Color? color, Color? textColor}) {
-     return InkWell(
-        onTap: () => _onNumpadTap(label),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-           width: MediaQuery.of(context).size.width * 0.22,
-           height: 60,
-           decoration: BoxDecoration(
-              color: color ?? theme.cardColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.dividerColor.withOpacity(0.2)),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))],
-           ),
-           child: Center(
-              child: label == "<" 
-                 ? Icon(Icons.backspace_outlined, color: textColor ?? theme.textTheme.bodyLarge?.color)
-                 : Text(
-                     label, 
-                     style: GoogleFonts.poppins(
-                        fontSize: 24, 
-                        fontWeight: FontWeight.bold,
-                        color: textColor ?? theme.textTheme.bodyLarge?.color,
-                     )
-                   ),
-           ),
-        ),
-     );
   }
 }

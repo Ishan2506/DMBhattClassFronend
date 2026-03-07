@@ -1939,6 +1939,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Coming Soon'**
   String get comingSoon;
+
+  /// No description provided for @spellingMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Spelling Master'**
+  String get spellingMaster;
+
+  /// No description provided for @spellingMasterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Test your spelling skills with increasingly difficult words.'**
+  String get spellingMasterDesc;
+
+  /// No description provided for @synonymAntonym.
+  ///
+  /// In en, this message translates to:
+  /// **'Synonym & Antonym'**
+  String get synonymAntonym;
+
+  /// No description provided for @synonymAntonymDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Find the correct synonym or antonym for the given word.'**
+  String get synonymAntonymDesc;
+
+  /// No description provided for @languageTranslator.
+  ///
+  /// In en, this message translates to:
+  /// **'Language Translator'**
+  String get languageTranslator;
+
+  /// No description provided for @languageTranslatorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Test your translation skills between different languages.'**
+  String get languageTranslatorDesc;
+
+  /// No description provided for @subjectWordSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject Word Search'**
+  String get subjectWordSearch;
+
+  /// No description provided for @subjectWordSearchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Find hidden academic words within the grid.'**
+  String get subjectWordSearchDesc;
+
+  /// No description provided for @logicGatesQuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Logic Gates Quest'**
+  String get logicGatesQuest;
+
+  /// No description provided for @logicGatesQuestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve puzzles using basic digital logic gates (AND, OR, NOT).'**
+  String get logicGatesQuestDesc;
+
+  /// No description provided for @stroopEffectChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Stroop Challenge'**
+  String get stroopEffectChallenge;
+
+  /// No description provided for @stroopEffectChallengeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Overcome cognitive interference in this classic color-word test.'**
+  String get stroopEffectChallengeDesc;
+
+  /// No description provided for @syllableScramble.
+  ///
+  /// In en, this message translates to:
+  /// **'Syllable Scramble'**
+  String get syllableScramble;
+
+  /// No description provided for @syllableScrambleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Construct multi-syllabic words from jumbled fragments.'**
+  String get syllableScrambleDesc;
+
+  /// No description provided for @capitalCityQuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Capital City Quest'**
+  String get capitalCityQuest;
+
+  /// No description provided for @capitalCityQuestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Match the region to its correct Capital City.'**
+  String get capitalCityQuestDesc;
+
+  /// No description provided for @proverbCompleter.
+  ///
+  /// In en, this message translates to:
+  /// **'Proverb Completer'**
+  String get proverbCompleter;
+
+  /// No description provided for @proverbCompleterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the missing word in well-known English proverbs.'**
+  String get proverbCompleterDesc;
+
+  /// No description provided for @directionSense.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction Sense'**
+  String get directionSense;
+
+  /// No description provided for @directionSenseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve basic direction and movement problems.'**
+  String get directionSenseDesc;
+
+  /// No description provided for @spotTheDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Spot the Difference'**
+  String get spotTheDifference;
+
+  /// No description provided for @spotTheDifferenceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Find the 1 element that is different.'**
+  String get spotTheDifferenceDesc;
+
+  /// No description provided for @flagExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Flag Explorer'**
+  String get flagExplorer;
+
+  /// No description provided for @flagExplorerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Identify the correct country name from its flag.'**
+  String get flagExplorerDesc;
+
+  /// No description provided for @grammarSorter.
+  ///
+  /// In en, this message translates to:
+  /// **'Grammar Sorter'**
+  String get grammarSorter;
+
+  /// No description provided for @grammarSorterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort falling words into the correct grammatical bucket.'**
+  String get grammarSorterDesc;
+
+  /// No description provided for @gkQuiz.
+  ///
+  /// In en, this message translates to:
+  /// **'General Knowledge'**
+  String get gkQuiz;
+
+  /// No description provided for @gkQuizDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Test your general knowledge with a quick quiz.'**
+  String get gkQuizDesc;
+
+  /// No description provided for @sequenceMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Sequence Memory'**
+  String get sequenceMemory;
+
+  /// No description provided for @sequenceMemoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Memorize and repeat a growing sequence of colors.'**
+  String get sequenceMemoryDesc;
 }
 
 class _AppLocalizationsDelegate

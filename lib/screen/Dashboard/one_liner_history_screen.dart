@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:intl/intl.dart';
 
 class OneLinerHistoryScreen extends StatefulWidget {
@@ -65,7 +65,7 @@ class _OneLinerHistoryScreenState extends State<OneLinerHistoryScreen> {
         centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CustomLoader())
           : _history.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
