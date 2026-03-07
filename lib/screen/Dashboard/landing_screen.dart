@@ -6,9 +6,13 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/explore_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/dmai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/payment_screen.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/social_media_ad_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +27,7 @@ class LandingScreen extends StatefulWidget {
 class _LandingScreenState extends State<LandingScreen> {
   // 1. Track the current active index
   int _selectedIndex = 0;
+  bool _isLoadingMembership = true;
 
   // 2. Define the list of bodies/screens
   // These will replace the 'body' area when the index changes
@@ -45,35 +50,88 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAndShowAd();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    await _checkMembershipStatus();
+    if (mounted && !_isLoadingMembership) {
+      _checkAndShowAd();
+    }
+  }
+
+  Future<void> _checkMembershipStatus() async {
+    setState(() {
+      _isLoadingMembership = true;
+    });
+
+    // 1. Check if user is a guest (guests don't pay membership)
+    bool isGuest = await GuestUtils.isGuest();
+    if (isGuest) {
+      if (mounted) {
+        setState(() {
+          _isLoadingMembership = false;
+        });
+      }
+      return;
+    }
+
+    // 2. Fetch profile to check payment status
+    try {
+      final response = await ApiService.getProfile();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final user = data['user'];
+        
+        // Assume 'isPaid' is the field. If backend doesn't provide it, 
+        // we might need to check a different field like 'paymentStatus'.
+        if (user != null && user['role'] == 'student' && user['isPaid'] == false) {
+           if (!mounted) return;
+           
+           // Redirect to Payment Screen
+           Navigator.push(
+             context,
+             MaterialPageRoute(builder: (context) => const PaymentScreen()),
+           ).then((success) {
+             if (success == true) {
+               // Refresh if needed
+               _checkMembershipStatus();
+             }
+           });
+           return; // Keep loading visible while redirecting
+        }
+      }
+    } catch (e) {
+      debugPrint("Error checking membership: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingMembership = false;
+        });
+      }
+    }
   }
 
   Future<void> _checkAndShowAd() async {
+    // Only show if we are on the dashboard (index 0)
+    if (_selectedIndex != 0) return;
+
     final prefs = await SharedPreferences.getInstance();
     
-    // Get current date string (YYYY-MM-DD)
-    final String todayDate = DateTime.now().toIso8601String().split('T')[0];
-    final String? lastAdDate = prefs.getString('social_ad_date');
+    // Check if already shown once (ever)
+    bool alreadyShown = prefs.getBool('social_ad_shown_once') ?? false;
     
-    // If the date has changed, reset the counter
-    if (lastAdDate != todayDate) {
-      await prefs.setInt('social_ad_count', 0);
-      await prefs.setString('social_ad_date', todayDate);
-    }
-
-    int activeCount = prefs.getInt('social_ad_count') ?? 0;
-
-    if (activeCount < 3) {
+    if (!alreadyShown) {
       if (!mounted) return;
       // Show dialog after slight delay ensuring context is ready
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted && _selectedIndex == 0) {
           showDialog(
             context: context,
             barrierDismissible: true, // Allow clicking outside to close
             builder: (context) => const SocialMediaAdDialog(),
           );
-          prefs.setInt('social_ad_count', activeCount + 1);
+          prefs.setBool('social_ad_shown_once', true);
         }
       });
     }
@@ -146,10 +204,12 @@ class _LandingScreenState extends State<LandingScreen> {
           // const SizedBox(width: 8),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: _isLoadingMembership 
+        ? const Center(child: CircularProgressIndicator())
+        : IndexedStack(
+            index: _selectedIndex,
+            children: _pages,
+          ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

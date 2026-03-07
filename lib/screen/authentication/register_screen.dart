@@ -533,16 +533,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       files: [], 
                     );
 
-                    // Navigate to Payment Screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PaymentScreen(
-                          payload: payload,
-                          password: _passwordController.text,
-                        ),
-                      ),
-                    );
+                    // Register Directly
+                    try {
+                      CustomLoader.show(context);
+                      final response = await ApiService.registerUser(
+                        payload: payload,
+                        dpin: _passwordController.text,
+                      );
+
+                      if (!mounted) return;
+                      CustomLoader.hide(context);
+
+                      if (response.statusCode == 201 || response.statusCode == 200) {
+                        CustomToast.showSuccess(context, "Registration Successful! Please Login.");
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      } else {
+                        final errorMsg = ApiService.getErrorMessage(response.body);
+                        CustomToast.showError(context, "Registration Failed: $errorMsg");
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        CustomLoader.hide(context);
+                        CustomToast.showError(context, "Error: $e");
+                      }
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(

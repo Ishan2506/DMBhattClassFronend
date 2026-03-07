@@ -169,6 +169,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             await ApiService.setAuthToken(token);
                             //await prefs.setString('auth_token', token);
                             await prefs.setString('user_password', _passwordController.text); // Saving password for PDF encryption
+                            if (user != null) {
+                              if (user['phoneNum'] != null) await prefs.setString('user_phone', user['phoneNum']);
+                              if (user['email'] != null) await prefs.setString('user_email', user['email']);
+                            }
 
                             // Fetch profile data to get std and userId
                             try {
@@ -185,11 +189,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (user != null && user['role'] != null) {
                                   await prefs.setString('user_role', user['role']);
                                 }
+                                if (user != null && user['firstName'] != null) await prefs.setString('firstName', user['firstName']);
                                 if (profile != null) {
                                   if (profile['std'] != null && profile['std'].toString().isNotEmpty) await prefs.setString('std', profile['std']); else await prefs.remove('std');
                                   if (profile['medium'] != null && profile['medium'].toString().isNotEmpty) await prefs.setString('medium', profile['medium']); else await prefs.remove('medium');
                                   if (profile['board'] != null && profile['board'].toString().isNotEmpty) await prefs.setString('board', profile['board']); else await prefs.remove('board');
                                   if (profile['stream'] != null && profile['stream'].toString().isNotEmpty) await prefs.setString('stream', profile['stream']); else await prefs.remove('stream');
+                                  if (profile['parentPhone'] != null && profile['parentPhone'].toString().isNotEmpty) await prefs.setString('parentPhone', profile['parentPhone']);
                                 }
 
                                 // Sync this account to the saved accounts list
