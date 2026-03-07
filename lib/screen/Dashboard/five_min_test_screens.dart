@@ -128,7 +128,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
       if (unit != null && _selectedSubject != null) {
         _titles = _allTests
             .where((t) => t['subject'] == _selectedSubject && t['unit'] == unit)
-            .map((t) => t['title']?.toString() ?? 'Untitled Test')
+            .map((t) => (t['title'] == null || t['title'].toString().trim().isEmpty) ? 'Untitled Test' : t['title'].toString())
             .toSet()
             .toList();
             
@@ -150,7 +150,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
           _selectedTest = _allTests.firstWhere(
             (t) => t['subject'] == _selectedSubject && 
                    t['unit'] == _selectedUnit &&
-                   (t['title']?.toString() ?? 'Untitled Test') == title
+                   ((t['title'] == null || t['title'].toString().trim().isEmpty) ? 'Untitled Test' : t['title'].toString()) == title
           );
         } catch (e) {
           _selectedTest = null;
