@@ -708,6 +708,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
           obtainedMarks: correct,
           totalMarks: _questions.length,
           isOnline: false,
+          type: 'QUIZ',
         );
       } catch (e) {
         debugPrint("Error submitting 5 min result: $e");

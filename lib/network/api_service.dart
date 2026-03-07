@@ -274,6 +274,7 @@ class ApiService {
     required int obtainedMarks,
     required int totalMarks,
     bool isOnline = true,
+    String? type,
   }) async {
     final uri = Uri.parse("$baseUrl/exam/submit");
     return _handleSession(await http.post(
@@ -289,6 +290,7 @@ class ApiService {
         'obtainedMarks': obtainedMarks,
         'totalMarks': totalMarks,
         'isOnline': isOnline,
+        if (type != null) 'type': type,
       }),
     ));
   }
@@ -672,6 +674,7 @@ class ApiService {
     required int obtainedMarks,
     required int totalMarks,
     required double accuracy,
+    String? type,
   }) async {
     final uri = Uri.parse("$baseUrl/onelinerexam/submit");
     return _handleSession(await http.post(
@@ -686,6 +689,7 @@ class ApiService {
         'obtainedMarks': obtainedMarks,
         'totalMarks': totalMarks,
         'accuracy': accuracy,
+        if (type != null) 'type': type,
       }),
     ));
   }

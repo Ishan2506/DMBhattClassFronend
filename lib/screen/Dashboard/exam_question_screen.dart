@@ -169,6 +169,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
           title: widget.title,
           obtainedMarks: correct,
           totalMarks: _questions.length,
+          type: 'REGULAR',
         );
         
         if (response.statusCode != 201) {

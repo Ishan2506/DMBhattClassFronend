@@ -12,32 +12,67 @@ import 'dart:io';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
-import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
-class StudentFiveMinHistoryScreen extends StatelessWidget {
+class StudentFiveMinHistoryScreen extends StatefulWidget {
   const StudentFiveMinHistoryScreen({super.key});
+
+  @override
+  State<StudentFiveMinHistoryScreen> createState() => _StudentFiveMinHistoryScreenState();
+}
+
+class _StudentFiveMinHistoryScreenState extends State<StudentFiveMinHistoryScreen> {
+  bool _isLoading = true;
+  List<dynamic> _quizExams = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistory();
+  }
+
+  Future<void> _fetchHistory() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await ApiService.getDashboardData();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> results = data['examResults'] ?? [];
+        
+        setState(() {
+          // Filter to only include QUIZ type
+          _quizExams = results.where((e) => e['type'] == 'QUIZ').toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching 5-min history: $e");
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Fetch Data from Singleton (Only Quiz Exams)
-    final quizExams = ExamHistoryData().quizExams;
-
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: const CustomAppBar(
         title: "5 Min Test History",
       ),
-      body: _buildExamList(context, quizExams),
+      body: _isLoading 
+          ? const Center(child: CustomLoader())
+          : _buildExamList(context, _quizExams),
     );
   }
 
-  Widget _buildExamList(BuildContext context, List<Map<String, dynamic>> exams) {
+  Widget _buildExamList(BuildContext context, List<dynamic> exams) {
     final colorScheme = Theme.of(context).colorScheme;
 
     if (exams.isEmpty) {
@@ -54,6 +89,10 @@ class StudentFiveMinHistoryScreen extends StatelessWidget {
       itemCount: exams.length,
       itemBuilder: (context, index) {
         final exam = exams[index];
+        final DateTime date = exam['date'] != null ? DateTime.parse(exam['date']) : DateTime.now();
+        final String formattedDate = DateFormat('MMM dd, yyyy').format(date);
+        final String marks = "${exam['obtainedMarks']}/${exam['totalMarks']}";
+
         return Card(
           elevation: 0,
           color: colorScheme.surfaceContainer,
@@ -68,14 +107,14 @@ class StudentFiveMinHistoryScreen extends StatelessWidget {
                 color: colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.timer, color: colorScheme.primary), // Changed icon to timer
+              child: Icon(Icons.timer, color: colorScheme.primary),
             ),
             title: Text(
-              exam['title'],
+              exam['title'] ?? "5-min Quiz",
               style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
             ),
             subtitle: Text(
-              "Date: ${exam['date']}",
+              "Date: $formattedDate",
               style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
             ),
             trailing: Column(
@@ -87,7 +126,7 @@ class StudentFiveMinHistoryScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(fontSize: 10, color: colorScheme.onSurfaceVariant),
                 ),
                 Text(
-                  exam['marks'],
+                  marks,
                   style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: colorScheme.primary, fontSize: 14),
                 ),
               ],
@@ -98,47 +137,31 @@ class StudentFiveMinHistoryScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _generateAndOpenPdf(BuildContext context, Map<String, dynamic> exam) async {
-    final examId = exam['examId'] ?? exam['id'] ?? exam['_id'];
+  Future<void> _generateAndOpenPdf(BuildContext context, dynamic exam) async {
+    final rawId = exam['examId'];
+    final examId = rawId is Map ? rawId['_id']?.toString() : rawId?.toString();
     
-    if (examId == null) {
-      // If no ID, it's likely local mock data from ExamHistoryData singleton
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ExamPdfViewer(exam: exam),
-        ),
-      );
-      return;
-    }
-
     CustomLoader.show(context);
     try {
-       // Since this is Five Min History, we fetch from FiveMinTest endpoint
-      final response = await ApiService.getFiveMinTestById(examId);
+      Map<String, dynamic>? fullExam;
+      if (examId != null && examId.isNotEmpty) {
+        final response = await ApiService.getFiveMinTestById(examId);
+        if (response.statusCode == 200) {
+          fullExam = jsonDecode(response.body);
+        }
+      }
 
       if (context.mounted) {
         CustomLoader.hide(context);
-        if (response.statusCode == 200) {
-          final fullExam = jsonDecode(response.body);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ExamPdfViewer(
-                exam: exam,
-                fullExam: fullExam,
-              ),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ExamPdfViewer(
+              exam: exam is Map<String, dynamic> ? exam : Map<String, dynamic>.from(exam),
+              fullExam: fullExam,
             ),
-          );
-        } else {
-           // Fallback to just opening with what we have
-           Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ExamPdfViewer(exam: exam),
-            ),
-          );
-        }
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
@@ -146,7 +169,9 @@ class StudentFiveMinHistoryScreen extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ExamPdfViewer(exam: exam),
+            builder: (context) => ExamPdfViewer(
+               exam: exam is Map<String, dynamic> ? exam : Map<String, dynamic>.from(exam),
+            ),
           ),
         );
       }
@@ -154,7 +179,6 @@ class StudentFiveMinHistoryScreen extends StatelessWidget {
   }
 }
 
-// Reusing ExamPdfViewer Logic
 class ExamPdfViewer extends StatelessWidget {
   final Map<String, dynamic> exam;
   final Map<String, dynamic>? fullExam;
@@ -179,7 +203,7 @@ class ExamPdfViewer extends StatelessWidget {
         ],
       ),
       body: PdfPreview(
-        build: (format) => _generateExamPdf(format, exam), // Preview is unprotected
+        build: (format) => _generateExamPdf(format, exam),
         canChangeOrientation: false,
         canChangePageFormat: false,
         allowSharing: false,
@@ -194,10 +218,8 @@ class ExamPdfViewer extends StatelessWidget {
       final bytes = await _generateExamPdf(PdfPageFormat.a4, exam);
       
       if (kIsWeb) {
-        // On Web, creating a download link or using Printing.sharePdf (which downloads)
         await Printing.sharePdf(bytes: bytes, filename: '${exam['title']}.pdf');
       } else {
-        // Mobile / Desktop
         final directory = Platform.isAndroid 
             ? await getExternalStorageDirectory() 
             : await getApplicationDocumentsDirectory();
@@ -219,13 +241,7 @@ class ExamPdfViewer extends StatelessWidget {
 
   Future<void> _sharePdf(BuildContext context) async {
     try {
-      // Generate normal PDF (Unencrypted)
       final bytes = await _generateExamPdf(PdfPageFormat.a4, exam);
-      
-      if (context.mounted) {
-         CustomToast.showSuccess(context, "Sharing PDF...");
-      }
-      
       await Printing.sharePdf(bytes: bytes, filename: '${exam['title']}.pdf');
     } catch (e) {
       if (context.mounted) {
@@ -236,8 +252,6 @@ class ExamPdfViewer extends StatelessWidget {
 
   Future<Uint8List> _generateExamPdf(PdfPageFormat format, Map<String, dynamic> exam) async {
     final pdf = pw.Document();
-    
-    // Load Logo for Watermark
     final logoData = await rootBundle.load(imgDmBhattLogo);
     final logoImage = pw.MemoryImage(logoData.buffer.asUint8List());
 
@@ -266,6 +280,9 @@ class ExamPdfViewer extends StatelessWidget {
           },
         ),
         build: (pw.Context context) {
+          final DateTime date = exam['date'] != null ? DateTime.parse(exam['date']) : DateTime.now();
+          final String formattedDate = DateFormat('MMM dd, yyyy').format(date);
+
           return [
             pw.Header(
               level: 0,
@@ -273,7 +290,7 @@ class ExamPdfViewer extends StatelessWidget {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text("D. M. Bhatt Tuition Classes", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                  pw.Text("Date: ${exam['date']}"),
+                  pw.Text("Date: $formattedDate"),
                 ]
               )
             ),
@@ -283,8 +300,8 @@ class ExamPdfViewer extends StatelessWidget {
             ),
             pw.SizedBox(height: 10),
             pw.Center(
-              child: pw.Text(
-                "Marks Obtained: ${exam['marks'] ?? (exam['obtainedMarks'] != null ? "${exam['obtainedMarks']}/${exam['totalMarks']}" : "N/A")}",
+               child: pw.Text(
+                "Marks Obtained: ${exam['obtainedMarks']}/${exam['totalMarks']}",
                 style: const pw.TextStyle(fontSize: 16),
               ),
             ),
@@ -292,11 +309,9 @@ class ExamPdfViewer extends StatelessWidget {
             pw.SizedBox(height: 20),
             pw.Text("Questions:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
-            // Render Dynamic Questions if available
             if (fullExam != null && fullExam!['questions'] != null)
               ...List.generate((fullExam!['questions'] as List).length, (index) {
                 final q = fullExam!['questions'][index];
-                 // Handle both Exam (questionText) and FiveMinTest (question) formats
                 final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
                 return pw.Padding(
                   padding: const pw.EdgeInsets.only(bottom: 8),
@@ -304,12 +319,8 @@ class ExamPdfViewer extends StatelessWidget {
                 );
               })
             else ...[
-              // Mock Questions (Generic for now, as history doesn't store full Q&A detailed list in this simple mock)
               pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(1, "Question 1 content placeholder...")),
               pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(2, "Question 2 content placeholder...")),
-              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(3, "Question 3 content placeholder...")),
-              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(4, "Question 4 content placeholder...")),
-              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(5, "Question 5 content placeholder...")),
             ],
           ];
         },

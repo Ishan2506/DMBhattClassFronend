@@ -48,13 +48,9 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
         
         setState(() {
           // Filter to only include appropriate types for each tab
-          _regularExams = results.where((e) => 
-            e['isOnline'] == true && e['type'] != 'ONELINER'
-          ).toList();
+          _regularExams = results.where((e) => e['type'] == 'REGULAR').toList();
           
-          _fiveMinQuizzes = results.where((e) => 
-            e['isOnline'] == false && e['type'] != 'ONELINER'
-          ).toList(); 
+          _fiveMinQuizzes = results.where((e) => e['type'] == 'QUIZ').toList(); 
           
           _isLoading = false;
         });

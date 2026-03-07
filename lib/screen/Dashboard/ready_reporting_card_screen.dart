@@ -96,8 +96,8 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
       filtered = filtered.where((exam) => exam['subject'] == _selectedSubject).toList();
     }
 
-    _appExams = filtered.where((e) => e['isOnline'] == true).toList();
-    _manualExams = filtered.where((e) => e['isOnline'] == false).toList();
+    _appExams = filtered.where((e) => e['type'] == 'REGULAR').toList();
+    _manualExams = filtered.where((e) => e['type'] == 'QUIZ').toList();
   }
 
   Future<void> _selectDateRange(BuildContext context) async {

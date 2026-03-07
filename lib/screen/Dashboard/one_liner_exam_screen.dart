@@ -203,6 +203,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
         obtainedMarks: score,
         totalMarks: _questions.length,
         accuracy: avgAccuracy,
+        type: 'ONELINER',
       );
     } catch (e) {
       debugPrint("Error syncing one-liner result: $e");
