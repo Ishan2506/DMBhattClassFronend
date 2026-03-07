@@ -13,6 +13,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
+import 'upgrade_plan_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // --- Screen 1: Selection ---
@@ -33,6 +34,8 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
   List<String> _units = [];
   List<String> _titles = [];
   List<String> _takenTestIds = [];
+  bool _isPaid = false;
+  int _fiveMinTestCount = 0;
   
   bool _isLoading = true;
   dynamic _selectedTest; // The full test object from API
@@ -49,12 +52,21 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         
-        // Fetch history to check for taken tests
-        final historyResponse = await ApiService.getDashboardData();
+        final historyResponse = await ApiService.getProfile(forceRefresh: true);
         if (historyResponse.statusCode == 200) {
-             final historyData = jsonDecode(historyResponse.body);
-             final List<dynamic> results = historyData['examResults'] ?? [];
-             _takenTestIds = results.map((e) => e['examId'].toString()).toList();
+             final profileData = jsonDecode(historyResponse.body);
+             debugPrint("[DEBUG] 5-Min Test Profile Data: $profileData");
+        _isPaid = profileData['user']?['isPaid'] ?? false;
+        _fiveMinTestCount = profileData['examCounts']?['fiveMinTest'] ?? 0;
+        debugPrint("[DEBUG] 5-Min Test _isPaid: $_isPaid, _fiveMinTestCount: $_fiveMinTestCount");
+             
+             // Also fetch history for specific "already taken" list
+             final dashResponse = await ApiService.getDashboardData();
+             if (dashResponse.statusCode == 200) {
+               final dashData = jsonDecode(dashResponse.body);
+               final List<dynamic> results = dashData['examResults'] ?? [];
+               _takenTestIds = results.map((e) => e['examId'].toString()).toList();
+             }
         }
 
         if (mounted) {
@@ -62,6 +74,8 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
             _allTests = data;
             // Extract unique subjects
             _subjects = _allTests.map((e) => e['subject'].toString()).toSet().toList();
+            _isPaid = profileData['user']?['isPaid'] ?? false;
+            _fiveMinTestCount = profileData['examCounts']?['fiveMinTest'] ?? 0;
             _isLoading = false;
           });
 
@@ -241,6 +255,41 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                         ? () async {
                             if (!await GuestUtils.canGuestAccessExam(context)) return;
                             
+                            if (!_isPaid && _fiveMinTestCount >= 1) {
+                              if (mounted) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    title: const Text("Limit Reached", style: TextStyle(fontWeight: FontWeight.bold)),
+                                    content: const Text("You have already used your 1 free attempt for 5-Min Tests. Please upgrade your plan for unlimited access."),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text("Later", style: TextStyle(color: Colors.grey)),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => UpgradePlanScreen()),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: theme.colorScheme.primary,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                        child: const Text("Upgrade Now", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              return;
+                            }
+                            
                             if (_takenTestIds.contains(_selectedTest['_id'].toString())) {
                               if (mounted) {
                                 showDialog(
@@ -273,7 +322,7 @@ class _FiveMinTestSelectionScreenState extends State<FiveMinTestSelectionScreen>
                                     testData: _selectedTest,
                                   ),
                                 ),
-                              );
+                              ).then((_) => _fetchTests());
                             }
                           }
                         : null,
@@ -656,7 +705,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
     }
   }
   
-  void _finishQuiz() {
+  Future<void> _finishQuiz() async {
     int correct = 0;
     int wrong = 0;
     int skipped = 0;
@@ -702,9 +751,13 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
       try {
         CustomLoader.show(context);
         // Token managed internally
+        String finalTitle = widget.testData['title'] ?? '';
+        if (finalTitle.trim().isEmpty) finalTitle = widget.unit;
+        if (finalTitle.trim().isEmpty) finalTitle = 'Untitled Test';
+
         await ApiService.submitFiveMinTestResult(
           examId: widget.testData['_id'].toString(),
-          title: widget.testData['title'] ?? widget.unit,
+          title: finalTitle,
           obtainedMarks: correct,
           totalMarks: _questions.length,
           isOnline: true,
@@ -734,7 +787,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
       }
     }
 
-    _submitAndNavigate();
+    await _submitAndNavigate();
   }
 
   @override

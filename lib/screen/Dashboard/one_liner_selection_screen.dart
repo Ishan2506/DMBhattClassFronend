@@ -10,6 +10,7 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
+import 'upgrade_plan_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OneLinerSelectionScreen extends StatefulWidget {
@@ -35,6 +36,8 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
   List<String> _titles = [];
   List<String> _marksOptions = [];
   List<String> _takenTestTitles = [];
+  bool _isPaid = false;
+  int _oneLinerCount = 0;
 
   String? _selectedExamId;
 
@@ -50,15 +53,16 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
       String? userStandard = prefs.getString('std');
       String? userMedium = prefs.getString('medium');
 
-      // Fetch user profile if prefs are empty (robustness)
-      if (userStandard == null || userMedium == null) {
-        final profileResponse = await ApiService.getProfile();
-        if (profileResponse.statusCode == 200) {
-          final profileData = jsonDecode(profileResponse.body);
-          final profile = profileData['profile'];
-          userStandard = profile?['std']?.toString();
-          userMedium = profile?['medium']?.toString();
-        }
+      // Always fetch profile for current status and counts
+      final profileResponse = await ApiService.getProfile(forceRefresh: true);
+      if (profileResponse.statusCode == 200) {
+        final profileData = jsonDecode(profileResponse.body);
+        final profile = profileData['profile'];
+        _isPaid = profileData['user']?['isPaid'] ?? false;
+        _oneLinerCount = profileData['examCounts']?['oneLinerExam'] ?? 0;
+        debugPrint("[DEBUG] One-Liner _isPaid: $_isPaid, _oneLinerCount: $_oneLinerCount");
+        userStandard = profile?['std']?.toString();
+        userMedium = profile?['medium']?.toString();
       }
 
       final response = await ApiService.getAllOneLinerExams(
@@ -81,15 +85,18 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
           debugPrint("Error fetching dashboard data for one-liner: $e");
         }
 
-        setState(() {
-          _allOneLinerExams = data;
-          _subjects = _allOneLinerExams
-              .map((e) => e['subject']?.toString() ?? '')
-              .where((s) => s.isNotEmpty)
-              .toSet()
-              .toList();
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _allOneLinerExams = data;
+            _subjects = _allOneLinerExams
+                .map((e) => e['subject']?.toString() ?? '')
+                .where((s) => s.isNotEmpty)
+                .toSet()
+                .toList();
+            // _isPaid and _oneLinerCount were already set but this ensures they trigger a rebuild
+            _isLoading = false;
+          });
+        }
 
         if (_subjects.isEmpty) {
           _showNoExamDialog();
@@ -232,7 +239,42 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
     }
 
     if (!await GuestUtils.canGuestAccessExam(context)) return;
-
+    
+    if (!_isPaid && _oneLinerCount >= 1) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text("Limit Reached", style: TextStyle(fontWeight: FontWeight.bold)),
+            content: const Text("You have already used your 1 free attempt for One-Liner Exams. Please upgrade your plan for unlimited access."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Later", style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UpgradePlanScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text("Upgrade Now", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+    
     if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
       if (mounted) {
         showDialog(
@@ -262,7 +304,7 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
           examId: _selectedExamId!,
         ),
       ),
-    );
+    ).then((_) => _fetchOneLinerExams());
   }
 
   @override

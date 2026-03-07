@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
@@ -12,14 +14,119 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_exam_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class StudentHomeScreen extends StatelessWidget {
+class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
 
   @override
+  State<StudentHomeScreen> createState() => _StudentHomeScreenState();
+}
+
+class _StudentHomeScreenState extends State<StudentHomeScreen> {
+  bool _isPaid = false;
+  Map<String, int> _examCounts = {
+    'mainExam': 0,
+    'fiveMinTest': 0,
+    'oneLinerExam': 0,
+  };
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final response = await ApiService.getProfile(forceRefresh: true);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            debugPrint("[DEBUG] Home Profile Data: $data");
+            _isPaid = data['user']['isPaid'] ?? false;
+            if (data['examCounts'] != null) {
+              _examCounts = {
+                'mainExam': data['examCounts']['mainExam'] ?? 0,
+                'fiveMinTest': data['examCounts']['fiveMinTest'] ?? 0,
+                'oneLinerExam': data['examCounts']['oneLinerExam'] ?? 0,
+              };
+              debugPrint("[DEBUG] Home _examCounts: $_examCounts");
+            }
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching profile: $e");
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _checkAndNavigate(String type, Widget targetScreen) {
+    if (!_isPaid && (_examCounts[type] ?? 0) >= 1) {
+      _showUpgradeDialog();
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => targetScreen),
+    ).then((_) => _fetchProfile()); // Refresh counts after returning
+  }
+
+  void _showUpgradeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          "Limit Reached",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "You have already used your 1 free attempt for this exam. Please upgrade your plan for unlimited access.",
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Later", style: GoogleFonts.poppins(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text("Upgrade Now", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
@@ -62,7 +169,7 @@ class StudentHomeScreen extends StatelessWidget {
                   l10n.dmBhattGroupTuition,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                    fontSize: screenWidth * 0.055, // Responsive Font Size
+                    fontSize: screenWidth * 0.055, 
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 1.2,
@@ -72,7 +179,7 @@ class StudentHomeScreen extends StatelessWidget {
                 Text(
                   l10n.excellenceInEducation,
                   style: GoogleFonts.poppins(
-                    fontSize: screenWidth * 0.035, // Responsive Font Size
+                    fontSize: screenWidth * 0.035, 
                     color: Colors.white70,
                   ),
                 ),
@@ -80,84 +187,10 @@ class StudentHomeScreen extends StatelessWidget {
             ),
           ),
 
-            
-            // Quick Access Categories
-            const SizedBox(height: 16),
-            const QuickAccessCategories(),
-            
-            // YouTube Ad
-            const YouTubeChannelAd(),
-           // const SizedBox(height: 18),
-            blankVerticalSpace24,
-
-          // Daily Time Table Section
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 20),
-          //   child: Column(
-          //     crossAxisAlignment: CrossAxisAlignment.start,
-          //     children: [
-          //       Row(
-          //         children: [
-          //           Container(
-          //             height: MediaQuery.of(context).size.height * 0.03,
-          //             width: 4,
-          //             decoration: BoxDecoration(
-          //               color: Colors.orange,
-          //               borderRadius: BorderRadius.circular(2),
-          //             ),
-          //           ),
-          //           const SizedBox(width: 8),
-          //           Text(
-          //             l10n.dailyTimeTable,
-          //             style: GoogleFonts.poppins(
-          //               fontSize: screenWidth * 0.045, // Responsive Font Size
-          //               fontWeight: FontWeight.w600,
-          //               color: colorScheme.onSurface,
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //       blankVerticalSpace16,
-          //       Container(
-          //         width: double.infinity,
-          //         decoration: BoxDecoration(
-          //           color: colorScheme.surfaceContainer, // Dynamic Card
-          //           borderRadius: BorderRadius.circular(20),
-          //           boxShadow: [
-          //             BoxShadow(
-          //               color: colorScheme.shadow.withOpacity(0.05),
-          //               blurRadius: 20,
-          //               offset: const Offset(0, 5),
-          //             ),
-          //           ],
-          //         ),
-          //         child: Column(
-          //           children: [
-          //             _buildTimeTableItem(
-          //               context,
-          //               "Mathematics",
-          //               "10:00 AM - 11:30 AM",
-          //               Icons.calculate_outlined,
-          //               Colors.blue,
-          //             ),
-          //             Padding(
-          //               padding: const EdgeInsets.symmetric(horizontal: 16),
-          //               child: Divider(height: 1, color: colorScheme.outlineVariant.withOpacity(0.2)),
-          //             ),
-          //             _buildTimeTableItem(
-          //               context,
-          //               "Physics",
-          //               "12:00 PM - 01:30 PM",
-          //               Icons.science_outlined,
-          //               Colors.purple,
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          // blankVerticalSpace32,
+          const SizedBox(height: 16),
+          const QuickAccessCategories(),
+          const YouTubeChannelAd(),
+          blankVerticalSpace24,
 
           // Start Exam Section
           Padding(
@@ -165,7 +198,7 @@ class StudentHomeScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainer, // Dynamic Card
+                color: colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
                 boxShadow: [
@@ -181,7 +214,7 @@ class StudentHomeScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1), // Subtle theme tint
+                      color: colorScheme.primary.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -194,7 +227,7 @@ class StudentHomeScreen extends StatelessWidget {
                   Text(
                     l10n.nextExamWaiting,
                     style: GoogleFonts.poppins(
-                      fontSize: screenWidth * 0.04, // Responsive Font Size
+                      fontSize: screenWidth * 0.04,
                       color: colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                     ),
@@ -203,17 +236,12 @@ class StudentHomeScreen extends StatelessWidget {
                   blankVerticalSpace24,
                   SizedBox(
                     width: double.infinity,
-                    height: MediaQuery.of(context).size.height * 0.06,
+                    height: screenHeight * 0.06,
                     child: ElevatedButton(
                       onPressed: () async {
                         if (!await GuestUtils.canGuestAccessExam(context)) return;
                         if (context.mounted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const StudentStartExamForm(),
-                            ),
-                          );
+                          _checkAndNavigate('mainExam', const StudentStartExamForm());
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -229,7 +257,7 @@ class StudentHomeScreen extends StatelessWidget {
                         child: Text(
                           l10n.startExam.toUpperCase(),
                           style: GoogleFonts.poppins(
-                            fontSize: screenWidth * 0.035, // Responsive Font Size
+                            fontSize: screenWidth * 0.035,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1,
                           ),
@@ -244,15 +272,15 @@ class StudentHomeScreen extends StatelessWidget {
           blankVerticalSpace24,
 
           // 5 Min Test Section
-           Padding(
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                     colorScheme.primary,
-                     colorScheme.primary.withOpacity(0.7)
+                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.7)
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -268,7 +296,7 @@ class StudentHomeScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                   Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -288,23 +316,18 @@ class StudentHomeScreen extends StatelessWidget {
                             color: Colors.white.withOpacity(0.9),
                           ),
                         ),
-                         const SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () async {
                             if (!await GuestUtils.canGuestAccessExam(context)) return;
-                             if (context.mounted) {
-                               Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const FiveMinTestSelectionScreen(),
-                                ),
-                              );
-                             }
+                            if (context.mounted) {
+                              _checkAndNavigate('fiveMinTest', const FiveMinTestSelectionScreen());
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: colorScheme.surface,
                             foregroundColor: colorScheme.primary,
-                             shape: RoundedRectangleBorder(
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -313,20 +336,20 @@ class StudentHomeScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                   ),
-                   Container(
-                     height: 100,
-                     width: 90,
-                     clipBehavior: Clip.hardEdge,
-                     decoration: const BoxDecoration(), // Just for clip
-                     child: Image.asset(
-                       'assets/images/app_logo.png', 
-                       fit: BoxFit.fitWidth,
-                       alignment: Alignment.topCenter, // Alignment top to crop bottom text
-                       errorBuilder: (context, error, stackTrace) => 
-                          Icon(Icons.timer_outlined, size: 60, color: Colors.white.withOpacity(0.8)),
-                     ),
-                   ),
+                  ),
+                  Container(
+                    height: 100,
+                    width: 90,
+                    clipBehavior: Clip.hardEdge,
+                    decoration: const BoxDecoration(), 
+                    child: Image.asset(
+                      'assets/images/app_logo.png', 
+                      fit: BoxFit.fitWidth,
+                      alignment: Alignment.topCenter,
+                      errorBuilder: (context, error, stackTrace) => 
+                        Icon(Icons.timer_outlined, size: 60, color: Colors.white.withOpacity(0.8)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -334,15 +357,15 @@ class StudentHomeScreen extends StatelessWidget {
           blankVerticalSpace24,
 
           // One-Liner Exam Section
-           Padding(
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                     Colors.orange.shade700,
-                     Colors.orange.shade400
+                    Colors.orange.shade700,
+                    Colors.orange.shade400
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -358,7 +381,7 @@ class StudentHomeScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                   Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -378,23 +401,18 @@ class StudentHomeScreen extends StatelessWidget {
                             color: Colors.white.withOpacity(0.9),
                           ),
                         ),
-                         const SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () async {
-                             if (!await GuestUtils.canGuestAccessExam(context)) return;
-                             if (context.mounted) {
-                               Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const OneLinerSelectionScreen(),
-                                ),
-                              );
-                             }
+                            if (!await GuestUtils.canGuestAccessExam(context)) return;
+                            if (context.mounted) {
+                              _checkAndNavigate('oneLinerExam', const OneLinerSelectionScreen());
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.orange.shade700,
-                             shape: RoundedRectangleBorder(
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -403,63 +421,18 @@ class StudentHomeScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                   ),
-                   const SizedBox(
-                     height: 100,
-                     width: 90,
-                     child: Icon(Icons.mic_external_on, size: 60, color: Colors.white),
-                   ),
+                  ),
+                  const SizedBox(
+                    height: 100,
+                    width: 90,
+                    child: Icon(Icons.mic_external_on, size: 60, color: Colors.white),
+                  ),
                 ],
               ),
             ),
           ),
           blankVerticalSpace24,
-    
           SizedBox(height: screenHeight * 0.05),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeTableItem(BuildContext context,
-      String subject, String time, IconData icon, Color color) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subject,
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: colorScheme.onSurface, // Dynamic Text
-                  ),
-                ),
-                Text(
-                  time,
-                  style: GoogleFonts.poppins(
-                    color: colorScheme.onSurfaceVariant, // Dynamic Text
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.arrow_forward_ios, size: 14, color: colorScheme.onSurfaceVariant),
         ],
       ),
     );

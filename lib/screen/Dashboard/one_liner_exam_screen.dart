@@ -197,6 +197,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
 
     // Sync to backend (Fire and forget or wait? Better wait for better UX)
     try {
+      if (context.mounted) CustomLoader.show(context);
       await ApiService.submitOneLinerExamResult(
         examId: widget.examId,
         title: widget.title,
@@ -207,6 +208,8 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
       );
     } catch (e) {
       debugPrint("Error syncing one-liner result: $e");
+    } finally {
+      if (context.mounted) CustomLoader.hide(context);
     }
 
     if (mounted) {

@@ -130,7 +130,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     }
   }
 
-  void _navigateToResult() {
+  Future<void> _navigateToResult() async {
     int correct = 0;
     int wrong = 0;
     int skipped = 0;
@@ -205,7 +205,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
       }
     }
 
-    submitAndNavigate();
+    await submitAndNavigate();
   }
 
   void _previousQuestion() {

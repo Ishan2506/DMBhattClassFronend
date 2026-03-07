@@ -9,6 +9,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
+import 'upgrade_plan_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,6 +44,8 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   String? _userMedium;
   String? _userStandard;
   String? _userStream;
+  bool _isPaid = false;
+  int _mainExamCount = 0;
 
   @override
   void initState() {
@@ -61,12 +64,14 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
       // Fetch user profile to filter exams
       if (token != null) {
         debugPrint("[Timing] Starting getProfile at ${stopwatch.elapsedMilliseconds}ms");
-        final profileResponse = await ApiService.getProfile();
+        final profileResponse = await ApiService.getProfile(forceRefresh: true);
         debugPrint("[Timing] Finished getProfile at ${stopwatch.elapsedMilliseconds}ms");
         
         if (profileResponse.statusCode == 200) {
           final profileData = jsonDecode(profileResponse.body);
           final profile = profileData['profile'];
+          _isPaid = profileData['user']?['isPaid'] ?? false;
+          _mainExamCount = profileData['examCounts']?['mainExam'] ?? 0;
           _userStandard = profile?['std']?.toString();
           // Backward compatibility: If the DB has "11 Science", split it.
           if (_userStandard != null && _userStandard!.contains(' ')) {
@@ -381,6 +386,41 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                           : () async {
                               if (!await GuestUtils.canGuestAccessExam(context)) return;
                               
+                              if (!_isPaid && _mainExamCount >= 1) {
+                                if (context.mounted) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      title: const Text("Limit Reached", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      content: const Text("You have already used your 1 free attempt for Main Exams. Please upgrade your plan for unlimited access."),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context),
+                                          child: const Text("Later", style: TextStyle(color: Colors.grey)),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => UpgradePlanScreen()),
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Theme.of(context).primaryColor,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          ),
+                                          child: const Text("Upgrade Now", style: TextStyle(fontWeight: FontWeight.bold)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                                return;
+                              }
+                              
                               if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
                                 showDialog(
                                   context: context,
@@ -411,7 +451,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                                       title: _selectedTitle ?? 'Untitled Exam',
                                     ),
                                   ),
-                                );
+                                ).then((_) => _fetchExams());
                               }
                             },
                       style: ElevatedButton.styleFrom(

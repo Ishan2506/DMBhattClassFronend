@@ -28,7 +28,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   String? _selectedMedium;
   String? _selectedStream;
 
-  final List<String> _standards = ["7", "8", "9", "10", "11", "12"];
+  final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
 
@@ -44,6 +44,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   String? _currentStandard;
   bool _isLoading = true;
   bool _isGuest = false;
+  bool _isPaid = true;
 
   late RazorpayHelper _razorpayHelper;
 
@@ -122,10 +123,12 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final profile = data['profile'];
+        final user = data['user'];
         
         if (profile != null) {
           setState(() {
             _currentStandard = profile['std'];
+            _isPaid = user['isPaid'] ?? true;
           });
         }
       }
@@ -164,6 +167,12 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   List<String> get _filteredStandards {
     if (_currentStandard == null) return _standards;
     int current = int.tryParse(_currentStandard!) ?? 0;
+    
+    // If NOT paid, include the current standard (e.g. 6th) to allow payment
+    if (!_isPaid) {
+      return _standards.where((s) => (int.tryParse(s) ?? 0) >= current).toList();
+    }
+    
     // Filter standards strictly greater than current standard
     return _standards.where((s) => (int.tryParse(s) ?? 0) > current).toList();
   }
@@ -177,6 +186,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     }
 
     switch (_selectedStandard) {
+      case "6":
+        _originalAmount = 300;
+        break;
       case "7":
         _originalAmount = 400;
         break;
@@ -473,43 +485,58 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     }
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: CustomAppBar(
-        title: l10n.upgradePlan,
+      appBar: AppBar(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: colorScheme.onSurface),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          l10n.upgradePlan,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
             onPressed: _showUpgradeHistory,
-            icon: const Icon(Icons.history, color: Colors.white),
+            icon: Icon(Icons.history, color: colorScheme.primary),
             tooltip: "Upgrade History",
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-            // Selection Card
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Selection Section
+            Text(
+              "Select Your New Plan",
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
-                  boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: Column(
                 children: [
-                   _buildDropdown(
+                  _buildDropdown(
                     label: l10n.standard,
                     value: _selectedStandard,
-                    items: _filteredStandards, // Use filtered list
+                    items: _filteredStandards,
                     onChanged: (val) {
                       setState(() {
                         _selectedStandard = val;
@@ -521,9 +548,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                     },
                     colorScheme: colorScheme,
                   ),
-                  const SizedBox(height: 16),
                   if (_selectedStandard == "11" || _selectedStandard == "12") ...[
-                      _buildDropdown(
+                    const SizedBox(height: 16),
+                    _buildDropdown(
                       label: l10n.stream,
                       value: _selectedStream,
                       items: _streams,
@@ -534,14 +561,14 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                       },
                       colorScheme: colorScheme,
                     ),
-                    const SizedBox(height: 16),
                   ],
+                  const SizedBox(height: 16),
                   _buildDropdown(
                     label: l10n.medium,
                     value: _selectedMedium,
                     items: _mediums,
                     onChanged: (val) {
-                       setState(() {
+                      setState(() {
                         _selectedMedium = val;
                       });
                     },
@@ -550,32 +577,130 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                 ],
               ),
             ),
-             const SizedBox(height: 24),
-            
+
             if (_selectedStandard != null) ...[
-              // Amount Breakdown
+              const SizedBox(height: 32),
+              // Plan Details Card (Matching PaymentScreen)
               Container(
-                padding: const EdgeInsets.all(20),
-                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.primary.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSummaryRow(l10n.baseAmount, "₹$_originalAmount", colorScheme),
-                    if (_isPromoApplied)
-                      _buildSummaryRow(l10n.promoDiscount, "-₹${_promoDiscount.toStringAsFixed(0)}", colorScheme, isDiscount: true),
-                    if (_pointsDiscount > 0)
-                      _buildSummaryRow(l10n.pointsDiscount, "-₹${_pointsDiscount.toStringAsFixed(0)}", colorScheme, isDiscount: true),
-                    const Divider(),
-                     _buildSummaryRow(l10n.totalPayable, "₹${_finalAmount.toStringAsFixed(0)}", colorScheme, isTotal: true),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Standard $_selectedStandard",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onPrimary.withOpacity(0.8),
+                              ),
+                            ),
+                            Text(
+                              "${_selectedMedium ?? ''} Medium",
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onPrimary,
+                              ),
+                            ),
+                            if (_selectedStream != null)
+                              Text(
+                                _selectedStream!,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: colorScheme.onPrimary.withOpacity(0.8),
+                                ),
+                              ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            "ANNUAL",
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    const Divider(color: Colors.white24, thickness: 1),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.totalPayable,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: colorScheme.onPrimary.withOpacity(0.9),
+                          ),
+                        ),
+                        Text(
+                          "₹${_finalAmount.toStringAsFixed(0)}",
+                          style: GoogleFonts.poppins(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-               const SizedBox(height: 24),
 
-               // Promo Code Section
+              const SizedBox(height: 32),
+              // Membership Benefits (Chips style)
+              Text(
+                "Membership Benefits",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _buildBenefitChip(context, Icons.auto_stories, "Full Access", Colors.blue),
+                  _buildBenefitChip(context, Icons.description, "School Papers", Colors.green),
+                  _buildBenefitChip(context, Icons.stars_rounded, "Board Papers", Colors.orange),
+                  _buildBenefitChip(context, Icons.hub_outlined, "Mind Maps", Colors.purple),
+                  _buildBenefitChip(context, Icons.timer, "5 Min Test", Colors.red),
+                  _buildBenefitChip(context, Icons.analytics, "Performance", Colors.teal),
+                  _buildBenefitChip(context, Icons.library_books, "Premium Material", Colors.indigo),
+                ],
+              ),
+
+              const SizedBox(height: 32),
+              // Promo Code Section
               Text("Have a Redeem Code?", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
               const SizedBox(height: 8),
               Row(
@@ -592,7 +717,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                         decoration: InputDecoration(
                           hintText: _selectedStandard != null 
                               ? l10n.promoHint(_selectedStandard!)
-                              : l10n.promoHint("8"), // Dynamic Hint
+                              : "Enter Promo Code",
                           hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -605,18 +730,18 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   ElevatedButton(
                     onPressed: _applyPromoCode,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
+                      backgroundColor: colorScheme.inverseSurface,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     ),
-                    child: Text(l10n.apply, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: Text(l10n.apply, style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
 
+              const SizedBox(height: 24),
               // Reward Points Section
-               Text(l10n.useRewardPoints(_availablePoints), style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
+              Text(l10n.useRewardPoints(_availablePoints), style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -632,7 +757,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: l10n.pointsHint,
-                          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+                          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
@@ -640,39 +765,79 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                       ),
                     ),
                   ),
-                   const SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   ElevatedButton(
                     onPressed: _applyRewardPoints,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
+                      backgroundColor: colorScheme.inverseSurface,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     ),
-                    child: Text(l10n.use, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: Text(l10n.use, style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
-               const SizedBox(height: 32),
 
+              const SizedBox(height: 32),
+              // Terms/Info Section
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "This membership will be expired after 1 year.",
+                        style: GoogleFonts.poppins(fontSize: 12, color: Colors.orange.shade800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
               // Pay Button
-              SizedBox(
+              Container(
                 width: double.infinity,
-                height: 56,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
                 child: ElevatedButton(
                   onPressed: _processUpgrade,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    elevation: 4,
-                    shadowColor: colorScheme.primary.withOpacity(0.4),
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
-                  child: Text(
-                    l10n.payAndUpgrade(_finalAmount.toStringAsFixed(0)),
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        l10n.payAndUpgrade(_finalAmount.toStringAsFixed(0)),
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 24),
+                    ],
                   ),
                 ),
               ),
@@ -739,6 +904,32 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
              fontWeight: isTotal ? FontWeight.bold : FontWeight.bold,
              color: isDiscount ? Colors.green : (isTotal ? colorScheme.primary : colorScheme.onSurface)
           )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitChip(BuildContext context, IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color.withOpacity(0.9),
+            ),
+          ),
         ],
       ),
     );
