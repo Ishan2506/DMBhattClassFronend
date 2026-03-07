@@ -714,8 +714,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildDetailItem(context, Icons.school_rounded, l10n.school, schoolName),
-                  const SizedBox(height: 12),
                   _buildDetailItem(context, Icons.phone_android_rounded, l10n.mobile, mobileNo),
                   const SizedBox(height: 12),
                   _buildDetailItem(context, Icons.email_rounded, l10n.email, email.isEmpty ? l10n.notProvided : email),

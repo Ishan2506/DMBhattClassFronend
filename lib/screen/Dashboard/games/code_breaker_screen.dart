@@ -135,29 +135,161 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
   }
 
   void _showHowToPlay() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("How to Play", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-             Text("1. Guess the 4-digit secret code using the colors.", style: GoogleFonts.poppins()),
-             const SizedBox(height: 8),
-             Text("2. Each digit is between 1-6.", style: GoogleFonts.poppins()),
-             const SizedBox(height: 8),
-             Text("3. Red dot (Bull): Correct digit in the correct position.", style: GoogleFonts.poppins()),
-             const SizedBox(height: 8),
-             Text("4. Empty circle (Cow): Correct digit but in the wrong position.", style: GoogleFonts.poppins()),
-             const SizedBox(height: 8),
-             Text("5. You have 10 attempts to break the code!", style: GoogleFonts.poppins()),
-          ],
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 10,
+        backgroundColor: theme.cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header with Icon
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.videogame_asset,
+                      color: colorScheme.primary,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    "How to Play",
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: theme.textTheme.titleLarge?.color,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Instructions
+              _buildInstructionRow(theme, "1", "Guess the 4-digit secret code using the colors."),
+              const SizedBox(height: 12),
+              _buildInstructionRow(theme, "2", "Each digit is a distinct number between 1 and 6."),
+              const SizedBox(height: 12),
+              _buildInstructionRow(theme, "3", "Red dot (Bull): Correct color in the correct position."),
+              const SizedBox(height: 12),
+              _buildInstructionRow(theme, "4", "Empty circle (Cow): Correct color but in the wrong position."),
+              const SizedBox(height: 24),
+              // Example Box
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      "Example",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.tertiary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Secret: 1-4-5-6 | Guess: 1-2-3-4",
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.normal),
+                    ),
+                    const SizedBox(height: 8),
+                    const Icon(Icons.arrow_downward_rounded, size: 20, color: Colors.grey),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.circle, size: 16, color: Colors.red),
+                        const SizedBox(width: 4),
+                        Text("1 Bull (1 is perfect)", style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.circle_outlined, size: 16, color: theme.colorScheme.onSurface.withOpacity(0.4)),
+                        const SizedBox(width: 4),
+                        Text("1 Cow (4 is wrong spot)", style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Got it button
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 2,
+                ),
+                child: Text(
+                  "Let's Play!",
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it!"))
-        ],
       ),
+    );
+  }
+
+  Widget _buildInstructionRow(ThemeData theme, String number, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.secondary.withOpacity(0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              number,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.secondary,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              height: 1.4,
+              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

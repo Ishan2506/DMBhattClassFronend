@@ -3,6 +3,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_payment_confirmation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
@@ -21,8 +22,7 @@ class StudentProductHistoryScreen extends StatefulWidget {
 
 class _StudentProductHistoryScreenState extends State<StudentProductHistoryScreen> {
   bool _isLoading = true;
-  List<Map<String, dynamic>> _materials = [];
-  List<Map<String, dynamic>> _products = [];
+  List<Map<String, dynamic>> _purchases = [];
 
   @override
   void initState() {
@@ -37,21 +37,20 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
         final List<dynamic> data = jsonDecode(response.body);
         
         setState(() {
-          // Assuming the API returns a list of purchases
-          // Filter into materials (PDFs) and products (Image/Other)
-          final purchases = data.map((item) => {
+          _purchases = data.map((item) => {
             "id": item['productId']['_id'],
             "title": item['productId']['name'] ?? "Unknown Product",
             "date": _formatDate(item['createdAt']),
             "type": item['productId']['category'] ?? "Material",
             "price": "₹${item['amount']}",
+            "amountRaw": item['amount'],
             "transactionId": item['razorpay_payment_id'] ?? "N/A",
             "image": item['productId']['image'] ?? "",
             "isPdf": item['productId']['image'].toString().toLowerCase().contains('.pdf'),
+            "standard": item['productId']['standardId']?['name'] ?? "N/A",
+            "medium": item['productId']['mediumId']?['name'] ?? "N/A",
           }).toList().cast<Map<String, dynamic>>();
 
-          _materials = purchases.where((p) => p['isPdf']).toList();
-          _products = purchases.where((p) => !p['isPdf']).toList();
           _isLoading = false;
         });
       } else {
@@ -79,46 +78,18 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: CustomAppBar(
-          title: "Product History",
-          bottom: TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            tabs: [
-              Tab(
-                child: Text(
-                  "Materials",
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                ),
-              ),
-              Tab(
-                child: Text(
-                  "Products",
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-        ),
-        body: _isLoading 
-          ? const Center(child: CustomLoader())
-          : TabBarView(
-              children: [
-                _buildHistoryList(context, _materials, isMaterial: true),
-                _buildHistoryList(context, _products, isMaterial: false),
-              ],
-            ),
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: const CustomAppBar(
+        title: "Product History",
       ),
+      body: _isLoading 
+        ? const Center(child: CustomLoader())
+        : _buildHistoryList(context, _purchases),
     );
   }
 
-  Widget _buildHistoryList(BuildContext context, List<Map<String, dynamic>> items, {required bool isMaterial}) {
+  Widget _buildHistoryList(BuildContext context, List<Map<String, dynamic>> items) {
     final colorScheme = Theme.of(context).colorScheme;
     
     if (items.isEmpty) {
@@ -135,119 +106,186 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
+        final isPdf = item['isPdf'] == true;
         return Card(
           elevation: 0,
           color: colorScheme.surfaceContainer,
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              if (isPdf) {
+                _openMaterialViewer(context, item);
+              } else if (item['image'] != null && item['image'].toString().isNotEmpty) {
+                _openMaterialViewer(context, item);
+              } else {
+                // If it's not a material, we don't have a specific view right now, 
+                // but we could just show the receipt as a fallback
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentPaymentConfirmationScreen(
+                      transactionDetails: item,
+                    ),
+                  ),
+                );
+              }
+            },
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  isPdf ? Icons.picture_as_pdf : Icons.image, 
+                  color: colorScheme.primary
+                ),
               ),
-              child: Icon(
-                isMaterial ? Icons.picture_as_pdf : Icons.inventory_2, 
-                color: colorScheme.primary
+              title: Text(
+                item['title'],
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface
+                ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                   Text(
+                    "Purchased on: ${item['date']}",
+                     style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant
+                    ),
+                  ),
+                  Text(
+                    "Price: ${item['price']}",
+                     style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500
+                    ),
+                  ),
+                   Text(
+                    "Txn ID: ${item['transactionId']}",
+                     style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: colorScheme.onSurfaceVariant.withOpacity(0.8)
+                    ),
+                  ),
+                ],
+              ),
+              isThreeLine: true,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Download Receipt Button
+                  IconButton(
+                    icon: Icon(Icons.download, color: colorScheme.primary),
+                    tooltip: "Download Receipt",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StudentPaymentConfirmationScreen(
+                            transactionDetails: item,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  // Read Button (Show for all)
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      _openMaterialViewer(context, item);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)
+                    ),
+                    child: Text("Read", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                  )
+                ],
               ),
             ),
-            title: Text(
-              item['title'],
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                 Text(
-                  "Purchased on: ${item['date']}",
-                   style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant
-                  ),
-                ),
-                Text(
-                  "Price: ${item['price']}",
-                   style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500
-                  ),
-                ),
-                 Text(
-                  "Txn ID: ${item['transactionId']}",
-                   style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.8)
-                  ),
-                ),
-              ],
-            ),
-            isThreeLine: true,
-            trailing: isMaterial 
-              ? ElevatedButton(
-                  onPressed: () {
-                    _openSecurePdf(context, item);
-                  },
-                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)
-                  ),
-                  child: Text("Read", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                )
-              : null,
           ),
         );
       },
     );
   }
 
-  void _openSecurePdf(BuildContext context, Map<String, dynamic> item) {
-    // Navigate to a screen that shows the full PDF
+  void _openMaterialViewer(BuildContext context, Map<String, dynamic> item) {
+    // Navigate to a screen that shows the full PDF or image
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FullPdfViewerScreen(product: {
-          'name': item['title'],
-          'image': item['image'],
-        }),
+        builder: (context) => FullMaterialViewerScreen(
+          product: {
+            'name': item['title'],
+            'image': item['image'],
+          },
+          isPdf: item['isPdf'] ?? false,
+        ),
       ),
     );
   }
 }
 
-class FullPdfViewerScreen extends StatelessWidget {
+class FullMaterialViewerScreen extends StatelessWidget {
   final Map<String, dynamic> product;
-  const FullPdfViewerScreen({super.key, required this.product});
+  final bool isPdf;
+  
+  const FullMaterialViewerScreen({
+    super.key, 
+    required this.product,
+    required this.isPdf,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black, // Better for viewing images/PDFs
       appBar: CustomAppBar(
-        title: product['name'] ?? 'View PDF',
+        title: product['name'] ?? 'View Material',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: PdfPreview(
-        build: (format) async {
-          final response = await http.get(Uri.parse(product['image']));
-          return response.bodyBytes;
-        },
-        useActions: false, 
-        allowPrinting: false,
-        allowSharing: false,
-        canChangeOrientation: false,
-        canChangePageFormat: false,
-      ),
+      body: isPdf
+          ? PdfPreview(
+              build: (format) async {
+                final response = await http.get(Uri.parse(product['image']));
+                return response.bodyBytes;
+              },
+              useActions: false, 
+              allowPrinting: false,
+              allowSharing: false,
+              canChangeOrientation: false,
+              canChangePageFormat: false,
+            )
+          : Center(
+              child: InteractiveViewer(
+                child: Image.network(
+                  product['image'],
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const CircularProgressIndicator(color: Colors.white);
+                  },
+                  errorBuilder: (context, error, stackTrace) => 
+                      const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                ),
+              ),
+            ),
     );
   }
 }

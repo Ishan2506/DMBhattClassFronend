@@ -985,4 +985,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comingSoon => 'Coming Soon';
+
+  @override
+  String get spellingMaster => 'Spelling Master';
+
+  @override
+  String get spellingMasterDesc =>
+      'Test your spelling skills with increasingly difficult words.';
+
+  @override
+  String get synonymAntonym => 'Synonym & Antonym';
+
+  @override
+  String get synonymAntonymDesc =>
+      'Find the correct synonym or antonym for the given word.';
+
+  @override
+  String get languageTranslator => 'Language Translator';
+
+  @override
+  String get languageTranslatorDesc =>
+      'Test your translation skills between different languages.';
+
+  @override
+  String get subjectWordSearch => 'Subject Word Search';
+
+  @override
+  String get subjectWordSearchDesc =>
+      'Find hidden academic words within the grid.';
+
+  @override
+  String get logicGatesQuest => 'Logic Gates Quest';
+
+  @override
+  String get logicGatesQuestDesc =>
+      'Solve puzzles using basic digital logic gates (AND, OR, NOT).';
+
+  @override
+  String get stroopEffectChallenge => 'Stroop Challenge';
+
+  @override
+  String get stroopEffectChallengeDesc =>
+      'Overcome cognitive interference in this classic color-word test.';
+
+  @override
+  String get syllableScramble => 'Syllable Scramble';
+
+  @override
+  String get syllableScrambleDesc =>
+      'Construct multi-syllabic words from jumbled fragments.';
+
+  @override
+  String get capitalCityQuest => 'Capital City Quest';
+
+  @override
+  String get capitalCityQuestDesc =>
+      'Match the region to its correct Capital City.';
+
+  @override
+  String get proverbCompleter => 'Proverb Completer';
+
+  @override
+  String get proverbCompleterDesc =>
+      'Fill in the missing word in well-known English proverbs.';
+
+  @override
+  String get directionSense => 'Direction Sense';
+
+  @override
+  String get directionSenseDesc =>
+      'Solve basic direction and movement problems.';
+
+  @override
+  String get spotTheDifference => 'Spot the Difference';
+
+  @override
+  String get spotTheDifferenceDesc => 'Find the 1 element that is different.';
+
+  @override
+  String get flagExplorer => 'Flag Explorer';
+
+  @override
+  String get flagExplorerDesc =>
+      'Identify the correct country name from its flag.';
+
+  @override
+  String get grammarSorter => 'Grammar Sorter';
+
+  @override
+  String get grammarSorterDesc =>
+      'Sort falling words into the correct grammatical bucket.';
+
+  @override
+  String get gkQuiz => 'General Knowledge';
+
+  @override
+  String get gkQuizDesc => 'Test your general knowledge with a quick quiz.';
+
+  @override
+  String get sequenceMemory => 'Sequence Memory';
+
+  @override
+  String get sequenceMemoryDesc =>
+      'Memorize and repeat a growing sequence of colors.';
 }
