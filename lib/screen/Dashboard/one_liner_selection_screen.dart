@@ -35,7 +35,7 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
   List<String> _units = [];
   List<String> _titles = [];
   List<String> _marksOptions = [];
-  List<String> _takenTestTitles = [];
+  List<String> _takenExamIds = [];
   bool _isPaid = false;
   int _oneLinerCount = 0;
 
@@ -79,7 +79,10 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
           if (historyResponse.statusCode == 200) {
             final historyData = jsonDecode(historyResponse.body);
             final List<dynamic> results = historyData['examResults'] ?? [];
-            _takenTestTitles = results.map((e) => e['title'].toString().toLowerCase()).toList();
+            _takenExamIds = results
+                .where((e) => e['examId'] != null)
+                .map((e) => e['examId'].toString())
+                .toList();
           }
         } catch (e) {
           debugPrint("Error fetching dashboard data for one-liner: $e");
@@ -275,7 +278,7 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
       return;
     }
     
-    if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
+    if (_takenExamIds.contains(_selectedExamId)) {
       if (mounted) {
         showDialog(
           context: context,

@@ -41,7 +41,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       // If std or userId is missing, fetch profile data
       if (std == null || userId == null) {
         try {
-          final profileResponse = await ApiService.getProfile();
+          final profileResponse = await ApiService.getProfile(forceRefresh: true);
           if (profileResponse.statusCode == 200) {
             final profileData = jsonDecode(profileResponse.body);
             final user = profileData['user'];

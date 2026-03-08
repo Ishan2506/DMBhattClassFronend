@@ -39,7 +39,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
 
   String? _selectedExamId;
   String? _selectedTitle;
-  List<String> _takenTestTitles = [];
+  List<String> _takenExamIds = [];
   String? _userRole;
   String? _userMedium;
   String? _userStandard;
@@ -94,7 +94,10 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
       if (historyResponse.statusCode == 200) {
         final historyData = jsonDecode(historyResponse.body);
         final List<dynamic> results = historyData['examResults'] ?? [];
-        _takenTestTitles = results.map((e) => e['title'].toString().toLowerCase()).toList();
+        _takenExamIds = results
+            .where((e) => e['examId'] != null)
+            .map((e) => e['examId'].toString())
+            .toList();
       }
 
       // Use backend filters if possible, or fetch all and filter locally
@@ -421,7 +424,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                                 return;
                               }
                               
-                              if (_takenTestTitles.contains(_selectedTitle?.toLowerCase())) {
+                              if (_takenExamIds.contains(_selectedExamId)) {
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(

@@ -128,7 +128,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         if (profile != null) {
           setState(() {
             _currentStandard = profile['std'];
-            _isPaid = user['isPaid'] ?? true;
+            _isPaid = user['isPaid'] ?? false;
           });
         }
       }

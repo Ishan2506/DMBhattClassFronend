@@ -50,7 +50,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         if (mounted) {
           setState(() {
             debugPrint("[DEBUG] Home Profile Data: $data");
-            _isPaid = data['user']['isPaid'] ?? false;
+            _isPaid = data['user']?['isPaid'] ?? false;
             _isGuest = ApiService.isGuest;
             if (data['examCounts'] != null) {
               _examCounts = {

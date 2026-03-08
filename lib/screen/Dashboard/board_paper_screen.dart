@@ -65,7 +65,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   Future<void> _fetchUserProfile() async {
     setState(() => _isProfileLoading = true);
     try {
-      final response = await ApiService.getProfile();
+      final response = await ApiService.getProfile(forceRefresh: true);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final profile = data['profile'];

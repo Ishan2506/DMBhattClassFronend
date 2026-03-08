@@ -42,10 +42,10 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
     _isGuest = await GuestUtils.isGuest();
     if (!_isGuest) {
       try {
-        final profileResponse = await ApiService.getProfile();
+        final profileResponse = await ApiService.getProfile(forceRefresh: true);
         if (profileResponse.statusCode == 200) {
           final profileData = jsonDecode(profileResponse.body);
-          _isPaid = profileData['user']['isPaid'] ?? false;
+          _isPaid = profileData['user']?['isPaid'] ?? false;
         }
       } catch (e) {
         debugPrint('Error fetching profile for MindMapSelection: $e');

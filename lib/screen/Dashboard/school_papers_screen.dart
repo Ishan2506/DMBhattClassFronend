@@ -35,10 +35,10 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
     _isGuest = await GuestUtils.isGuest();
     if (!_isGuest) {
       try {
-        final profileResponse = await ApiService.getProfile();
+        final profileResponse = await ApiService.getProfile(forceRefresh: true);
         if (profileResponse.statusCode == 200) {
           final profileData = jsonDecode(profileResponse.body);
-          _isPaid = profileData['isPaid'] ?? false;
+          _isPaid = profileData['user']?['isPaid'] ?? false;
         }
       } catch (e) {
         debugPrint("Error fetching profile: $e");

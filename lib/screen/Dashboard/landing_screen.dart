@@ -78,7 +78,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
     // 2. Fetch profile to check payment status
     try {
-      final response = await ApiService.getProfile();
+      final response = await ApiService.getProfile(forceRefresh: true);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final user = data['user'];
