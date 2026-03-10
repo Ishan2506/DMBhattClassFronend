@@ -281,6 +281,7 @@ class ApiService {
     required int totalMarks,
     bool isOnline = true,
     String? type,
+    int violationCount = 0,
   }) async {
     final uri = Uri.parse("$baseUrl/exam/submit");
     return _handleSession(await http.post(
@@ -296,7 +297,26 @@ class ApiService {
         'obtainedMarks': obtainedMarks,
         'totalMarks': totalMarks,
         'isOnline': isOnline,
+        'violationCount': violationCount,
         if (type != null) 'type': type,
+      }),
+    ));
+  }
+
+  static Future<http.Response> updateViolationCount({
+    required String examId,
+    required String examType,
+  }) async {
+    final uri = Uri.parse("$baseUrl/exam/violation");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
+      body: jsonEncode({
+        'examId': examId,
+        'examType': examType,
       }),
     ));
   }
@@ -684,6 +704,7 @@ class ApiService {
     required int totalMarks,
     required double accuracy,
     String? type,
+    int violationCount = 0,
   }) async {
     final uri = Uri.parse("$baseUrl/onelinerexam/submit");
     return _handleSession(await http.post(
@@ -698,6 +719,7 @@ class ApiService {
         'obtainedMarks': obtainedMarks,
         'totalMarks': totalMarks,
         'accuracy': accuracy,
+        'violationCount': violationCount,
         if (type != null) 'type': type,
       }),
     ));
@@ -710,6 +732,7 @@ class ApiService {
     required int totalMarks,
     bool isOnline = true,
     String? type,
+    int violationCount = 0,
   }) async {
     final uri = Uri.parse("$baseUrl/fiveMinTest/submit");
     return _handleSession(await http.post(
@@ -724,6 +747,7 @@ class ApiService {
         'obtainedMarks': obtainedMarks,
         'totalMarks': totalMarks,
         'isOnline': isOnline,
+        'violationCount': violationCount,
         if (type != null) 'type': type,
       }),
     ));

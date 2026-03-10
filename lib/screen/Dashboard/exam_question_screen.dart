@@ -24,12 +24,15 @@ class ExamQuestionScreen extends StatefulWidget {
   State<ExamQuestionScreen> createState() => _ExamQuestionScreenState();
 }
 
-class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
+class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBindingObserver {
   int _currentQuestionIndex = 0;
   final Map<int, String> _selectedAnswers = {};
   Timer? _timer;
   int _remainingSeconds = 30; // Will be set from API if available
   bool _isTimerActive = true;
+  
+  int _violationCount = 0;
+  bool _isSubmitting = false;
   
   // Audio Feedback
   final FlutterTts _flutterTts = FlutterTts();
@@ -41,8 +44,53 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initTts();
     _fetchExamDetails();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _handleViolation("You left the app during the exam.");
+    }
+  }
+
+  Future<void> _handleViolation(String message) async {
+    if (_isSubmitting) return;
+    
+    _violationCount++;
+    try {
+      await ApiService.updateViolationCount(examId: widget.examId, examType: 'REGULAR');
+    } catch (e) {
+      debugPrint("Error updating violation: $e");
+    }
+
+    if (_violationCount >= 2) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Multiple violations detected. Auto-submitting exam.")),
+        );
+      }
+      _navigateToResult();
+    } else {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text("Warning", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            content: Text("$message\n\nReturning or leaving the app again will result in automatic submission of the exam."),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("I Understand"),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   void _initTts() async {
@@ -85,6 +133,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }
@@ -133,6 +182,10 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
   }
 
   Future<void> _navigateToResult() async {
+    if (_isSubmitting) return;
+    _isSubmitting = true;
+    _timer?.cancel();
+
     int correct = 0;
     int wrong = 0;
     int skipped = 0;
@@ -162,8 +215,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
         }
     }
 
-    Future<void> submitAndNavigate() async {
-      try {
+    try {
         bool isGuest = await GuestUtils.isGuest();
         http.Response? response;
         if (!isGuest) {
@@ -175,6 +227,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
             obtainedMarks: correct,
             totalMarks: _questions.length,
             type: 'REGULAR',
+            violationCount: _violationCount,
           );
         }
 
@@ -192,33 +245,37 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
                );
              }
         }
-      } catch (e) {
-        debugPrint("Error submitting result: $e");
-      }
-
-      if (mounted) {
-        if (!await GuestUtils.isGuest()) {
-          CustomLoader.hide(context);
-        }
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ExamResultScreen(
-              totalQuestions: _questions.length,
-              correctAnswers: correct,
-              wrongAnswers: wrong,
-              skippedAnswers: skipped,
-              questions: _questions,
-              selectedAnswers: _selectedAnswers,
-              subject: widget.subject,
-              unit: "Full Exam",
-            ),
-          ),
-        );
+    } catch (e) {
+      debugPrint("Error submitting result: $e");
+    } finally {
+      if (mounted && !await GuestUtils.isGuest()) {
+        CustomLoader.hide(context);
       }
     }
 
-    await submitAndNavigate();
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ExamResultScreen(
+            totalQuestions: _questions.length,
+            correctAnswers: correct,
+            wrongAnswers: wrong,
+            skippedAnswers: skipped,
+            questions: _questions.map((q) => {
+              'question': q['question'] ?? '',
+              'answers': (q['optionsRaw'] as List?)?.map((o) => o['text']?.toString() ?? '').toList() ?? [],
+              'correctAnswer': q['correctAnswer'] ?? '',
+              'correctAnswerKey': q['correctAnswerKey'],
+              'optionsRaw': q['optionsRaw'],
+            }).toList(),
+            selectedAnswers: _selectedAnswers.map((k, v) => MapEntry(k, v)),
+            subject: 'Exam', // Or your subject field
+            unit: widget.title,
+          ),
+        ),
+      );
+    }
   }
 
   void _previousQuestion() {
@@ -251,8 +308,14 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
     final question = _questions[_currentQuestionIndex];
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleViolation("Back navigation is not allowed during the exam.");
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(
         title: '${l10n.question} ${_currentQuestionIndex + 1}/${_questions.length}',
         centerTitle: true,
@@ -417,8 +480,9 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   List<Widget> _buildAnswerOptions(List<dynamic> answers) { 
     final textTheme = Theme.of(context).textTheme;

@@ -654,15 +654,19 @@ class FiveMinQuizScreen extends StatefulWidget {
   State<FiveMinQuizScreen> createState() => _FiveMinQuizScreenState();
 }
 
-class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
+class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> with WidgetsBindingObserver {
   int _currentQuestionIndex = 0;
   final Map<int, String> _selectedAnswers = {}; // Track user answers
   final Map<int, TextEditingController> _textControllers = {}; // Controllers for Fill in the Blanks
   List<dynamic> _questions = [];
+  
+  int _violationCount = 0;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Safely cast or assume structure
     _questions = widget.testData['questions'] ?? [];
     
@@ -675,7 +679,52 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _handleViolation("You left the app during the exam.");
+    }
+  }
+
+  Future<void> _handleViolation(String message) async {
+    if (_isSubmitting) return;
+
+    _violationCount++;
+    try {
+      await ApiService.updateViolationCount(examId: widget.testData['_id'].toString(), examType: 'FIVEMIN');
+    } catch (e) {
+      debugPrint("Error updating violation: $e");
+    }
+
+    if (_violationCount >= 2) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Multiple violations detected. Auto-submitting exam.")),
+        );
+      }
+      _finishQuiz();
+    } else {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text("Warning", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            content: Text("$message\n\nReturning or leaving the app again will result in automatic submission of the exam."),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("I Understand"),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     for (var controller in _textControllers.values) {
       controller.dispose();
     }
@@ -705,6 +754,9 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
   }
   
   Future<void> _finishQuiz() async {
+    if (_isSubmitting) return;
+    _isSubmitting = true;
+
     int correct = 0;
     int wrong = 0;
     int skipped = 0;
@@ -740,9 +792,9 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
        }
        
        mappedQuestions.add({
-         'question': q['question'],
+         'question': q['question'] ?? '',
          'answers': options,
-         'correctAnswer': correctAnswer
+         'correctAnswer': correctAnswer ?? ''
        });
     }
 
@@ -763,6 +815,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
             totalMarks: _questions.length,
             isOnline: true,
             type: 'QUIZ',
+            violationCount: _violationCount,
           );
         }
 
@@ -821,8 +874,14 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
         if (question['optionB'] != null) options.add(question['optionB']);
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleViolation("Back navigation is not allowed during the exam.");
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F7FA),
       // Use CustomAppBar to match app theme
       appBar: CustomAppBar(
         title: "Rapid Quiz",
@@ -1036,6 +1095,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

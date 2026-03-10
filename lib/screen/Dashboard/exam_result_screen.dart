@@ -126,9 +126,9 @@ class ExamResultScreen extends StatelessWidget {
               String resolvedCorrectText = "";
               try {
                 final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
-                resolvedCorrectText = correctOption['text'].toString();
+                resolvedCorrectText = correctOption['text']?.toString() ?? "";
               } catch (e) {
-                resolvedCorrectText = question['correctAnswer'].toString();
+                resolvedCorrectText = question['correctAnswer']?.toString() ?? "";
               }
 
               final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
@@ -140,7 +140,7 @@ class ExamResultScreen extends StatelessWidget {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                      pw.Text(
-                       "Q${index + 1}: ${question['question']}",
+                       "Q${index + 1}: ${question['question'] ?? ''}",
                        style: pw.TextStyle(font: fontBold, fontSize: 12),
                      ),
                      pw.SizedBox(height: 4),
@@ -364,9 +364,9 @@ class ExamResultScreen extends StatelessWidget {
                   String resolvedCorrectText = "";
                   try {
                     final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
-                    resolvedCorrectText = correctOption['text'].toString();
+                    resolvedCorrectText = correctOption['text']?.toString() ?? "";
                   } catch (e) {
-                    resolvedCorrectText = question['correctAnswer'].toString();
+                    resolvedCorrectText = question['correctAnswer']?.toString() ?? "";
                   }
 
                   final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
@@ -434,7 +434,7 @@ class ExamResultScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                question['question'],
+                                question['question'] ?? '',
                                 style: GoogleFonts.poppins(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500, 

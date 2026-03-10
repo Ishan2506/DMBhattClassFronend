@@ -33,7 +33,7 @@ class OneLinerExamScreen extends StatefulWidget {
   State<OneLinerExamScreen> createState() => _OneLinerExamScreenState();
 }
 
-class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
+class _OneLinerExamScreenState extends State<OneLinerExamScreen> with WidgetsBindingObserver {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   final TextEditingController _textController = TextEditingController();
@@ -44,13 +44,61 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
   
   List<Map<String, dynamic>> _questions = [];
   bool _isLoading = true;
+  
+  int _violationCount = 0;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _speech = stt.SpeechToText();
     _checkPermission();
     _fetchQuestions();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _handleViolation("You left the app during the exam.");
+    }
+  }
+
+  Future<void> _handleViolation(String message) async {
+    if (_isSubmitting) return;
+
+    _violationCount++;
+    try {
+      await ApiService.updateViolationCount(examId: widget.examId, examType: 'ONELINER');
+    } catch (e) {
+      debugPrint("Error updating violation: $e");
+    }
+
+    if (_violationCount >= 2) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Multiple violations detected. Auto-submitting exam.")),
+        );
+      }
+      _showResult();
+    } else {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text("Warning", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            content: Text("$message\n\nReturning or leaving the app again will result in automatic submission of the exam."),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("I Understand"),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _fetchQuestions() async {
@@ -102,6 +150,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _textController.dispose();
     super.dispose();
   }
@@ -180,6 +229,9 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
   }
 
   void _showResult() async {
+    if (_isSubmitting) return;
+    _isSubmitting = true;
+
     int score = 0;
     double totalPartialScore = 0.0;
     for (int i = 0; i < _questions.length; i++) {
@@ -208,6 +260,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
           totalMarks: _questions.length,
           accuracy: avgAccuracy,
           type: 'ONELINER',
+          violationCount: _violationCount,
         );
       }
 
@@ -266,8 +319,14 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
     final textTheme = theme.textTheme;
     final lang = context.select((ThemeCubit c) => c.state.locale.languageCode);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleViolation("Back navigation is not allowed during the exam.");
+      },
+      child: Scaffold(
+        backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
         title: lang == 'gu' ? "એક લીટી પરીક્ષા" : "One-Liner Exam",
         centerTitle: true,
@@ -433,6 +492,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
