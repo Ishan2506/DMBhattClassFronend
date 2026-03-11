@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
             theme: theme.getThemeForStyle(styleName, false), // Light
             darkTheme: theme.getThemeForStyle(styleName, true), // Dark
             themeMode: state.themeMode,
-            // locale: state.locale,
+            locale: state.locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const SplashScreen(),

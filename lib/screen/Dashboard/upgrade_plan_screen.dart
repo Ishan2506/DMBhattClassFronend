@@ -485,25 +485,13 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     }
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          l10n.upgradePlan,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: l10n.upgradePlan,
         centerTitle: true,
         actions: [
           IconButton(
             onPressed: _showUpgradeHistory,
-            icon: Icon(Icons.history, color: colorScheme.primary),
+            icon: const Icon(Icons.history, color: Colors.white),
             tooltip: "Upgrade History",
           ),
           const SizedBox(width: 8),

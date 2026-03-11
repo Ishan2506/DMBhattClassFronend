@@ -38,10 +38,16 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/capital_city_quest_scree
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/proverb_completer_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/direction_sense_screen.dart';
 
+import 'package:dm_bhatt_tutions/screen/Dashboard/game_objectives_screen.dart';
+
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/gk_quiz_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/sequence_memory_screen.dart';
 
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/word_chain_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/sorting_sweep_screen.dart';
 
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/prefix_suffix_maker_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/audio_recall_screen.dart';
 
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 
@@ -169,12 +175,13 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
         title: AppLocalizations.of(context)!.mindGames,
         centerTitle: true,
       ),
-      body: _isLoading
-        ? const Center(child: CustomLoader())
-        : SingleChildScrollView(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
+                _buildPurposeSection(context, l10n),
                 _buildGameCard(
                   context,
                   title: l10n.memoryMatch,
@@ -445,9 +452,35 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                   icon: Icons.palette_rounded,
                   color: Colors.greenAccent.shade700,
                   onTap: () => _handleGameTap(const StroopEffectChallengeScreen()),
-                ),              ],
+                ),
+                const SizedBox(height: 16),
+                
+                // --------- New Games Added ---------
+                _buildGameCard(
+                  context,
+                  title: "Word Chain",
+                  description: "Create a connected chain of words where the last letter of one word becomes the first letter of the next.",
+                  icon: Icons.link_rounded,
+                  color: Colors.lightBlue,
+                  onTap: () => _handleGameTap(const WordChainScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: "Sorting Sweep",
+                  description: "Tap ascending numeric values as fast as possible.",
+                  icon: Icons.sort_rounded,
+                  color: Colors.orangeAccent,
+                  onTap: () => _handleGameTap(const SortingSweepScreen()),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
+          if (_isLoading)
+            const Center(child: CustomLoader()),
+        ],
+      ),
     );
   }
 
@@ -520,6 +553,76 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
               size: 16
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPurposeSection(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.blue.withValues(alpha: 0.1) : Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const GameObjectivesScreen()),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.blue.withValues(alpha: 0.2) : Colors.blue.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.lightbulb_outline_rounded, color: isDark ? Colors.blue.shade200 : Colors.blueAccent),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Game Objectives & Subjects",
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: isDark ? Colors.blue.shade200 : Colors.blue.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Find out which game improves what skills",
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: isDark ? Colors.blue.shade200 : Colors.blue.shade800,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

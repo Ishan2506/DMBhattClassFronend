@@ -330,17 +330,6 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen> with WidgetsBin
       appBar: CustomAppBar(
         title: lang == 'gu' ? "એક લીટી પરીક્ષા" : "One-Liner Exam",
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history_rounded),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const OneLinerHistoryScreen()),
-              );
-            },
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CustomLoader())
