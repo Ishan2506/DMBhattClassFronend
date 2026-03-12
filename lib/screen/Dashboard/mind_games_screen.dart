@@ -46,8 +46,11 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/sequence_memory_screen.d
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/word_chain_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/sorting_sweep_screen.dart';
 
-import 'package:dm_bhatt_tutions/screen/Dashboard/games/prefix_suffix_maker_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/games/audio_recall_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/color_flood_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/path_finder_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/games/escape_room/escape_lobby_screen.dart';
+
+
 
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 
@@ -472,6 +475,35 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                   icon: Icons.sort_rounded,
                   color: Colors.orangeAccent,
                   onTap: () => _handleGameTap(const SortingSweepScreen()),
+                ),
+                const SizedBox(height: 16),
+                
+                // --------- New Logic Games ---------
+                _buildGameCard(
+                  context,
+                  title: "Collaborative Escape Room",
+                  description: "Grab a friend! One defuses a bomb, the other reads the manual. Communication is key.",
+                  icon: Icons.meeting_room,
+                  color: Colors.deepPurple,
+                  onTap: () => _handleGameTap(const EscapeLobbyScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: "Path Finder",
+                  description: "Draw continuous lines to connect matching colored dots without crossing paths.",
+                  icon: Icons.timeline,
+                  color: Colors.green,
+                  onTap: () => _handleGameTap(const PathFinderScreen()),
+                ),
+                const SizedBox(height: 16),
+                _buildGameCard(
+                  context,
+                  title: "Color Flood",
+                  description: "Strategically flood the board with a single color in limited moves.",
+                  icon: Icons.format_paint,
+                  color: Colors.lightBlue,
+                  onTap: () => _handleGameTap(const ColorFloodScreen()),
                 ),
                 const SizedBox(height: 16),
               ],
