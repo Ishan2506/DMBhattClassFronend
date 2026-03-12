@@ -770,14 +770,17 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> with WidgetsBindi
        // Construct options list based on type
        List<String> options = [];
        if (q['type'] == 'MCQ' || q['type'] == null) {
-          if (q['optionA'] != null) options.add(q['optionA']);
-          if (q['optionB'] != null) options.add(q['optionB']);
-          if (q['optionC'] != null) options.add(q['optionC']);
-          if (q['optionD'] != null) options.add(q['optionD']);
+          if (q['optionA'] != null && q['optionA'].toString().isNotEmpty) options.add(q['optionA']);
+          if (q['optionB'] != null && q['optionB'].toString().isNotEmpty) options.add(q['optionB']);
+          if (q['optionC'] != null && q['optionC'].toString().isNotEmpty) options.add(q['optionC']);
+          if (q['optionD'] != null && q['optionD'].toString().isNotEmpty) options.add(q['optionD']);
+       } else if (q['type'] == 'True/False' || q['type'] == 'TF' || q['type'] == 'T/F') {
+          options.add((q['optionA'] != null && q['optionA'].toString().isNotEmpty) ? q['optionA'].toString() : "True");
+          options.add((q['optionB'] != null && q['optionB'].toString().isNotEmpty) ? q['optionB'].toString() : "False");
        } else {
-         // TF
-          if (q['optionA'] != null) options.add(q['optionA']);
-          if (q['optionB'] != null) options.add(q['optionB']);
+          // Fallback for other types or implicit TF
+          if (q['optionA'] != null && q['optionA'].toString().isNotEmpty) options.add(q['optionA']);
+          if (q['optionB'] != null && q['optionB'].toString().isNotEmpty) options.add(q['optionB']);
        }
 
        final userAnswer = _selectedAnswers[i];
@@ -865,13 +868,17 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> with WidgetsBindi
     // Build options list dynamically
     List<String> options = [];
     if (question['type'] == 'MCQ' || question['type'] == null) {
-        if (question['optionA'] != null) options.add(question['optionA']);
-        if (question['optionB'] != null) options.add(question['optionB']);
-        if (question['optionC'] != null) options.add(question['optionC']);
-        if (question['optionD'] != null) options.add(question['optionD']);
+        if (question['optionA'] != null && question['optionA'].toString().isNotEmpty) options.add(question['optionA']);
+        if (question['optionB'] != null && question['optionB'].toString().isNotEmpty) options.add(question['optionB']);
+        if (question['optionC'] != null && question['optionC'].toString().isNotEmpty) options.add(question['optionC']);
+        if (question['optionD'] != null && question['optionD'].toString().isNotEmpty) options.add(question['optionD']);
+    } else if (question['type'] == 'True/False' || question['type'] == 'TF' || question['type'] == 'T/F') {
+        options.add((question['optionA'] != null && question['optionA'].toString().isNotEmpty) ? question['optionA'].toString() : "True");
+        options.add((question['optionB'] != null && question['optionB'].toString().isNotEmpty) ? question['optionB'].toString() : "False");
     } else {
-        if (question['optionA'] != null) options.add(question['optionA']);
-        if (question['optionB'] != null) options.add(question['optionB']);
+        // Fallback
+        if (question['optionA'] != null && question['optionA'].toString().isNotEmpty) options.add(question['optionA']);
+        if (question['optionB'] != null && question['optionB'].toString().isNotEmpty) options.add(question['optionB']);
     }
 
     return PopScope(
