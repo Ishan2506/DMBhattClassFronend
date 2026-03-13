@@ -177,18 +177,18 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
       Map<String, dynamic>? fullExam;
 
       if (examId != null && examId.isNotEmpty) {
+        final String type = exam['type']?.toString().toUpperCase() ?? 'REGULAR';
         final bool isOnline = exam['isOnline'] ?? true;
-        final response = isOnline
-            ? await ApiService.getExamById(examId)
-            : await ApiService.getFiveMinTestById(examId);
+        
+        final response = (type == 'QUIZ' || !isOnline)
+            ? await ApiService.getFiveMinTestById(examId)
+            : await ApiService.getExamById(examId);
 
-        debugPrint("Exam fetch: ${response.statusCode} for examId=$examId");
+        debugPrint("Exam fetch ($type): ${response.statusCode} for examId=$examId");
 
         if (response.statusCode == 200) {
           fullExam = jsonDecode(response.body) as Map<String, dynamic>;
         } else {
-          // 404 = exam was deleted from server — just show history data (no questions)
-          // Other errors — log but still show what we have
           debugPrint("Exam fetch non-200: ${response.statusCode} — ${response.body}");
         }
       }
@@ -368,12 +368,9 @@ class ExamPdfViewer extends StatelessWidget {
                 );
               })
             else ...[
-              // Fallback to Mock Questions if no detailed data
-              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(1, "Explain the laws of motion.")),
-              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(2, "What is photosynthesis?")),
-              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(3, "Solve: 2x + 5 = 15")),
-              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(4, "Define Kinetic Energy.")),
-              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(5, "Write a short note on Indian Constitution.")),
+              // Fallback if detailed data is missing
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(1, "Detailed question data unavailable.")),
+              pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child: _buildQuestionItem(2, "Please contact support if this persists.")),
             ],
           ];
         },

@@ -769,18 +769,18 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> with WidgetsBindi
        
        // Construct options list based on type
        List<String> options = [];
-       if (q['type'] == 'MCQ' || q['type'] == null) {
-          if (q['optionA'] != null && q['optionA'].toString().isNotEmpty) options.add(q['optionA']);
-          if (q['optionB'] != null && q['optionB'].toString().isNotEmpty) options.add(q['optionB']);
-          if (q['optionC'] != null && q['optionC'].toString().isNotEmpty) options.add(q['optionC']);
-          if (q['optionD'] != null && q['optionD'].toString().isNotEmpty) options.add(q['optionD']);
-       } else if (q['type'] == 'True/False' || q['type'] == 'TF' || q['type'] == 'T/F') {
-          options.add((q['optionA'] != null && q['optionA'].toString().isNotEmpty) ? q['optionA'].toString() : "True");
-          options.add((q['optionB'] != null && q['optionB'].toString().isNotEmpty) ? q['optionB'].toString() : "False");
+       if (q['type']?.toString().trim().toUpperCase() == 'MCQ' || q['type'] == null) {
+          if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) options.add(q['optionA'].toString().trim());
+          if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) options.add(q['optionB'].toString().trim());
+          if (q['optionC'] != null && q['optionC'].toString().trim().isNotEmpty) options.add(q['optionC'].toString().trim());
+          if (q['optionD'] != null && q['optionD'].toString().trim().isNotEmpty) options.add(q['optionD'].toString().trim());
+       } else if (q['type']?.toString().trim().toUpperCase() == 'TRUE/FALSE' || q['type']?.toString().trim().toUpperCase() == 'TF' || q['type']?.toString().trim().toUpperCase() == 'T/F' || q['type'] == 'True/False') {
+          options.add((q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) ? q['optionA'].toString().trim() : "True");
+          options.add((q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) ? q['optionB'].toString().trim() : "False");
        } else {
           // Fallback for other types or implicit TF
-          if (q['optionA'] != null && q['optionA'].toString().isNotEmpty) options.add(q['optionA']);
-          if (q['optionB'] != null && q['optionB'].toString().isNotEmpty) options.add(q['optionB']);
+          if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) options.add(q['optionA'].toString().trim());
+          if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) options.add(q['optionB'].toString().trim());
        }
 
        final userAnswer = _selectedAnswers[i];
@@ -816,7 +816,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> with WidgetsBindi
             title: finalTitle,
             obtainedMarks: correct,
             totalMarks: _questions.length,
-            isOnline: true,
+            isOnline: false,
             type: 'QUIZ',
             violationCount: _violationCount,
           );
@@ -867,18 +867,18 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen> with WidgetsBindi
     
     // Build options list dynamically
     List<String> options = [];
-    if (question['type'] == 'MCQ' || question['type'] == null) {
-        if (question['optionA'] != null && question['optionA'].toString().isNotEmpty) options.add(question['optionA']);
-        if (question['optionB'] != null && question['optionB'].toString().isNotEmpty) options.add(question['optionB']);
-        if (question['optionC'] != null && question['optionC'].toString().isNotEmpty) options.add(question['optionC']);
-        if (question['optionD'] != null && question['optionD'].toString().isNotEmpty) options.add(question['optionD']);
-    } else if (question['type'] == 'True/False' || question['type'] == 'TF' || question['type'] == 'T/F') {
-        options.add((question['optionA'] != null && question['optionA'].toString().isNotEmpty) ? question['optionA'].toString() : "True");
-        options.add((question['optionB'] != null && question['optionB'].toString().isNotEmpty) ? question['optionB'].toString() : "False");
+    if (question['type']?.toString().trim().toUpperCase() == 'MCQ' || question['type'] == null) {
+        if (question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty) options.add(question['optionA'].toString().trim());
+        if (question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty) options.add(question['optionB'].toString().trim());
+        if (question['optionC'] != null && question['optionC'].toString().trim().isNotEmpty) options.add(question['optionC'].toString().trim());
+        if (question['optionD'] != null && question['optionD'].toString().trim().isNotEmpty) options.add(question['optionD'].toString().trim());
+    } else if (question['type']?.toString().trim().toUpperCase() == 'TRUE/FALSE' || question['type']?.toString().trim().toUpperCase() == 'TF' || question['type']?.toString().trim().toUpperCase() == 'T/F') {
+        options.add((question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty) ? question['optionA'].toString().trim() : "True");
+        options.add((question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty) ? question['optionB'].toString().trim() : "False");
     } else {
         // Fallback
-        if (question['optionA'] != null && question['optionA'].toString().isNotEmpty) options.add(question['optionA']);
-        if (question['optionB'] != null && question['optionB'].toString().isNotEmpty) options.add(question['optionB']);
+        if (question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty) options.add(question['optionA'].toString().trim());
+        if (question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty) options.add(question['optionB'].toString().trim());
     }
 
     return PopScope(

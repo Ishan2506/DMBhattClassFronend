@@ -18,6 +18,7 @@ class MultiplayerService {
   Function(EscapeGameState?)? onStateChanged;
   Function(String)? onError;
 
+  Map<String, EscapeGameState> get activeRooms => _activeRooms;
   String? get currentRoomId => _currentRoomId;
   String? get currentUserRole => _currentUserRole;
 
