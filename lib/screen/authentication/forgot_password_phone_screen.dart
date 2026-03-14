@@ -17,7 +17,7 @@ class ForgotPasswordPhoneScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -82,37 +82,35 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
               ),
               const SizedBox(height: 20),
               
-              Text(
-                AppLocalizations.of(context)!.forgotPasswordSubtext,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.black54,
-                  height: 1.5,
+              Center(
+                child: Text(
+                  "Please enter the email address associated with your account.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.black54,
+                    height: 1.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
 
-              // Phone Number Field
+              // Email Field
               TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 style: GoogleFonts.poppins(
                   color: Colors.black,
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                 ),
-                validator: ValidationUtils.validateIndianPhoneNumber,
+                validator: ValidationUtils.validateEmail,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.phoneNumber,
+                  labelText: "Email Address",
                   labelStyle: GoogleFonts.poppins(color: Colors.grey),
-                  hintText: AppLocalizations.of(context)!.enterPhoneHint,
+                  hintText: "Enter your email",
                   hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 14),
-                  prefixIcon: const Icon(Icons.phone_android_rounded, color: Colors.black54),
+                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.black54),
                   filled: true,
                   fillColor: Colors.grey.shade50,
                   border: OutlineInputBorder(
@@ -139,15 +137,13 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                       ScaffoldMessenger.of(context).showSnackBar(
-                         SnackBar(content: Text(AppLocalizations.of(context)!.sendingOtp)),
-                       );
+                       CustomToast.showInfo(context, "Sending OTP...");
                        
-                       ApiService.forgetPassword(phone: _phoneController.text).then((response) {
+                       ApiService.forgetPassword(email: _emailController.text).then((response) {
                           if (response.statusCode == 200) {
                             Navigator.push(
                               context, 
-                              MaterialPageRoute(builder: (context) => ForgotPasswordOtpScreen(phone: _phoneController.text)),
+                              MaterialPageRoute(builder: (context) => ForgotPasswordOtpScreen(email: _emailController.text)),
                             );
                           } else {
                             CustomToast.showError(context, "Failed to send OTP. User may not exist.");

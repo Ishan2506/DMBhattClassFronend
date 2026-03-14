@@ -9,8 +9,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  final String phone;
-  const ResetPasswordScreen({super.key, required this.phone});
+  final String email;
+  const ResetPasswordScreen({super.key, required this.email});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -45,7 +45,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            SizedBox(width: double.infinity), // Force expansion for Center
+            const SizedBox(width: double.infinity), // Force expansion for Center
             const SizedBox(height: 20),
              // Logo
                Center(
@@ -149,7 +149,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                        }
 
                        // Perform Reset Logic (API call etc)
-                       ApiService.resetPassword(phone: widget.phone, newPassword: _newPasswordController.text).then((response) {
+                       ApiService.resetPassword(email: widget.email, newPassword: _newPasswordController.text).then((response) {
                           if (response.statusCode == 200) {
                              CustomToast.showSuccess(context, "Password Reset Successful");
                              

@@ -53,4 +53,16 @@ class ValidationUtils {
   static String? noFieldError(String? value, dynamic l10n) {
     return null;
   }
+
+  /// Validates email format
+  static String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Email is required";
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return "Please enter a valid email address";
+    }
+    return null;
+  }
 }

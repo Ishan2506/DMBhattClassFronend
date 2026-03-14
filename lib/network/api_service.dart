@@ -11,8 +11,8 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 
 class ApiService {
-  static const String baseUrl = "http://103.212.121.139:5000/api";
-  // static const String baseUrl = "http://localhost:5000/api"; // 10.0.2.2 for Android Emulator, use localhost for others
+  // static const String baseUrl = "http://103.212.121.139:5000/api";
+  static const String baseUrl = "http://localhost:5000/api"; // 10.0.2.2 for Android Emulator, use localhost for others
   static const String guestToken = "DMBHATT_GUEST_ACCESS_TOKEN_2024";
   static String? _authToken;
   static bool _isGuest = false;
@@ -410,7 +410,7 @@ class ApiService {
   }
 
   static Future<http.Response> forgetPassword({
-    required String phone,
+    required String email,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/forget-password");
     
@@ -420,13 +420,13 @@ class ApiService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'phoneNum': phone,
+        'email': email,
       }),
     ));
   }
 
   static Future<http.Response> verifyOtp({
-    required String phone,
+    required String email,
     required String otp,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/verify-otp");
@@ -437,14 +437,14 @@ class ApiService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'phoneNum': phone,
+        'email': email,
         'otp': otp,
       }),
     ));
   }
 
   static Future<http.Response> resetPassword({
-    required String phone,
+    required String email,
     required String newPassword,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/reset-password");
@@ -455,7 +455,7 @@ class ApiService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'phoneNum': phone,
+        'email': email,
         'newPassword': newPassword,
       }),
     ));

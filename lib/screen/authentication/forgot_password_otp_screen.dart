@@ -10,8 +10,8 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 
 class ForgotPasswordOtpScreen extends StatefulWidget {
-  final String phone;
-  const ForgotPasswordOtpScreen({super.key, required this.phone});
+  final String email;
+  const ForgotPasswordOtpScreen({super.key, required this.email});
 
   @override
   State<ForgotPasswordOtpScreen> createState() => _ForgotPasswordOtpScreenState();
@@ -19,6 +19,19 @@ class ForgotPasswordOtpScreen extends StatefulWidget {
 
 class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
   final _pinController = TextEditingController();
+
+  String _maskEmail(String email) {
+    if (email.contains("@")) {
+      final parts = email.split("@");
+      final local = parts[0];
+      final domain = parts[1];
+      if (local.length > 2) {
+        return "${local.substring(0, 1)}***${local.substring(local.length - 1)}@$domain";
+      }
+      return email;
+    }
+    return email;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +74,7 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: double.infinity), // Force expansion for Center
+            const SizedBox(width: double.infinity), // Force expansion for Center
             const SizedBox(height: 20),
              // Logo
                Center(
@@ -98,13 +111,15 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
               ),
               const SizedBox(height: 20),
 
-            Text(
-              "We have sent the verification code to your registered phone number ending in ${widget.phone.length > 4 ? widget.phone.substring(widget.phone.length - 4) : '****'}",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.black54,
-                height: 1.5,
+            Center(
+              child: Text(
+                "We have sent the verification code to your registered email address ${_maskEmail(widget.email)}",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.black54,
+                  height: 1.5,
+                ),
               ),
             ),
             const SizedBox(height: 40),
@@ -113,7 +128,7 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
             Center(
               child: Pinput(
                 controller: _pinController,
-                length: 4,
+                length: 6,
                 defaultPinTheme: defaultPinTheme,
                 focusedPinTheme: focusedPinTheme,
                 pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
@@ -132,12 +147,12 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
               height: 56,
               child: ElevatedButton(
                 onPressed: () {
-                   if (_pinController.text.length == 4) {
-                     ApiService.verifyOtp(phone: widget.phone, otp: _pinController.text).then((response) {
+                   if (_pinController.text.length == 6) {
+                     ApiService.verifyOtp(email: widget.email, otp: _pinController.text).then((response) {
                         if (response.statusCode == 200) {
                            Navigator.push(
                              context,
-                             MaterialPageRoute(builder: (context) => ResetPasswordScreen(phone: widget.phone)),
+                             MaterialPageRoute(builder: (context) => ResetPasswordScreen(email: widget.email)),
                            );
                         } else {
                            CustomToast.showError(context, "Invalid OTP");
@@ -146,9 +161,7 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
                         CustomToast.showError(context, "Error: $e");
                      });
                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                         const SnackBar(content: Text("Please enter full 4-digit code")),
-                       );
+                      CustomToast.showError(context, "Please enter full 6-digit code");
                    }
                 },
                 style: ElevatedButton.styleFrom(
@@ -170,22 +183,29 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
             ),
             
              const SizedBox(height: 24),
-             Center(
-               child: TextButton(
-                 onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                       const SnackBar(content: Text("OTP Resent!")),
-                     );
-                 },
-                 child: Text(
-                   "Resend Code",
-                   style: GoogleFonts.poppins(
-                     color: Colors.blue.shade700,
-                     fontWeight: FontWeight.w600,
-                   ),
-                 ),
-               ),
-             ),
+              Center(
+                child: TextButton(
+                onPressed: () {
+                     CustomToast.showInfo(context, "Sending new OTP...");
+                      ApiService.forgetPassword(email: widget.email).then((response) {
+                        if (response.statusCode == 200) {
+                           CustomToast.showSuccess(context, "OTP Resent Successfully");
+                        } else {
+                           CustomToast.showError(context, "Failed to resend OTP");
+                        }
+                      }).catchError((e) {
+                         CustomToast.showError(context, "Error: $e");
+                      });
+                  },
+                  child: Text(
+                    "Resend Code",
+                    style: GoogleFonts.poppins(
+                      color: Colors.blue.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
