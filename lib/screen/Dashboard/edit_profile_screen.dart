@@ -29,13 +29,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
-  final TextEditingController _cityController = TextEditingController();
 
   // Selection States
   String? _selectedStandard;
   String? _selectedMedium;
   String? _selectedStream;
   String? _selectedState = "Gujarat";
+  String? _selectedCity;
   String? _selectedBoard;
   String? _selectedRole;
 
@@ -84,11 +84,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   .trim();
           _emailController.text = user['email'] ?? (profile?['email'] ?? "");
           _phoneController.text = user['phoneNum'] ?? "";
-          _cityController.text =
+          final city = 
               user['city'] ??
               profile?['city'] ??
               user['address']?['city'] ??
               "";
+          _selectedCity = city.isNotEmpty ? city : null;
 
           if (profile != null) {
             _selectedStandard = profile['std'];
@@ -123,6 +124,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 "Gujarat";
             if (!_stateCityMap.keys.contains(_selectedState))
               _selectedState = "Gujarat";
+
+            // Validate city against state
+            if (_selectedCity != null && 
+                _stateCityMap[_selectedState] != null && 
+                !_stateCityMap[_selectedState]!.contains(_selectedCity)) {
+              _selectedCity = null;
+            }
           }
           _currentPhotoPath = user['photoPath'];
         });
@@ -164,7 +172,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'medium': _selectedMedium,
         'board': _selectedBoard,
         'loginAs': _selectedRole,
-        'city': _cityController.text,
+        'city': _selectedCity,
         'state': _selectedState,
         'parentPhone': _parentPhoneController.text,
       };
@@ -478,18 +486,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           onChanged: (val) {
                             setState(() {
                               _selectedState = val;
-                              // _selectedCity = null;
+                              _selectedCity = null; // Reset city when state changes
                             });
                           },
                         ),
                         const SizedBox(height: 16),
 
                         // City
-                        _buildTextField(
+                        _buildDropdown(
                           context,
-                          controller: _cityController,
                           hint: "City",
                           icon: Icons.location_city,
+                          value: _selectedCity,
+                          items: _selectedState != null ? (_stateCityMap[_selectedState] ?? []) : [],
+                          onChanged: (val) => setState(() => _selectedCity = val),
                         ),
                         const SizedBox(height: 16),
 

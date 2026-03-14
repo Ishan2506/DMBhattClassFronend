@@ -15,8 +15,20 @@ import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 class PaymentScreen extends StatefulWidget {
   final RegistrationPayload? payload;
   final String? password; // needed for api call
+  final String? std;
+  final String? medium;
+  final String? phone;
+  final String? email;
 
-  const PaymentScreen({super.key, this.payload, this.password});
+  const PaymentScreen({
+    super.key, 
+    this.payload, 
+    this.password,
+    this.std,
+    this.medium,
+    this.phone,
+    this.email,
+  });
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -59,17 +71,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> _initData() async {
     if (widget.payload != null) {
-      _std = widget.payload!.fields['std'].toString();
-      _medium = widget.payload!.fields['medium'].toString();
+      _std = widget.payload!.fields['std']?.toString();
+      _medium = widget.payload!.fields['medium']?.toString();
       _phoneNum = widget.payload!.fields['phoneNum'];
       _email = widget.payload!.fields['email'];
       _cachedPassword = widget.password;
+    } else if (widget.std != null) {
+      _std = widget.std;
+      _medium = widget.medium;
+      _phoneNum = widget.phone;
+      _email = widget.email;
+      _cachedPassword = widget.password; // If passed
     } else {
       final prefs = await SharedPreferences.getInstance();
       _std = prefs.getString('std');
       _medium = prefs.getString('medium');
-      _phoneNum = prefs.getString('user_phone'); // Assuming this is saved, I'll check LoginScreen
-      _email = prefs.getString('user_email'); // Assuming this is saved
+      _phoneNum = prefs.getString('user_phone');
+      _email = prefs.getString('user_email');
       _cachedPassword = prefs.getString('user_password');
     }
     

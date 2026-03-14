@@ -82,9 +82,8 @@ class _LandingScreenState extends State<LandingScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final user = data['user'];
+        final profile = data['profile'];
         
-        // Assume 'isPaid' is the field. If backend doesn't provide it, 
-        // we might need to check a different field like 'paymentStatus'.
         if (user != null && user['role'] == 'student' && user['isPaid'] == false) {
            final prefs = await SharedPreferences.getInstance();
            bool skippedOnce = prefs.getBool('skipped_payment_prompt') ?? false;
@@ -96,10 +95,17 @@ class _LandingScreenState extends State<LandingScreen> {
 
            if (!mounted) return;
            
-           // Redirect to Payment Screen
+           // Redirect to Payment Screen with data directly from API
            Navigator.push(
              context,
-             MaterialPageRoute(builder: (context) => const PaymentScreen()),
+             MaterialPageRoute(
+               builder: (context) => PaymentScreen(
+                 std: profile?['std']?.toString(),
+                 medium: profile?['medium']?.toString(),
+                 phone: user['phoneNum'],
+                 email: user['email'],
+               ),
+             ),
            ).then((success) {
              if (success == true) {
                // Refresh if needed
