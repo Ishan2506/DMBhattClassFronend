@@ -3,18 +3,38 @@ import 'package:google_fonts/google_fonts.dart';
 
 class CustomToast {
   static void showSuccess(BuildContext context, String message) {
-    _showToast(context, message, Colors.green.shade600, Icons.check_circle_outline);
+    _showToast(
+      context,
+      message,
+      Colors.green.shade600,
+      Icons.check_circle_outline,
+    );
   }
 
   static void showError(BuildContext context, String message) {
-    _showToast(context, message, Colors.red.shade600, Icons.error_outline);
+    _showToast(
+      context,
+      message,
+      Theme.of(context).colorScheme.error,
+      Icons.error_outline,
+    );
   }
 
   static void showInfo(BuildContext context, String message) {
-    _showToast(context, message, Colors.blue.shade600, Icons.info_outline);
+    _showToast(
+      context,
+      message,
+      Theme.of(context).colorScheme.primary,
+      Icons.info_outline,
+    );
   }
 
-  static void _showToast(BuildContext context, String message, Color color, IconData icon) {
+  static void _showToast(
+    BuildContext context,
+    String message,
+    Color color,
+    IconData icon,
+  ) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -25,18 +45,21 @@ class CustomToast {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Colors.white24, width: 1), // Subtle border
+          side: const BorderSide(
+            color: Colors.white24,
+            width: 1,
+          ), // Subtle border
         ),
         content: Row(
           mainAxisSize: MainAxisSize.min, // Wrap content
           children: [
             Container(
-               padding: const EdgeInsets.all(4),
-               decoration: BoxDecoration(
-                 color: Colors.white.withOpacity(0.2),
-                 shape: BoxShape.circle,
-               ),
-               child: Icon(icon, color: Colors.white, size: 20),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(

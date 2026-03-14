@@ -529,6 +529,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         "stream": _selectedStream ?? "",
                         "board": _selectedBoard!,
                         "loginAs": _selectedRole!,
+                        "city": _selectedCity!,
+                        "state": _selectedState!,
                       },
                       files: [], 
                     );

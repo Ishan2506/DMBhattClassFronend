@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -17,23 +18,29 @@ class ExamQuestionScreen extends StatefulWidget {
   final String subject;
   final String examId;
   final String title;
-  
-  const ExamQuestionScreen({super.key, required this.subject, required this.examId, required this.title});
+
+  const ExamQuestionScreen({
+    super.key,
+    required this.subject,
+    required this.examId,
+    required this.title,
+  });
 
   @override
   State<ExamQuestionScreen> createState() => _ExamQuestionScreenState();
 }
 
-class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBindingObserver {
+class _ExamQuestionScreenState extends State<ExamQuestionScreen>
+    with WidgetsBindingObserver {
   int _currentQuestionIndex = 0;
   final Map<int, String> _selectedAnswers = {};
   Timer? _timer;
   int _remainingSeconds = 30; // Will be set from API if available
   bool _isTimerActive = true;
-  
+
   int _violationCount = 0;
   bool _isSubmitting = false;
-  
+
   // Audio Feedback
   final FlutterTts _flutterTts = FlutterTts();
   bool _isAudioEnabled = true;
@@ -51,25 +58,30 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       _handleViolation("You left the app during the exam.");
     }
   }
 
   Future<void> _handleViolation(String message) async {
     if (_isSubmitting) return;
-    
+
     _violationCount++;
     try {
-      await ApiService.updateViolationCount(examId: widget.examId, examType: 'REGULAR');
+      await ApiService.updateViolationCount(
+        examId: widget.examId,
+        examType: 'REGULAR',
+      );
     } catch (e) {
       debugPrint("Error updating violation: $e");
     }
 
     if (_violationCount >= 2) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Multiple violations detected. Auto-submitting exam.")),
+        CustomToast.showError(
+          context,
+          "Multiple violations detected. Auto-submitting exam.",
         );
       }
       _navigateToResult();
@@ -79,8 +91,13 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: const Text("Warning", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-            content: Text("$message\n\nReturning or leaving the app again will result in automatic submission of the exam."),
+            title: const Text(
+              "Warning",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              "$message\n\nReturning or leaving the app again will result in automatic submission of the exam.",
+            ),
             actions: [
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
@@ -104,18 +121,20 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final questionsData = data['questions'] as List;
-        
+
         if (mounted) {
           setState(() {
             _questions = questionsData.map((q) {
-                final optionsList = (q['options'] as List).map((o) => o['text'].toString()).toList();
-                return {
-                  'question': q['questionText'],
-                  'answers': optionsList, 
-                  'correctAnswer': q['correctAnswer'], 
-                  'correctAnswerKey': q['correctAnswer'], 
-                  'optionsRaw': q['options']
-                };
+              final optionsList = (q['options'] as List)
+                  .map((o) => o['text'].toString())
+                  .toList();
+              return {
+                'question': q['questionText'],
+                'answers': optionsList,
+                'correctAnswer': q['correctAnswer'],
+                'correctAnswerKey': q['correctAnswer'],
+                'optionsRaw': q['options'],
+              };
             }).toList();
             _isLoading = false;
           });
@@ -123,7 +142,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
         }
       } else {
         // Handle error
-         if (mounted) setState(() => _isLoading = false);
+        if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
       debugPrint("Error fetching exam questions: $e");
@@ -191,60 +210,67 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
     int skipped = 0;
 
     for (int i = 0; i < _questions.length; i++) {
-        final userAns = _selectedAnswers[i];
-        
-        final q = _questions[i];
-        final correctKey = q['correctAnswerKey']; // 'A'
-        final optionsRaw = q['optionsRaw'] as List; // [{key:'A', text:'...'}, ...]
-        
-        String? correctText;
-        try {
-            final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
-            correctText = correctOption['text'];
-        } catch (e) {
-            // Fallback
-            correctText = q['correctAnswer']; 
-        }
+      final userAns = _selectedAnswers[i];
 
-        if (userAns == null) {
-          skipped++;
-        } else if (userAns == correctText) {
-          correct++;
-        } else {
-          wrong++;
-        }
+      final q = _questions[i];
+      final correctKey = q['correctAnswerKey']; // 'A'
+      final optionsRaw =
+          q['optionsRaw'] as List; // [{key:'A', text:'...'}, ...]
+
+      String? correctText;
+      try {
+        final correctOption = optionsRaw.firstWhere(
+          (o) => o['key'] == correctKey,
+        );
+        correctText = correctOption['text'];
+      } catch (e) {
+        // Fallback
+        correctText = q['correctAnswer'];
+      }
+
+      if (userAns == null) {
+        skipped++;
+      } else if (userAns == correctText) {
+        correct++;
+      } else {
+        wrong++;
+      }
     }
 
     try {
-        bool isGuest = await GuestUtils.isGuest();
-        http.Response? response;
-        if (!isGuest) {
-          CustomLoader.show(context);
-          // Token managed internally
-          response = await ApiService.submitExamResult(
-            examId: widget.examId,
-            title: widget.title,
-            obtainedMarks: correct,
-            totalMarks: _questions.length,
-            type: 'REGULAR',
-            violationCount: _violationCount,
+      bool isGuest = await GuestUtils.isGuest();
+      http.Response? response;
+      if (!isGuest) {
+        CustomLoader.show(context);
+        // Token managed internally
+        response = await ApiService.submitExamResult(
+          examId: widget.examId,
+          title: widget.title,
+          obtainedMarks: correct,
+          totalMarks: _questions.length,
+          type: 'REGULAR',
+          violationCount: _violationCount,
+        );
+      }
+
+      // Increment local guest counter if applicable
+      if (isGuest) {
+        await GuestUtils.incrementGuestExamCount('REGULAR');
+      }
+
+      if (response != null && response.statusCode != 201) {
+        debugPrint("Submit failed: ${response.body}");
+        if (mounted) {
+          // Show toast or some feedback if it failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Failed to save result to server: ${response.statusCode}",
+              ),
+            ),
           );
         }
-
-        // Increment local guest counter if applicable
-        if (isGuest) {
-          await GuestUtils.incrementGuestExamCount('REGULAR');
-        }
-        
-        if (response != null && response.statusCode != 201) {
-             debugPrint("Submit failed: ${response.body}");
-             if (mounted) {
-               // Show toast or some feedback if it failed
-               ScaffoldMessenger.of(context).showSnackBar(
-                 SnackBar(content: Text("Failed to save result to server: ${response.statusCode}")),
-               );
-             }
-        }
+      }
     } catch (e) {
       debugPrint("Error submitting result: $e");
     } finally {
@@ -262,13 +288,21 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
             correctAnswers: correct,
             wrongAnswers: wrong,
             skippedAnswers: skipped,
-            questions: _questions.map((q) => {
-              'question': q['question'] ?? '',
-              'answers': (q['optionsRaw'] as List?)?.map((o) => o['text']?.toString() ?? '').toList() ?? [],
-              'correctAnswer': q['correctAnswer'] ?? '',
-              'correctAnswerKey': q['correctAnswerKey'],
-              'optionsRaw': q['optionsRaw'],
-            }).toList(),
+            questions: _questions
+                .map(
+                  (q) => {
+                    'question': q['question'] ?? '',
+                    'answers':
+                        (q['optionsRaw'] as List?)
+                            ?.map((o) => o['text']?.toString() ?? '')
+                            .toList() ??
+                        [],
+                    'correctAnswer': q['correctAnswer'] ?? '',
+                    'correctAnswerKey': q['correctAnswerKey'],
+                    'optionsRaw': q['optionsRaw'],
+                  },
+                )
+                .toList(),
             selectedAnswers: _selectedAnswers.map((k, v) => MapEntry(k, v)),
             subject: 'Exam', // Or your subject field
             unit: widget.title,
@@ -293,16 +327,16 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    
+
     if (_isLoading) {
       return const Scaffold(body: CustomLoader());
     }
 
     if (_questions.isEmpty) {
-       return Scaffold(
-         appBar: const CustomAppBar(title: "Exam"),
-         body: Center(child: Text("No questions found for this exam."))
-       );
+      return Scaffold(
+        appBar: const CustomAppBar(title: "Exam"),
+        body: Center(child: Text("No questions found for this exam.")),
+      );
     }
 
     final question = _questions[_currentQuestionIndex];
@@ -316,175 +350,200 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
       },
       child: Scaffold(
         backgroundColor: Colors.grey[50],
-      appBar: CustomAppBar(
-        title: '${l10n.question} ${_currentQuestionIndex + 1}/${_questions.length}',
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(
-                    _isAudioEnabled ? Icons.volume_up : Icons.volume_off,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isAudioEnabled = !_isAudioEnabled;
-                    });
-                  },
-                ),
-                const Icon(Icons.timer, color: Colors.white),
-                const SizedBox(width: 8.0),
-                Text(_isTimerActive ? _formatDuration(_remainingSeconds) : '--:--',
-                    style: textTheme.titleMedium?.copyWith(color: Colors.white)),
-              ],
-            ),
-          )
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Question X of Y Chip
+        appBar: CustomAppBar(
+          title:
+              '${l10n.question} ${_currentQuestionIndex + 1}/${_questions.length}',
+          centerTitle: true,
+          actions: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              padding: const EdgeInsets.only(right: 16.0),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
+                  IconButton(
+                    icon: Icon(
+                      _isAudioEnabled ? Icons.volume_up : Icons.volume_off,
+                      color: Colors.white,
                     ),
-                    child: Text(
-                      l10n.questionProgress(_currentQuestionIndex + 1, _questions.length),
-                      style: textTheme.labelLarge?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isAudioEnabled = !_isAudioEnabled;
+                      });
+                    },
                   ),
-                ],
-              ),
-            ),
-
-            // Question Card with Gradient
-            Expanded( 
-              flex: 2,
-              child: Container(
-                margin: const EdgeInsets.all(24),
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.8)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      question['question'],
-                      style: textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Options List
-            Expanded(
-              flex: 3,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: _buildAnswerOptions(question['answers']),
-                ),
-              ),
-            ),
-
-            // Bottom Navigation
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                   // SKIP Button
-                   TextButton(
-                    onPressed: _currentQuestionIndex < _questions.length - 1 ? _nextQuestion : null,
-                    child: Text(
-                      l10n.skip,
-                      style: textTheme.titleMedium?.copyWith(
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  
-                  // NEXT/SUBMIT Button
-                  ElevatedButton(
-                    onPressed: _selectedAnswers.containsKey(_currentQuestionIndex)
-                        ? _nextQuestion // This goes to next or submit
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary, 
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isLastQuestion ? l10n.submit : l10n.next,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward),
-                      ],
-                    ),
+                  const Icon(Icons.timer, color: Colors.white),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    _isTimerActive
+                        ? _formatDuration(_remainingSeconds)
+                        : '--:--',
+                    style: textTheme.titleMedium?.copyWith(color: Colors.white),
                   ),
                 ],
               ),
             ),
           ],
         ),
-      ),
-    ),
-  );
-}
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Question X of Y Chip
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: theme.colorScheme.primary.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.questionProgress(
+                          _currentQuestionIndex + 1,
+                          _questions.length,
+                        ),
+                        style: textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-  List<Widget> _buildAnswerOptions(List<dynamic> answers) { 
+              // Question Card with Gradient
+              Expanded(
+                flex: 2,
+                child: Container(
+                  margin: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withOpacity(0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Text(
+                        question['question'],
+                        style: textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Options List
+              Expanded(
+                flex: 3,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: _buildAnswerOptions(question['answers']),
+                  ),
+                ),
+              ),
+
+              // Bottom Navigation
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // SKIP Button
+                    TextButton(
+                      onPressed: _currentQuestionIndex < _questions.length - 1
+                          ? _nextQuestion
+                          : null,
+                      child: Text(
+                        l10n.skip,
+                        style: textTheme.titleMedium?.copyWith(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    // NEXT/SUBMIT Button
+                    ElevatedButton(
+                      onPressed:
+                          _selectedAnswers.containsKey(_currentQuestionIndex)
+                          ? _nextQuestion // This goes to next or submit
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            isLastQuestion ? l10n.submit : l10n.next,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildAnswerOptions(List<dynamic> answers) {
     final textTheme = Theme.of(context).textTheme;
     final theme = Theme.of(context);
 
@@ -500,7 +559,9 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? theme.colorScheme.primary.withOpacity(0.5) : Colors.grey[200]!,
+            color: isSelected
+                ? theme.colorScheme.primary.withOpacity(0.5)
+                : Colors.grey[200]!,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -543,8 +604,12 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen> with WidgetsBin
                   child: Text(
                     answer,
                     style: textTheme.titleMedium?.copyWith(
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                 ),
