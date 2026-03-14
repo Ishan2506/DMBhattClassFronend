@@ -11,8 +11,8 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 
 class ApiService {
-  //static const String baseUrl = "http://103.212.121.139:5000/api";
-   static const String baseUrl = "http://localhost:9657/api"; // 10.0.2.2 for Android Emulator, use localhost for others
+  static const String baseUrl = "http://103.212.121.139:5000/api";
+  // static const String baseUrl = "http://localhost:9657/api"; // 10.0.2.2 for Android Emulator, use localhost for others
   static const String guestToken = "DMBHATT_GUEST_ACCESS_TOKEN_2024";
   static String? _authToken;
   static bool _isGuest = false;
