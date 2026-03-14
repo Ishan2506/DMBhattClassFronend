@@ -13,11 +13,21 @@ import 'constant/app_constant.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+    // Initialize sqflite for desktop
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   final prefs = await SharedPreferences.getInstance();
   
   // Request Microphone permission at start

@@ -7,14 +7,15 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services for formatters
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/database_helper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_phone_screen.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool isAddAccount;
+  const LoginScreen({super.key, this.isAddAccount = false});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -174,50 +175,31 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (user['email'] != null) await prefs.setString('user_email', user['email']);
                             }
 
-                            // Fetch profile data to get std and userId
-                            try {
-                              final profileResponse = await ApiService.getProfile();
-                              if (profileResponse.statusCode == 200) {
-                                final profileData = jsonDecode(profileResponse.body);
-                                final user = profileData['user'];
-                                final profile = profileData['profile'];
-
-                                // Save userId and std for leaderboard
-                                if (user != null && user['_id'] != null) {
-                                  await prefs.setString('userId', user['_id']);
-                                }
-                                if (user != null && user['role'] != null) {
-                                  await prefs.setString('user_role', user['role']);
-                                }
-                                if (user != null && user['firstName'] != null) await prefs.setString('firstName', user['firstName']);
-                                if (profile != null) {
-                                  if (profile['std'] != null && profile['std'].toString().isNotEmpty) await prefs.setString('std', profile['std']); else await prefs.remove('std');
-                                  if (profile['medium'] != null && profile['medium'].toString().isNotEmpty) await prefs.setString('medium', profile['medium']); else await prefs.remove('medium');
-                                  if (profile['board'] != null && profile['board'].toString().isNotEmpty) await prefs.setString('board', profile['board']); else await prefs.remove('board');
-                                  if (profile['stream'] != null && profile['stream'].toString().isNotEmpty) await prefs.setString('stream', profile['stream']); else await prefs.remove('stream');
-                                  if (profile['parentPhone'] != null && profile['parentPhone'].toString().isNotEmpty) await prefs.setString('parentPhone', profile['parentPhone']);
+                                // Handle Multi-Account Storage
+                                final db = DatabaseHelper();
+                                if (!widget.isAddAccount) {
+                                  // Normal Login: Clear other accounts
+                                  await db.clearAllExcept(user['_id'] ?? user['id']);
                                 }
 
-                                // Sync this account to the saved accounts list
-                                await StudentProfileScreen.ensureCurrentAccountSaved(
-                                  prefs,
+                                // Save/Update Current Account in DB
+                                await db.saveAccount(
+                                  userId: user['_id'] ?? user['id'] ?? 'unknown',
                                   name: "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim(),
-                                  phone: user['phoneNum'] ?? "",
-                                  pic: user['photoPath'] ?? "",
+                                  token: token,
+                                  role: user['role'] ?? 'student',
+                                  phone: _phoneController.text,
+                                  userData: jsonEncode(user),
+                                  profilePic: user['photoPath'] ?? "",
                                 );
-                              }
-                            } catch (e) {
-                              print('Error fetching profile: $e');
-                              // Continue with login even if profile fetch fails
-                            }
 
-                             CustomToast.showSuccess(context, "Login Successful");
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const LandingScreen()),
-                              (route) => false,
-                            );
+                                 CustomToast.showSuccess(context, "Login Successful");
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const LandingScreen()),
+                                  (route) => false,
+                                );
                         } else {
                            CustomToast.showError(context, "Login Failed: ${ApiService.getErrorMessage(response.body)}");
                         }

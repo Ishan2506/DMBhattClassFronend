@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/database_helper.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 
@@ -22,14 +24,12 @@ class StudentProfileScreen extends StatefulWidget {
   State<StudentProfileScreen> createState() => _StudentProfileScreenState();
 
 
-  static Future<void> showSwitchAccountSheet(BuildContext context, {String? name, String? phone, String? pic}) async {
+  static Future<void> showSwitchAccountSheet(BuildContext context) async {
+    final db = DatabaseHelper();
     final prefs = await SharedPreferences.getInstance();
     
-    // Ensure current user is in the list with UPDATED details
-    await ensureCurrentAccountSaved(prefs, name: name, phone: phone, pic: pic);
-
-    List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
-    List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
+    // Fetch all saved accounts from SQLite
+    List<Map<String, dynamic>> accounts = await db.getAccounts();
     String currentToken = prefs.getString('auth_token') ?? "";
 
     if (!context.mounted) return;
@@ -46,13 +46,6 @@ class StudentProfileScreen extends StatefulWidget {
           decoration: BoxDecoration(
             color: theme.brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
-              )
-            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -68,10 +61,6 @@ class StudentProfileScreen extends StatefulWidget {
               Text(l10n.switchProfile, 
                 style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)
               ),
-              const SizedBox(height: 8),
-              Text(l10n.manageProfilesSeamlessly, 
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)
-              ),
               const SizedBox(height: 24),
               
               ...accounts.map((acc) {
@@ -85,102 +74,67 @@ class StudentProfileScreen extends StatefulWidget {
                        color: isActive ? theme.colorScheme.primary : Colors.grey.shade200,
                        width: isActive ? 1.5 : 1
                      ),
-                     boxShadow: [
-                       if (!isActive)
-                         BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))
-                     ]
                    ),
                    child: ListTile(
                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                     leading: Container(
-                       padding: const EdgeInsets.all(2),
-                       decoration: BoxDecoration(
-                         shape: BoxShape.circle,
-                         border: Border.all(color: isActive ? theme.colorScheme.primary : Colors.transparent, width: 2)
-                       ),
-                       child: CircleAvatar(
-                         radius: 24,
-                         backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                         backgroundImage: (acc['profilePic'] != null && acc['profilePic'].toString().isNotEmpty) 
-                             ? NetworkImage(acc['profilePic']) 
-                             : null,
-                         child: (acc['profilePic'] == null || acc['profilePic'].toString().isEmpty)
-                             ? Text(
-                                 acc['name'][0].toUpperCase(), 
-                                 style: TextStyle(
-                                   color: theme.colorScheme.primary, 
-                                   fontWeight: FontWeight.bold,
-                                   fontSize: 18
-                                 )
-                               )
-                             : null,
-                       ),
+                     leading: CircleAvatar(
+                       radius: 24,
+                       backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                       backgroundImage: (acc['profilePic'] != null && acc['profilePic'].toString().isNotEmpty) 
+                           ? NetworkImage(acc['profilePic']) 
+                           : null,
+                       child: (acc['profilePic'] == null || acc['profilePic'].toString().isEmpty)
+                           ? Text(
+                               (acc['name'] ?? "U")[0].toUpperCase(), 
+                               style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)
+                             )
+                           : null,
                      ),
                      title: Text(
-                        acc['name'], 
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface)
+                        acc['name'] ?? "User", 
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)
                      ),
                      subtitle: Text(
-                        acc['phone'], 
+                        acc['phone'] ?? "", 
                         style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade600)
                      ),
                      trailing: isActive 
-                        ? Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
-                            child: const Icon(Icons.check, color: Colors.white, size: 16),
-                          )
-                        : null,
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : IconButton(
+                            icon: const Icon(Icons.logout, color: Colors.red, size: 20),
+                            onPressed: () => _logoutAccount(context, acc),
+                          ),
                      onTap: () {
-                       Navigator.pop(context);
-                       if (!isActive) _switchUser(context, acc);
+                       if (!isActive) {
+                         Navigator.pop(context);
+                         _switchUser(context, acc);
+                       }
                      },
                    ),
                  );
               }).toList(),
               
-              if (accounts.length < 3)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                             Navigator.pop(context);
-                             Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAccountScreen()));
-                          },
-                          icon: const Icon(Icons.login_rounded),
-                          label: Text(l10n.logInExisting),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(color: theme.colorScheme.primary),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600)
-                          ),
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                           Navigator.pop(context);
+                           Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen(isAddAccount: true)));
+                        },
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.logInExisting),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                             Navigator.pop(context);
-                             Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
-                          },
-                          icon: const Icon(Icons.person_add_rounded, color: Colors.white),
-                          label: Text(l10n.createNew, style: const TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600)
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
             ],
           ),
         );
@@ -188,66 +142,37 @@ class StudentProfileScreen extends StatefulWidget {
     );
   }
 
-  static Future<void> ensureCurrentAccountSaved(SharedPreferences prefs, {String? name, String? phone, String? pic}) async {
-    String token = prefs.getString('auth_token') ?? "";
-    if (token.isEmpty) return;
+  static Future<void> _logoutAccount(BuildContext context, Map<String, dynamic> account) async {
+    final db = DatabaseHelper();
+    final prefs = await SharedPreferences.getInstance();
     
-    List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
-    List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
+    // Call backend logout
+    try {
+      await ApiService.logoutUser(account['token']);
+    } catch (e) {
+      debugPrint("Logout error: $e");
+    }
 
-    // Try to match by Phone (most reliable), then Token
-    int index = -1;
-    if (phone != null && phone.isNotEmpty && phone != "Signed In") {
-      index = accounts.indexWhere((acc) => acc['phone'] == phone);
-    }
-    if (index == -1) {
-      index = accounts.indexWhere((acc) => acc['token'] == token);
-    }
+    // Delete from DB
+    await db.deleteAccount(account['userId']);
     
-    // Create updated account object
-    final updatedAccount = {
-         'token': token,
-         'name': (name != null && name.isNotEmpty) ? name : "User",
-         'phone': (phone != null && phone.isNotEmpty) ? phone : "Signed In", 
-         'password': prefs.getString('user_password') ?? "",
-         'userId': prefs.getString('userId') ?? "",
-         'std': prefs.getString('std') ?? "",
-         'medium': prefs.getString('medium') ?? "",
-         'board': prefs.getString('board') ?? "",
-         'stream': prefs.getString('stream') ?? "",
-         'profilePic': pic ?? "",
-    };
-
-    if (index != -1) {
-       // Merge updates
-       final existing = accounts[index];
-       accounts[index] = {
-         ...existing,
-         'token': token, // Ensure token is latest
-         'name': (name != null && name.isNotEmpty) ? name : existing['name'],
-         'phone': (phone != null && phone.isNotEmpty) ? phone : existing['phone'],
-         'profilePic': (pic != null && pic.isNotEmpty) ? pic : existing['profilePic'],
-         'password': prefs.getString('user_password') ?? existing['password'],
-         'userId': prefs.getString('userId') ?? existing['userId'],
-         'std': prefs.getString('std') ?? existing['std'],
-         'medium': prefs.getString('medium') ?? existing['medium'],
-         'board': prefs.getString('board') ?? existing['board'],
-         'stream': prefs.getString('stream') ?? existing['stream'],
-       };
+    // If it was active, clear prefs and go to welcome
+    String currentToken = prefs.getString('auth_token') ?? "";
+    if (account['token'] == currentToken) {
+      await ApiService.clearAuthToken();
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+          (route) => false,
+        );
+      }
     } else {
-       // Prevent duplicates if by chance token changed but phone is same (handled by phone check above),
-       // or if fully new. limit to 3.
-       if (accounts.length >= 3) {
-         // Should we remove the oldest? Or just fail? 
-         // For now, let's keep it simple. If we are just saving CURRENT, we should probably allow it or replace the non-active one?
-         // User didn't specify replacement policy. We'll just add if space.
-         // Realistically, ensureCurrent shouldn't fail silently, but for safety:
-         if (accounts.isNotEmpty) accounts.removeAt(0); // Remove oldest
-       }
-       accounts.add(updatedAccount);
+      if (context.mounted) {
+        Navigator.pop(context); // Close sheet
+        showSwitchAccountSheet(context); // Reopen with updated list
+      }
     }
-    
-    await prefs.setStringList('saved_accounts', accounts.map((e) => jsonEncode(e)).toList());
   }
 
   static Future<void> _switchUser(BuildContext context, Map<String, dynamic> account) async {
@@ -257,47 +182,18 @@ class StudentProfileScreen extends StatefulWidget {
      try {
        String token = account['token'];
        
-       // 1. Attempt Background Login to refresh session
-       if (account['phone'] != null && 
-           account['password'] != null && 
-           account['phone'].toString().length >= 10 && 
-           account['password'].toString().isNotEmpty) {
-           
-           try {
-             final response = await ApiService.loginUser(
-               loginCode: account['password'],
-               phoneNum: account['phone'],
-             );
-             
-             if (response.statusCode == 200) {
-               final data = jsonDecode(response.body);
-               token = data['token'];
-               
-               // Update the local list with the new token so next time it's fresh
-               List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
-               List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
-               
-               int idx = accounts.indexWhere((acc) => acc['phone'] == account['phone']);
-               if (idx != -1) {
-                 accounts[idx]['token'] = token;
-                 await prefs.setStringList('saved_accounts', accounts.map((e) => jsonEncode(e)).toList());
-               }
-             }
-           } catch (e) {
-             print("Background login failed: $e");
-             // Fallback to existing token
-           }
+       // Update prefs with stored data
+       await ApiService.setAuthToken(token);
+       if (account['phone'] != null) await prefs.setString('user_phone', account['phone']);
+       if (account['userId'] != null) await prefs.setString('userId', account['userId']);
+       
+       // Handle userData if present
+       if (account['userData'] != null) {
+         final user = jsonDecode(account['userData']);
+         if (user['role'] != null) await prefs.setString('user_role', user['role']);
+         if (user['firstName'] != null) await prefs.setString('firstName', user['firstName']);
        }
 
-       // 2. Set Active Session
-       await ApiService.setAuthToken(token);
-       if (account['password'] != null) await prefs.setString('user_password', account['password']); else await prefs.remove('user_password');
-       if (account['userId'] != null) await prefs.setString('userId', account['userId']); else await prefs.remove('userId');
-       if (account['std'] != null && account['std'].toString().isNotEmpty) await prefs.setString('std', account['std']); else await prefs.remove('std');
-       if (account['medium'] != null && account['medium'].toString().isNotEmpty) await prefs.setString('medium', account['medium']); else await prefs.remove('medium');
-       if (account['board'] != null && account['board'].toString().isNotEmpty) await prefs.setString('board', account['board']); else await prefs.remove('board');
-       if (account['stream'] != null && account['stream'].toString().isNotEmpty) await prefs.setString('stream', account['stream']); else await prefs.remove('stream');
-       
        if (context.mounted) {
          CustomLoader.hide(context);
          Navigator.pushAndRemoveUntil(
@@ -384,12 +280,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         });
         final prefs = await SharedPreferences.getInstance();
 
-            StudentProfileScreen.ensureCurrentAccountSaved(
-              prefs, 
-              name: studentName, 
-              phone: mobileNo, 
-              pic: _photoPath,
-            );
+            // Removed legacy ensureCurrentAccountSaved call
       }
 
       // Fetch Dashboard Data (Points & Exams)
@@ -417,7 +308,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -783,7 +673,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextButton.icon(
                 onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final currentToken = prefs.getString('auth_token') ?? "";
+                  
+                  // Call backend logout
+                  await ApiService.logoutUser(currentToken);
+                  
+                  // Clear local session
                   await ApiService.clearAuthToken();
+                  
                   if (!mounted) return;
                   Navigator.pushAndRemoveUntil(
                     context,
@@ -862,132 +760,115 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildSwitchAccountSection(BuildContext context, ThemeData theme) {
-    return FutureBuilder<SharedPreferences>(
-      future: SharedPreferences.getInstance(),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: DatabaseHelper().getAccounts(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
+        if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
         final l10n = AppLocalizations.of(context)!;
-        final prefs = snapshot.data!;
-        List<String> savedContexts = prefs.getStringList('saved_accounts') ?? [];
-        List<Map<String, dynamic>> accounts = savedContexts.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
-        String currentToken = prefs.getString('auth_token') ?? "";
+        final accounts = snapshot.data!;
+        
+        return FutureBuilder<SharedPreferences>(
+          future: SharedPreferences.getInstance(),
+          builder: (context, prefSnapshot) {
+            if (!prefSnapshot.hasData) return const SizedBox.shrink();
+            final prefs = prefSnapshot.data!;
+            String currentToken = prefs.getString('auth_token') ?? "";
 
-        // Filter out current active account for the "Switch" list
-        final otherAccounts = accounts.where((acc) => acc['token'] != currentToken).toList();
+            // Filter out current active account for the "Switch" list
+            final otherAccounts = accounts.where((acc) => acc['token'] != currentToken).toList();
 
-        return Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.switchProfile,
-                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        l10n.switchProfile,
+                        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                      ),
+                      GestureDetector(
+                        onTap: () => StudentProfileScreen.showSwitchAccountSheet(context),
+                        child: Text(
+                          l10n.seeAll,
+                          style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                        ),
+                      ),
+                    ],
                   ),
-                  GestureDetector(
-                    onTap: () => StudentProfileScreen.showSwitchAccountSheet(context, name: studentName, phone: mobileNo, pic: _photoPath),
-                    child: Text(
-                      l10n.seeAll,
-                      style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                  const SizedBox(height: 16),
+                  if (otherAccounts.isEmpty)
+                    Text(
+                      l10n.singleProfileActive,
+                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500),
+                    )
+                  else
+                    SizedBox(
+                      height: 60,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: otherAccounts.length,
+                        itemBuilder: (context, index) {
+                          final acc = otherAccounts[index];
+                          return GestureDetector(
+                            onTap: () => StudentProfileScreen._switchUser(context, acc),
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface,
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                   CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                                    backgroundImage: (acc['profilePic'] != null && acc['profilePic'].toString().isNotEmpty) 
+                                        ? NetworkImage(acc['profilePic']) 
+                                        : null,
+                                    child: (acc['profilePic'] == null || acc['profilePic'].toString().isEmpty)
+                                        ? Text((acc['name'] ?? "U")[0].toUpperCase(), style: TextStyle(fontSize: 10, color: theme.colorScheme.primary, fontWeight: FontWeight.bold))
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(acc['name'] ?? "User", style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
+                  if (accounts.length < 3) ...[
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen(isAddAccount: true))),
+                        icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                        label: Text(l10n.addAnotherAccount),
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.primary,
+                          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
-              const SizedBox(height: 16),
-              if (otherAccounts.isEmpty)
-                Text(
-                  l10n.singleProfileActive,
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500),
-                )
-              else
-                SizedBox(
-                  height: 60,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: otherAccounts.length,
-                    itemBuilder: (context, index) {
-                      final acc = otherAccounts[index];
-                      return GestureDetector(
-                        onTap: () async {
-                           // Save the CURRENT user state first so we don't lose it
-                           final prefs = await SharedPreferences.getInstance();
-                           await StudentProfileScreen.ensureCurrentAccountSaved(
-                             prefs, 
-                             name: studentName, 
-                             phone: mobileNo, 
-                             pic: _photoPath
-                           );
-
-                           if (!context.mounted) return;
-                           await StudentProfileScreen._switchUser(context, acc);
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                               CircleAvatar(
-                                radius: 14,
-                                backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                                backgroundImage: (acc['profilePic'] != null && acc['profilePic'].toString().isNotEmpty) 
-                                    ? NetworkImage(acc['profilePic']) 
-                                    : null,
-                                child: (acc['profilePic'] == null || acc['profilePic'].toString().isEmpty)
-                                    ? Text(acc['name'][0].toUpperCase(), style: TextStyle(fontSize: 10, color: theme.colorScheme.primary, fontWeight: FontWeight.bold))
-                                    : null,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(acc['name'], style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              if (accounts.length < 3) ...[
-                const SizedBox(height: 16),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      // Ensure current profile is updated before adding a new one
-                      await StudentProfileScreen.ensureCurrentAccountSaved(
-                        prefs,
-                        name: studentName,
-                        phone: mobileNo,
-                        pic: _photoPath,
-                      );
-                      if (!context.mounted) return;
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAccountScreen()));
-                    },
-                    icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                    label: Text(l10n.addAnotherAccount),
-                    style: TextButton.styleFrom(
-                      foregroundColor: theme.colorScheme.primary,
-                      textStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+            );
+          }
         );
       },
     );

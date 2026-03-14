@@ -186,12 +186,14 @@ class ApiService {
     String? role,
     required String loginCode,
     required String phoneNum,
+    String? deviceId,
   }) async {
     final uri = Uri.parse("$baseUrl/auth/login");
     
     final body = {
       'loginCode': loginCode,
       'phoneNum': phoneNum,
+      if (deviceId != null) 'deviceId': deviceId,
     };
 
     if (role != null) {
@@ -207,6 +209,17 @@ class ApiService {
       body: jsonEncode(body),
     );
     return _handleSession(response);
+  }
+
+  static Future<http.Response> logoutUser(String token) async {
+    final uri = Uri.parse("$baseUrl/auth/logout");
+    return await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
   }
 
   static Future<http.Response> getProfile({bool forceRefresh = false}) async {
