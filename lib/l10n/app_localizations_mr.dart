@@ -403,6 +403,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get schoolPapers => 'शाळेचे पेपर';
 
   @override
+  String get notes => 'Notes';
+
+  @override
   String get boardPapers => 'बोर्डाचे पेपर';
 
   @override

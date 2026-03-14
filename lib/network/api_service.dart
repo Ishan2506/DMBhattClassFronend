@@ -396,6 +396,24 @@ class ApiService {
     ));
   }
 
+  static Future<http.Response> getNotes({
+    String? subject,
+  }) async {
+    final queryParams = await _getDefaultQueryParams();
+    queryParams['type'] = 'Notes';
+    if (subject != null) queryParams['subject'] = subject;
+    
+    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
+    
+    return _handleSession(await http.get(
+      uri,
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
+    ));
+  }
+
   static String _getMimeType(String fileName) {
     final ext = fileName.split('.').last.toLowerCase();
     const mimeTypes = {

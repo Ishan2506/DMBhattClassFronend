@@ -408,6 +408,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get schoolPapers => 'பள்ளித் தாள்கள்';
 
   @override
+  String get notes => 'Notes';
+
+  @override
   String get boardPapers => 'வாரியத் தாள்கள்';
 
   @override

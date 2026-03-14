@@ -404,6 +404,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get schoolPapers => 'स्कूल पेपर्स';
 
   @override
+  String get notes => 'नोट्स';
+
+  @override
   String get boardPapers => 'बोर्ड पेपर्स';
 
   @override

@@ -872,6 +872,12 @@ abstract class AppLocalizations {
   /// **'School Papers'**
   String get schoolPapers;
 
+  /// No description provided for @notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notes;
+
   /// No description provided for @boardPapers.
   ///
   /// In en, this message translates to:

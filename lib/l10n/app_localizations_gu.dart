@@ -403,6 +403,9 @@ class AppLocalizationsGu extends AppLocalizations {
   String get schoolPapers => 'શાળા પેપર્સ';
 
   @override
+  String get notes => 'નોટ્સ';
+
+  @override
   String get boardPapers => 'બોર્ડ પેપર્સ';
 
   @override

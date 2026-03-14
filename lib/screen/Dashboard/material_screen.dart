@@ -2,6 +2,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/board_paper_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/school_papers_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/notes_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_images_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +52,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
         title: l10n.material,
         centerTitle: true,
       ),
-      body: _isLoading 
+      body: _isLoading
         ? const CustomLoader()
         : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -65,6 +66,17 @@ class _MaterialScreenState extends State<MaterialScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SchoolPapersScreen()),
+                );
+              },
+            ),
+            _buildMaterialItem(
+              context,
+              title: l10n.notes,
+              icon: Icons.description_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => NotesScreen()),
                 );
               },
             ),
