@@ -76,7 +76,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => NotesScreen()),
+                  MaterialPageRoute(builder: (context) => const NotesScreen()),
                 );
               },
             ),

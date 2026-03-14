@@ -48,7 +48,6 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/sorting_sweep_screen.dar
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/color_flood_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/path_finder_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/games/escape_room/escape_lobby_screen.dart';
 
 
 
@@ -478,15 +477,6 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // --------- New Logic Games ---------
-                _buildGameCard(
-                  context,
-                  title: "Collaborative Escape Room",
-                  description: "Grab a friend! One defuses a bomb, the other reads the manual. Communication is key.",
-                  icon: Icons.meeting_room,
-                  color: Colors.deepPurple,
-                  onTap: () => _handleGameTap(const EscapeLobbyScreen()),
-                ),
                 const SizedBox(height: 16),
                 _buildGameCard(
                   context,
