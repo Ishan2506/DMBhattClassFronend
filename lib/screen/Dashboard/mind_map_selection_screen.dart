@@ -213,6 +213,7 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
                               final mindMap = _allMindMaps.firstWhere(
                                 (e) => e.subject == _selectedSubject && e.unit == _selectedUnit && e.title == _selectedTitle,
                               );
+                              
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
