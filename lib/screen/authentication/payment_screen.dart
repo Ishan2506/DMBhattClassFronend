@@ -90,6 +90,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _email = prefs.getString('user_email');
       _cachedPassword = prefs.getString('user_password');
     }
+
+    // Always ensure _cachedPassword is loaded if not already provided
+    if (_cachedPassword == null) {
+      final prefs = await SharedPreferences.getInstance();
+      _cachedPassword = prefs.getString('user_password');
+    }
     
     if (_std != null) {
       _calculateInitialAmount();
@@ -299,6 +305,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           "stream": (await SharedPreferences.getInstance()).getString('stream') ?? "",
           "board": (await SharedPreferences.getInstance()).getString('board') ?? "",
           "loginAs": (await SharedPreferences.getInstance()).getString('user_role') ?? "student",
+          "firstName": (await SharedPreferences.getInstance()).getString('firstName') ?? "", // Explicitly ensuring field is present
         },
         files: [],
       );

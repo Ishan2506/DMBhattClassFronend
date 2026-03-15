@@ -86,6 +86,16 @@ class _LandingScreenState extends State<LandingScreen> {
         
         if (user != null && user['role'] == 'student' && user['isPaid'] == false) {
            final prefs = await SharedPreferences.getInstance();
+           
+           // Persist data for payment flow
+           if (user['firstName'] != null) await prefs.setString('firstName', user['firstName']);
+           if (profile != null) {
+             if (profile['std'] != null) await prefs.setString('std', profile['std'].toString());
+             if (profile['medium'] != null) await prefs.setString('medium', profile['medium']);
+             if (profile['stream'] != null) await prefs.setString('stream', profile['stream']);
+             if (profile['board'] != null) await prefs.setString('board', profile['board']);
+           }
+
            bool skippedOnce = prefs.getBool('skipped_payment_prompt') ?? false;
 
            if (skippedOnce) {

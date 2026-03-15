@@ -173,6 +173,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (user != null) {
                               if (user['phoneNum'] != null) await prefs.setString('user_phone', user['phoneNum']);
                               if (user['email'] != null) await prefs.setString('user_email', user['email']);
+                              if (user['firstName'] != null) await prefs.setString('firstName', user['firstName']);
+                              if (user['std'] != null) await prefs.setString('std', user['std'].toString());
+                              if (user['medium'] != null) await prefs.setString('medium', user['medium']);
+                              if (user['stream'] != null) await prefs.setString('stream', user['stream']);
+                              if (user['board'] != null) await prefs.setString('board', user['board']);
                             }
 
                                 // Handle Multi-Account Storage
