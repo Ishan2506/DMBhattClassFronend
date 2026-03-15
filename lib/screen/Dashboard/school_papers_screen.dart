@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
@@ -24,6 +25,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   bool _isPaid = false;
   String? _std;
   String? _stream;
+  String? _board;
 
   @override
   void initState() {
@@ -33,20 +35,41 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
 
   Future<void> _loadProfileAndCheckGuest() async {
     _isGuest = await GuestUtils.isGuest();
+    final prefs = await SharedPreferences.getInstance();
+
     if (!_isGuest) {
       try {
         final profileResponse = await ApiService.getProfile(forceRefresh: true);
         if (profileResponse.statusCode == 200) {
           final profileData = jsonDecode(profileResponse.body);
-          _isPaid = profileData['user']?['isPaid'] ?? false;
+          final user = profileData['user'];
+          final profile = profileData['profile'];
+          
+          if (mounted) {
+            setState(() {
+              _isPaid = user?['isPaid'] ?? false;
+              // Priority: Profile API User Object > Profile API Profile Object > SharedPreferences
+              _std = user?['std']?.toString() ?? profile?['std']?.toString() ?? prefs.getString('std');
+              _stream = user?['stream'] ?? profile?['stream'] ?? prefs.getString('stream');
+              _board = user?['board'] ?? profile?['board'] ?? prefs.getString('board');
+            });
+          }
+
+          // Sync back to SharedPreferences if missing
+          if (_std != null) await prefs.setString('std', _std!);
+          if (_stream != null) await prefs.setString('stream', _stream!);
+          if (_board != null) await prefs.setString('board', _board!);
         }
       } catch (e) {
         debugPrint("Error fetching profile: $e");
       }
     }
-    final prefs = await SharedPreferences.getInstance();
-    _std = prefs.getString('std');
-    _stream = prefs.getString('stream');
+
+    // Fallback/Ensure values from Prefs if guest or API failed
+    _std ??= prefs.getString('std');
+    _stream ??= prefs.getString('stream');
+    _board ??= prefs.getString('board');
+
     if (mounted) setState(() {});
   }
 
@@ -85,38 +108,11 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   }
 
   List<String> _getFilteredSubjects() {
-    // If guest, show a general set of subjects
-    if (_isGuest) {
-      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
-    }
-
-    // Parse Standard for logged-in students
-    int? stdNum;
-    if (_std != null) {
-      final match = RegExp(r'(\d+)').firstMatch(_std!);
-      if (match != null) {
-        stdNum = int.tryParse(match.group(1)!);
-      }
-    }
-
-    // 1. Lower Standards (1-10)
-    if (stdNum != null && stdNum <= 10) {
-      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Hindi", "Sanskrit", "Computer"];
-    }
-
-    // 2. Higher Secondary (11-12)
-    if (stdNum != null && (stdNum == 11 || stdNum == 12)) {
-      if (_stream == "Science") {
-        return ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Gujarati", "Hindi", "Computer", "Sanskrit"];
-      } else if (_stream == "Commerce") {
-        return ["Accounts", "Statistics", "Economics", "BA", "SPCC", "English", "Gujarati", "Hindi", "Computer"];
-      } else if (_stream == "Arts") {
-        return ["Sociology", "Psychology", "History", "Geography", "Philosophy", "English", "Gujarati", "Hindi", "Sanskrit"];
-      }
-    }
-
-    // Fallback if std unknown or parsing fails
-    return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+    return AcademicConstants.getSubjectsForStudent(
+      board: _board,
+      std: _std,
+      stream: _stream,
+    );
   }
   
   bool _isLoading = false;

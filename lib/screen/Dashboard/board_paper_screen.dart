@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
@@ -30,25 +31,14 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   final List<String> _years = List.generate(10, (index) => (DateTime.now().year - 1 - index).toString());
   String? _selectedSubject;
 
+  String? _userBoard;
+
   List<String> _getFilteredSubjects() {
-    // 10th Standard: Only general subjects
-    if (_selectedStd == '10') {
-      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Hindi", "Sanskrit", "Computer"];
-    }
-    // 12th Standard: filter by stream
-    if (_selectedStd == '12') {
-      if (_selectedStream == 'Science') {
-        return ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Gujarati", "Hindi", "Computer"];
-      } else if (_selectedStream == 'Commerce') {
-        return ["Accounts", "Statistics", "Economics", "BA", "SPCC", "English", "Gujarati", "Hindi", "Computer"];
-      } else if (_selectedStream == 'Arts') {
-        return ["Sociology", "Psychology", "History", "Geography", "Philosophy", "English", "Gujarati", "Hindi"];
-      }
-      // 12th but no stream selected yet - show all
-      return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
-    }
-    // Fallback
-    return ["Mathematics", "Science", "English", "Social Science", "Gujarati", "Physics", "Chemistry", "Biology", "Accounts", "Statistics"];
+    return AcademicConstants.getSubjectsForStudent(
+      board: _userBoard,
+      std: _selectedStd,
+      stream: _selectedStream,
+    );
   }
 
   bool _isLoading = false;
@@ -64,27 +54,51 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
   Future<void> _fetchUserProfile() async {
     setState(() => _isProfileLoading = true);
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Load initial values from prefs
+    final profileFromPrefs = {
+      'board': prefs.getString('board'),
+      'std': prefs.getString('std'),
+      'stream': prefs.getString('stream'),
+      'medium': prefs.getString('medium'),
+    };
+
     try {
       final response = await ApiService.getProfile(forceRefresh: true);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        final user = data['user'];
         final profile = data['profile'];
-        if (profile != null) {
-          // Extract the numeric part of std (e.g., "7th" -> "7", "10" -> "10")
-          final rawStd = profile['std']?.toString() ?? '';
-          final stdMatch = RegExp(r'(\d+)').firstMatch(rawStd);
-          final stdNum = stdMatch != null ? stdMatch.group(1) : null;
-          
-          // Board papers only available for std 10 and 12
-          final validBoardStd = (stdNum == '10' || stdNum == '12') ? stdNum : null;
+        
+        final board = user?['board'] ?? profile?['board'] ?? profileFromPrefs['board'];
+        final studentStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? profileFromPrefs['std'];
+        final studentStream = user?['stream'] ?? profile?['stream'] ?? profileFromPrefs['stream'];
+        final medium = user?['medium'] ?? profile?['medium'] ?? profileFromPrefs['medium'];
 
+        String validBoardStd = '';
+        if (studentStd != null) {
+          final match = RegExp(r'(\d+)').firstMatch(studentStd);
+          if (match != null) {
+            final num = match.group(1);
+            if (num == '10' || num == '12') validBoardStd = num!;
+          }
+        }
+
+        if (mounted) {
           setState(() {
-            _selectedMedium = profile['medium'];
+            _selectedMedium = medium;
             _selectedStd = validBoardStd;
-            // Only carry stream if it's a valid 12th standard stream
-            _selectedStream = (validBoardStd == '12') ? profile['stream'] : null;
+            _selectedStream = (validBoardStd == '12') ? studentStream : null;
+            _userBoard = board;
           });
         }
+
+        // Sync back to SharedPreferences if we got data
+        if (studentStd != null) await prefs.setString('std', studentStd);
+        if (studentStream != null) await prefs.setString('stream', studentStream);
+        if (board != null) await prefs.setString('board', board);
+        if (medium != null) await prefs.setString('medium', medium);
       }
     } catch (e) {
       debugPrint("Error fetching profile: $e");
