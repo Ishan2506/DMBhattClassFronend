@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 
 enum GateType { and, or, xor, not }
 
@@ -27,8 +29,10 @@ class LogicGatesQuestScreen extends StatefulWidget {
 class _LogicGatesQuestScreenState extends State<LogicGatesQuestScreen> {
   final MindGameService _gameService = MindGameService();
   final Random _random = Random();
-  
-  late LogicQuestion _currentQuestion;
+  LogicQuestion? _currentQuestion;
+  List<LogicQuestion> _backendQuestions = [];
+  List<int> _usedBackendIndices = [];
+  bool _isLoading = true;
   int _score = 0;
   int _timeLeft = 45;
   Timer? _timer;
@@ -38,7 +42,57 @@ class _LogicGatesQuestScreenState extends State<LogicGatesQuestScreen> {
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _startGame();
+    _fetchDynamicQuestions();
+  }
+
+  Future<void> _fetchDynamicQuestions() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await ApiService.getGameQuestions('Logic Gates Quest');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        List<LogicQuestion> fetched = [];
+        for (var item in data) {
+          try {
+            String text = item['questionText'] ?? "";
+            // Parse "1 AND 0 = ?" or similar
+            final parts = text.split(' ');
+            if (parts.length >= 3) {
+              bool in1 = parts[0] == "1";
+              String gateStr = parts[1].toLowerCase();
+              GateType gate;
+              bool? in2;
+              
+              if (gateStr == "not") {
+                gate = GateType.not;
+                in2 = null;
+              } else {
+                in2 = parts[2] == "1";
+                if (gateStr == "and") gate = GateType.and;
+                else if (gateStr == "or") gate = GateType.or;
+                else if (gateStr == "xor") gate = GateType.xor;
+                else continue;
+              }
+              
+              bool ans = (item['correctAnswer'] == "1" || item['correctAnswer'].toString().toLowerCase() == "true");
+              fetched.add(LogicQuestion(in1, in2, gate, ans));
+            }
+          } catch (e) {
+            debugPrint("Error parsing logic question: $e");
+          }
+        }
+        if (fetched.isNotEmpty) {
+          setState(() {
+            _backendQuestions = fetched;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching logic gates questions: $e");
+    } finally {
+      setState(() => _isLoading = false);
+      _startGame();
+    }
   }
 
   @override
@@ -49,14 +103,39 @@ class _LogicGatesQuestScreenState extends State<LogicGatesQuestScreen> {
   }
 
   void _startGame() {
-    _score = 0;
-    _timeLeft = 45;
-    _isGameOver = false;
+    setState(() {
+      _score = 0;
+      _timeLeft = 45;
+      _isGameOver = false;
+      _usedBackendIndices = [];
+    });
     _generateQuestion();
     _startTimer();
   }
 
   void _generateQuestion() {
+    if (_backendQuestions.isNotEmpty) {
+      if (_usedBackendIndices.length >= _backendQuestions.length) {
+        setState(() {
+          _isGameOver = true;
+        });
+        _timer?.cancel();
+        return;
+      }
+
+      int nextIndex;
+      do {
+        nextIndex = _random.nextInt(_backendQuestions.length);
+      } while (_usedBackendIndices.contains(nextIndex));
+
+      setState(() {
+        _usedBackendIndices.add(nextIndex);
+        _currentQuestion = _backendQuestions[nextIndex];
+      });
+      return;
+    }
+
+    // Fallback to random generation
     final gate = GateType.values[_random.nextInt(GateType.values.length)];
     final in1 = _random.nextBool();
     bool? in2;
@@ -99,9 +178,9 @@ class _LogicGatesQuestScreenState extends State<LogicGatesQuestScreen> {
   }
 
   void _checkAnswer(bool selected) {
-    if (_isGameOver) return;
+    if (_isGameOver || _currentQuestion == null) return;
 
-    if (selected == _currentQuestion.answer) {
+    if (selected == _currentQuestion!.answer) {
       setState(() {
         _score += 10;
         _timeLeft += 2;
@@ -257,121 +336,178 @@ class _LogicGatesQuestScreenState extends State<LogicGatesQuestScreen> {
         ],
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildStatBadge("Score: $_score", Icons.star, Colors.amber),
-                _buildStatBadge("Time: $_timeLeft s", Icons.timer, _timeLeft < 10 ? Colors.red : Colors.blue),
-              ],
-            ),
-            const Spacer(),
-            
-            // Logic Diagram
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 15)],
-                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
-              ),
+      body: Stack(
+        children: [
+          if (!_isGameOver && _currentQuestion != null)
+            Padding(
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildValueBox(_currentQuestion.input1, theme),
-                      if (_currentQuestion.input2 != null) ...[
-                        const SizedBox(width: 16),
-                        _buildValueBox(_currentQuestion.input2!, theme),
-                      ],
+                      _buildStatBadge("Score: $_score", Icons.star, Colors.amber),
+                      _buildStatBadge("Time: $_timeLeft s", Icons.timer, _timeLeft < 10 ? Colors.red : Colors.blue),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const Spacer(),
+                  
+                  // Logic Diagram
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.colorScheme.primary),
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 15)],
+                      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                     ),
-                    child: Text(
-                      _currentQuestion.gate.name.toUpperCase(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildValueBox(_currentQuestion!.input1, theme),
+                            if (_currentQuestion!.input2 != null) ...[
+                              const SizedBox(width: 16),
+                              _buildValueBox(_currentQuestion!.input2!, theme),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: theme.colorScheme.primary),
+                          ),
+                          child: Text(
+                            _currentQuestion!.gate.name.toUpperCase(),
+                            style: GoogleFonts.poppins(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Icon(Icons.arrow_downward_rounded, size: 40, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: theme.dividerColor.withValues(alpha: 0.05),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2), width: 2),
+                          ),
+                          child: const Center(
+                            child: Text("?", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.grey)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Answer Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildAnswerButton(true, Colors.green),
                       ),
-                    ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildAnswerButton(false, Colors.red),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  const Icon(Icons.arrow_downward_rounded, size: 40, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: theme.dividerColor.withValues(alpha: 0.05),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2), width: 2),
-                    ),
-                    child: const Center(
-                      child: Text("?", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.grey)),
-                    ),
-                  ),
+                  const Spacer(),
                 ],
               ),
             ),
-
-            const Spacer(),
-
-            // Answer Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: _buildAnswerButton(true, Colors.green),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildAnswerButton(false, Colors.red),
-                ),
-              ],
-            ),
-
-            const Spacer(),
-
-            if (_isGameOver)
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("Session Over", style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text("Final Score: $_score", style: GoogleFonts.poppins(fontSize: 18)),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _startGame,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          
+          if (_isGameOver)
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.black.withValues(alpha: 0.8),
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.85,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 20)],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.emoji_events_rounded, size: 80, color: Colors.amber),
                       ),
-                      child: const Text("Restart"),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      Text(
+                        "Game Over", 
+                        style: GoogleFonts.poppins(
+                          fontSize: 36, 
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        )
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Final Score", 
+                        style: GoogleFonts.poppins(
+                          fontSize: 18, 
+                          color: Colors.grey[600],
+                          letterSpacing: 1.2,
+                        )
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "$_score", 
+                        style: GoogleFonts.poppins(
+                          fontSize: 64, 
+                          fontWeight: FontWeight.w900,
+                          color: theme.colorScheme.primary,
+                        )
+                      ),
+                      const SizedBox(height: 40),
+                      ElevatedButton(
+                        onPressed: _startGame,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 18),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          elevation: 8,
+                          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+                        ),
+                        child: Text(
+                          "Restart Game", 
+                          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-          ],
-        ),
+            ),
+
+          if (_isLoading)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }

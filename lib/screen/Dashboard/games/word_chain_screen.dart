@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 
 class WordChainScreen extends StatefulWidget {
   const WordChainScreen({super.key});
@@ -21,23 +23,58 @@ class _WordChainScreenState extends State<WordChainScreen> {
   
   List<String> _chain = [];
   String _currentWord = "";
-  
-  final List<String> _dictionary = [
-    "APPLE", "ELEPHANT", "TIGER", "RABBIT", "TRAIN", "NIGHT", "TENT",
-    "TABLE", "EAGLE", "EARTH", "HAT", "TOMORROW", "WATER", "RAIN",
-    "NEST", "TOY", "YACHT", "TEAM", "MONKEY", "YELLOW", "WOLF", "FOX",
-    "XENON", "NETWORK", "KITE", "ENERGY", "YARD", "DOOR", "ROOF", "FISH"
-  ];
+
+  List<String> _dictionary = [];
   
   final Random _random = Random();
   late TextEditingController _textController;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _textController = TextEditingController();
     _gameService.startSession(context);
-    _startRound();
+    _fetchDynamicDictionary(); // Fetch new words
+  }
+
+  Future<void> _fetchDynamicDictionary() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await ApiService.getGameQuestions('Word Chain');
+      print("Word Chain API Status: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        print("Word Chain Data received: ${data.length} items");
+        if (data.isNotEmpty) {
+          Set<String> newWords = {};
+          for (var item in data) {
+            if (item['meta'] != null && item['meta']['wordsList'] != null) {
+              String wordsStr = item['meta']['wordsList'];
+              List<String> words = wordsStr.split(',').map((w) => w.trim().toUpperCase()).where((w) => w.isNotEmpty).toList();
+              newWords.addAll(words);
+            }
+          }
+          print("Word Chain Dictionary size: ${newWords.length}");
+          if (newWords.isNotEmpty) {
+            setState(() {
+              _dictionary = newWords.toList();
+            });
+          }
+        }
+      } else {
+        print("Word Chain Fetch failed: ${response.body}");
+        // Fallback to minimal dictionary if empty to prevent crash
+        if (_dictionary.isEmpty) {
+          _dictionary = ["APPLE", "ELEPHANT", "TIGER", "RABBIT", "TRAIN"];
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching word chain dictionary: $e");
+    } finally {
+      setState(() => _isLoading = false);
+      _startRound(); // Start game after fetch
+    }
   }
 
   @override
@@ -117,112 +154,121 @@ class _WordChainScreenState extends State<WordChainScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: const CustomAppBar(title: "Word Chain", centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
               children: [
-                _buildInfoBadge(Icons.timer, "$_timeLeft s", _timeLeft < 10 ? Colors.red : theme.colorScheme.primary),
-                _buildInfoBadge(Icons.star, "Score: $_score", Colors.amber[800]!),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildInfoBadge(Icons.timer, "$_timeLeft s", _timeLeft < 10 ? Colors.red : theme.colorScheme.primary),
+                    _buildInfoBadge(Icons.star, "Score: $_score", Colors.amber[800]!),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                
+                if (_gameOver)
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                         Icon(Icons.link_off, size: 80, color: Colors.orange),
+                         const SizedBox(height: 16),
+                         Text("Time's Up!", style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.orange)),
+                         const SizedBox(height: 8),
+                         Text("Chain Length: ${_chain.length}", style: GoogleFonts.poppins(fontSize: 20, color: Colors.grey)),
+                         const SizedBox(height: 16),
+                         Text("Final Score: $_score", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.w600)),
+                         const SizedBox(height: 32),
+                         ElevatedButton(
+                           onPressed: _startRound,
+                           style: ElevatedButton.styleFrom(
+                             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                             backgroundColor: theme.colorScheme.primary,
+                             foregroundColor: theme.colorScheme.onPrimary,
+                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                           ),
+                           child: Text("Play Again", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                         )
+                      ],
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text("Enter a word starting with:", style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey)),
+                        const SizedBox(height: 8),
+                        Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                                color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: theme.colorScheme.primary, width: 2)
+                            ),
+                            child: Text(
+                                _currentWord.isEmpty ? "?" : _currentWord[_currentWord.length - 1], 
+                                style: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                            ),
+                        ),
+                        const SizedBox(height: 32),
+                        
+                        TextField(
+                          controller: _textController,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: InputDecoration(
+                            labelText: "Next Word",
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.send),
+                              onPressed: _submitWord,
+                            )
+                          ),
+                          onSubmitted: (_) => _submitWord(),
+                        ),
+                        
+                        const SizedBox(height: 24),
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        Text("Chain History", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+                        const SizedBox(height: 8),
+                        Expanded(
+                            child: ListView.builder(
+                                itemCount: _chain.length,
+                                itemBuilder: (context, index) {
+                                    // First item currently at index 0 is most recent word
+                                    bool isNewest = index == 0;
+                                    return ListTile(
+                                        leading: CircleAvatar(
+                                            backgroundColor: isNewest ? theme.colorScheme.primary : theme.cardColor,
+                                            child: Text("${_chain.length - index}", style: TextStyle(color: isNewest ? Colors.white : theme.colorScheme.onSurface)),
+                                        ),
+                                        title: Text(
+                                            _chain[index],
+                                            style: GoogleFonts.poppins(
+                                                fontSize: 20, 
+                                                fontWeight: isNewest ? FontWeight.bold : FontWeight.w500,
+                                                color: isNewest ? theme.colorScheme.primary : theme.textTheme.bodyLarge?.color,
+                                            )
+                                        ),
+                                    );
+                                }
+                            )
+                        )
+                      ],
+                    ),
+                  ),
               ],
             ),
-            const SizedBox(height: 24),
-            
-            if (_gameOver)
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                     Icon(Icons.link_off, size: 80, color: Colors.orange),
-                     const SizedBox(height: 16),
-                     Text("Time's Up!", style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.orange)),
-                     const SizedBox(height: 8),
-                     Text("Chain Length: ${_chain.length}", style: GoogleFonts.poppins(fontSize: 20, color: Colors.grey)),
-                     const SizedBox(height: 16),
-                     Text("Final Score: $_score", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.w600)),
-                     const SizedBox(height: 32),
-                     ElevatedButton(
-                       onPressed: _startRound,
-                       style: ElevatedButton.styleFrom(
-                         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                         backgroundColor: theme.colorScheme.primary,
-                         foregroundColor: theme.colorScheme.onPrimary,
-                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                       ),
-                       child: Text("Play Again", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-                     )
-                  ],
-                ),
-              )
-            else
-              Expanded(
-                child: Column(
-                  children: [
-                    Text("Enter a word starting with:", style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                            color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: theme.colorScheme.primary, width: 2)
-                        ),
-                        child: Text(
-                            _currentWord[_currentWord.length - 1], 
-                            style: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
-                        ),
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    TextField(
-                      controller: _textController,
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: InputDecoration(
-                        labelText: "Next Word",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.send),
-                          onPressed: _submitWord,
-                        )
-                      ),
-                      onSubmitted: (_) => _submitWord(),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    Text("Chain History", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    Expanded(
-                        child: ListView.builder(
-                            itemCount: _chain.length,
-                            itemBuilder: (context, index) {
-                                // First item currently at index 0 is most recent word
-                                bool isNewest = index == 0;
-                                return ListTile(
-                                    leading: CircleAvatar(
-                                        backgroundColor: isNewest ? theme.colorScheme.primary : theme.cardColor,
-                                        child: Text("${_chain.length - index}", style: TextStyle(color: isNewest ? Colors.white : theme.colorScheme.onSurface)),
-                                    ),
-                                    title: Text(
-                                        _chain[index],
-                                        style: GoogleFonts.poppins(
-                                            fontSize: 20, 
-                                            fontWeight: isNewest ? FontWeight.bold : FontWeight.w500,
-                                            color: isNewest ? theme.colorScheme.primary : theme.textTheme.bodyLarge?.color,
-                                        )
-                                    ),
-                                );
-                            }
-                        )
-                    )
-                  ],
-                ),
-              ),
-          ],
-        ),
+          ),
+          if (_isLoading)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }

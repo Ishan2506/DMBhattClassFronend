@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'dart:convert';
 
 class ScrambledWord {
   final String fullWord;
@@ -41,12 +43,14 @@ class _SyllableScrambleScreenState extends State<SyllableScrambleScreen> {
     ScrambledWord("LEARNING", ["LEARN", "ING"]),
   ];
 
-  late List<ScrambledWord> _sessionWords;
+  late List<ScrambledWord> _sessionWords = [];
+  List<ScrambledWord> _backendWords = [];
   int _currentIndex = 0;
   int _score = 0;
   int _timeLeft = 60;
   Timer? _timer;
   bool _isGameOver = false;
+  bool _isLoading = true;
   
   List<String> _shuffledSyllables = [];
   List<String> _selectedSyllables = [];
@@ -55,7 +59,40 @@ class _SyllableScrambleScreenState extends State<SyllableScrambleScreen> {
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _startGame();
+    _fetchDynamicQuestions();
+  }
+
+  Future<void> _fetchDynamicQuestions() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await ApiService.getGameQuestions('Syllable Scramble');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        List<ScrambledWord> fetched = [];
+        for (var item in data) {
+          try {
+            String text = item['questionText'] ?? "";
+            String answer = item['correctAnswer'] ?? "";
+            if (text.isNotEmpty && answer.isNotEmpty) {
+              List<String> syllables = text.split('-').map((s) => s.trim().toUpperCase()).where((s) => s.isNotEmpty).toList();
+              fetched.add(ScrambledWord(answer.toUpperCase(), syllables));
+            }
+          } catch (e) {
+            debugPrint("Error parsing syllable quest: $e");
+          }
+        }
+        if (fetched.isNotEmpty) {
+          setState(() {
+            _backendWords = fetched;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching syllable questions: $e");
+    } finally {
+      setState(() => _isLoading = false);
+      _startGame();
+    }
   }
 
   @override
@@ -66,7 +103,8 @@ class _SyllableScrambleScreenState extends State<SyllableScrambleScreen> {
   }
 
   void _startGame() {
-    _sessionWords = List.from(_allWords)..shuffle();
+    _sessionWords = _backendWords.isNotEmpty ? List.from(_backendWords) : List.from(_allWords);
+    _sessionWords.shuffle();
     _currentIndex = 0;
     _score = 0;
     _timeLeft = 60;
@@ -89,8 +127,11 @@ class _SyllableScrambleScreenState extends State<SyllableScrambleScreen> {
 
   void _loadQuestion() {
     if (_currentIndex >= _sessionWords.length) {
-      _sessionWords.shuffle();
-      _currentIndex = 0;
+      setState(() {
+        _isGameOver = true;
+      });
+      _timer?.cancel();
+      return;
     }
     
     final word = _sessionWords[_currentIndex];
@@ -270,100 +311,164 @@ class _SyllableScrambleScreenState extends State<SyllableScrambleScreen> {
         ],
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildStatBadge("Score: $_score", Icons.star, Colors.amber),
-                _buildStatBadge("Time: $_timeLeft s", Icons.timer, _timeLeft < 10 ? Colors.red : Colors.blue),
-              ],
-            ),
-            const Spacer(),
-            
-            // Selected Syllables (Constructed Word)
-            Container(
-              height: 100,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
-              ),
-              child: Center(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: _selectedSyllables.isEmpty 
-                      ? [Text("Construct the word...", style: TextStyle(color: theme.hintColor, fontSize: 18))]
-                      : _selectedSyllables.map((s) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Chip(label: Text(s, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
-                        )).toList(),
+      body: Stack(
+        children: [
+          if (!_isGameOver)
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatBadge("Score: $_score", Icons.star, Colors.amber),
+                      _buildStatBadge("Time: $_timeLeft s", Icons.timer, _timeLeft < 10 ? Colors.red : Colors.blue),
+                    ],
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (_selectedSyllables.isNotEmpty)
-              TextButton.icon(
-                onPressed: _clearSelection,
-                icon: const Icon(Icons.refresh, size: 20),
-                label: const Text("Clear Selection"),
-              ),
-
-            const Spacer(),
-
-            // Scrambled Syllables
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
-              children: _shuffledSyllables.map((s) => InkWell(
-                onTap: () => _onSyllableTap(s),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.colorScheme.primary),
-                  ),
-                  child: Text(
-                    s,
-                    style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
-                  ),
-                ),
-              )).toList(),
-            ),
-
-            const Spacer(),
-
-            if (_isGameOver)
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)]),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text("Time's Up!", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text("Final Score: $_score", style: const TextStyle(fontSize: 18)),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _startGame,
-                      style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
-                      child: const Text("Play Again"),
+                  const Spacer(),
+                  
+                  // Selected Syllables (Constructed Word)
+                  Container(
+                    height: 100,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
                     ),
-                  ],
+                    child: Center(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: _selectedSyllables.isEmpty 
+                            ? [Text("Construct the word...", style: TextStyle(color: theme.hintColor, fontSize: 18))]
+                            : _selectedSyllables.map((s) => Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                child: Chip(label: Text(s, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                              )).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_selectedSyllables.isNotEmpty)
+                    TextButton.icon(
+                      onPressed: _clearSelection,
+                      icon: const Icon(Icons.refresh, size: 20),
+                      label: const Text("Clear Selection"),
+                    ),
+
+                  const Spacer(),
+
+                  // Scrambled Syllables
+                  if (_sessionWords.isNotEmpty)
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      alignment: WrapAlignment.center,
+                      children: _shuffledSyllables.map((s) => InkWell(
+                        onTap: () => _onSyllableTap(s),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: theme.colorScheme.primary),
+                          ),
+                          child: Text(
+                            s,
+                            style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                          ),
+                        ),
+                      )).toList(),
+                    ),
+                  const Spacer(),
+                ],
+              ),
+            ),
+          
+          if (_isGameOver)
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.black.withValues(alpha: 0.8),
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.85,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 20)],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.emoji_events_rounded, size: 80, color: Colors.amber),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        "Game Over", 
+                        style: GoogleFonts.poppins(
+                          fontSize: 36, 
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        )
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Final Score", 
+                        style: GoogleFonts.poppins(
+                          fontSize: 18, 
+                          color: Colors.grey[600],
+                          letterSpacing: 1.2,
+                        )
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "$_score", 
+                        style: GoogleFonts.poppins(
+                          fontSize: 64, 
+                          fontWeight: FontWeight.w900,
+                          color: theme.colorScheme.primary,
+                        )
+                      ),
+                      const SizedBox(height: 40),
+                      ElevatedButton(
+                        onPressed: _startGame,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 18),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          elevation: 8,
+                          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+                        ),
+                        child: Text(
+                          "Play Again", 
+                          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-          ],
-        ),
+            ),
+          if (_isLoading)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }

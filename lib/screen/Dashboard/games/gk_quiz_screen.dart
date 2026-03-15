@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'dart:convert';
 
 class GKQuizScreen extends StatefulWidget {
   const GKQuizScreen({super.key});
@@ -25,6 +27,8 @@ class _GKQuizScreenState extends State<GKQuizScreen> {
 
   int _currentIndex = 0;
   int _score = 0;
+  bool _isLoading = true;
+  bool _isGameOver = false;
 
   final List<GKQuestion> _allQuestions = [
     GKQuestion(
@@ -79,30 +83,72 @@ class _GKQuizScreenState extends State<GKQuizScreen> {
     ),
   ];
 
-  late List<GKQuestion> _sessionQuestions;
-  late List<String> _currentOptions;
+  late List<GKQuestion> _sessionQuestions = [];
+  List<GKQuestion> _backendQuestions = [];
+  late List<String> _currentOptions = [];
 
   @override
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _startSession();
+    _fetchDynamicQuestions();
+  }
+
+  Future<void> _fetchDynamicQuestions() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await ApiService.getGameQuestions('GK Quiz');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        List<GKQuestion> fetched = [];
+        for (var item in data) {
+          try {
+            String questionText = item['questionText'] ?? "";
+            String correctAnswer = item['correctAnswer'] ?? "";
+            List<String> options = List<String>.from(item['options'] ?? []);
+            
+            if (questionText.isNotEmpty && correctAnswer.isNotEmpty && options.isNotEmpty) {
+              fetched.add(GKQuestion(questionText, correctAnswer, options));
+            }
+          } catch (e) {
+            debugPrint("Error parsing GK question: $e");
+          }
+        }
+        if (fetched.isNotEmpty) {
+          setState(() {
+            _backendQuestions = fetched;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching GK questions: $e");
+    } finally {
+      setState(() => _isLoading = false);
+      _startSession();
+    }
   }
 
   void _startSession() {
-    _sessionQuestions = List.from(_allQuestions)..shuffle();
-    // Use a subset of 5 questions per session to keep it quick
-    _sessionQuestions = _sessionQuestions.take(5).toList();
-    _currentIndex = 0;
-    _score = 0;
-    _loadQuestion();
+    setState(() {
+      _sessionQuestions = _backendQuestions.isNotEmpty ? List.from(_backendQuestions) : List.from(_allQuestions);
+      _sessionQuestions.shuffle();
+      // Use a subset of 5 questions per session to keep it quick
+      _sessionQuestions = _sessionQuestions.take(5).toList();
+      _currentIndex = 0;
+      _score = 0;
+      _isGameOver = false;
+      _loadQuestion();
+    });
   }
 
   void _loadQuestion() {
     if (_currentIndex < _sessionQuestions.length) {
       _currentOptions = List.from(_sessionQuestions[_currentIndex].options)..shuffle();
+      setState(() {});
     } else {
-      _showWinDialog();
+      setState(() {
+        _isGameOver = true;
+      });
     }
   }
 
@@ -142,33 +188,7 @@ class _GKQuizScreenState extends State<GKQuizScreen> {
   }
 
   void _showWinDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text("Quiz Complete!", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text(
-          "You scored $_score out of ${_sessionQuestions.length * 20} points.",
-          style: GoogleFonts.poppins(fontSize: 18),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() => _startSession());
-            },
-            child: const Text("Play Again"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context); // Exit game
-            },
-            child: const Text("Exit"),
-          ),
-        ],
-      ),
-    );
+    // Deprecated in favor of inline game over UI
   }
 
   void _showHowToPlay() {
@@ -316,12 +336,12 @@ class _GKQuizScreenState extends State<GKQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_currentIndex >= _sessionQuestions.length) {
+    if (!_isGameOver && (_isLoading || _sessionQuestions.isEmpty)) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final theme = Theme.of(context);
-    final question = _sessionQuestions[_currentIndex];
+    final question = !_isGameOver && _currentIndex < _sessionQuestions.length ? _sessionQuestions[_currentIndex] : null;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -336,93 +356,184 @@ class _GKQuizScreenState extends State<GKQuizScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            children: [
-              // Score Board
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Question ${_currentIndex + 1}/${_sessionQuestions.length}",
-                    style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.amber.shade300),
+        child: Stack(
+          children: [
+            if (!_isGameOver && question != null)
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    // Score Board
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Question ${_currentIndex + 1}/${_sessionQuestions.length}",
+                          style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.amber.shade300),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Score: $_score",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber.shade800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Row(
+                    
+                    const SizedBox(height: 48),
+                    
+                    // Question Box
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
+                      ),
+                      child: Text(
+                        question.question,
+                        style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w600, height: 1.5),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    
+                    const Spacer(),
+                    
+                    // Options List
+                    ..._currentOptions.map((option) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: ElevatedButton(
+                          onPressed: () => _checkAnswer(option),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                            backgroundColor: theme.cardColor,
+                            foregroundColor: theme.textTheme.bodyLarge?.color,
+                            elevation: 2,
+                            alignment: Alignment.centerLeft,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                            ),
+                          ),
+                          child: Text(
+                            option,
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+
+            if (_isGameOver)
+              Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black.withOpacity(0.8),
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.85,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        )
+                      ],
+                    ),
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 20),
-                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.emoji_events_rounded, size: 80, color: Colors.amber),
+                        ),
+                        const SizedBox(height: 24),
                         Text(
-                          "Score: $_score",
+                          "Game Over", 
                           style: GoogleFonts.poppins(
-                            fontSize: 18,
+                            fontSize: 36, 
                             fontWeight: FontWeight.bold,
-                            color: Colors.amber.shade800,
+                            color: theme.colorScheme.onSurface,
+                          )
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Final Score", 
+                          style: GoogleFonts.poppins(
+                            fontSize: 18, 
+                            color: Colors.grey[600],
+                            letterSpacing: 1.2,
+                          )
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "$_score", 
+                          style: GoogleFonts.poppins(
+                            fontSize: 64, 
+                            fontWeight: FontWeight.w900,
+                            color: theme.colorScheme.primary,
+                          )
+                        ),
+                        const SizedBox(height: 40),
+                        ElevatedButton(
+                          onPressed: _startSession,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                            padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 18),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                            elevation: 8,
+                            shadowColor: theme.colorScheme.primary.withOpacity(0.5),
+                          ),
+                          child: Text(
+                            "Play Again", 
+                            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-              
-              const SizedBox(height: 48),
-              
-              // Question Box
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
-                ),
-                child: Text(
-                  question.question,
-                  style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w600, height: 1.5),
-                  textAlign: TextAlign.center,
                 ),
               ),
-              
-              const Spacer(),
-              
-              // Options List
-              ..._currentOptions.map((option) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: ElevatedButton(
-                    onPressed: () => _checkAnswer(option),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-                      backgroundColor: theme.cardColor,
-                      foregroundColor: theme.textTheme.bodyLarge?.color,
-                      elevation: 2,
-                      alignment: Alignment.centerLeft,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
-                      ),
-                    ),
-                    child: Text(
-                      option,
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
+
+            if (_isLoading)
+               Container(
+                color: Colors.black.withOpacity(0.2),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+          ],
         ),
       ),
     );

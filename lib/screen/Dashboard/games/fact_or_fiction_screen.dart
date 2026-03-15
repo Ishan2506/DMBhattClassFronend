@@ -89,8 +89,9 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
     bool correct = false;
     final question = _allQuestions[_currentIndex];
     
-    // Parse correct answer from string "true"/"false"
-    bool correctAnswerBool = question.correctAnswer.toLowerCase() == 'true';
+    // Parse correct answer from string "Fact"/"Fiction" or "true"/"false"
+    bool correctAnswerBool = question.correctAnswer.toLowerCase() == 'fact' || 
+                             question.correctAnswer.toLowerCase() == 'true';
 
     if (userAnswer != null) {
       if (userAnswer == correctAnswerBool) {
