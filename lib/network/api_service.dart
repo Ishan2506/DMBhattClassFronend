@@ -11,10 +11,33 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/utils/connectivity_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
-
 class ApiService {
-  static const String baseUrl = "http://103.212.121.139:5000/api";
-  // static const String baseUrl = "http://localhost:5000/api"; // 10.0.2.2 for Android Emulator, use localhost for others
+  static String get baseUrl {
+    // For Android Emulator, use 10.0.2.2. For others, use localhost or the production IP.
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      // Check if we are likely on an emulator (simplified check)
+      // In a real app, you might use device_info_plus, but for this dev environment:
+      return "http://10.0.2.2:5000/api";
+    }
+    return "http://localhost:5000/api";
+    // return "http://103.212.121.139:5000/api"; // Production
+  }
+  
+  /// Helper to get the full URL for a file (image, pdf, etc.)
+  static String getFileUrl(String? url) {
+    if (url == null || url.isEmpty) return "";
+    if (url.startsWith('http')) return url;
+    
+    // Remove /api from baseUrl to get the server root
+    final serverRoot = baseUrl.replaceAll('/api', '');
+    
+    // If it's a relative path from our server
+    if (url.startsWith('uploads/')) {
+        return "$serverRoot/$url";
+    }
+    
+    return url;
+  }
   static const String guestToken = "DMBHATT_GUEST_ACCESS_TOKEN_2024";
   static String? _authToken;
   static bool _isGuest = false;

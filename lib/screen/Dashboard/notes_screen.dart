@@ -303,7 +303,7 @@ class _NotesScreenState extends State<NotesScreen> {
                Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PdfPreviewScreen(product: note),
+                    builder: (context) => PdfPreviewScreen(product: note, isFullAccess: true),
                   ),
                 );
             },

@@ -130,7 +130,7 @@ class _EventsScreenState extends State<EventsScreen> {
                     // Ideally ApiService should have a method or constant for Image Base URL.
                     // For now, assuming backend serves static files correctly or returns full URL.
                     // If it returns "uploads/file.jpg", we need base URL.
-                    coverImage.startsWith('http') ? coverImage : "${ApiService.baseUrl.replaceAll('/api', '')}/$coverImage", 
+                    ApiService.getFileUrl(coverImage), 
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,

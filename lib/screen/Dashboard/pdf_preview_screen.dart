@@ -8,11 +8,11 @@ import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 class PdfPreviewScreen extends StatefulWidget {
   final Map<String, dynamic> product;
-
-  const PdfPreviewScreen({super.key, required this.product});
+  final bool isFullAccess;
+  const PdfPreviewScreen({super.key, required this.product, this.isFullAccess = false});
 
   @override
   State<PdfPreviewScreen> createState() => _PdfPreviewScreenState();
@@ -53,18 +53,25 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
         if (mounted) setState(() => _isLoading = false);
         return;
       }
-      final response = await http.get(Uri.parse(pdfUrl));
+      final fullUrl = ApiService.getFileUrl(pdfUrl);
+      debugPrint("📥 Fetching PDF info from: $fullUrl");
+      final response = await http.get(Uri.parse(fullUrl));
       if (response.statusCode == 200) {
+        debugPrint("✅ PDF info fetched successfully (${response.bodyBytes.length} bytes)");
         _pdfBytes = response.bodyBytes;
         
         // Robust page counting using structural PDF markers
+        if (_pdfBytes == null) return;
         try {
           final content = String.fromCharCodes(_pdfBytes!);
           
           // Strategy 1: Look for /Count in the page tree
           final countMatch = RegExp(r'/Count\s+(\d+)').firstMatch(content);
           if (countMatch != null) {
-            _actualTotalPages = int.parse(countMatch.group(1)!);
+            final countStr = countMatch.group(1);
+            if (countStr != null) {
+              _actualTotalPages = int.parse(countStr);
+            }
           } else {
             // Strategy 2: Count all instances of /Type /Page
             // We use a boundary check to avoid catching similar strings
@@ -83,10 +90,11 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
           });
         }
       } else {
+        debugPrint("❌ Failed to fetch PDF info. Status code: ${response.statusCode}");
         if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
-      debugPrint("Error loading PDF info: $e");
+      debugPrint("❌ Exception loading PDF info in _loadPdfInfo: $e");
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -165,7 +173,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
           ),
 
           // Free preview notice
-          if (_currentPage < _freePages)
+          if (!widget.isFullAccess && _currentPage < _freePages)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -203,10 +211,10 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                         _currentPage = index;
                       });
                     },
-                    itemCount: math.min(_actualTotalPages, _freePages + 1),
+                    itemCount: widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1),
                     itemBuilder: (context, index) {
                       final pageNumber = index + 1;
-                      final isLocked = pageNumber > _freePages;
+                      final isLocked = !widget.isFullAccess && pageNumber > _freePages;
                       final String? pdfUrl = widget.product['file'] ?? widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
                       final bool isCloudinary = pdfUrl != null && pdfUrl.contains('/upload/');
 
@@ -230,7 +238,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                               borderRadius: BorderRadius.circular(16),
                               child: isCloudinary
                                   ? Image.network(
-                                      _getPdfPageUrl(pdfUrl, pageNumber),
+                                      _getPdfPageUrl(ApiService.getFileUrl(pdfUrl!), pageNumber),
                                       fit: BoxFit.contain,
                                       width: double.infinity,
                                       loadingBuilder: (context, child, loadingProgress) {
@@ -361,7 +369,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
                 // Next button
                 ElevatedButton.icon(
-                  onPressed: _currentPage < math.min(_actualTotalPages, _freePages + 1) - 1
+                  onPressed: _currentPage < (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1
                       ? () {
                           _pageController.nextPage(
                             duration: const Duration(milliseconds: 300),
@@ -422,9 +430,15 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   Future<Uint8List?> _getRasterizedPage(String url, int pageNumber) async {
     try {
       if (_pdfBytes == null) {
-        final response = await http.get(Uri.parse(url));
+        final fullUrl = ApiService.getFileUrl(url);
+        debugPrint("📥 Rasterizing: Fetching PDF bytes from: $fullUrl");
+        final response = await http.get(Uri.parse(fullUrl));
         if (response.statusCode == 200) {
+          debugPrint("✅ Rasterizing: PDF bytes fetched successfully");
           _pdfBytes = response.bodyBytes;
+        } else {
+          debugPrint("❌ Rasterizing: Failed to fetch PDF bytes. Status: ${response.statusCode}");
+          return null;
         }
       }
 

@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 
 class EventGalleryScreen extends StatelessWidget {
   final String eventTitle;
@@ -41,7 +42,7 @@ class EventGalleryScreen extends StatelessWidget {
                  _showFullScreenImage(context, photos[index]);
                },
               child: Image.network(
-                photos[index],
+                ApiService.getFileUrl(photos[index].toString()),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
@@ -76,7 +77,7 @@ class EventGalleryScreen extends StatelessWidget {
           ),
           body: Center(
             child: InteractiveViewer(
-              child: Image.network(imagePath),
+              child: Image.network(ApiService.getFileUrl(imagePath), fit: BoxFit.cover),
             ),
           ),
         ),

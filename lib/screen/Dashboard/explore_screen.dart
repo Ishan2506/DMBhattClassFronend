@@ -108,24 +108,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
   String _getImageUrl(String url) {
     if (url.isEmpty) return url;
     
-    // Check if URL is a PDF (check before any URL encoding)
-    if (url.toLowerCase().contains('.pdf')) {
-      debugPrint('🔍 PDF detected: $url');
-      // Cloudinary PDF to Image transformation
-      // Replace /upload/ with /upload/pg_1,f_jpg/ to get first page as JPG
-      if (url.contains('/upload/')) {
-        // Split the URL at /upload/
-        final parts = url.split('/upload/');
-        if (parts.length == 2) {
-          // Reconstruct with transformation parameters
-          final transformedUrl = '${parts[0]}/upload/pg_1,f_jpg/${parts[1]}';
-          debugPrint('✅ Transformed URL: $transformedUrl');
-          return transformedUrl;
-        }
+    // First, handle our local server/remote base URL
+    final formattedUrl = ApiService.getFileUrl(url);
+
+    // If it's still a Cloudinary PDF, keep the transformation logic
+    if (formattedUrl.toLowerCase().contains('.pdf') && formattedUrl.contains('/upload/')) {
+      debugPrint('🔍 Cloudinary PDF detected: $formattedUrl');
+      final parts = formattedUrl.split('/upload/');
+      if (parts.length == 2) {
+        final transformedUrl = '${parts[0]}/upload/pg_1,f_jpg/${parts[1]}';
+        debugPrint('✅ Transformed URL: $transformedUrl');
+        return transformedUrl;
       }
     }
     
-    return url;
+    return formattedUrl;
   }
 
 
@@ -327,7 +324,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                         child: Hero(
                                           tag: product['id'],
                                           child: Image.network(
-                                            _getImageUrl(product['image']),
+                                            ApiService.getFileUrl(product['image']),
                                             fit: BoxFit.contain,
                                             width: screenWidth * 0.5,
                                             loadingBuilder: (context, child, loadingProgress) {

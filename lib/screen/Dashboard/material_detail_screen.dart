@@ -201,7 +201,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
                       child: Hero(
                         tag: widget.product['id'],
                         child: () {
-                           final String imageUrl = widget.product['image'].toString();
+                           final String imageUrl = ApiService.getFileUrl(widget.product['image']?.toString() ?? widget.product['file']?.toString() ?? '');
                            // 1. Check if it's a Cloudinary PDF - Use fast image transformation
                            if (imageUrl.toLowerCase().contains('.pdf') && imageUrl.contains('/upload/')) {
                               final parts = imageUrl.split('/upload/');
@@ -488,7 +488,7 @@ class _PdfCoverState extends State<_PdfCover> {
 
   Future<void> _loadPdfCover() async {
     try {
-      final response = await http.get(Uri.parse(widget.url));
+      final response = await http.get(Uri.parse(ApiService.getFileUrl(widget.url)));
       if (response.statusCode == 200) {
         final pdfBytes = response.bodyBytes;
         // Rasterize the first page (0)

@@ -218,14 +218,14 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
                   ? ImageFiltered(
                       imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                       child: Image.network(
-                        imageData['file'],
+                        ApiService.getFileUrl(imageData['file']),
                         fit: BoxFit.cover,
                         width: double.infinity,
                         errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),
                       ),
                     )
                   : Image.network(
-                      imageData['file'],
+                      ApiService.getFileUrl(imageData['file']),
                       fit: BoxFit.cover,
                       width: double.infinity,
                       errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),
@@ -263,7 +263,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
         child: Stack(
           alignment: Alignment.topRight,
           children: [
-            Image.network(url, fit: BoxFit.contain),
+            Image.network(ApiService.getFileUrl(url), fit: BoxFit.contain),
             IconButton(
               icon: const Icon(Icons.close, color: Colors.white, size: 30),
               onPressed: () => Navigator.pop(context),

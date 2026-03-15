@@ -81,7 +81,7 @@ class StudentProfileScreen extends StatefulWidget {
                        radius: 24,
                        backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                        backgroundImage: (acc['profilePic'] != null && acc['profilePic'].toString().isNotEmpty) 
-                           ? NetworkImage(acc['profilePic']) 
+                           ? NetworkImage(ApiService.getFileUrl(acc['profilePic'])) 
                            : null,
                        child: (acc['profilePic'] == null || acc['profilePic'].toString().isEmpty)
                            ? Text(
@@ -429,9 +429,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           child: CircleAvatar(
                             radius: 55,
                             backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                            backgroundImage: (_photoPath != null && _photoPath!.isNotEmpty)
-                                ? NetworkImage(_photoPath!)
-                                : const AssetImage("assets/images/user_placeholder.png") as ImageProvider,
+                             backgroundImage: (_photoPath != null && _photoPath!.isNotEmpty)
+                                 ? NetworkImage(ApiService.getFileUrl(_photoPath!))
+                                 : const AssetImage("assets/images/user_placeholder.png") as ImageProvider,
                           ),
                         ),
                         Positioned(
