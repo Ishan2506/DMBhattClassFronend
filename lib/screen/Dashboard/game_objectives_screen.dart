@@ -77,8 +77,8 @@ class GameObjectivesScreen extends StatelessWidget {
               _GameInfo(name: l10n.codeBreaker, desc: l10n.codeBreakerDesc, example: "E.g., Guess a 4-digit secret code based on Mastermind hints."),
               _GameInfo(name: l10n.emojiDecoder, desc: l10n.emojiDecoderDesc, example: "E.g., Decode '🦇👨' to guess the movie 'Batman'."),
               _GameInfo(name: l10n.directionSense, desc: l10n.directionSenseDesc, example: "E.g., If you walk north, turn right, then turn right again, which direction are you facing? (South)"),
-              _GameInfo(name: l10n.logicGatesQuest, desc: l10n.logicGatesQuestDesc, example: "E.g., If input A is 1 and input B is 0 for an AND gate, what is the output? (0)"),
-              _GameInfo(name: "Path Finder", desc: "Draw continuous lines to connect matching colored dots without crossing paths.", example: "E.g., Connect Red to Red and Blue to Blue without overlapping their lines."),
+
+
               _GameInfo(name: "Color Flood", desc: "Strategically flood the board with a single color in limited moves.", example: "E.g., Change the top-left color to absorb adjacent connected tiles of the same color."),
             ],
           ),
