@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dm_bhatt_tutions/utils/download_service.dart';
 import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
@@ -23,6 +24,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   String? _selectedSubject;
   bool _isGuest = false;
   bool _isPaid = false;
+  bool _isDownloading = false;
   String? _std;
   String? _stream;
   String? _board;
@@ -328,6 +330,36 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                 );
             },
             tooltip: l10n.view,
+          ),
+          IconButton(
+            icon: _isDownloading 
+                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                 : Icon(Icons.download_rounded, color: colorScheme.secondary),
+            onPressed: _isDownloading ? null : () async {
+              final rawUrl = paper['file'] ?? paper['url'] ?? "";
+              if (rawUrl.isEmpty) return;
+
+              setState(() => _isDownloading = true);
+              try {
+                final fileName = "${paper['title'] ?? 'school_paper'}.pdf"
+                    .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_'); 
+                
+                final success = await DownloadService.downloadAndSave(
+                  url: rawUrl, 
+                  fileName: fileName,
+                );
+
+                if (success) {
+                  if (mounted) CustomToast.showSuccess(context, "File saved successfully!");
+                } else {
+                  if (mounted) CustomToast.showError(context, "Failed to save file");
+                }
+              } catch (e) {
+                if (mounted) CustomToast.showError(context, "Download error: $e");
+              } finally {
+                if (mounted) setState(() => _isDownloading = false);
+              }
+            }, 
           ),
         ],
       ),

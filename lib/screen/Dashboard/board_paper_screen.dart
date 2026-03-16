@@ -10,6 +10,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/utils/download_service.dart';
 
 class BoardPaperScreen extends StatefulWidget {
   const BoardPaperScreen({super.key});
@@ -32,6 +33,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   String? _selectedSubject;
 
   String? _userBoard;
+  bool _isDownloading = false;
 
   List<String> _getFilteredSubjects() {
     return AcademicConstants.getSubjectsForStudent(
@@ -91,7 +93,15 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
             _selectedStd = validBoardStd;
             _selectedStream = (validBoardStd == '12') ? studentStream : null;
             _userBoard = board;
+            if (_selectedYear == null && _years.isNotEmpty) {
+               _selectedYear = _years.first;
+            }
           });
+          
+          // Auto-fetch if we have the primary filters
+          if (_selectedMedium != null && _selectedStd != null && _selectedYear != null) {
+             _validateAndFetch(isAuto: true);
+          }
         }
 
         // Sync back to SharedPreferences if we got data
@@ -136,14 +146,14 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                       padding: const EdgeInsets.only(top: 40),
                       child: Column(
                         children: [
-                          Icon(Icons.subject, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                          Icon(Icons.manage_search_rounded, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                           const SizedBox(height: 16),
-                          Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+                          Text("Select filters and apply to view papers", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                         ],
                       ),
                     ),
                   )
-                else if (_isLoading)
+                else if (_isLoading || _isProfileLoading)
                   const Padding(
                     padding: EdgeInsets.only(top: 40),
                     child: Center(child: CircularProgressIndicator()),
@@ -364,9 +374,33 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.download_rounded, color: colorScheme.secondary),
-            onPressed: () {
-              _launchURL(paper['file'] ?? paper['url'] ?? ""); 
+            icon: _isDownloading 
+                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                 : Icon(Icons.download_rounded, color: colorScheme.secondary),
+            onPressed: _isDownloading ? null : () async {
+              final rawUrl = paper['file'] ?? paper['url'] ?? "";
+              if (rawUrl.isEmpty) return;
+
+              setState(() => _isDownloading = true);
+              try {
+                final fileName = "${paper['title'] ?? 'paper'}_${_selectedYear ?? ''}.pdf"
+                    .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_'); // Sanitize filename
+                
+                final success = await DownloadService.downloadAndSave(
+                  url: rawUrl, 
+                  fileName: fileName,
+                );
+
+                if (success) {
+                  if (mounted) CustomToast.showSuccess(context, "File saved successfully!");
+                } else {
+                  if (mounted) CustomToast.showError(context, "Failed to save file");
+                }
+              } catch (e) {
+                if (mounted) CustomToast.showError(context, "Download error: $e");
+              } finally {
+                if (mounted) setState(() => _isDownloading = false);
+              }
             }, 
           ),
         ],
@@ -374,17 +408,17 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     );
   }
 
-  Future<void> _validateAndFetch() async {
+  Future<void> _validateAndFetch({bool isAuto = false}) async {
     if (_selectedMedium == null || _selectedStd == null) {
-       CustomToast.showError(context, "Please select Medium and Standard");
+       if (!isAuto) CustomToast.showError(context, "Please select Medium and Standard");
        return;
     }
     if (_selectedYear == null) {
-       CustomToast.showError(context, "Please select Year");
+       if (!isAuto) CustomToast.showError(context, "Please select Year");
        return;
     }
      if (_selectedStd == "12" && _selectedStream == null) {
-        CustomToast.showError(context, AppLocalizations.of(context)!.selectStreamError);
+        if (!isAuto) CustomToast.showError(context, AppLocalizations.of(context)!.selectStreamError);
         return;
      }
 

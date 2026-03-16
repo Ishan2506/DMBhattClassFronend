@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/board_paper_screen.dart';
@@ -5,9 +6,10 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/school_papers_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/notes_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_images_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
-import 'package:flutter/material.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class MaterialScreen extends StatefulWidget {
   const MaterialScreen({super.key});
@@ -28,7 +30,21 @@ class _MaterialScreenState extends State<MaterialScreen> {
 
   Future<void> _loadUserStd() async {
     final prefs = await SharedPreferences.getInstance();
-    final rawStd = prefs.getString('std') ?? '';
+    String rawStd = prefs.getString('std') ?? '';
+
+    try {
+      final response = await ApiService.getProfile();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final user = data['user'];
+        final profile = data['profile'];
+        rawStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? rawStd;
+        if (rawStd.isNotEmpty) await prefs.setString('std', rawStd);
+      }
+    } catch (e) {
+      debugPrint("Error fetching profile in MaterialScreen: $e");
+    }
+
     // Extract numeric part (e.g., "10th" -> "10")
     final stdMatch = RegExp(r'(\d+)').firstMatch(rawStd);
     if (mounted) {
