@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/game_question.dart';
 
@@ -342,13 +343,32 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               Text(
-                 "Score: $_score", 
-                 style: GoogleFonts.poppins(
-                   color: theme.colorScheme.primary, 
-                   fontSize: 18, 
-                   fontWeight: FontWeight.bold
-                 )
+               Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   Text(
+                     "Score: $_score", 
+                     style: GoogleFonts.poppins(
+                       color: theme.colorScheme.primary, 
+                       fontSize: 18, 
+                       fontWeight: FontWeight.bold
+                     )
+                   ),
+                   TextButton.icon(
+                     onPressed: () => _handleAnswer(null), // null means skipped/time up
+                     icon: const Icon(Icons.skip_next, size: 16),
+                     label: Text(
+                       AppLocalizations.of(context)!.skip,
+                       style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                     ),
+                     style: TextButton.styleFrom(
+                       padding: EdgeInsets.zero,
+                       minimumSize: Size.zero,
+                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                       foregroundColor: theme.colorScheme.primary,
+                     ),
+                   ),
+                 ],
                ),
                Container(
                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

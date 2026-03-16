@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class FlagExplorerScreen extends StatefulWidget {
   const FlagExplorerScreen({super.key});
@@ -324,10 +325,34 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Flag ${_currentIndex + 1}/${_sessionFlags.length}",
-                    style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey),
-                  ),
+                   Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       Text(
+                         "Flag ${_currentIndex + 1}/${_sessionFlags.length}",
+                         style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey),
+                       ),
+                       TextButton.icon(
+                         onPressed: () {
+                           setState(() {
+                             _currentIndex++;
+                             _loadQuestion();
+                           });
+                         },
+                         icon: const Icon(Icons.skip_next, size: 16),
+                         label: Text(
+                           AppLocalizations.of(context)!.skip,
+                           style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                         ),
+                         style: TextButton.styleFrom(
+                           padding: EdgeInsets.zero,
+                           minimumSize: Size.zero,
+                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                           foregroundColor: theme.colorScheme.primary,
+                         ),
+                       ),
+                     ],
+                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/game_question.dart';
 
@@ -516,22 +517,43 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
 
           Padding(
             padding: const EdgeInsets.all(24.0),
-            child: SizedBox(
-               width: double.infinity,
-               height: 55,
-               child: ElevatedButton(
-                 onPressed: _isChecked ? null : _checkOrder,
-                 style: ElevatedButton.styleFrom(
-                   backgroundColor: _isCorrect ? Colors.green : theme.colorScheme.primary,
-                   foregroundColor: theme.colorScheme.onPrimary,
-                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                   elevation: 4
-                 ),
-                 child: Text(
-                    _isCorrect ? "Next Sentence" : "Check Sentence",
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
-                 ),
-               ),
+            child: Column(
+              children: [
+                SizedBox(
+                   width: double.infinity,
+                   height: 55,
+                   child: ElevatedButton(
+                     onPressed: _isChecked ? null : _checkOrder,
+                     style: ElevatedButton.styleFrom(
+                       backgroundColor: _isCorrect ? Colors.green : theme.colorScheme.primary,
+                       foregroundColor: theme.colorScheme.onPrimary,
+                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                       elevation: 4
+                     ),
+                     child: Text(
+                        _isCorrect ? "Next Sentence" : "Check Sentence",
+                        style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                     ),
+                   ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    if (_currentIndex < _allQuestions.length - 1) {
+                      setState(() {
+                         _currentIndex++;
+                      });
+                      _startLevel();
+                    } else {
+                      _showWinDialog();
+                    }
+                  },
+                  child: const Text(
+                    "Skip",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.blue),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class ColorFloodScreen extends StatefulWidget {
   const ColorFloodScreen({super.key});
@@ -277,6 +278,22 @@ class _ColorFloodScreenState extends State<ColorFloodScreen> {
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                children: [
                    Text("Moves: $_moves / $_maxMoves", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                   TextButton.icon(
+                     onPressed: () {
+                        setState(() {
+                           _isGameOver = true;
+                           _showLoseDialog();
+                        });
+                     },
+                     icon: const Icon(Icons.skip_next, size: 16),
+                     label: Text(
+                       AppLocalizations.of(context)!.skip,
+                       style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                     ),
+                     style: TextButton.styleFrom(
+                       foregroundColor: theme.colorScheme.primary,
+                     ),
+                   ),
                ]
             ),
           ),

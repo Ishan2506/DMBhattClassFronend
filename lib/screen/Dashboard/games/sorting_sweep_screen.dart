@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class SortingSweepScreen extends StatefulWidget {
   const SortingSweepScreen({super.key});
@@ -176,6 +177,18 @@ class _SortingSweepScreenState extends State<SortingSweepScreen> {
               children: [
                 _buildInfoBadge(Icons.timer, "$_timeLeft s", _timeLeft < 10 ? Colors.red : theme.colorScheme.primary),
                 _buildInfoBadge(Icons.star, "Score: $_score", Colors.amber[800]!),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _generateBoard();
+                    });
+                  },
+                  icon: const Icon(Icons.skip_next, size: 18),
+                  label: Text(
+                    AppLocalizations.of(context)!.skip,
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),

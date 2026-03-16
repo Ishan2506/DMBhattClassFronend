@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class AudioRecallScreen extends StatefulWidget {
   const AudioRecallScreen({super.key});
@@ -124,7 +125,28 @@ class _AudioRecallScreenState extends State<AudioRecallScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildInfoBadge(Icons.format_list_numbered, "Level: ${_sequenceLength - 2}", theme.colorScheme.primary),
-                _buildInfoBadge(Icons.star, "Score: $_score", Colors.amber[800]!),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildInfoBadge(Icons.star, "Score: $_score", Colors.amber[800]!),
+                    TextButton.icon(
+                      onPressed: () {
+                        _startRound();
+                      },
+                      icon: const Icon(Icons.skip_next, size: 16),
+                      label: Text(
+                        AppLocalizations.of(context)!.skip,
+                        style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             const Spacer(),

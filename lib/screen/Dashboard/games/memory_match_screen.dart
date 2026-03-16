@@ -8,6 +8,7 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class MemoryMatchGameScreen extends StatefulWidget {
   const MemoryMatchGameScreen({super.key});
@@ -334,6 +335,19 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
           IconButton(
             icon: const Icon(Icons.info_outline, color: Colors.white),
             onPressed: _showHowToPlay,
+          ),
+          TextButton.icon(
+            onPressed: () {
+              // Mark all as matched to skip or just restart
+              // Better to just show win dialog to go to next if game logic supports it
+              // For this simple game, we'll just restart a new grid
+              _startNewGame();
+            },
+            icon: const Icon(Icons.skip_next, color: Colors.white),
+            label: Text(
+              AppLocalizations.of(context)!.skip,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class MagicSquareScreen extends StatefulWidget {
   const MagicSquareScreen({super.key});
@@ -340,6 +341,14 @@ class _MagicSquareScreenState extends State<MagicSquareScreen> {
                    onPressed: _generatePuzzle, 
                    icon: const Icon(Icons.refresh, size: 18), 
                    label: const Text("Restart")
+                ),
+                TextButton.icon(
+                  onPressed: _generatePuzzle,
+                  icon: const Icon(Icons.skip_next, size: 18),
+                  label: Text(
+                    AppLocalizations.of(context)!.skip,
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),

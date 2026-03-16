@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class StroopColor {
   final String name;
@@ -238,7 +239,30 @@ class _StroopEffectChallengeScreenState extends State<StroopEffectChallengeScree
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildStatBadge("Score: $_score", Icons.star, Colors.amber),
-                _buildStatBadge("Time: $_timeLeft s", Icons.timer, _timeLeft < 10 ? Colors.red : Colors.blue),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildStatBadge("Time: $_timeLeft s", Icons.timer, _timeLeft < 10 ? Colors.red : Colors.blue),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                           _generateQuestion();
+                        });
+                      },
+                      icon: const Icon(Icons.skip_next, size: 16),
+                      label: Text(
+                        AppLocalizations.of(context)!.skip,
+                        style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             const Spacer(),

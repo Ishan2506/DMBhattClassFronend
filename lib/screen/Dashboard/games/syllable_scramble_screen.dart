@@ -353,6 +353,19 @@ class _SyllableScrambleScreenState extends State<SyllableScrambleScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _currentIndex++;
+                        _loadQuestion();
+                      });
+                    },
+                    child: Text(
+                      AppLocalizations.of(context)!.skip,
+                      style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   if (_selectedSyllables.isNotEmpty)
                     TextButton.icon(

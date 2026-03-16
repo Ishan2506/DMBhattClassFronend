@@ -67,6 +67,15 @@ class _EscapeRoomExpertScreenState extends State<EscapeRoomExpertScreen> {
          backgroundColor: Colors.blue.shade900,
          title: const Text("EXPERT (PLAYER 2)", style: TextStyle(color: Colors.white)),
          automaticallyImplyLeading: false,
+         actions: [
+            TextButton(
+               onPressed: () {
+                  _service.leaveRoom();
+                  Navigator.of(context).pop();
+               },
+               child: const Text("Skip", style: TextStyle(color: Colors.white)),
+            )
+         ],
       ),
       body: SafeArea(
         child: Column(

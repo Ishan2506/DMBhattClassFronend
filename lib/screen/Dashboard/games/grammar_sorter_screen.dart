@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class GrammarSorterScreen extends StatefulWidget {
   const GrammarSorterScreen({super.key});
@@ -323,6 +324,26 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                         fontWeight: FontWeight.bold,
                         color: Colors.amber.shade800,
                       ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      if (_wordsToFall.isNotEmpty) {
+                        setState(() {
+                          _fallingWords.removeAt(0);
+                          _fallingWords.add(_wordsToFall.removeLast());
+                        });
+                      } else {
+                        setState(() {
+                          _level++;
+                          _generateLevel();
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.skip_next, size: 20),
+                    label: Text(
+                      AppLocalizations.of(context)!.skip,
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],

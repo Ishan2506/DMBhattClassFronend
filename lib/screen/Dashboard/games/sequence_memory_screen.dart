@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class SequenceMemoryScreen extends StatefulWidget {
   const SequenceMemoryScreen({super.key});
@@ -342,6 +343,22 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
                   Text(
                     "Level $_level",
                     style: GoogleFonts.poppins(fontSize: 20, color: Colors.grey, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      _sequence.add(_random.nextInt(4));
+                      _playerIndex = 0;
+                      setState(() {
+                        _level++;
+                        _score += 5; // Small bonus for skipping? or just next
+                      });
+                      _playSequence();
+                    },
+                    icon: const Icon(Icons.skip_next, size: 20),
+                    label: Text(
+                      AppLocalizations.of(context)!.skip,
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

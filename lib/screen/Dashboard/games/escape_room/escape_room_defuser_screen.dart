@@ -80,6 +80,15 @@ class _EscapeRoomDefuserScreenState extends State<EscapeRoomDefuserScreen> {
          backgroundColor: Colors.black,
          title: const Text("DEFUSER (PLAYER 1)", style: TextStyle(color: Colors.red)),
          automaticallyImplyLeading: false,
+         actions: [
+            TextButton(
+               onPressed: () {
+                  _service.leaveRoom();
+                  Navigator.of(context).pop();
+               },
+               child: const Text("Skip", style: TextStyle(color: Colors.red)),
+            )
+         ],
       ),
       body: SafeArea(
         child: Padding(

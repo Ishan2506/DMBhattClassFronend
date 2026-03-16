@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class SubjectWordSearchScreen extends StatefulWidget {
   const SubjectWordSearchScreen({super.key});
@@ -459,6 +460,18 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
           IconButton(
             icon: const Icon(Icons.info_outline, color: Colors.white),
             onPressed: _showHowToPlay,
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _levelIndex++;
+                _startLevel();
+              });
+            },
+            child: Text(
+              AppLocalizations.of(context)!.skip,
+              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

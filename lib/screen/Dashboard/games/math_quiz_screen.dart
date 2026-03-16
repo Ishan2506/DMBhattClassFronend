@@ -8,6 +8,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/game_question.dart'; // Ensure this path is correct based on your project structure
 
@@ -431,6 +432,19 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                         ),
                       );
                     },
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _currentQuestionIndex++;
+                      });
+                      _loadQuestion();
+                    },
+                    child: Text(
+                      AppLocalizations.of(context)!.skip,
+                      style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+                    ),
                   ),
                 ],
               ),

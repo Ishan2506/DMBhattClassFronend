@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class SpellingMasterScreen extends StatefulWidget {
   const SpellingMasterScreen({super.key});
@@ -388,6 +389,19 @@ class _SpellingMasterScreenState extends State<SpellingMasterScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: Text("Submit Spelling", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _currentIndex++;
+                    _textController.clear();
+                  });
+                },
+                child: Text(
+                  AppLocalizations.of(context)!.skip,
+                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+                ),
               ),
             ],
           ),
