@@ -37,18 +37,23 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
         final List<dynamic> data = jsonDecode(response.body);
         
         setState(() {
-          _purchases = data.map((item) => {
-            "id": item['productId']['_id'],
-            "title": item['productId']['name'] ?? "Unknown Product",
-            "date": _formatDate(item['createdAt']),
-            "type": item['productId']['category'] ?? "Material",
-            "price": "₹${item['amount']}",
-            "amountRaw": item['amount'],
-            "transactionId": item['razorpay_payment_id'] ?? "N/A",
-            "image": item['productId']['image'] ?? "",
-            "isPdf": item['productId']['image'].toString().toLowerCase().contains('.pdf'),
-            "standard": item['productId']['standardId']?['name'] ?? "N/A",
-            "medium": item['productId']['mediumId']?['name'] ?? "N/A",
+          _purchases = data.map((item) {
+            final productId = item['productId'];
+            final hasProduct = productId != null;
+            
+            return {
+              "id": hasProduct ? productId['_id'] : "missing_id",
+              "title": hasProduct ? (productId['name'] ?? "Unknown Product") : "Unknown Product",
+              "date": _formatDate(item['createdAt'] ?? ""),
+              "type": hasProduct ? (productId['category'] ?? "Material") : "Material",
+              "price": "₹${item['amount'] ?? 0}",
+              "amountRaw": item['amount'] ?? 0,
+              "transactionId": item['razorpay_payment_id'] ?? "N/A",
+              "image": hasProduct ? (productId['image'] ?? "") : "",
+              "isPdf": hasProduct ? productId['image'].toString().toLowerCase().contains('.pdf') : false,
+              "standard": hasProduct ? (productId['standardId']?['name'] ?? "N/A") : "N/A",
+              "medium": hasProduct ? (productId['mediumId']?['name'] ?? "N/A") : "N/A",
+            };
           }).toList().cast<Map<String, dynamic>>();
 
           _isLoading = false;
