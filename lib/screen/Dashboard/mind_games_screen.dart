@@ -20,7 +20,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/magic_square_screen.dart
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/algebra_balancer_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/spot_the_difference_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/flag_explorer_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/games/logic_gates_quest_screen.dart';
+
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/stroop_effect_challenge_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/syllable_scramble_screen.dart';
 
@@ -47,7 +47,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/games/word_chain_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/sorting_sweep_screen.dart';
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/color_flood_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/games/path_finder_screen.dart';
+
 
 
 
@@ -438,15 +438,7 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                   onTap: () => _handleGameTap(const SyllableScrambleScreen()),
                 ),
                 const SizedBox(height: 16),
-                _buildGameCard(
-                  context,
-                  title: l10n.logicGatesQuest,
-                  description: l10n.logicGatesQuestDesc,
-                  icon: Icons.settings_input_component_rounded,
-                  color: Colors.orangeAccent,
-                  onTap: () => _handleGameTap(const LogicGatesQuestScreen()),
-                ),
-                const SizedBox(height: 16),
+
                 _buildGameCard(
                   context,
                   title: l10n.stroopEffectChallenge,
@@ -478,15 +470,7 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
                 const SizedBox(height: 16),
                 
                 const SizedBox(height: 16),
-                _buildGameCard(
-                  context,
-                  title: "Path Finder",
-                  description: "Draw continuous lines to connect matching colored dots without crossing paths.",
-                  icon: Icons.timeline,
-                  color: Colors.green,
-                  onTap: () => _handleGameTap(const PathFinderScreen()),
-                ),
-                const SizedBox(height: 16),
+
                 _buildGameCard(
                   context,
                   title: "Color Flood",
