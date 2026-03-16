@@ -219,7 +219,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                      children: [
                        Icon(Icons.subject, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                        const SizedBox(height: 16),
-                       Text(l10n.selectStandardMediumError, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)), // Generic msg if needed
+                       Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                      ],
                    ),
                  ),
@@ -323,7 +323,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PdfPreviewScreen(product: paper),
+                    builder: (context) => PdfPreviewScreen(product: paper,isFullAccess: true,),
                   ),
                 );
             },

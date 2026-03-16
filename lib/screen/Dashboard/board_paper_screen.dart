@@ -130,20 +130,38 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                 _buildFilterCard(colorScheme, isDark),
                 const SizedBox(height: 24),
                 
-                if (_hasSearched && _papers.isEmpty && !_isLoading)
+                if (_selectedMedium == null || _selectedStd == null || _selectedYear == null)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 40),
+                      child: Column(
+                        children: [
+                          Icon(Icons.subject, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                          const SizedBox(height: 16),
+                          Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 40),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (_hasSearched && _papers.isEmpty)
                    Center(
                      child: Padding(
                        padding: const EdgeInsets.only(top: 40),
                        child: Column(
                          children: [
-                           Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade400),
+                           Icon(Icons.search_off_rounded, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                            const SizedBox(height: 16),
-                           const Text("No papers found for this search", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
+                           Text("No papers found for this search", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500)),
                          ],
                        ),
                      ),
                    )
-                else if (_hasSearched && _papers.isNotEmpty && !_isLoading) ...[
+                else if (_hasSearched && _papers.isNotEmpty) ...[
                    Column(
                      crossAxisAlignment: CrossAxisAlignment.start,
                      children: [
@@ -157,7 +175,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                            Center(
                              child: Padding(
                                padding: const EdgeInsets.only(top: 20),
-                               child: Text("No papers found for $_selectedSubject", style: GoogleFonts.poppins(color: Colors.grey)),
+                               child: Text("No papers found for $_selectedSubject", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                              ),
                            ),
                      ],
@@ -166,8 +184,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               ],
             ),
           ),
-          if (_isLoading || _isProfileLoading)
-            const Center(child: CustomLoader()),
         ],
       ),
     );
@@ -342,7 +358,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PdfPreviewScreen(product: pdfPaper),
+                    builder: (context) => PdfPreviewScreen(product: pdfPaper,isFullAccess: true,),
                   ),
                 );
             },
