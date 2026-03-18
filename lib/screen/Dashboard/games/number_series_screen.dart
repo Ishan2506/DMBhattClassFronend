@@ -1,8 +1,10 @@
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class NumberSeriesScreen extends StatefulWidget {
   const NumberSeriesScreen({super.key});
@@ -17,15 +19,28 @@ class NumberSequence {
   final String ruleExplanation;
 
   NumberSequence(this.sequence, this.answer, this.ruleExplanation);
+
+  factory NumberSequence.fromGameQuestion(GameQuestion q) {
+    // Expecting sequence as comma-separated ints or in questionText
+    // But usually for Number Series, questionText contains "2, 4, 6, 8"
+    List<int> seq = q.questionText.split(',').map((e) => int.tryParse(e.trim()) ?? 0).toList();
+    return NumberSequence(
+      seq,
+      int.tryParse(q.correctAnswer) ?? 0,
+      q.meta['hint'] ?? "",
+    );
+  }
 }
 
 class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
   final MindGameService _gameService = MindGameService();
 
-  late NumberSequence _currentSequence;
+  List<NumberSequence> _sequences = [];
+  int _currentIndex = 0;
+  bool _isLoading = true;
+  NumberSequence? _currentSequence;
   int _score = 0;
   String _currentInput = "";
-  final Random _rand = Random();
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
@@ -33,7 +48,76 @@ class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _generateSequence();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Number Series');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _sequences = data.map((json) => NumberSequence.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          if (_sequences.isNotEmpty) {
+            _sequences.shuffle();
+            _currentIndex = 0;
+            _currentSequence = _sequences[_currentIndex];
+          }
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching number series: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _nextSequence() {
+    if (_currentIndex < _sequences.length - 1) {
+      setState(() {
+        _currentIndex++;
+        _currentSequence = _sequences[_currentIndex];
+        _currentInput = "";
+        _textController.clear();
+      });
+    } else {
+      _showWinDialog();
+    }
+  }
+
+  void _showWinDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text("Series Master!", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text("You solved all the number sequences!\n\nFinal Score: $_score", style: GoogleFonts.poppins()),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _sequences.shuffle();
+                _currentIndex = 0;
+                _currentSequence = _sequences[_currentIndex];
+                _score = 0;
+                _currentInput = "";
+              });
+            },
+            child: const Text("Play Again"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("Exit"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -44,95 +128,14 @@ class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
     super.dispose();
   }
 
-  void _generateSequence() {
-     // Generate a random math sequence type
-     int type = _rand.nextInt(6);
-     List<int> seq = [];
-     int ans = 0;
-     String rule = "";
-
-     switch (type) {
-        case 0: // Arithmetic progression (add a constant)
-            int start = _rand.nextInt(20) + 1;
-            int step = _rand.nextInt(15) + 2;
-            for(int i=0; i<5; i++) {
-              seq.add(start + (i * step));
-            }
-            ans = start + (5 * step);
-            rule = "Add $step to the previous number.";
-            break;
-        case 1: // Geometric progression (multiply by a constant)
-            int start = _rand.nextInt(5) + 1;
-            int step = _rand.nextInt(3) + 2;
-            for(int i=0; i<5; i++) {
-              seq.add(start * pow(step, i).toInt());
-            }
-            ans = start * pow(step, 5).toInt();
-            rule = "Multiply the previous number by $step.";
-            break;
-        case 2: // Arithmetic with increasing step
-            int start = _rand.nextInt(10) + 1;
-            int current = start;
-            int step = _rand.nextInt(5) + 1;
-            for(int i=0; i<5; i++) {
-               seq.add(current);
-               current += step;
-               step += 1; // Step increases by 1 each time
-            }
-            ans = current;
-            rule = "Add an increasing number each time (+step+1, +step+2...).";
-            break;
-        case 3: // Fibonacci style
-            int a = _rand.nextInt(5) + 1;
-            int b = _rand.nextInt(5) + 1;
-            seq.addAll([a, b]);
-            for(int i=2; i<5; i++) {
-               seq.add(seq[i-1] + seq[i-2]);
-            }
-            ans = seq[4] + seq[3];
-            rule = "Add the previous two numbers together.";
-            break;
-        case 4: // Squares / Cubes modified
-            int offset = _rand.nextBool() ? 1 : -1;
-            int power = _rand.nextBool() ? 2 : 3;
-            int start = _rand.nextInt(3) + 1;
-            for(int i=0; i<5; i++) {
-                seq.add(pow(start + i, power).toInt() + offset);
-            }
-            ans = pow(start + 5, power).toInt() + offset;
-            rule = "${power == 2 ? 'Squares' : 'Cubes'} of consecutive numbers ${offset > 0 ? 'plus 1' : 'minus 1'}.";
-            break;
-        case 5: // Alternating operation (e.g., *2, -1, *2, -1)
-            int start = _rand.nextInt(5) + 2;
-            int mult = _rand.nextInt(2) + 2;
-            int sub = _rand.nextInt(3) + 1;
-            int current = start;
-            for(int i=0; i<5; i++) {
-               seq.add(current);
-               if(i % 2 == 0) {
-                 current *= mult;
-               } else {
-                 current -= sub;
-               }
-            }
-            ans = current;
-            rule = "Alternate multiplying by $mult and subtracting $sub.";
-            break;
-     }
-
-     setState(() {
-        _currentSequence = NumberSequence(seq, ans, rule);
-        _currentInput = "";
-        _textController.clear();
-     });
-  }
 
 
 
   void _checkAnswer() {
+    if (_currentSequence == null) return;
     int? inputInt = int.tryParse(_currentInput);
     
-    if (inputInt == _currentSequence.answer) {
+    if (inputInt == _currentSequence!.answer) {
       setState(() {
          _score += 100;
       });
@@ -149,6 +152,7 @@ class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
   }
 
   void _showSuccessDialog() {
+    if (_currentSequence == null) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -159,14 +163,14 @@ class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
            crossAxisAlignment: CrossAxisAlignment.start,
            children: [
               Text("Rule:", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-              Text(_currentSequence.ruleExplanation, style: GoogleFonts.poppins()),
+              Text(_currentSequence!.ruleExplanation, style: GoogleFonts.poppins()),
            ],
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              _generateSequence();
+              _nextSequence();
             },
             child: const Text("Next Sequence"),
           ),
@@ -339,8 +343,11 @@ class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : _sequences.isEmpty
+            ? Center(child: Text("No number series found.", style: GoogleFonts.poppins()))
+            : Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -351,7 +358,7 @@ class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
                   TextButton.icon(
                      onPressed: () {
                         setState(() { _score = 0; });
-                        _generateSequence();
+                        _nextSequence();
                      }, 
                      icon: const Icon(Icons.skip_next), 
                      label: const Text("Skip")
@@ -382,7 +389,7 @@ class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
                                runSpacing: 12,
                                crossAxisAlignment: WrapCrossAlignment.center,
                                children: [
-                                  ..._currentSequence.sequence.map((n) => _buildSequenceTag(n.toString(), theme)),
+                                  if (_currentSequence != null) ..._currentSequence!.sequence.map((n) => _buildSequenceTag(n.toString(), theme)),
                                   _buildSequenceTag("?", theme, isQuestion: true),
                                ]
                             ),
