@@ -239,7 +239,8 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                     _selectedStd = val?.replaceAll(l10n.th, "");
                     _selectedSubject = null; // Reset subject when std changes
                     _selectedStream = null;  // Reset stream when std changes
-                  })
+                  }),
+                  enabled: false,
                 ),
               ),
             ],
@@ -292,11 +293,11 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     );
   }
 
-  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?) onChanged) {
+  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?)? onChanged, {bool enabled = true}) {
     return DropdownButtonFormField<String>(
       value: value,
       items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-      onChanged: onChanged,
+      onChanged: enabled ? onChanged : null,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: GoogleFonts.poppins(fontSize: 14),
