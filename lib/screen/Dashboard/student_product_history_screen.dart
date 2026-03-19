@@ -48,9 +48,9 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
               "type": hasProduct ? (productId['category'] ?? "Material") : "Material",
               "price": "₹${item['amount'] ?? 0}",
               "amountRaw": item['amount'] ?? 0,
-              "transactionId": item['razorpay_payment_id'] ?? "N/A",
-              "image": hasProduct ? (productId['image'] ?? "") : "",
-              "isPdf": hasProduct ? productId['image'].toString().toLowerCase().contains('.pdf') : false,
+              "transactionId": item['razorpayPaymentId'] ?? item['razorpay_payment_id'] ?? "N/A",
+              "image": hasProduct ? (productId['image'] ?? productId['file'] ?? "") : "",
+              "isPdf": hasProduct ? (productId['image']?.toString().toLowerCase().contains('.pdf') == true || productId['file']?.toString().toLowerCase().contains('.pdf') == true) : false,
               "standard": hasProduct ? (productId['standardId']?['name'] ?? "N/A") : "N/A",
               "medium": hasProduct ? (productId['mediumId']?['name'] ?? "N/A") : "N/A",
               "category": hasProduct ? (productId['category'] ?? "N/A") : "N/A",
@@ -270,7 +270,8 @@ class FullMaterialViewerScreen extends StatelessWidget {
       body: isPdf
           ? PdfPreview(
               build: (format) async {
-                final response = await http.get(Uri.parse(product['image']));
+                final url = ApiService.getFileUrl(product['image']);
+                final response = await http.get(Uri.parse(url));
                 return response.bodyBytes;
               },
               useActions: false, 
@@ -282,7 +283,7 @@ class FullMaterialViewerScreen extends StatelessWidget {
           : Center(
               child: InteractiveViewer(
                 child: Image.network(
-                  product['image'],
+                  ApiService.getFileUrl(product['image']),
                   fit: BoxFit.contain,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
