@@ -19,7 +19,7 @@ class AcademicConstants {
     "GSEB-7": ["Maths", "Science", "English", "Gujarati", "Hindi", "Social Science", "Computer"],
     "GSEB-8": ["Maths", "Science", "English", "Gujarati", "Hindi", "Social Science", "Computer"],
     "GSEB-9": ["Maths", "Science", "English", "Gujarati", "Hindi", "Social Science", "Computer"],
-    "GSEB-10": ["Maths", "Science", "English", "Gujarati", "Hindi", "Social Science", "Computer"],
+    "GSEB-10": ["Maths", "Science", "English", "Gujarati", "Hindi", "Social Science", "Computer", "Sanskrit"],
 
     "GSEB-11-Science": ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Computer Science"],
     "GSEB-12-Science": ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Computer Science"],
@@ -47,7 +47,7 @@ class AcademicConstants {
     "CBSE-7": ["Maths", "Science", "English", "Hindi", "Social Science", "Computer"],
     "CBSE-8": ["Maths", "Science", "English", "Hindi", "Social Science", "Computer"],
     "CBSE-9": ["Maths", "Science", "English", "Hindi", "Social Science", "Computer"],
-    "CBSE-10": ["Maths", "Science", "English", "Hindi", "Social Science", "Computer"],
+    "CBSE-10": ["Maths", "Science", "English", "Hindi", "Social Science", "Computer", "Gujarati", "Sanskrit"],
 
     "CBSE-11-Science": ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Computer Science"],
     "CBSE-12-Science": ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Computer Science"],

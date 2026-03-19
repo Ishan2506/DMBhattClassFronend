@@ -93,9 +93,6 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
             _selectedStd = validBoardStd;
             _selectedStream = (validBoardStd == '12') ? studentStream : null;
             _userBoard = board;
-            if (_selectedYear == null && _years.isNotEmpty) {
-               _selectedYear = _years.first;
-            }
           });
           
           // Auto-fetch if we have the primary filters
