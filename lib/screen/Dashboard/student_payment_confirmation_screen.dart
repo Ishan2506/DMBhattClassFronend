@@ -69,10 +69,22 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
                           style: pw.TextStyle(font: font, fontSize: 18)),
                       pw.Divider(color: PdfColors.grey400),
                       pw.SizedBox(height: 16),
-                      _buildPdfRow("Standard", transactionDetails['standard'] ?? "N/A", font, boldFont),
-                      pw.SizedBox(height: 12),
-                      _buildPdfRow("Medium", transactionDetails['medium'] ?? "N/A", font, boldFont),
-                      pw.SizedBox(height: 12),
+                      if (transactionDetails['standard'] != null && transactionDetails['standard'] != "N/A") ...[
+                        _buildPdfRow("Standard", transactionDetails['standard'], font, boldFont),
+                        pw.SizedBox(height: 12),
+                      ],
+                      if (transactionDetails['medium'] != null && transactionDetails['medium'] != "N/A") ...[
+                        _buildPdfRow("Medium", transactionDetails['medium'], font, boldFont),
+                        pw.SizedBox(height: 12),
+                      ],
+                      if (transactionDetails['category'] != null && transactionDetails['category'] != "N/A") ...[
+                        _buildPdfRow("Category", transactionDetails['category'], font, boldFont),
+                        pw.SizedBox(height: 12),
+                      ],
+                      if (transactionDetails['subject'] != null && transactionDetails['subject'] != "N/A") ...[
+                        _buildPdfRow("Subject", transactionDetails['subject'], font, boldFont),
+                        pw.SizedBox(height: 12),
+                      ],
                       _buildPdfRow("Date", transactionDetails['date'] ?? "N/A", font, boldFont),
                       pw.SizedBox(height: 12),
                       _buildPdfRow("Transaction ID", transactionDetails['transactionId'] ?? "N/A", font, boldFont),
@@ -171,10 +183,22 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    _buildRowItem("Standard", transactionDetails['standard'] ?? "N/A", colorScheme),
-                    const Divider(height: 32),
-                    _buildRowItem("Medium", transactionDetails['medium'] ?? "N/A", colorScheme),
-                    const Divider(height: 32),
+                    if (transactionDetails['standard'] != null && transactionDetails['standard'] != "N/A") ...[
+                      _buildRowItem("Standard", transactionDetails['standard'], colorScheme),
+                      const Divider(height: 32),
+                    ],
+                    if (transactionDetails['medium'] != null && transactionDetails['medium'] != "N/A") ...[
+                      _buildRowItem("Medium", transactionDetails['medium'], colorScheme),
+                      const Divider(height: 32),
+                    ],
+                    if (transactionDetails['category'] != null && transactionDetails['category'] != "N/A") ...[
+                      _buildRowItem("Category", transactionDetails['category'], colorScheme),
+                      const Divider(height: 32),
+                    ],
+                    if (transactionDetails['subject'] != null && transactionDetails['subject'] != "N/A") ...[
+                      _buildRowItem("Subject", transactionDetails['subject'], colorScheme),
+                      const Divider(height: 32),
+                    ],
                     _buildRowItem("Date", transactionDetails['date'] ?? "N/A", colorScheme),
                     const Divider(height: 32),
                     _buildRowItem("Transaction ID", transactionDetails['transactionId'] ?? "N/A", colorScheme),

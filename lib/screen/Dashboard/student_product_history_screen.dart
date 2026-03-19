@@ -53,6 +53,8 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
               "isPdf": hasProduct ? productId['image'].toString().toLowerCase().contains('.pdf') : false,
               "standard": hasProduct ? (productId['standardId']?['name'] ?? "N/A") : "N/A",
               "medium": hasProduct ? (productId['mediumId']?['name'] ?? "N/A") : "N/A",
+              "category": hasProduct ? (productId['category'] ?? "N/A") : "N/A",
+              "subject": hasProduct ? (productId['subject'] ?? "N/A") : "N/A",
             };
           }).toList().cast<Map<String, dynamic>>();
 

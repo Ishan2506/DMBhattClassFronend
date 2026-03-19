@@ -460,7 +460,6 @@ class _NumberSeriesScreenState extends State<NumberSeriesScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 

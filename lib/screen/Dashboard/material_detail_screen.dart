@@ -95,6 +95,8 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
           "title": widget.product['name'] ?? "Material Purchase",
           "standard": widget.product['standard'] ?? widget.product['standardId']?['name'] ?? "N/A",
           "medium": widget.product['medium'] ?? widget.product['mediumId']?['name'] ?? "N/A",
+          "category": widget.product['category'] ?? "N/A",
+          "subject": widget.product['subject'] ?? "N/A",
           "date": formattedDate,
           "transactionId": response.paymentId ?? "N/A",
           "amountRaw": widget.product['price'] ?? 0,
