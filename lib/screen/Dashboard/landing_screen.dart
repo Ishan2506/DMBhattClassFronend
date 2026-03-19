@@ -29,11 +29,13 @@ class _LandingScreenState extends State<LandingScreen> {
   int _selectedIndex = 0;
   bool _isLoadingMembership = true;
 
+  final GlobalKey<ExploreScreenState> _exploreKey = GlobalKey<ExploreScreenState>();
+
   // 2. Define the list of bodies/screens
   // These will replace the 'body' area when the index changes
-  final List<Widget> _pages = [
+  late final List<Widget> _pages = [
     const StudentHomeScreen(),
-    const ExploreScreen(),
+    ExploreScreen(key: _exploreKey),
     //const DMAIScreen(),
     //AIChatScreen(),
     DMAIChatScreen(),
@@ -45,6 +47,9 @@ class _LandingScreenState extends State<LandingScreen> {
     setState(() {
       _selectedIndex = index;
     });
+    if (index == 1) {
+      _exploreKey.currentState?.fetchProducts(showLoader: false);
+    }
   }
 
   @override

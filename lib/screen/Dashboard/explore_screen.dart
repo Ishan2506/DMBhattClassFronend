@@ -8,15 +8,18 @@ import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:printing/printing.dart';
+import 'dart:typed_data';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
 
   @override
-  State<ExploreScreen> createState() => _ExploreScreenState();
+  State<ExploreScreen> createState() => ExploreScreenState();
 }
 
-class _ExploreScreenState extends State<ExploreScreen> {
+class ExploreScreenState extends State<ExploreScreen> {
   // Search
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
@@ -38,7 +41,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   void initState() {
     super.initState();
     _pageController = PageController(viewportFraction: 0.75);
-    _fetchProducts();
+    fetchProducts(showLoader: true);
   }
 
   void _startAutoSlide() {
@@ -66,7 +69,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchProducts() async {
+  Future<void> fetchProducts({bool showLoader = false}) async {
+    if (showLoader) {
+      if (mounted) setState(() => _isLoading = true);
+    }
     try {
       final response = await ApiService.getExploreProducts();
       if (response.statusCode == 200) {
@@ -323,23 +329,36 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                       Center(
                                         child: Hero(
                                           tag: product['id'],
-                                          child: Image.network(
-                                            ApiService.getFileUrl(product['image']),
-                                            fit: BoxFit.contain,
-                                            width: screenWidth * 0.5,
-                                            loadingBuilder: (context, child, loadingProgress) {
-                                              if (loadingProgress == null) return child;
-                                              return Center(
-                                                child: CircularProgressIndicator(
-                                                  value: loadingProgress.expectedTotalBytes != null
-                                                      ? loadingProgress.cumulativeBytesLoaded /
-                                                          loadingProgress.expectedTotalBytes!
-                                                      : null,
-                                                  strokeWidth: 2,
-                                                ),
+                                          child: Builder(
+                                            builder: (context) {
+                                              final String imageUrl = ApiService.getFileUrl(product['image'] ?? '');
+                                              
+                                              if (imageUrl.toLowerCase().contains('.pdf')) {
+                                                return SizedBox(
+                                                  width: screenWidth * 0.5,
+                                                  child: _PdfThumbnail(url: product['image'] ?? ''),
+                                                );
+                                              }
+
+                                              return Image.network(
+                                                imageUrl,
+                                                fit: BoxFit.contain,
+                                                width: screenWidth * 0.5,
+                                                loadingBuilder: (context, child, loadingProgress) {
+                                                  if (loadingProgress == null) return child;
+                                                  return Center(
+                                                    child: CircularProgressIndicator(
+                                                      value: loadingProgress.expectedTotalBytes != null
+                                                          ? loadingProgress.cumulativeBytesLoaded /
+                                                              loadingProgress.expectedTotalBytes!
+                                                          : null,
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  );
+                                                },
+                                                errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 50, color: Colors.grey.shade400,),
                                               );
-                                            },
-                                            errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 50, color: Colors.grey.shade400,),
+                                            }
                                           ),
                                         ),
                                       ),
@@ -399,6 +418,69 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ),
       ),
     );
+  }
+}
+
+class _PdfThumbnail extends StatefulWidget {
+  final String url;
+  const _PdfThumbnail({required this.url});
+
+  @override
+  State<_PdfThumbnail> createState() => _PdfThumbnailState();
+}
+
+class _PdfThumbnailState extends State<_PdfThumbnail> {
+  Uint8List? _imageBytes;
+  bool _isLoading = true;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPdfCover();
+  }
+
+  Future<void> _loadPdfCover() async {
+    try {
+      final response = await http.get(Uri.parse(ApiService.getFileUrl(widget.url)));
+      if (response.statusCode == 200) {
+        final pdfBytes = response.bodyBytes;
+        await for (final page in Printing.raster(pdfBytes, pages: [0])) {
+           final bytes = await page.toPng();
+           if (mounted) {
+             setState(() {
+               _imageBytes = bytes;
+               _isLoading = false;
+             });
+           }
+           break;
+        }
+      } else {
+        if (mounted) setState(() { _hasError = true; _isLoading = false; });
+      }
+    } catch (e) {
+      if (mounted) setState(() { _hasError = true; _isLoading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+    if (_hasError || _imageBytes == null) {
+       return Center(
+         child: Column(
+           mainAxisAlignment: MainAxisAlignment.center,
+           children: [
+             const Icon(Icons.picture_as_pdf, size: 50, color: Colors.red),
+             const SizedBox(height: 8),
+             Text("PDF", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12))
+           ],
+         )
+       );
+    }
+    return Image.memory(_imageBytes!, fit: BoxFit.contain);
   }
 }
 
