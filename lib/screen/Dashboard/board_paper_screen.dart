@@ -431,6 +431,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
         std: _selectedStd!,
         stream: _selectedStream,
         year: _selectedYear!,
+        subject: _selectedSubject,
       );
 
       if (response.statusCode == 200) {

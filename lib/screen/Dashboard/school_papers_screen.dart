@@ -28,6 +28,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   String? _std;
   String? _stream;
   String? _board;
+  String? _medium;
 
   @override
   void initState() {
@@ -54,6 +55,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
               _std = user?['std']?.toString() ?? profile?['std']?.toString() ?? prefs.getString('std');
               _stream = user?['stream'] ?? profile?['stream'] ?? prefs.getString('stream');
               _board = user?['board'] ?? profile?['board'] ?? prefs.getString('board');
+              _medium = user?['medium'] ?? profile?['medium'] ?? prefs.getString('medium');
             });
           }
 
@@ -61,6 +63,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
           if (_std != null) await prefs.setString('std', _std!);
           if (_stream != null) await prefs.setString('stream', _stream!);
           if (_board != null) await prefs.setString('board', _board!);
+          if (_medium != null) await prefs.setString('medium', _medium!);
         }
       } catch (e) {
         debugPrint("Error fetching profile: $e");
@@ -71,6 +74,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
     _std ??= prefs.getString('std');
     _stream ??= prefs.getString('stream');
     _board ??= prefs.getString('board');
+    _medium ??= prefs.getString('medium');
 
     if (mounted) setState(() {});
   }
@@ -130,7 +134,16 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
     
     setState(() => _isLoading = true);
     try {
-      final response = await ApiService.getSchoolPapers(subject: _selectedSubject);
+      final prefs = await SharedPreferences.getInstance();
+      final currentMedium = _medium ?? prefs.getString('medium');
+      debugPrint("Fetching School Papers with: Subject: $_selectedSubject, Std: $_std, Board: $_board, Medium: $currentMedium, Stream: $_stream");
+      final response = await ApiService.getSchoolPapers(
+        subject: _selectedSubject,
+        std: _std,
+        medium: currentMedium,
+        board: _board,
+        stream: _stream,
+      );
       if (response.statusCode == 200) {
         setState(() {
           final List<dynamic> allPapers = jsonDecode(response.body);

@@ -371,6 +371,12 @@ class ApiService {
     ));
   }
 
+  static String? _normalizeStd(String? std) {
+    if (std == null || std.isEmpty) return std;
+    final match = RegExp(r'(\d+)').firstMatch(std);
+    return match != null ? match.group(1)! : std;
+  }
+
   static Future<Map<String, String>> _getDefaultQueryParams() async {
     final prefs = await SharedPreferences.getInstance();
     final std = prefs.getString('std');
@@ -395,13 +401,16 @@ class ApiService {
     required String std,
     String? stream,
     required String year,
+    String? subject,
   }) async {
     if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
     queryParams['type'] = 'BoardPaper';
     queryParams['year'] = year;
-    // std, medium, stream might be overridden here if explicitly required
-    if (std.isNotEmpty) queryParams['std'] = std;
+    queryParams['standard'] = std;
+    queryParams['std'] = std;
+    
+    if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
     if (medium.isNotEmpty) queryParams['medium'] = medium;
     if (stream != null && stream.isNotEmpty && stream != "None" && stream != "-") queryParams['stream'] = stream;
     
@@ -418,11 +427,26 @@ class ApiService {
 
   static Future<http.Response> getSchoolPapers({
     String? subject,
+    String? medium,
+    String? std,
+    String? year,
+    String? board,
+    String? stream,
   }) async {
     if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
     queryParams['type'] = 'SchoolPaper';
-    if (subject != null) queryParams['subject'] = subject;
+    
+    if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
+    if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
+    if (std != null && std.isNotEmpty) {
+      final stdValue = _normalizeStd(std)!;
+      queryParams['standard'] = stdValue;
+      queryParams['std'] = stdValue;
+    }
+    if (year != null && year.isNotEmpty) queryParams['year'] = year;
+    if (board != null && board.isNotEmpty) queryParams['board'] = board;
+    if (stream != null && stream.isNotEmpty && stream != "None" && stream != "-") queryParams['stream'] = stream;
     
     final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
     
