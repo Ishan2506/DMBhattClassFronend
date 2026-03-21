@@ -88,8 +88,9 @@ dev_dependencies:
 #  min_sdk_android: 21
 flutter_launcher_icons:
   ios: true
-  image_path: "ios_icon_final.png"
+  image_path: "assets/images/robot_logo.png"
   remove_alpha_ios: true
+  background_color_ios: "#ffffff"   # 👈 add this (white background)
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
