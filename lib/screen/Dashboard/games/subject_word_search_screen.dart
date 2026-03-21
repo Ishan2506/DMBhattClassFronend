@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class SubjectWordSearchScreen extends StatefulWidget {
   const SubjectWordSearchScreen({super.key});
@@ -17,6 +20,16 @@ class SearchLevel {
   final List<String> words;
 
   SearchLevel(this.category, this.words);
+
+  factory SearchLevel.fromGameQuestion(GameQuestion q) {
+    // Correct answer contains comma separated words
+    List<String> wordsList = q.correctAnswer.split(',')
+        .map((e) => e.trim().toUpperCase())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    
+    return SearchLevel(q.questionText, wordsList);
+  }
 }
 
 class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
@@ -25,6 +38,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
   
   int _score = 0;
   int _levelIndex = 0;
+  bool _isLoading = true;
   
   final int _gridSize = 10;
   late List<List<String>> _grid;
@@ -35,22 +49,39 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
   List<Point<int>> _selectedCells = [];
   bool _isDragging = false;
 
-  final List<SearchLevel> _levels = [
-    SearchLevel("Geography", ["EARTH", "OCEAN", "MOUNTAIN", "DESERT", "RIVER", "ISLAND"]),
-    SearchLevel("Grammar", ["NOUN", "VERB", "ADJECTIVE", "ADVERB", "PRONOUN", "TENSE"]),
-    SearchLevel("Math Words", ["ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "EQUALS", "FRACTION"]),
-    SearchLevel("Science (General)", ["ENERGY", "FORCE", "LIGHT", "SOUND", "MATTER", "WATER"]),
-    SearchLevel("History", ["KING", "QUEEN", "EMPIRE", "CASTLE", "BATTLE", "ANCIENT"]),
-  ];
+  List<SearchLevel> _levels = [];
 
   @override
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _startLevel();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Subject Word Search');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _levels = data.map((json) => SearchLevel.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          if (_levels.isNotEmpty) {
+            _levels.shuffle();
+          }
+          _isLoading = false;
+          _startLevel();
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching word search questions: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   void _startLevel() {
+    if (_levels.isEmpty) return;
     if (_levelIndex >= _levels.length) {
       _showWinDialog();
       return;
@@ -444,6 +475,26 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_levels.isEmpty) {
+      return Scaffold(
+        appBar: const CustomAppBar(title: "Subject Word Search", centerTitle: true),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.search_off, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text("No word search categories found.", style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey)),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (_levelIndex >= _levels.length) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

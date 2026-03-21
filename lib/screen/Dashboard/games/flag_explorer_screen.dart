@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class FlagExplorerScreen extends StatefulWidget {
   const FlagExplorerScreen({super.key});
@@ -13,10 +16,19 @@ class FlagExplorerScreen extends StatefulWidget {
 }
 
 class FlagData {
-  final String emoji;
+  final String identifier; // Can be emoji or image description
   final String correctCountry;
+  final List<String> options;
 
-  FlagData(this.emoji, this.correctCountry);
+  FlagData(this.identifier, this.correctCountry, this.options);
+
+  factory FlagData.fromGameQuestion(GameQuestion q) {
+    return FlagData(
+      q.questionText,
+      q.correctAnswer,
+      q.options.isEmpty ? [q.correctAnswer] : q.options,
+    );
+  }
 }
 
 class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
@@ -26,32 +38,8 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
   int _currentIndex = 0;
   int _score = 0;
   List<String> _currentOptions = [];
-
-  final List<FlagData> _allFlags = [
-    FlagData("🇮🇳", "India"),
-    FlagData("🇺🇸", "United States"),
-    FlagData("🇬🇧", "United Kingdom"),
-    FlagData("🇨🇦", "Canada"),
-    FlagData("🇦🇺", "Australia"),
-    FlagData("🇯🇵", "Japan"),
-    FlagData("🇩🇪", "Germany"),
-    FlagData("🇫🇷", "France"),
-    FlagData("🇮🇹", "Italy"),
-    FlagData("🇧🇷", "Brazil"),
-    FlagData("🇿🇦", "South Africa"),
-    FlagData("🇷🇺", "Russia"),
-    FlagData("🇨🇳", "China"),
-    FlagData("🇦🇷", "Argentina"),
-    FlagData("🇲🇽", "Mexico"),
-    FlagData("🇪🇬", "Egypt"),
-    FlagData("🇰🇷", "South Korea"),
-    FlagData("🇪🇸", "Spain"),
-    FlagData("🇳🇿", "New Zealand"),
-    FlagData("🇸🇬", "Singapore"),
-  ];
-
-  late List<FlagData> _sessionFlags;
-
+  bool _isLoading = true;
+  List<FlagData> _sessionFlags = [];
   @override
   void initState() {
     super.initState();
@@ -60,13 +48,36 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
   }
 
   void _startSession() {
-    _sessionFlags = List.from(_allFlags)..shuffle();
-    _currentIndex = 0;
-    _score = 0;
-    _loadQuestion();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Flag Explorer');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _sessionFlags = data.map((json) => FlagData.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          if (_sessionFlags.isNotEmpty) {
+            _sessionFlags.shuffle();
+          }
+          _currentIndex = 0;
+          _score = 0;
+          _isLoading = false;
+          _loadQuestion();
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching flags: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   void _loadQuestion() {
+    if (_sessionFlags.isEmpty) return;
+    
     if (_currentIndex >= _sessionFlags.length) {
       _showWinDialog();
       return;
@@ -74,19 +85,8 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
 
     final currentFlag = _sessionFlags[_currentIndex];
     
-    // Pick 3 random wrong options
-    final wrongOptions = _allFlags
-        .where((f) => f.correctCountry != currentFlag.correctCountry)
-        .map((f) => f.correctCountry)
-        .toList()
-        ..shuffle();
-        
-    _currentOptions = [
-      currentFlag.correctCountry,
-      wrongOptions[0],
-      wrongOptions[1],
-      wrongOptions[2],
-    ]..shuffle();
+    // Use options provided by admin, shuffle them
+    _currentOptions = List<String>.from(currentFlag.options)..shuffle();
   }
 
   @override
@@ -96,7 +96,9 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
   }
 
   void _checkAnswer(String selectedCountry) {
-    if (selectedCountry == _sessionFlags[_currentIndex].correctCountry) {
+    final correctCountry = _sessionFlags[_currentIndex].correctCountry;
+    
+    if (selectedCountry == correctCountry) {
       setState(() {
         _score += 10;
         _currentIndex++;
@@ -112,7 +114,7 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Wrong! It was ${_sessionFlags[_currentIndex].correctCountry}."),
+          content: Text("Wrong! It was $correctCountry."),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 1),
         ),
@@ -258,6 +260,15 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
     );
   }
 
+  String _getFlagEmoji(String countryCode) {
+    if (countryCode.length != 2) return countryCode;
+    
+    final int firstLetter = countryCode.toUpperCase().codeUnitAt(0) - 0x41 + 0x1F1E6;
+    final int secondLetter = countryCode.toUpperCase().codeUnitAt(1) - 0x41 + 0x1F1E6;
+    
+    return String.fromCharCode(firstLetter) + String.fromCharCode(secondLetter);
+  }
+
   Widget _buildInstructionRow(ThemeData theme, String number, String text) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,12 +308,8 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_currentIndex >= _sessionFlags.length) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
     final theme = Theme.of(context);
-    final flag = _sessionFlags[_currentIndex];
+    final flag = (_sessionFlags.isNotEmpty && _currentIndex < _sessionFlags.length) ? _sessionFlags[_currentIndex] : null;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -316,7 +323,11 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
           ),
         ],
       ),
-      body: SafeArea(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : _sessionFlags.isEmpty
+          ? Center(child: Text("No flags found.", style: GoogleFonts.poppins()))
+          : SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -329,7 +340,7 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
                      crossAxisAlignment: CrossAxisAlignment.start,
                      children: [
                        Text(
-                         "Flag ${_currentIndex + 1}/${_sessionFlags.length}",
+                         "Flag ${flag == null ? _currentIndex : _currentIndex + 1}/${_sessionFlags.length}",
                          style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey),
                        ),
                        TextButton.icon(
@@ -391,7 +402,7 @@ class _FlagExplorerScreenState extends State<FlagExplorerScreen> {
                   border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                 ),
                 child: Text(
-                  flag.emoji,
+                  flag == null ? "" : _getFlagEmoji(flag.identifier),
                   style: const TextStyle(fontSize: 100),
                 ),
               ),

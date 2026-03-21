@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class LanguageTranslatorScreen extends StatefulWidget {
   const LanguageTranslatorScreen({super.key});
@@ -13,11 +16,21 @@ class LanguageTranslatorScreen extends StatefulWidget {
 }
 
 class TranslationWord {
-  final String english;
-  final String hindi;
-  final String gujarati;
+  final String sourceWord;
+  final String targetWord;
+  final String targetLanguage;
+  final List<String> options;
 
-  TranslationWord(this.english, this.hindi, this.gujarati);
+  TranslationWord(this.sourceWord, this.targetWord, this.targetLanguage, this.options);
+
+  factory TranslationWord.fromGameQuestion(GameQuestion q) {
+    return TranslationWord(
+      q.questionText,
+      q.correctAnswer,
+      q.meta != null ? (q.meta!['targetLanguage'] ?? q.meta!['hint'] ?? "Target Language") : "Target Language",
+      q.options ?? [],
+    );
+  }
 }
 
 class _LanguageTranslatorScreenState extends State<LanguageTranslatorScreen> {
@@ -27,32 +40,13 @@ class _LanguageTranslatorScreenState extends State<LanguageTranslatorScreen> {
   int _score = 0;
   int _currentIndex = 0;
   
-  // 0: English -> Hindi, 1: English -> Gujarati, 2: Hindi -> English, etc.
-  int _questionType = 0;
   List<String> _currentOptions = [];
   String _questionText = "";
   String _correctAnswer = "";
   String _targetLanguage = "";
+  bool _isLoading = true;
 
-  final List<TranslationWord> _allWords = [
-    TranslationWord("Book", "किताब (Kitab)", "પુસ્તક (Pustak)"),
-    TranslationWord("Water", "पानी (Pani)", "પાણી (Pani)"),
-    TranslationWord("School", "विद्यालय (Vidyalaya)", "શાળા (Shala)"),
-    TranslationWord("Teacher", "शिक्षक (Shikshak)", "શિક્ષક (Shikshak)"),
-    TranslationWord("Student", "छात्र (Chhatra)", "વિદ્યાર્થી (Vidyarthi)"),
-    TranslationWord("Friend", "दोस्त (Dost)", "મિત્ર (Mitra)"),
-    TranslationWord("Food", "खाना (Khana)", "ખોરાક (Khorak)"),
-    TranslationWord("House", "घर (Ghar)", "ઘર (Ghar)"),
-    TranslationWord("Time", "समय (Samay)", "સમય (Samay)"),
-    TranslationWord("Money", "पैसा (Paisa)", "પૈસા (Paisa)"),
-    TranslationWord("Work", "काम (Kaam)", "કામ (Kaam)"),
-    TranslationWord("Love", "प्यार (Pyaar)", "પ્રેમ (Prem)"),
-    TranslationWord("Happy", "खुश (Khush)", "ખુશ (Khush)"),
-    TranslationWord("Beautiful", "सुंदर (Sundar)", "સુંદર (Sundar)"),
-    TranslationWord("Family", "परिवार (Parivar)", "પરિવાર (Parivar)"),
-  ];
-
-  late List<TranslationWord> _sessionWords;
+  List<TranslationWord> _sessionWords = [];
 
   @override
   void initState() {
@@ -62,59 +56,75 @@ class _LanguageTranslatorScreenState extends State<LanguageTranslatorScreen> {
   }
 
   void _startSession() {
-    _sessionWords = List.from(_allWords)..shuffle();
-    _score = 0;
-    _currentIndex = 0;
-    _loadQuestion();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Language Translator');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _sessionWords = data.map((json) => TranslationWord.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          if (_sessionWords.isNotEmpty) {
+            _sessionWords.shuffle();
+          }
+          _score = 0;
+          _currentIndex = 0;
+          _isLoading = false;
+          _loadQuestion();
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching translation questions: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   void _loadQuestion() {
+    if (_sessionWords.isEmpty) return;
     if (_currentIndex >= _sessionWords.length) {
       _showWinDialog();
       return;
     }
 
     final currentWord = _sessionWords[_currentIndex];
-    _questionType = _random.nextInt(4);
+    _questionText = currentWord.sourceWord;
+    _correctAnswer = currentWord.targetWord;
+    _targetLanguage = currentWord.targetLanguage;
 
-    switch (_questionType) {
-      case 0: // English to Hindi
-        _questionText = currentWord.english;
-        _correctAnswer = currentWord.hindi;
-        _targetLanguage = "Hindi";
-        break;
-      case 1: // English to Gujarati
-        _questionText = currentWord.english;
-        _correctAnswer = currentWord.gujarati;
-        _targetLanguage = "Gujarati";
-        break;
-      case 2: // Hindi to English
-        _questionText = currentWord.hindi;
-        _correctAnswer = currentWord.english;
-        _targetLanguage = "English";
-        break;
-      case 3: // Gujarati to English
-        _questionText = currentWord.gujarati;
-        _correctAnswer = currentWord.english;
-        _targetLanguage = "English";
-        break;
-    }
-
-    // Generate wrong options
-    final _wrongOptionsPool = _allWords.where((w) => w.english != currentWord.english).toList()..shuffle();
-    _currentOptions = [_correctAnswer];
-    
-    for (int i = 0; i < 3; i++) {
-        switch (_questionType) {
-          case 0: _currentOptions.add(_wrongOptionsPool[i].hindi); break;
-          case 1: _currentOptions.add(_wrongOptionsPool[i].gujarati); break;
-          case 2: _currentOptions.add(_wrongOptionsPool[i].english); break;
-          case 3: _currentOptions.add(_wrongOptionsPool[i].english); break;
+    if (currentWord.options.isNotEmpty) {
+      _currentOptions = List.from(currentWord.options);
+    } else {
+      // Generate wrong options from other words with SAME target language
+      final sameLangWords = _sessionWords
+          .where((w) => w.targetLanguage == currentWord.targetLanguage && w.sourceWord != currentWord.sourceWord)
+          .toList();
+      
+      _currentOptions = [_correctAnswer];
+      
+      if (sameLangWords.length >= 3) {
+        sameLangWords.shuffle();
+        for (int i = 0; i < 3; i++) {
+          _currentOptions.add(sameLangWords[i].targetWord);
         }
+      } else {
+        // Fallback if not enough questions for this language
+        final otherWords = _sessionWords
+            .where((w) => w.sourceWord != currentWord.sourceWord && !_currentOptions.contains(w.targetWord))
+            .toList();
+        otherWords.shuffle();
+        for (int i = 0; i < min(3, otherWords.length); i++) {
+          _currentOptions.add(otherWords[i].targetWord);
+        }
+      }
     }
+    
     _currentOptions.shuffle();
+    setState(() {});
   }
-
   @override
   void dispose() {
     _gameService.stopSession();
