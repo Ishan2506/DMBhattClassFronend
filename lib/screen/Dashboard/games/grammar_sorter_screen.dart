@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class GrammarSorterScreen extends StatefulWidget {
   const GrammarSorterScreen({super.key});
@@ -17,6 +20,10 @@ class GrammarWord {
   final String category; // 'Noun', 'Verb', 'Adjective'
 
   GrammarWord(this.word, this.category);
+
+  factory GrammarWord.fromGameQuestion(GameQuestion q) {
+    return GrammarWord(q.questionText, q.correctAnswer);
+  }
 }
 
 class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
@@ -25,40 +32,51 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
   
   int _score = 0;
   int _level = 1;
-  int _lives = 3;
+  bool _isLoading = true;
   
   List<GrammarWord> _wordsToFall = [];
   List<GrammarWord> _fallingWords = [];
   
-  // A master list of words
-  final List<GrammarWord> _allWords = [
-    GrammarWord("Apple", "Noun"), GrammarWord("Dog", "Noun"), GrammarWord("City", "Noun"),
-    GrammarWord("Table", "Noun"), GrammarWord("River", "Noun"), GrammarWord("Ocean", "Noun"),
-    GrammarWord("Run", "Verb"), GrammarWord("Jump", "Verb"), GrammarWord("Speak", "Verb"),
-    GrammarWord("Eat", "Verb"), GrammarWord("Sleep", "Verb"), GrammarWord("Think", "Verb"),
-    GrammarWord("Happy", "Adjective"), GrammarWord("Blue", "Adjective"), GrammarWord("Tall", "Adjective"),
-    GrammarWord("Fast", "Adjective"), GrammarWord("Bright", "Adjective"), GrammarWord("Loud", "Adjective"),
-  ];
+  List<GrammarWord> _allWords = [];
 
   @override
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _startSession();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Grammar Sorter');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allWords = data.map((json) => GrammarWord.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          _isLoading = false;
+          _startSession();
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching grammar questions: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   void _startSession() {
     _score = 0;
     _level = 1;
-    _lives = 3;
     _generateLevel();
   }
 
   void _generateLevel() {
+    if (_allWords.isEmpty) return;
     _wordsToFall = List.from(_allWords)..shuffle();
-    _fallingWords = [_wordsToFall.removeLast()];
-    // Normally we'd use an AnimationController for real falling pieces,
-    // but a simpler drag-and-drop bucket system is better for this minigame
+    if (_wordsToFall.isNotEmpty) {
+      _fallingWords = [_wordsToFall.removeLast()];
+    }
   }
 
   @override
@@ -75,9 +93,8 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
         if (_wordsToFall.isNotEmpty) {
            _fallingWords.add(_wordsToFall.removeLast());
         } else {
-           // Level complete
-           _level++;
-           _generateLevel();
+           // All dynamic questions exhausted
+           _showWinDialog();
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,14 +106,17 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
       );
     } else {
       setState(() {
-        _lives--;
-        if (_lives <= 0) {
-            _showGameOverDialog();
+        _score = max(0, _score - 5);
+        _fallingWords.remove(word);
+        if (_wordsToFall.isNotEmpty) {
+           _fallingWords.add(_wordsToFall.removeLast());
+        } else {
+           _showWinDialog();
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Wrong! It's a ${word.category}. LIVES: $_lives"),
+          content: Text("Wrong! It was a ${word.category}."),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 1),
         ),
@@ -104,14 +124,14 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
     }
   }
 
-  void _showGameOverDialog() {
+  void _showWinDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text("Game Over!", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text("Game Complete!", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: Text(
-          "You ran out of lives.\nFinal Score: $_score\nLevel Reached: $_level",
+          "You've sorted all available words!\nFinal Score: $_score",
           style: GoogleFonts.poppins(fontSize: 18),
         ),
         actions: [
@@ -133,6 +153,7 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
       ),
     );
   }
+
 
   void _showHowToPlay() {
     final theme = Theme.of(context);
@@ -272,8 +293,24 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_lives <= 0) {
-        return const Scaffold();
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_allWords.isEmpty) {
+      return Scaffold(
+        appBar: const CustomAppBar(title: "Grammar Sorter", centerTitle: true),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.category_outlined, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text("No grammar words found.", style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey)),
+            ],
+          ),
+        ),
+      );
     }
   
     final theme = Theme.of(context);
@@ -299,13 +336,7 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: List.generate(3, (index) => Icon(
-                      Icons.favorite,
-                      color: index < _lives ? Colors.red : Colors.grey.shade300,
-                      size: 28,
-                    )),
-                  ),
+                  const SizedBox(width: 28), // Spacer where hearts were
                   Text(
                     "Lvl $_level",
                     style: GoogleFonts.poppins(fontSize: 20, color: Colors.grey, fontWeight: FontWeight.bold),
@@ -334,10 +365,7 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                           _fallingWords.add(_wordsToFall.removeLast());
                         });
                       } else {
-                        setState(() {
-                          _level++;
-                          _generateLevel();
-                        });
+                        _showWinDialog();
                       }
                     },
                     icon: const Icon(Icons.skip_next, size: 20),

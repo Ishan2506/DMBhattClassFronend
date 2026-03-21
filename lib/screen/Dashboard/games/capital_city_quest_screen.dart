@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class CapitalCityQuestScreen extends StatefulWidget {
   const CapitalCityQuestScreen({super.key});
@@ -15,8 +18,17 @@ class CapitalCityQuestScreen extends StatefulWidget {
 class GeographyFact {
   final String region;    // e.g. "Gujarat" or "France"
   final String capital;   // e.g. "Gandhinagar" or "Paris"
+  final List<String> options;
 
-  GeographyFact(this.region, this.capital);
+  GeographyFact(this.region, this.capital, {this.options = const []});
+
+  factory GeographyFact.fromGameQuestion(GameQuestion q) {
+    return GeographyFact(
+      q.questionText, 
+      q.correctAnswer,
+      options: q.options ?? [],
+    );
+  }
 }
 
 class _CapitalCityQuestScreenState extends State<CapitalCityQuestScreen> {
@@ -26,42 +38,39 @@ class _CapitalCityQuestScreenState extends State<CapitalCityQuestScreen> {
   int _currentIndex = 0;
   int _score = 0;
   List<String> _currentOptions = [];
+  bool _isLoading = true;
 
-  final List<GeographyFact> _allFacts = [
-    // Indian States
-    GeographyFact("Gujarat", "Gandhinagar"),
-    GeographyFact("Maharashtra", "Mumbai"),
-    GeographyFact("Rajasthan", "Jaipur"),
-    GeographyFact("Karnataka", "Bengaluru"),
-    GeographyFact("Tamil Nadu", "Chennai"),
-    GeographyFact("Uttar Pradesh", "Lucknow"),
-    GeographyFact("West Bengal", "Kolkata"),
-    GeographyFact("Punjab", "Chandigarh"),
-    GeographyFact("Madhya Pradesh", "Bhopal"),
-    GeographyFact("Kerala", "Thiruvananthapuram"),
-    // World Countries
-    GeographyFact("France", "Paris"),
-    GeographyFact("Japan", "Tokyo"),
-    GeographyFact("Australia", "Canberra"),
-    GeographyFact("Canada", "Ottawa"),
-    GeographyFact("Brazil", "Brasilia"),
-    GeographyFact("United Kingdom", "London"),
-    GeographyFact("Germany", "Berlin"),
-    GeographyFact("Italy", "Rome"),
-    GeographyFact("Egypt", "Cairo"),
-    GeographyFact("Russia", "Moscow"),
-  ];
-
+  List<GeographyFact> _allFacts = [];
   late List<GeographyFact> _sessionFacts;
 
   @override
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _startSession();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Capital City Quest');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allFacts = data.map((json) => GeographyFact.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          _isLoading = false;
+          _startSession();
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching capital city questions: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   void _startSession() {
+    if (_allFacts.isEmpty) return;
     _sessionFacts = List.from(_allFacts)..shuffle();
     _currentIndex = 0;
     _score = 0;
@@ -69,6 +78,7 @@ class _CapitalCityQuestScreenState extends State<CapitalCityQuestScreen> {
   }
 
   void _loadQuestion() {
+    if (_sessionFacts.isEmpty) return;
     if (_currentIndex >= _sessionFacts.length) {
       _showWinDialog();
       return;
@@ -76,19 +86,23 @@ class _CapitalCityQuestScreenState extends State<CapitalCityQuestScreen> {
 
     final currentFact = _sessionFacts[_currentIndex];
     
-    // Pick 3 random wrong options
-    final wrongOptions = _allFacts
-        .where((f) => f.capital != currentFact.capital)
-        .map((f) => f.capital)
-        .toList()
-        ..shuffle();
-        
-    _currentOptions = [
-      currentFact.capital,
-      wrongOptions[0],
-      wrongOptions[1],
-      wrongOptions[2],
-    ]..shuffle();
+    if (currentFact.options.isNotEmpty) {
+      _currentOptions = List.from(currentFact.options)..shuffle();
+    } else {
+      // Pick 3 random wrong options from all available capitals
+      final allCapitals = _allFacts.map((f) => f.capital).toSet().toList();
+      final wrongOptions = allCapitals
+          .where((c) => c != currentFact.capital)
+          .toList()
+          ..shuffle();
+          
+      _currentOptions = [currentFact.capital];
+      for (int i = 0; i < min(3, wrongOptions.length); i++) {
+        _currentOptions.add(wrongOptions[i]);
+      }
+      _currentOptions.shuffle();
+    }
+    setState(() {});
   }
 
   @override
@@ -299,6 +313,26 @@ class _CapitalCityQuestScreenState extends State<CapitalCityQuestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_allFacts.isEmpty) {
+       return Scaffold(
+          appBar: const CustomAppBar(title: "Capital City Quest", centerTitle: true),
+          body: Center(
+             child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                   const Icon(Icons.public_off, size: 64, color: Colors.grey),
+                   const SizedBox(height: 16),
+                   Text("No questions found.", style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey)),
+                ],
+             ),
+          ),
+       );
+    }
+
     if (_currentIndex >= _sessionFacts.length) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

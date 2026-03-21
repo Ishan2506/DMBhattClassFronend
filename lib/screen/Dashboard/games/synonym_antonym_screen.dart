@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class SynonymAntonymScreen extends StatefulWidget {
   const SynonymAntonymScreen({super.key});
@@ -18,6 +21,14 @@ class WordPair {
   final bool isSynonym;
 
   WordPair(this.word1, this.word2, this.isSynonym);
+
+  factory WordPair.fromGameQuestion(GameQuestion q) {
+    return WordPair(
+      q.questionText, // Word 1
+      q.options.isNotEmpty ? q.options[0] : "", // Word 2
+      q.correctAnswer.toLowerCase() == 'synonym', // Relationship
+    );
+  }
 }
 
 class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
@@ -27,30 +38,9 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
   int _score = 0;
   int _currentIndex = 0;
   
-  final List<WordPair> _allPairs = [
-    WordPair("Happy", "Joyful", true),
-    WordPair("Hot", "Cold", false),
-    WordPair("Begin", "Start", true),
-    WordPair("Fast", "Slow", false),
-    WordPair("Huge", "Gigantic", true),
-    WordPair("Awake", "Asleep", false),
-    WordPair("Brave", "Courageous", true),
-    WordPair("Rich", "Poor", false),
-    WordPair("Silent", "Quiet", true),
-    WordPair("Light", "Dark", false),
-    WordPair("Difficult", "Hard", true),
-    WordPair("Create", "Destroy", false),
-    WordPair("Eager", "Keen", true),
-    WordPair("Expand", "Shrink", false),
-    WordPair("Genuine", "Authentic", true),
-    WordPair("Generous", "Selfish", false),
-    WordPair("Hazard", "Danger", true),
-    WordPair("Ignite", "Extinguish", false),
-    WordPair("Mend", "Repair", true),
-    WordPair("Optimistic", "Pessimistic", false),
-  ];
-  
-  late List<WordPair> _sessionPairs;
+  List<WordPair> _sessionPairs = [];
+  bool _isLoading = true;
+  bool? _selectedIsSynonym; // For radio buttons
 
   @override
   void initState() {
@@ -60,9 +50,31 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
   }
 
   void _startSession() {
-    _sessionPairs = List.from(_allPairs)..shuffle();
-    _score = 0;
-    _currentIndex = 0;
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Synonym & Antonym');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _sessionPairs = data.map((json) => WordPair.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          if (_sessionPairs.isNotEmpty) {
+            _sessionPairs.shuffle();
+          }
+          _score = 0;
+          _currentIndex = 0;
+          _isLoading = false;
+          _selectedIsSynonym = null;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching synonym pairs: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -243,8 +255,22 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_sessionPairs.isEmpty) {
+      return Scaffold(
+        appBar: CustomAppBar(title: "Synonym & Antonym", centerTitle: true),
+        body: Center(child: Text("No word pairs found.", style: GoogleFonts.poppins())),
+      );
+    }
+
     if (_currentIndex >= _sessionPairs.length) {
-      final theme = Theme.of(context);
        return Scaffold(
           appBar: CustomAppBar(title: "Synonym & Antonym", centerTitle: true),
           body: Center(
@@ -269,8 +295,6 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
           )
        );
     }
-
-    final theme = Theme.of(context);
     final pair = _sessionPairs[_currentIndex];
 
     return Scaffold(
@@ -285,7 +309,11 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
           ),
         ],
       ),
-      body: SafeArea(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : _sessionPairs.isEmpty
+          ? Center(child: Text("No word pairs found.", style: GoogleFonts.poppins()))
+          : SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -373,7 +401,7 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       onPressed: () => _checkAnswer(true),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 20),
@@ -381,22 +409,20 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: Text("SYNONYM", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: Text("SYNONYM", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       onPressed: () => _checkAnswer(false),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 20),
-                        backgroundColor: Colors.deepOrange,
+                        backgroundColor: Colors.teal,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      icon: const Icon(Icons.cancel_outlined),
-                      label: Text("ANTONYM", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: Text("ANTONYM", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],

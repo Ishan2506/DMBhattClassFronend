@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class ProverbCompleterScreen extends StatefulWidget {
   const ProverbCompleterScreen({super.key});
@@ -16,8 +19,22 @@ class ProverbFact {
   final String start;
   final String end;
   final String missingWord;
+  final List<String> options;
 
-  ProverbFact(this.start, this.end, this.missingWord);
+  ProverbFact(this.start, this.end, this.missingWord, {this.options = const []});
+
+  factory ProverbFact.fromGameQuestion(GameQuestion q) {
+    final parts = q.questionText.split("[BLANK]");
+    String start = parts[0];
+    String end = parts.length > 1 ? parts[1] : "";
+    
+    return ProverbFact(
+      start, 
+      end, 
+      q.correctAnswer,
+      options: q.options ?? [],
+    );
+  }
 }
 
 class _ProverbCompleterScreenState extends State<ProverbCompleterScreen> {
@@ -27,35 +44,39 @@ class _ProverbCompleterScreenState extends State<ProverbCompleterScreen> {
   int _currentIndex = 0;
   int _score = 0;
   List<String> _currentOptions = [];
+  bool _isLoading = true;
 
-  final List<ProverbFact> _allProverbs = [
-    ProverbFact("A", "in time saves nine.", "stitch"),
-    ProverbFact("Actions speak louder than", ".", "words"),
-    ProverbFact("Better late than", ".", "never"),
-    ProverbFact("Don't judge a book by its", ".", "cover"),
-    ProverbFact("Every cloud has a silver", ".", "lining"),
-    ProverbFact("Honesty is the best", ".", "policy"),
-    ProverbFact("Laughter is the best", ".", "medicine"),
-    ProverbFact("Two wrongs don't make a", ".", "right"),
-    ProverbFact("When in Rome, do as the", "do.", "Romans"),
-    ProverbFact("You can't judge a tree by its", ".", "bark"),
-    ProverbFact("A blessing in", ".", "disguise"),
-    ProverbFact("A picture is worth a thousand", ".", "words"),
-    ProverbFact("Birds of a feather flock", ".", "together"),
-    ProverbFact("Don't put all your eggs in one", ".", "basket"),
-    ProverbFact("Early bird catches the", ".", "worm"),
-  ];
-
+  List<ProverbFact> _allProverbs = [];
   late List<ProverbFact> _sessionProverbs;
 
   @override
   void initState() {
     super.initState();
     _gameService.startSession(context);
-    _startSession();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Proverb Completer');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _allProverbs = data.map((json) => ProverbFact.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          _isLoading = false;
+          _startSession();
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching proverb questions: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   void _startSession() {
+    if (_allProverbs.isEmpty) return;
     _sessionProverbs = List.from(_allProverbs)..shuffle();
     _currentIndex = 0;
     _score = 0;
@@ -63,6 +84,7 @@ class _ProverbCompleterScreenState extends State<ProverbCompleterScreen> {
   }
 
   void _loadQuestion() {
+    if (_sessionProverbs.isEmpty) return;
     if (_currentIndex >= _sessionProverbs.length) {
       _showWinDialog();
       return;
@@ -70,23 +92,28 @@ class _ProverbCompleterScreenState extends State<ProverbCompleterScreen> {
 
     final currentFact = _sessionProverbs[_currentIndex];
     
-    // Pick 3 random wrong options
-    final wrongOptionsPool = [
-      "needle", "thread", "time", "clock", "mind", "heart", "book", "story", 
-      "color", "shadow", "truth", "lie", "friend", "enemy", "tree", "leaf",
-      "apple", "fruit", "day", "night", "sun", "moon", "star", "sky",
-      "water", "fire", "earth", "wind", "gold", "silver", "bronze", "stone"
-    ]..shuffle();
-        
-    // Exclude the correct answer if it happens to be in the pool
-    wrongOptionsPool.removeWhere((w) => w.toLowerCase() == currentFact.missingWord.toLowerCase());
-        
-    _currentOptions = [
-      currentFact.missingWord,
-      wrongOptionsPool[0],
-      wrongOptionsPool[1],
-      wrongOptionsPool[2],
-    ]..shuffle();
+    if (currentFact.options.isNotEmpty) {
+      _currentOptions = List.from(currentFact.options)..shuffle();
+    } else {
+      // Pick 3 random wrong options from fallback pool
+      final wrongOptionsPool = [
+        "needle", "thread", "time", "clock", "mind", "heart", "book", "story", 
+        "color", "shadow", "truth", "lie", "friend", "enemy", "tree", "leaf",
+        "apple", "fruit", "day", "night", "sun", "moon", "star", "sky",
+        "water", "fire", "earth", "wind", "gold", "silver", "bronze", "stone"
+      ]..shuffle();
+          
+      // Exclude the correct answer if it happens to be in the pool
+      wrongOptionsPool.removeWhere((w) => w.toLowerCase() == currentFact.missingWord.toLowerCase());
+          
+      _currentOptions = [
+        currentFact.missingWord,
+        wrongOptionsPool[0],
+        wrongOptionsPool[1],
+        wrongOptionsPool[2],
+      ]..shuffle();
+    }
+    setState(() {});
   }
 
   @override
@@ -299,6 +326,26 @@ class _ProverbCompleterScreenState extends State<ProverbCompleterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_allProverbs.isEmpty) {
+       return Scaffold(
+          appBar: const CustomAppBar(title: "Proverb Completer", centerTitle: true),
+          body: Center(
+             child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                   const Icon(Icons.format_quote, size: 64, color: Colors.grey),
+                   const SizedBox(height: 16),
+                   Text("No proverbs found.", style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey)),
+                ],
+             ),
+          ),
+       );
+    }
+
     if (_currentIndex >= _sessionProverbs.length) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

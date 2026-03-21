@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/model/game_question.dart';
 
 class SpellingMasterScreen extends StatefulWidget {
   const SpellingMasterScreen({super.key});
@@ -16,6 +19,13 @@ class SpellingWord {
   final String definition;
 
   SpellingWord(this.word, this.definition);
+
+  factory SpellingWord.fromGameQuestion(GameQuestion q) {
+    return SpellingWord(
+      q.correctAnswer, // Correct word
+      q.questionText,  // Definition
+    );
+  }
 }
 
 class _SpellingMasterScreenState extends State<SpellingMasterScreen> {
@@ -25,25 +35,8 @@ class _SpellingMasterScreenState extends State<SpellingMasterScreen> {
   int _score = 0;
   int _currentIndex = 0;
   
-  final List<SpellingWord> _allWords = [
-    SpellingWord("ACCOMMODATE", "To provide lodging or sufficient space for."),
-    SpellingWord("EMBARRASS", "To cause someone to feel awkward or ashamed."),
-    SpellingWord("FLUORESCENT", "Emitting light during exposure to radiation."),
-    SpellingWord("OCCURRENCE", "An incident or event."),
-    SpellingWord("RHYTHM", "A strong, regular, repeated pattern of movement or sound."),
-    SpellingWord("SEPARATE", "Forming or viewed as a unit apart or by itself."),
-    SpellingWord("DEFINITELY", "Without doubt; used for emphasis."),
-    SpellingWord("BEAUTIFUL", "Pleasing the senses or mind aesthetically."),
-    SpellingWord("KNOWLEDGE", "Facts, information, and skills acquired through experience or education."),
-    SpellingWord("GOVERNMENT", "The group of people with the authority to govern a country or state."),
-    SpellingWord("ENVIRONMENT", "The surroundings or conditions in which a person, animal, or plant lives or operates."),
-    SpellingWord("FASCINATING", "Extremely interesting."),
-    SpellingWord("MISCHIEVOUS", "Causing or showing a fondness for causing trouble in a playful way."),
-    SpellingWord("POTATOES", "Plural form of a starchy plant tuber which is one of the most important food crops."),
-    SpellingWord("TOMORROW", "On the day after today."),
-  ];
-  
-  late List<SpellingWord> _sessionWords;
+  List<SpellingWord> _sessionWords = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -53,10 +46,31 @@ class _SpellingMasterScreenState extends State<SpellingMasterScreen> {
   }
 
   void _startSession() {
-    _sessionWords = List.from(_allWords)..shuffle();
-    _score = 0;
-    _currentIndex = 0;
-    _textController.clear();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final response = await ApiService.getGameQuestions('Spelling Master');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _sessionWords = data.map((json) => SpellingWord.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          if (_sessionWords.isNotEmpty) {
+            _sessionWords.shuffle();
+          }
+          _score = 0;
+          _currentIndex = 0;
+          _isLoading = false;
+          _textController.clear();
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching spelling words: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -245,6 +259,19 @@ class _SpellingMasterScreenState extends State<SpellingMasterScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_sessionWords.isEmpty) {
+      return Scaffold(
+        appBar: CustomAppBar(title: "Spelling Master", centerTitle: true),
+        body: Center(child: Text("No spelling words found.", style: GoogleFonts.poppins())),
+      );
+    }
+
     if (_currentIndex >= _sessionWords.length) {
        return Scaffold(
           appBar: CustomAppBar(title: "Spelling Master", centerTitle: true),
