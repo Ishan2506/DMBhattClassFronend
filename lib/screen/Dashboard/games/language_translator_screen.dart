@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
@@ -334,7 +335,7 @@ class _LanguageTranslatorScreenState extends State<LanguageTranslatorScreen> {
   @override
   Widget build(BuildContext context) {
     if (_currentIndex >= _sessionWords.length) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const CustomLoader();
     }
 
     final theme = Theme.of(context);

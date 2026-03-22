@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/multiplayer_service.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/escape_room/escape_room_defuser_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/games/escape_room/escape_room_expert_screen.dart';
@@ -150,7 +151,7 @@ class _EscapeLobbyScreenState extends State<EscapeLobbyScreen> {
                     style: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.bold, letterSpacing: 8, color: Colors.blue),
                  ),
                  const SizedBox(height: 24),
-                 const CircularProgressIndicator(),
+                 const CustomLoader(),
                  const SizedBox(height: 16),
                  Text("Waiting for Expert to join...", style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey)),
                  const SizedBox(height: 24),
@@ -195,7 +196,7 @@ class _EscapeLobbyScreenState extends State<EscapeLobbyScreen> {
                       foregroundColor: Colors.white,
                     ),
                     child: _isLoading 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        ? const SizedBox(width: 20, height: 20, child: CustomLoader())
                         : const Text("Create Room"),
                   ),
                 ),

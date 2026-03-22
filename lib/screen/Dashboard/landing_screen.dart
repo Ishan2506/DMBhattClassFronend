@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/ai_chat_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/dm_ai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_home_screen.dart';
@@ -234,7 +235,7 @@ class _LandingScreenState extends State<LandingScreen> {
         ],
       ),
       body: _isLoadingMembership 
-        ? const Center(child: CircularProgressIndicator())
+        ? const CustomLoader()
         : IndexedStack(
             index: _selectedIndex,
             children: _pages,

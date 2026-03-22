@@ -151,9 +151,9 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                     ),
                   )
                 else if (_isLoading || _isProfileLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 40),
-                    child: Center(child: CircularProgressIndicator()),
+                   Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: const CustomLoader(),
                   )
                 else if (_hasSearched && _papers.isEmpty)
                    Center(
@@ -373,7 +373,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           ),
           IconButton(
             icon: _isDownloading 
-                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                 ? const SizedBox(width: 24, height: 24, child: CustomLoader())
                  : Icon(Icons.download_rounded, color: colorScheme.secondary),
             onPressed: _isDownloading ? null : () async {
               final rawUrl = paper['file'] ?? paper['url'] ?? "";

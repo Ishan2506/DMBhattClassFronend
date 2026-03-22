@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/model/chat_message.dart';
 import 'package:dm_bhatt_tutions/network/ai_service.dart';
 import 'package:dm_bhatt_tutions/widget/chat_bubble.dart';
@@ -402,7 +403,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   const CircularProgressIndicator(strokeWidth: 2),
+                   CustomLoader(),
                    const SizedBox(width: 8),
                    Text("Searching video...", style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.primary)),
                 ],

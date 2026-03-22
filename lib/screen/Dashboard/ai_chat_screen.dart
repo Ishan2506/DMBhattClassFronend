@@ -1,4 +1,5 @@
 import 'package:dm_bhatt_tutions/network/ai_service.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/widget/chat_bubble.dart';
 import 'package:dm_bhatt_tutions/model/chat_message.dart';
 import 'package:flutter/material.dart';
@@ -159,7 +160,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                          SizedBox(
                            width: 16,
                            height: 16,
-                           child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5C6BC0)),
+                           child: CustomLoader(),
                          ),
                          SizedBox(width: 10),
                          Text("Thinking...", style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic)),
@@ -278,7 +279,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                 height: 50,
                 alignment: Alignment.center,
                 child: _isLoading 
-                  ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  ? SizedBox(width: 24, height: 24, child: CustomLoader())
                   : Icon(Icons.send_rounded, color: Colors.white),
               ),
             ),

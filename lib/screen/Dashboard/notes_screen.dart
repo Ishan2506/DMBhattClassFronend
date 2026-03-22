@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -231,7 +232,7 @@ class _NotesScreenState extends State<NotesScreen> {
                  ),
                )
             else if (_isLoading)
-               const Center(child: CircularProgressIndicator())
+               CustomLoader()
             else
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

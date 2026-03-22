@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/download_service.dart';
 import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
@@ -253,7 +254,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                  ),
                )
             else if (_isLoading)
-               const Center(child: CircularProgressIndicator())
+               CustomLoader()
             else
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +347,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
           ),
           IconButton(
             icon: _isDownloading 
-                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                 ? SizedBox(width: 24, height: 24, child: CustomLoader())
                  : Icon(Icons.download_rounded, color: colorScheme.secondary),
             onPressed: _isDownloading ? null : () async {
               final rawUrl = paper['file'] ?? paper['url'] ?? "";

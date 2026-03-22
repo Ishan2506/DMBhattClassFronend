@@ -354,7 +354,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) return Scaffold(body: CustomLoader());
     
     if (_originalAmount == 0) {
        return Scaffold(
@@ -597,12 +597,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 border: InputBorder.none,
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                                 suffixIcon: _isValidatingReferral
-                                  ? const Padding(
+                                  ? Padding(
                                       padding: EdgeInsets.all(12.0),
                                       child: SizedBox(
                                         width: 20,
                                         height: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                                        ),
                                       ),
                                     )
                                   : _isReferralValid == true

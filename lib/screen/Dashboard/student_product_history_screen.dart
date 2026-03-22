@@ -287,7 +287,7 @@ class FullMaterialViewerScreen extends StatelessWidget {
                   fit: BoxFit.contain,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
-                    return const CircularProgressIndicator(color: Colors.white);
+                    return const CustomLoader();
                   },
                   errorBuilder: (context, error, stackTrace) => 
                       const Icon(Icons.broken_image, size: 50, color: Colors.grey),

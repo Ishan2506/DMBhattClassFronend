@@ -126,7 +126,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const CustomLoader();
     }
 
     final colorScheme = Theme.of(context).colorScheme;

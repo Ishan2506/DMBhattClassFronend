@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/utils/multiplayer_service.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 
 class EscapeRoomDefuserScreen extends StatefulWidget {
   const EscapeRoomDefuserScreen({super.key});
@@ -68,7 +69,7 @@ class _EscapeRoomDefuserScreenState extends State<EscapeRoomDefuserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_gameState == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_gameState == null) return const CustomLoader();
 
     final theme = Theme.of(context);
     int mins = _gameState!.timeRemainingSeconds ~/ 60;

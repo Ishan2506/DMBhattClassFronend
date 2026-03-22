@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
@@ -258,9 +259,7 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
     final theme = Theme.of(context);
 
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return CustomLoader();
     }
 
     if (_sessionPairs.isEmpty) {
@@ -310,7 +309,7 @@ class _SynonymAntonymScreenState extends State<SynonymAntonymScreen> {
         ],
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
+        ? CustomLoader()
         : _sessionPairs.isEmpty
           ? Center(child: Text("No word pairs found.", style: GoogleFonts.poppins()))
           : SafeArea(

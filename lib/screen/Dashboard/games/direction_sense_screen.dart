@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
@@ -328,7 +329,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_isGameOver && (_isLoading || _sessionPuzzles.isEmpty)) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const CustomLoader();
     }
 
     final theme = Theme.of(context);
@@ -585,10 +586,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
               ),
 
             if (_isLoading)
-               Container(
-                color: Colors.black.withOpacity(0.2),
-                child: const Center(child: CircularProgressIndicator()),
-              ),
+               const CustomLoader(),
           ],
         ),
       ),

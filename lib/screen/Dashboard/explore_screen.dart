@@ -466,7 +466,7 @@ class _PdfThumbnailState extends State<_PdfThumbnail> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+      return CustomLoader();
     }
     if (_hasError || _imageBytes == null) {
        return Center(

@@ -152,7 +152,7 @@ class _StudentVideoScreenState extends State<StudentVideoScreen> {
                 else
                   _buildFallbackUI(),
                 if (_isLoading && _isWebViewSupported)
-                  const Center(child: CircularProgressIndicator(color: Colors.red)),
+                  const CustomLoader()
               ],
             ),
           ),

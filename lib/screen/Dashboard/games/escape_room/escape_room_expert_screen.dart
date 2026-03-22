@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/utils/multiplayer_service.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 
 class EscapeRoomExpertScreen extends StatefulWidget {
   const EscapeRoomExpertScreen({super.key});
@@ -56,7 +57,7 @@ class _EscapeRoomExpertScreenState extends State<EscapeRoomExpertScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_gameState == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_gameState == null) return const CustomLoader();
 
     int mins = _gameState!.timeRemainingSeconds ~/ 60;
     int secs = _gameState!.timeRemainingSeconds % 60;
