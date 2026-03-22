@@ -1,15 +1,12 @@
 #!/bin/sh
 set -e
 
-# Install Flutter
-git clone https://github.com/flutter/flutter.git -b stable
-export PATH="$PATH:`pwd`/flutter/bin"
+echo "Flutter version:"
+flutter --version
 
-# Verify
-flutter doctor
-
-# Get dependencies
+echo "Getting dependencies"
 flutter pub get
 
-# Generate iOS files
-flutter build ios --no-codesign
+echo "Installing CocoaPods"
+cd ios
+pod install
