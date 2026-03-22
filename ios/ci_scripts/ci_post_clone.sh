@@ -12,5 +12,4 @@ echo "Installing dependencies"
 flutter pub get
 
 echo "Installing CocoaPods"
-cd ios
 pod install
