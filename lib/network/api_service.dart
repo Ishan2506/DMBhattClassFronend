@@ -649,6 +649,24 @@ class ApiService {
     ));
   }
 
+  static Future<http.Response> validateRedeemCode(String code, {String? targetStd, String? targetBoard, String? targetMedium, String? targetStream}) async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/redeem/validate");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        'code': code,
+        if (targetStd != null) 'targetStd': targetStd,
+        if (targetBoard != null) 'targetBoard': targetBoard,
+        if (targetMedium != null) 'targetMedium': targetMedium,
+        if (targetStream != null) 'targetStream': targetStream,
+      }),
+    ));
+  }
+
   static Future<http.Response> getAllEvents() async {
     if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/event/all");

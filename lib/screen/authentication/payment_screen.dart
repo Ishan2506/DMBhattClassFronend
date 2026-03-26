@@ -181,6 +181,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       setState(() {
         _isReferralValid = null;
         _referralMessage = '';
+        _referralDiscount = 0; // Reset discount if empty
+        _calculateFinalAmount();
       });
       return;
     }
@@ -192,7 +194,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     try {
-      final response = await ApiService.validateReferralCode(code);
+      // 1. Try student referral check first
+      final refResponse = await ApiService.validateReferralCode(code);
+      
+      if (!mounted) return;
+
+      if (refResponse.statusCode == 200) {
+        final refData = jsonDecode(refResponse.body);
+        setState(() {
+          _isReferralValid = true;
+          final double discountAmount = (refData['discountAmount'] as num).toDouble();
+          _referralMessage = refData['message'] ?? "Referral applied!";
+          _referralDiscount = discountAmount;
+          _calculateFinalAmount();
+        });
+        CustomToast.showSuccess(context, _referralMessage);
+        return;
+      }
+
+      // 2. Fallback to admin-generated redeem code check
+      final response = await ApiService.validateRedeemCode(
+        code,
+        targetStd: _std,
+        targetMedium: _medium,
+      );
       final data = jsonDecode(response.body);
 
       if (!mounted) return;
@@ -200,15 +225,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
       if (response.statusCode == 200) {
         setState(() {
           _isReferralValid = true;
-          _referralMessage = data['message'] ?? 'Valid referral code';
-          _referralDiscount = (data['discountAmount'] ?? 0).toDouble();
+          final double discountPercent = (data['discount'] as num).toDouble();
+          _referralMessage = "Applied! ${data['message'] ?? '$discountPercent% discount'}";
+          _referralDiscount = _originalAmount * (discountPercent / 100);
           _calculateFinalAmount();
         });
         CustomToast.showSuccess(context, _referralMessage);
       } else {
         setState(() {
           _isReferralValid = false;
-          _referralMessage = data['message'] ?? 'Invalid referral code';
+          _referralMessage = ApiService.getErrorMessage(response.body);
           _referralDiscount = 0;
           _calculateFinalAmount();
         });
@@ -537,6 +563,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             ),
                             child: TextField(
                               controller: _promoCodeController,
+                              onChanged: (value) {
+                                if (_isDiscountApplied) {
+                                  setState(() {
+                                    _isDiscountApplied = false;
+                                    _discount = 0;
+                                    _calculateFinalAmount();
+                                  });
+                                }
+                              },
                               decoration: InputDecoration(
                                 hintText: "Enter Code (e.g. DMBHATT7)",
                                 hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
@@ -584,10 +619,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               controller: _referralCodeController,
                               onChanged: (value) {
                                 // Reset validation state when user types
-                                if (_isReferralValid != null) {
+                                if (_isReferralValid != null || _referralDiscount > 0) {
                                   setState(() {
                                     _isReferralValid = null;
                                     _referralMessage = '';
+                                    _referralDiscount = 0;
+                                    _calculateFinalAmount();
                                   });
                                 }
                               },
