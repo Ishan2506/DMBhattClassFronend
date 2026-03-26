@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 class PdfPreviewScreen extends StatefulWidget {
   final Map<String, dynamic> product;
   final bool isFullAccess;
@@ -60,26 +61,17 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
         debugPrint("✅ PDF info fetched successfully (${response.bodyBytes.length} bytes)");
         _pdfBytes = response.bodyBytes;
         
-        // Robust page counting using structural PDF markers
+        // Robust page counting using syncfusion_flutter_pdf
         if (_pdfBytes == null) return;
         try {
-          final content = String.fromCharCodes(_pdfBytes!);
-          
-          // Strategy 1: Look for /Count in the page tree
-          final countMatch = RegExp(r'/Count\s+(\d+)').firstMatch(content);
-          if (countMatch != null) {
-            final countStr = countMatch.group(1);
-            if (countStr != null) {
-              _actualTotalPages = int.parse(countStr);
-            }
-          } else {
-            // Strategy 2: Count all instances of /Type /Page
-            // We use a boundary check to avoid catching similar strings
-            _actualTotalPages = RegExp(r'/Type\s*/Page\b').allMatches(content).length;
-          }
+          final PdfDocument document = PdfDocument(inputBytes: _pdfBytes!);
+          _actualTotalPages = document.pages.count;
+          document.dispose();
+          debugPrint("📊 PDF Page Count detected: $_actualTotalPages");
         } catch (parseError) {
-          debugPrint("Error parsing PDF content for page count: $parseError");
-          _actualTotalPages = 1; // Fallback
+          debugPrint("Error parsing PDF with Syncfusion: $parseError");
+          // Fallback to minimal page count if parsing fails
+          _actualTotalPages = 1; 
         }
 
         if (_actualTotalPages <= 0) _actualTotalPages = 1;
