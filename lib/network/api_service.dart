@@ -921,4 +921,135 @@ class ApiService {
       }),
     ));
   }
+
+  // --- Apple In-App Purchase Verification ---
+
+  static Future<http.Response> verifyAppleMembership({
+    required String receipt,
+    required String productId,
+    required String transactionId,
+    required String standard,
+    required String medium,
+    String? stream,
+  }) async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/payment/apple/verify-membership");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        'receipt': receipt,
+        'productId': productId,
+        'transactionId': transactionId,
+        'standard': standard,
+        'medium': medium,
+        if (stream != null) 'stream': stream,
+      }),
+    ));
+  }
+
+  static Future<http.Response> verifyAppleUpgrade({
+    required String receipt,
+    required String productId,
+    required String transactionId,
+    required String newStandard,
+    required String medium,
+    String? stream,
+    required double amount,
+  }) async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/payment/apple/verify-upgrade");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        'receipt': receipt,
+        'productId': productId,
+        'transactionId': transactionId,
+        'newStandard': newStandard,
+        'medium': medium,
+        if (stream != null) 'stream': stream,
+        'amount': amount,
+      }),
+    ));
+  }
+
+  static Future<http.Response> verifyAppleProductPurchase({
+    required String receipt,
+    required String productId,
+    required String transactionId,
+    required String materialProductId,
+    required double amount,
+  }) async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/payment/apple/verify-product");
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        'receipt': receipt,
+        'productId': productId,
+        'transactionId': transactionId,
+        'materialProductId': materialProductId,
+        'amount': amount,
+      }),
+    ));
+  }
+
+  /// Register user with Apple IAP payment (iOS only)
+  static Future<http.Response> registerUserWithApple({
+    required RegistrationPayload payload,
+    required String dpin,
+    String? referralCode,
+    required String appleReceipt,
+    required String appleProductId,
+    required String appleTransactionId,
+    double? amount,
+  }) async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/auth/register");
+    final request = http.MultipartRequest("POST", uri);
+
+    request.headers['Accept'] = 'application/json';
+    request.headers['User-Agent'] = 'Flutter-App';
+
+    final fields = Map<String, String>.from(payload.fields);
+    fields["loginCode"] = dpin;
+    fields["role"] = payload.role;
+
+    if (referralCode != null && referralCode.isNotEmpty) {
+      fields["referralCode"] = referralCode;
+    }
+
+    // Apple IAP fields instead of Razorpay fields
+    fields["apple_receipt"] = appleReceipt;
+    fields["apple_product_id"] = appleProductId;
+    fields["apple_transaction_id"] = appleTransactionId;
+    if (amount != null) {
+      fields["amount"] = amount.toString();
+    }
+
+    request.fields.addAll(fields);
+
+    if (payload.files.isNotEmpty) {
+      final file = payload.files.first;
+      if (file.existsSync()) {
+        final mimeType = _getMimeType(file.path);
+        request.files.add(await http.MultipartFile.fromPath(
+          'photo',
+          file.path,
+          contentType: MediaType.parse(mimeType),
+        ));
+      }
+    }
+
+    final streamedResponse = await request.send();
+    return _handleSession(await http.Response.fromStream(streamedResponse));
+  }
 }

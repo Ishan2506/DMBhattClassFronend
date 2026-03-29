@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -9,8 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
+import 'package:dm_bhatt_tutions/utils/iap_service.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class PaymentScreen extends StatefulWidget {
   final RegistrationPayload? payload;
@@ -44,7 +47,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   double _referralDiscount = 0;
   bool _isDiscountApplied = false;
   
-  late RazorpayHelper _razorpayHelper;
+  // Platform-specific payment helpers
+  RazorpayHelper? _razorpayHelper;
+  final IAPService _iapService = IAPService();
   
   // Referral code validation states
   bool _isValidatingReferral = false;
@@ -58,15 +63,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String? _cachedPassword;
   bool _isLoading = true;
 
+  bool get _isIOS => Platform.isIOS;
+
   @override
   void initState() {
     super.initState();
     _initData();
-    _razorpayHelper = RazorpayHelper(
-      context: context,
-      onSuccess: _handlePaymentSuccess,
-      onFailure: _handlePaymentFailure,
-    );
+
+    if (_isIOS) {
+      // iOS: Use Apple In-App Purchase
+      _iapService.initialize();
+      _iapService.onPurchaseSuccess = _handleApplePurchaseSuccess;
+      _iapService.onPurchaseError = (error) {
+        if (mounted) {
+          CustomToast.showError(context, "Purchase Failed: $error");
+        }
+      };
+    } else {
+      // Android: Use Razorpay
+      _razorpayHelper = RazorpayHelper(
+        context: context,
+        onSuccess: _handlePaymentSuccess,
+        onFailure: _handlePaymentFailure,
+      );
+    }
   }
 
   Future<void> _initData() async {
@@ -108,7 +128,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   
   @override
   void dispose() {
-    _razorpayHelper.dispose();
+    _razorpayHelper?.dispose();
     super.dispose();
   }
 
@@ -266,34 +286,43 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
 
-    try {
-      CustomLoader.show(context);
-      final orderResponse = await ApiService.createPaymentOrder(_finalAmount);
-      
-      if (!mounted) return;
-      CustomLoader.hide(context);
-
-      if (orderResponse.statusCode == 200) {
-        final orderData = jsonDecode(orderResponse.body);
-        final String orderId = orderData['id'];
+    if (_isIOS) {
+      // iOS: Use Apple In-App Purchase
+      _iapService.setPurchaseContext('registration', metadata: {
+        'std': _std,
+        'medium': _medium,
+      });
+      await _iapService.purchaseMembership(_std ?? "6");
+    } else {
+      // Android: Use Razorpay
+      try {
+        CustomLoader.show(context);
+        final orderResponse = await ApiService.createPaymentOrder(_finalAmount);
         
-        _razorpayHelper.openCheckout(
-          amount: _finalAmount,
-          name: "Our Learning Platform",
-          description: "Standard $_std Membership",
-          contact: _phoneNum ?? '',
-          email: _email ?? '',
-          orderId: orderId,
-        );
+        if (!mounted) return;
+        CustomLoader.hide(context);
 
-      } else {
-         CustomToast.showError(context, "Failed to create order: ${ApiService.getErrorMessage(orderResponse.body)}");
+        if (orderResponse.statusCode == 200) {
+          final orderData = jsonDecode(orderResponse.body);
+          final String orderId = orderData['id'];
+          
+          _razorpayHelper!.openCheckout(
+            amount: _finalAmount,
+            name: "Our Learning Platform",
+            description: "Standard $_std Membership",
+            contact: _phoneNum ?? '',
+            email: _email ?? '',
+            orderId: orderId,
+          );
+        } else {
+           CustomToast.showError(context, "Failed to create order: ${ApiService.getErrorMessage(orderResponse.body)}");
+        }
+      } catch (e) {
+         if (mounted) {
+           CustomLoader.hide(context);
+           CustomToast.showError(context, "Error initiating payment: $e");
+         }
       }
-    } catch (e) {
-       if (mounted) {
-         CustomLoader.hide(context);
-         CustomToast.showError(context, "Error initiating payment: $e");
-       }
     }
   }
 
@@ -304,6 +333,71 @@ class _PaymentScreenState extends State<PaymentScreen> {
       orderId: response.orderId,
       signature: response.signature,
     );
+  }
+
+  void _handleApplePurchaseSuccess(PurchaseDetails purchaseDetails) {
+    if (!mounted) return;
+    CustomToast.showSuccess(context, "Apple Purchase Successful!");
+    _processRegistrationWithApple(purchaseDetails);
+  }
+
+  /// Process registration with Apple IAP receipt
+  Future<void> _processRegistrationWithApple(PurchaseDetails purchaseDetails) async {
+    final referralCode = _referralCodeController.text.trim();
+    final shouldIncludeReferral = referralCode.isNotEmpty && _isReferralValid == true;
+
+    try {
+      CustomLoader.show(context);
+
+      final currentPayload = widget.payload ?? RegistrationPayload(
+        role: 'student',
+        fields: {
+          "firstName": (await SharedPreferences.getInstance()).getString('firstName') ?? "",
+          "email": _email ?? "",
+          "phoneNum": _phoneNum ?? "",
+          "parentPhone": (await SharedPreferences.getInstance()).getString('parentPhone') ?? "",
+          "std": _std ?? "",
+          "medium": _medium ?? "",
+          "stream": (await SharedPreferences.getInstance()).getString('stream') ?? "",
+          "board": (await SharedPreferences.getInstance()).getString('board') ?? "",
+          "loginAs": (await SharedPreferences.getInstance()).getString('user_role') ?? "student",
+        },
+        files: [],
+      );
+
+      final response = await ApiService.registerUserWithApple(
+        payload: currentPayload,
+        dpin: _cachedPassword ?? "",
+        referralCode: shouldIncludeReferral ? referralCode : null,
+        appleReceipt: purchaseDetails.verificationData.serverVerificationData,
+        appleProductId: purchaseDetails.productID,
+        appleTransactionId: purchaseDetails.purchaseID ?? "",
+        amount: _finalAmount,
+      );
+
+      if (!mounted) return;
+      CustomLoader.hide(context);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        CustomToast.showSuccess(context, "Membership Activated Successfully!");
+        if (widget.payload != null) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        } else {
+          Navigator.pop(context, true);
+        }
+      } else {
+        CustomToast.showError(context, "Registration Failed: ${ApiService.getErrorMessage(response.body)}");
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomLoader.hide(context);
+        CustomToast.showError(context, "Error: $e");
+      }
+    }
   }
 
   Future<void> _processRegistration({
@@ -331,7 +425,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
           "stream": (await SharedPreferences.getInstance()).getString('stream') ?? "",
           "board": (await SharedPreferences.getInstance()).getString('board') ?? "",
           "loginAs": (await SharedPreferences.getInstance()).getString('user_role') ?? "student",
-          "firstName": (await SharedPreferences.getInstance()).getString('firstName') ?? "", // Explicitly ensuring field is present
         },
         files: [],
       );
@@ -549,134 +642,136 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Promo Code
-                    Text("Have a Redeem Code?", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainer,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
-                            ),
-                            child: TextField(
-                              controller: _promoCodeController,
-                              onChanged: (value) {
-                                if (_isDiscountApplied) {
-                                  setState(() {
-                                    _isDiscountApplied = false;
-                                    _discount = 0;
-                                    _calculateFinalAmount();
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                hintText: "Enter Code (e.g. DMBHATT7)",
-                                hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                              ),
-                              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: _applyPromoCode,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.inverseSurface,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                          ),
-                          child: Text("Apply", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 24),
-
-                    // Referral Code
-                    Text("Have a Referral Code?", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainer,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _isReferralValid == true 
-                                  ? Colors.green 
-                                  : _isReferralValid == false 
-                                    ? Colors.red 
-                                    : colorScheme.outlineVariant.withOpacity(0.5)
-                              ),
-                            ),
-                            child: TextField(
-                              controller: _referralCodeController,
-                              onChanged: (value) {
-                                // Reset validation state when user types
-                                if (_isReferralValid != null || _referralDiscount > 0) {
-                                  setState(() {
-                                    _isReferralValid = null;
-                                    _referralMessage = '';
-                                    _referralDiscount = 0;
-                                    _calculateFinalAmount();
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                hintText: "Enter Referral Code (Optional)",
-                                hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                                suffixIcon: _isValidatingReferral
-                                  ? Padding(
-                                      padding: EdgeInsets.all(12.0),
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-                                        ),
-                                      ),
-                                    )
-                                  : _isReferralValid == true
-                                    ? const Icon(Icons.check_circle, color: Colors.green)
-                                    : _isReferralValid == false
-                                      ? const Icon(Icons.error, color: Colors.red)
-                                      : null,
-                              ),
-                              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: _isValidatingReferral ? null : _validateReferralCode,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.inverseSurface,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                          ),
-                          child: Text("Validate", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    if (_referralMessage.isNotEmpty) ...[
+                    // Promo Code (hide on iOS since Apple doesn't allow external discounts on IAP)
+                    if (!_isIOS) ...[
+                      Text("Have a Redeem Code?", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
                       const SizedBox(height: 8),
-                      Text(
-                        _referralMessage,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: _isReferralValid == true ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainer,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                              ),
+                              child: TextField(
+                                controller: _promoCodeController,
+                                onChanged: (value) {
+                                  if (_isDiscountApplied) {
+                                    setState(() {
+                                      _isDiscountApplied = false;
+                                      _discount = 0;
+                                      _calculateFinalAmount();
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  hintText: "Enter Code (e.g. DMBHATT7)",
+                                  hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                                ),
+                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: _applyPromoCode,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colorScheme.inverseSurface,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                            ),
+                            child: Text("Apply", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
+                      
+                      const SizedBox(height: 24),
+
+                      // Referral Code
+                      Text("Have a Referral Code?", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainer,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _isReferralValid == true 
+                                    ? Colors.green 
+                                    : _isReferralValid == false 
+                                      ? Colors.red 
+                                      : colorScheme.outlineVariant.withOpacity(0.5)
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _referralCodeController,
+                                onChanged: (value) {
+                                  // Reset validation state when user types
+                                  if (_isReferralValid != null || _referralDiscount > 0) {
+                                    setState(() {
+                                      _isReferralValid = null;
+                                      _referralMessage = '';
+                                      _referralDiscount = 0;
+                                      _calculateFinalAmount();
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  hintText: "Enter Referral Code (Optional)",
+                                  hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                                  suffixIcon: _isValidatingReferral
+                                    ? Padding(
+                                        padding: EdgeInsets.all(12.0),
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                                          ),
+                                        ),
+                                      )
+                                    : _isReferralValid == true
+                                      ? const Icon(Icons.check_circle, color: Colors.green)
+                                      : _isReferralValid == false
+                                        ? const Icon(Icons.error, color: Colors.red)
+                                        : null,
+                                ),
+                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: _isValidatingReferral ? null : _validateReferralCode,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colorScheme.inverseSurface,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                            ),
+                            child: Text("Validate", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                      if (_referralMessage.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _referralMessage,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: _isReferralValid == true ? Colors.green : Colors.red,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ],
 
                     const SizedBox(height: 32),
@@ -731,7 +826,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              "Pay ₹${_finalAmount.toStringAsFixed(0)}",
+                              _isIOS 
+                                ? "Subscribe ₹${_finalAmount.toStringAsFixed(0)}"
+                                : "Pay ₹${_finalAmount.toStringAsFixed(0)}",
                               style: GoogleFonts.poppins(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -739,7 +836,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 24),
+                            Icon(
+                              _isIOS ? Icons.apple : Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ],
                         ),
                       ),

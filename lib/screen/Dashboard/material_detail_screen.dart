@@ -1,10 +1,12 @@
 import 'dart:ui' as ui;
 import 'dart:convert';
+import 'dart:io';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
+import 'package:dm_bhatt_tutions/utils/iap_service.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
@@ -17,6 +19,7 @@ import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MaterialDetailScreen extends StatefulWidget {
@@ -29,18 +32,32 @@ class MaterialDetailScreen extends StatefulWidget {
 }
 
 class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
-  late RazorpayHelper _razorpayHelper;
+  RazorpayHelper? _razorpayHelper;
+  final IAPService _iapService = IAPService();
   bool _isProcessing = false;
   bool _previewUsed = false;
+
+  bool get _isIOS => Platform.isIOS;
 
   @override
   void initState() {
     super.initState();
-    _razorpayHelper = RazorpayHelper(
-      context: context,
-      onSuccess: _handlePaymentSuccess,
-      onFailure: _handlePaymentFailure,
-    );
+    if (_isIOS) {
+      _iapService.initialize();
+      _iapService.onPurchaseSuccess = _handleApplePurchaseSuccess;
+      _iapService.onPurchaseError = (error) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          CustomToast.showError(context, "Purchase Failed: $error");
+        }
+      };
+    } else {
+      _razorpayHelper = RazorpayHelper(
+        context: context,
+        onSuccess: _handlePaymentSuccess,
+        onFailure: _handlePaymentFailure,
+      );
+    }
     _checkPreviewStatus();
   }
 
@@ -58,7 +75,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
 
   @override
   void dispose() {
-    _razorpayHelper.dispose();
+    _razorpayHelper?.dispose();
     super.dispose();
   }
 
@@ -124,38 +141,98 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   Future<void> _initiatePurchase() async {
     if (!await GuestUtils.canGuestPurchase(context)) return;
     setState(() => _isProcessing = true);
+
+    if (_isIOS) {
+      // iOS: Use Apple In-App Purchase
+      _iapService.setPurchaseContext('material', metadata: {
+        'materialProductId': widget.product['id'],
+        'amount': (widget.product['price'] as num).toDouble(),
+      });
+      await _iapService.purchaseMaterial();
+    } else {
+      // Android: Use Razorpay
+      try {
+        final orderResponse = await ApiService.createProductOrder(
+          widget.product['id'],
+          (widget.product['price'] as num).toDouble(),
+        );
+
+        if (!mounted) return;
+
+        if (orderResponse.statusCode == 200) {
+          final orderData = jsonDecode(orderResponse.body);
+          final String orderId = orderData['id'];
+
+          _razorpayHelper!.openCheckout(
+            amount: (widget.product['price'] as num).toDouble(),
+            name: "D.M. Bhatt classes",
+            description: widget.product['name'],
+            contact: '',
+            email: '',
+            orderId: orderId,
+          );
+        } else {
+          setState(() => _isProcessing = false);
+          final errorMsg = ApiService.getErrorMessage(orderResponse.body);
+          CustomToast.showError(context, "Failed: $errorMsg");
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          CustomToast.showError(context, "Error: $e");
+        }
+      }
+    }
+  }
+
+  void _handleApplePurchaseSuccess(PurchaseDetails purchaseDetails) async {
+    if (!mounted) return;
+    setState(() => _isProcessing = true);
     try {
-      final orderResponse = await ApiService.createProductOrder(
-        widget.product['id'],
-        (widget.product['price'] as num).toDouble(),
+      final metadata = _iapService.purchaseMetadata;
+      final verifyResponse = await ApiService.verifyAppleProductPurchase(
+        receipt: purchaseDetails.verificationData.serverVerificationData,
+        productId: purchaseDetails.productID,
+        transactionId: purchaseDetails.purchaseID ?? '',
+        materialProductId: metadata['materialProductId'] ?? widget.product['id'],
+        amount: (metadata['amount'] as num?)?.toDouble() ?? (widget.product['price'] as num).toDouble(),
       );
 
       if (!mounted) return;
+      setState(() => _isProcessing = false);
 
-      if (orderResponse.statusCode == 200) {
-        final orderData = jsonDecode(orderResponse.body);
-        final String orderId = orderData['id'];
+      if (verifyResponse.statusCode == 200) {
+        CustomToast.showSuccess(context, "Purchase Successful!");
 
-        // Get user profile for prefill (optional but better)
-        // For now using empty for prefill or we could fetch it
-        
-        _razorpayHelper.openCheckout(
-          amount: (widget.product['price'] as num).toDouble(),
-          name: "D.M. Bhatt classes",
-          description: widget.product['name'],
-          contact: '', // Ideally from user profile
-          email: '',   // Ideally from user profile
-          orderId: orderId,
+        final DateTime now = DateTime.now();
+        final String formattedDate = "${now.day}/${now.month}/${now.year}";
+
+        final transactionDetails = {
+          "title": widget.product['name'] ?? "Material Purchase",
+          "standard": widget.product['standard'] ?? widget.product['standardId']?['name'] ?? "N/A",
+          "medium": widget.product['medium'] ?? widget.product['mediumId']?['name'] ?? "N/A",
+          "category": widget.product['category'] ?? "N/A",
+          "subject": widget.product['subject'] ?? "N/A",
+          "date": formattedDate,
+          "transactionId": purchaseDetails.purchaseID ?? "N/A",
+          "amountRaw": widget.product['price'] ?? 0,
+        };
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StudentPaymentConfirmationScreen(
+              transactionDetails: transactionDetails,
+            ),
+          ),
         );
       } else {
-        setState(() => _isProcessing = false);
-        final errorMsg = ApiService.getErrorMessage(orderResponse.body);
-        CustomToast.showError(context, "Failed: $errorMsg");
+        CustomToast.showError(context, "Verification Failed: ${verifyResponse.body}");
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        CustomToast.showError(context, "Error: $e");
+        CustomToast.showError(context, "Error verifying purchase: $e");
       }
     }
   }

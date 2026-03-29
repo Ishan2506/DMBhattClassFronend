@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 
 class IAPService {
@@ -12,7 +11,7 @@ class IAPService {
   IAPService._internal();
 
   final InAppPurchase _iap = InAppPurchase.instance;
-  late StreamSubscription<List<PurchaseDetails>> _subscription;
+  StreamSubscription<List<PurchaseDetails>>? _subscription;
 
   // Product IDs for memberships (Standards 6-12)
   static const Map<String, String> membershipProductIds = {
@@ -25,17 +24,30 @@ class IAPService {
     "12": "com.dmbhatt.membership.std12",
   };
 
+  // Generic consumable product for material purchases
+  static const String materialProductId = "com.dmbhatt.material.purchase";
+
   List<ProductDetails> _products = [];
   bool _isAvailable = false;
+  bool _initialized = false;
 
+  // Callbacks
   Function(PurchaseDetails)? onPurchaseSuccess;
   Function(String)? onPurchaseError;
 
+  /// Context tag to identify what purchase is for (e.g., "registration", "upgrade", "material")
+  String _purchaseContext = '';
+  /// Extra data associated with the current purchase
+  Map<String, dynamic> _purchaseMetadata = {};
+
   void initialize() {
+    if (_initialized) return;
+    _initialized = true;
+
     final Stream<List<PurchaseDetails>> purchaseUpdated = _iap.purchaseStream;
     _subscription = purchaseUpdated.listen(
       _listenToPurchaseUpdated,
-      onDone: () => _subscription.cancel(),
+      onDone: () => _subscription?.cancel(),
       onError: (error) {
         debugPrint("IAP Subscription Error: $error");
       },
@@ -51,7 +63,10 @@ class IAPService {
   }
 
   Future<void> _loadProducts() async {
-    final Set<String> ids = membershipProductIds.values.toSet();
+    final Set<String> ids = {
+      ...membershipProductIds.values,
+      materialProductId,
+    };
     final ProductDetailsResponse response = await _iap.queryProductDetails(ids);
 
     if (response.error == null) {
@@ -62,6 +77,16 @@ class IAPService {
     }
   }
 
+  /// Set context before initiating a purchase so the listener knows what to do
+  void setPurchaseContext(String context, {Map<String, dynamic>? metadata}) {
+    _purchaseContext = context;
+    _purchaseMetadata = metadata ?? {};
+  }
+
+  String get purchaseContext => _purchaseContext;
+  Map<String, dynamic> get purchaseMetadata => _purchaseMetadata;
+
+  /// Purchase membership for a given standard (used for registration & upgrade)
   Future<void> purchaseMembership(String standard) async {
     final productId = membershipProductIds[standard];
     if (productId == null) {
@@ -71,13 +96,19 @@ class IAPService {
     await purchaseProduct(productId);
   }
 
+  /// Purchase a material/product (generic consumable)
+  Future<void> purchaseMaterial() async {
+    await purchaseProduct(materialProductId);
+  }
+
+  /// Generic purchase method
   Future<void> purchaseProduct(String productId) async {
     if (!_isAvailable) {
       onPurchaseError?.call("In-App Purchases are not available on this device.");
       return;
     }
 
-    // Ensure products are loaded (or try to query them specifically if not in initial list)
+    // Ensure products are loaded
     if (!_products.any((p) => p.id == productId)) {
       final ProductDetailsResponse response = await _iap.queryProductDetails({productId});
       if (response.error == null && response.productDetails.isNotEmpty) {
@@ -90,57 +121,38 @@ class IAPService {
 
     final product = _products.firstWhere((p) => p.id == productId);
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-    await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+
+    // Memberships are non-consumable, materials are consumable
+    if (productId == materialProductId) {
+      await _iap.buyConsumable(purchaseParam: purchaseParam);
+    } else {
+      await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    }
   }
 
   void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
-    purchaseDetailsList.forEach((PurchaseDetails purchaseDetails) async {
+    for (final PurchaseDetails purchaseDetails in purchaseDetailsList) {
       if (purchaseDetails.status == PurchaseStatus.pending) {
-        // Show loading or wait
+        // Show loading or wait — handled by the calling screen
       } else if (purchaseDetails.status == PurchaseStatus.error) {
         onPurchaseError?.call(purchaseDetails.error?.message ?? "Purchase failed");
         if (purchaseDetails.pendingCompletePurchase) {
-          await _iap.completePurchase(purchaseDetails);
+          _iap.completePurchase(purchaseDetails);
         }
       } else if (purchaseDetails.status == PurchaseStatus.purchased ||
                  purchaseDetails.status == PurchaseStatus.restored) {
-        
-        // Verify with backend
-        final bool verified = await _verifyPurchase(purchaseDetails);
-        if (verified) {
-          onPurchaseSuccess?.call(purchaseDetails);
-        } else {
-          onPurchaseError?.call("Transaction verification failed on server.");
-        }
+        // Notify caller — they handle backend verification
+        onPurchaseSuccess?.call(purchaseDetails);
 
         if (purchaseDetails.pendingCompletePurchase) {
-          await _iap.completePurchase(purchaseDetails);
+          _iap.completePurchase(purchaseDetails);
         }
       }
-    });
-  }
-
-  Future<bool> _verifyPurchase(PurchaseDetails purchaseDetails) async {
-    try {
-      // For Apple, the receipt is in purchaseDetails.verificationData.serverVerificationData
-      final receipt = purchaseDetails.verificationData.serverVerificationData;
-      final productId = purchaseDetails.productID;
-
-      // Call backend API to verify
-      final response = await ApiService.verifyApplePurchase(
-        receipt: receipt,
-        productId: productId,
-        transactionId: purchaseDetails.purchaseID ?? "",
-      );
-
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      debugPrint("Backend Verification Error: $e");
-      return false;
     }
   }
 
   void dispose() {
-    _subscription.cancel();
+    _subscription?.cancel();
+    _initialized = false;
   }
 }

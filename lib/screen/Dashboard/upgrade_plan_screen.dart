@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -5,11 +6,13 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
+import 'package:dm_bhatt_tutions/utils/iap_service.dart';
 import 'package:intl/intl.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_receipt_screen.dart';
 
@@ -46,23 +49,37 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   bool _isGuest = false;
   bool _isPaid = true;
 
-  late RazorpayHelper _razorpayHelper;
+  RazorpayHelper? _razorpayHelper;
+  final IAPService _iapService = IAPService();
+
+  bool get _isIOS => Platform.isIOS;
 
   @override
   void initState() {
     super.initState();
     _fetchUserProfile();
     _fetchBonusPoints();
-    _razorpayHelper = RazorpayHelper(
-      context: context,
-      onSuccess: _handlePaymentSuccess,
-      onFailure: _handlePaymentFailure,
-    );
+
+    if (_isIOS) {
+      _iapService.initialize();
+      _iapService.onPurchaseSuccess = _handleApplePurchaseSuccess;
+      _iapService.onPurchaseError = (error) {
+        if (mounted) {
+          CustomToast.showError(context, "Purchase Failed: $error");
+        }
+      };
+    } else {
+      _razorpayHelper = RazorpayHelper(
+        context: context,
+        onSuccess: _handlePaymentSuccess,
+        onFailure: _handlePaymentFailure,
+      );
+    }
   }
 
   @override
   void dispose() {
-    _razorpayHelper.dispose();
+    _razorpayHelper?.dispose();
     _promoCodeController.dispose();
     _rewardPointsController.dispose();
     super.dispose();
@@ -348,33 +365,79 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       return;
     }
 
+    if (_isIOS) {
+      // iOS: Use Apple In-App Purchase
+      _iapService.setPurchaseContext('upgrade', metadata: {
+        'newStandard': _selectedStandard!,
+        'medium': _selectedMedium!,
+        'stream': _selectedStream,
+        'amount': _finalAmount,
+      });
+      await _iapService.purchaseMembership(_selectedStandard!);
+    } else {
+      // Android: Use Razorpay
+      try {
+        CustomLoader.show(context);
+        final response = await ApiService.createUpgradeOrder(
+          amount: _finalAmount,
+          newStandard: _selectedStandard!,
+          medium: _selectedMedium!,
+          stream: _selectedStream,
+        );
+
+        if (!mounted) return;
+        CustomLoader.hide(context);
+
+        if (response.statusCode == 200) {
+          final orderData = jsonDecode(response.body);
+          final String orderId = orderData['id'];
+
+          _razorpayHelper!.openCheckout(
+            amount: _finalAmount,
+            name: "Standard Upgrade",
+            description: "Upgrade to Standard $_selectedStandard",
+            contact: '',
+            email: '',
+            orderId: orderId,
+          );
+        } else {
+          final errorMsg = ApiService.getErrorMessage(response.body);
+          CustomToast.showError(context, "Failed: $errorMsg");
+        }
+      } catch (e) {
+        if (mounted) {
+          CustomLoader.hide(context);
+          CustomToast.showError(context, "Error: $e");
+        }
+      }
+    }
+  }
+
+  void _handleApplePurchaseSuccess(PurchaseDetails purchaseDetails) async {
+    if (!mounted) return;
     try {
       CustomLoader.show(context);
-      final response = await ApiService.createUpgradeOrder(
-        amount: _finalAmount,
-        newStandard: _selectedStandard!,
-        medium: _selectedMedium!,
-        stream: _selectedStream,
+      final metadata = _iapService.purchaseMetadata;
+      final response = await ApiService.verifyAppleUpgrade(
+        receipt: purchaseDetails.verificationData.serverVerificationData,
+        productId: purchaseDetails.productID,
+        transactionId: purchaseDetails.purchaseID ?? "",
+        newStandard: metadata['newStandard'] ?? _selectedStandard!,
+        medium: metadata['medium'] ?? _selectedMedium!,
+        stream: metadata['stream'],
+        amount: (metadata['amount'] as num?)?.toDouble() ?? _finalAmount,
       );
 
       if (!mounted) return;
       CustomLoader.hide(context);
 
       if (response.statusCode == 200) {
-        final orderData = jsonDecode(response.body);
-        final String orderId = orderData['id'];
-
-        _razorpayHelper.openCheckout(
-          amount: _finalAmount,
-          name: "Standard Upgrade",
-          description: "Upgrade to Standard $_selectedStandard",
-          contact: '', // Ideally from user profile
-          email: '', // Ideally from user profile
-          orderId: orderId,
-        );
+        final l10n = AppLocalizations.of(context)!;
+        CustomToast.showSuccess(context, l10n.planUpgradeSuccess);
+        Navigator.pop(context);
       } else {
         final errorMsg = ApiService.getErrorMessage(response.body);
-        CustomToast.showError(context, "Failed: $errorMsg");
+        CustomToast.showError(context, "Verification Failed: $errorMsg");
       }
     } catch (e) {
       if (mounted) {
@@ -773,143 +836,145 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
               ),
 
               const SizedBox(height: 32),
-              // Promo Code Section
-              Text(
-                "Have a Redeem Code?",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
+              // Promo Code Section (hide on iOS)
+              if (!_isIOS) ...[
+                Text(
+                  "Have a Redeem Code?",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outlineVariant.withOpacity(0.5),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withOpacity(0.5),
+                          ),
                         ),
-                      ),
-                      child: TextField(
-                        controller: _promoCodeController,
-                        decoration: InputDecoration(
-                          hintText: _selectedStandard != null
-                              ? l10n.promoHint(_selectedStandard!)
-                              : "Enter Promo Code",
-                          hintStyle: GoogleFonts.poppins(
-                            color: colorScheme.onSurfaceVariant.withOpacity(
-                              0.5,
+                        child: TextField(
+                          controller: _promoCodeController,
+                          decoration: InputDecoration(
+                            hintText: _selectedStandard != null
+                                ? l10n.promoHint(_selectedStandard!)
+                                : "Enter Promo Code",
+                            hintStyle: GoogleFonts.poppins(
+                              color: colorScheme.onSurfaceVariant.withOpacity(
+                                0.5,
+                              ),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
                             ),
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                            color: colorScheme.onSurface,
                           ),
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _applyPromoCode,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.inverseSurface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 20,
+                        ),
+                      ),
+                      child: Text(
+                        l10n.apply,
                         style: GoogleFonts.poppins(
+                          color: colorScheme.onInverseSurface,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
-                          color: colorScheme.onSurface,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _applyPromoCode,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.inverseSurface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 20,
-                      ),
-                    ),
-                    child: Text(
-                      l10n.apply,
-                      style: GoogleFonts.poppins(
-                        color: colorScheme.onInverseSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
-              const SizedBox(height: 24),
-              // Reward Points Section
-              Text(
-                l10n.useRewardPoints(_availablePoints),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
+                const SizedBox(height: 24),
+                // Reward Points Section
+                Text(
+                  l10n.useRewardPoints(_availablePoints),
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outlineVariant.withOpacity(0.5),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withOpacity(0.5),
+                          ),
                         ),
-                      ),
-                      child: TextField(
-                        controller: _rewardPointsController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: l10n.pointsHint,
-                          hintStyle: GoogleFonts.poppins(
-                            color: colorScheme.onSurfaceVariant.withOpacity(
-                              0.5,
+                        child: TextField(
+                          controller: _rewardPointsController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: l10n.pointsHint,
+                            hintStyle: GoogleFonts.poppins(
+                              color: colorScheme.onSurfaceVariant.withOpacity(
+                                0.5,
+                              ),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
                             ),
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                            color: colorScheme.onSurface,
                           ),
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _applyRewardPoints,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.inverseSurface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 20,
+                        ),
+                      ),
+                      child: Text(
+                        l10n.use,
                         style: GoogleFonts.poppins(
+                          color: colorScheme.onInverseSurface,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
-                          color: colorScheme.onSurface,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _applyRewardPoints,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.inverseSurface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 20,
-                      ),
-                    ),
-                    child: Text(
-                      l10n.use,
-                      style: GoogleFonts.poppins(
-                        color: colorScheme.onInverseSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
 
               const SizedBox(height: 32),
               // Terms/Info Section
