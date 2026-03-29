@@ -908,4 +908,17 @@ class ApiService {
       }),
     ));
   }
+
+  /// Delete Account (Soft Delete)
+  static Future<http.Response> deleteAccount() async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/profile");
+    return _handleSession(await http.delete(
+      uri,
+      headers: _addAuth({
+        'Accept': 'application/json',
+        'User-Agent': 'Flutter-App',
+      }),
+    ));
+  }
 }

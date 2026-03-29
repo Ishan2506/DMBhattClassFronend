@@ -4,6 +4,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/update_password_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -88,6 +89,8 @@ class SettingsScreen extends StatelessWidget {
                     icon: Icons.logout,
                     onTap: () => _handleSignOut(context),
                   ),
+                  const SizedBox(height: 24),
+                  _buildDeleteAccountItem(context),
                 ],
               );
             }
@@ -358,6 +361,120 @@ class SettingsScreen extends StatelessWidget {
           Navigator.pop(context);
         }
       },
+    );
+  }
+
+  Future<void> _handleDeleteAccount(BuildContext context) async {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colorScheme.surfaceContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+            const SizedBox(width: 8),
+            Text('Delete Account', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red)),
+          ],
+        ),
+        content: Text(
+          'This action is permanent. Your account will be deleted and you will not be able to register again with the same phone number. Are you sure?',
+          style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+
+              try {
+                final response = await ApiService.deleteAccount();
+
+                if (response.statusCode == 200) {
+                  // Clear local session
+                  await ApiService.clearAuthToken();
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.clear();
+
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                      (route) => false,
+                    );
+                    CustomToast.showSuccess(context, 'Account deleted successfully');
+                  }
+                } else {
+                  final errorMsg = ApiService.getErrorMessage(response.body);
+                  if (context.mounted) {
+                    CustomToast.showError(context, errorMsg);
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  CustomToast.showError(context, 'Failed to delete account: $e');
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteAccountItem(BuildContext context) {
+    return InkWell(
+      onTap: () => _handleDeleteAccount(context),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0x1AFF0000),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.delete_forever_rounded, color: Colors.red, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Delete Account',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.red),
+          ],
+        ),
+      ),
     );
   }
 
