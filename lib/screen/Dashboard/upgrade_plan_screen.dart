@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -52,7 +53,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   RazorpayHelper? _razorpayHelper;
   final IAPService _iapService = IAPService();
 
-  bool get _isIOS => Platform.isIOS;
+  bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {

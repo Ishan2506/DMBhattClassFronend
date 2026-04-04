@@ -63,7 +63,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String? _cachedPassword;
   bool _isLoading = true;
 
-  bool get _isIOS => Platform.isIOS;
+  bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {

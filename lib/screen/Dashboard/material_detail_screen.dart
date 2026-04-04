@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
@@ -37,7 +38,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   bool _isProcessing = false;
   bool _previewUsed = false;
 
-  bool get _isIOS => Platform.isIOS;
+  bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {

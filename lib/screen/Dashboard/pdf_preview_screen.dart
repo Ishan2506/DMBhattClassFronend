@@ -21,7 +21,9 @@ class PdfPreviewScreen extends StatefulWidget {
 
 class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   final PageController _pageController = PageController();
+  final TransformationController _transformationController = TransformationController(); // Shared controller
   int _currentPage = 0;
+  double _currentScale = 1.0;
   final int _freePages = 2; // First 2 pages are free
   int _actualTotalPages = 1; // Actual total pages in PDF (dynamic)
   bool _isLoading = true;
@@ -32,6 +34,20 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     super.initState();
     _loadPdfInfo();
     _markPreviewAsUsed(); // Mark as used immediately when entering
+  }
+
+  void _zoom(double factor) {
+    setState(() {
+      _currentScale = (_currentScale * factor).clamp(1.0, 4.0);
+      _transformationController.value = Matrix4.identity()..scale(_currentScale);
+    });
+  }
+
+  void _resetZoom() {
+    setState(() {
+      _currentScale = 1.0;
+      _transformationController.value = Matrix4.identity();
+    });
   }
 
   Future<void> _markPreviewAsUsed() async {
@@ -94,6 +110,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _transformationController.dispose();
     super.dispose();
   }
 
@@ -201,6 +218,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                     onPageChanged: (index) {
                       setState(() {
                         _currentPage = index;
+                        _resetZoom(); // Reset zoom when changing pages for consistent experience
                       });
                     },
                     itemCount: widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1),
@@ -226,23 +244,33 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                         child: Stack(
                           children: [
                             // PDF Page Image
+                            // PDF Page Image with Zoom features
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
-                              child: isCloudinary
-                                  ? Image.network(
-                                      _getPdfPageUrl(ApiService.getFileUrl(pdfUrl!), pageNumber),
-                                      fit: BoxFit.contain,
-                                      width: double.infinity,
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
-                                        return Center(
-                                          child: const CustomLoader(),
-                                        );
-                                      },
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          _buildRasterizedFallback(pageNumber),
-                                    )
-                                  : _buildRasterizedFallback(pageNumber),
+                              child: InteractiveViewer(
+                                transformationController: _transformationController,
+                                minScale: 1.0,
+                                maxScale: 4.0,
+                                onInteractionUpdate: (details) {
+                                  // Update internal scale when pinch-zooming
+                                  _currentScale = _transformationController.value.getMaxScaleOnAxis();
+                                },
+                                child: isCloudinary
+                                    ? Image.network(
+                                        _getPdfPageUrl(ApiService.getFileUrl(pdfUrl!), pageNumber),
+                                        fit: BoxFit.contain,
+                                        width: double.infinity,
+                                        loadingBuilder: (context, child, loadingProgress) {
+                                          if (loadingProgress == null) return child;
+                                          return Center(
+                                            child: const CustomLoader(),
+                                          );
+                                        },
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            _buildRasterizedFallback(pageNumber),
+                                      )
+                                    : _buildRasterizedFallback(pageNumber),
+                              ),
                             ),
 
                       // Locked overlay for pages beyond free limit
@@ -320,6 +348,20 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                             ),
                           ),
                         ),
+                      // Zoom Controls
+                      Positioned(
+                        bottom: 16,
+                        right: 16,
+                        child: Column(
+                          children: [
+                            _buildZoomButton(Icons.add, () => _zoom(1.2)),
+                            const SizedBox(height: 8),
+                            _buildZoomButton(Icons.remove, () => _zoom(0.8)),
+                            const SizedBox(height: 8),
+                            _buildZoomButton(Icons.refresh, _resetZoom),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -444,5 +486,18 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
       debugPrint("Error rasterizing PDF: $e");
     }
     return null;
+  }
+
+  Widget _buildZoomButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.5),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white, size: 24),
+        onPressed: onPressed,
+      ),
+    );
   }
 }
