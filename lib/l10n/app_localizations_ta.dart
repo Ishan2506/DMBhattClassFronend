@@ -960,6 +960,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get availablePapers => 'Available Papers';
 
   @override
+  String get availableNotes => 'கிடைக்கும் குறிப்புகள்';
+
+  @override
   String get noPapersFound => 'No board papers found';
 
   @override

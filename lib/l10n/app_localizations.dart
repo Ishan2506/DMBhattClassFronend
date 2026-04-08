@@ -1850,6 +1850,12 @@ abstract class AppLocalizations {
   /// **'Available Papers'**
   String get availablePapers;
 
+  /// No description provided for @availableNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Notes'**
+  String get availableNotes;
+
   /// No description provided for @noPapersFound.
   ///
   /// In en, this message translates to:

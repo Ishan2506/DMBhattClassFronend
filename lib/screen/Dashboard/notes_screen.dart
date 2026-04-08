@@ -238,7 +238,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${l10n.availablePapers} (${_displayNotes.length})",
+                    "${l10n.availableNotes} (${_displayNotes.length})",
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                   ),
                   const SizedBox(height: 12),

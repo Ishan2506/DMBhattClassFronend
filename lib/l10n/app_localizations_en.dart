@@ -942,6 +942,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get availablePapers => 'Available Papers';
 
   @override
+  String get availableNotes => 'Available Notes';
+
+  @override
   String get noPapersFound => 'No board papers found';
 
   @override

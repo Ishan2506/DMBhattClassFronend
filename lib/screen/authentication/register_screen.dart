@@ -434,7 +434,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   );
                 }
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
             // Terms Checkbox
             Row(

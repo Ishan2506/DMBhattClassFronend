@@ -948,6 +948,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get availablePapers => 'Available Papers';
 
   @override
+  String get availableNotes => 'उपलब्ध नोट्स';
+
+  @override
   String get noPapersFound => 'No board papers found';
 
   @override

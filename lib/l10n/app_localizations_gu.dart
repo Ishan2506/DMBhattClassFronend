@@ -946,6 +946,9 @@ class AppLocalizationsGu extends AppLocalizations {
   String get availablePapers => 'Available Papers';
 
   @override
+  String get availableNotes => 'ઉપલબ્ધ નોટ્સ';
+
+  @override
   String get noPapersFound => 'No board papers found';
 
   @override

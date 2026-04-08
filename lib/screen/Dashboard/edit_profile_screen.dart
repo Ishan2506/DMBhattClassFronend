@@ -503,7 +503,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
 
                         // Login As Dropdown
                         /*
@@ -516,7 +516,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     onChanged: (val) => setState(() => _selectedRole = val),
                   ),
                   */
-                        const SizedBox(height: 32),
 
                         // Update Button
                         SizedBox(

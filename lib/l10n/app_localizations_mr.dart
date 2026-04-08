@@ -947,6 +947,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get availablePapers => 'उपलब्ध पेपर्स';
 
   @override
+  String get availableNotes => 'उपलब्ध नोट्स';
+
+  @override
   String get noPapersFound => 'कोणतेही बोर्ड पेपर्स आढळले नाहीत';
 
   @override
