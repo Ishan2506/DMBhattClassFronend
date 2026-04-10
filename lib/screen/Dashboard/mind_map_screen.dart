@@ -85,7 +85,7 @@ class _MindMapScreenState extends State<MindMapScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), 
+      backgroundColor: Colors.white, 
       appBar: CustomAppBar(
         title: widget.mindMap.unit,
         leading: IconButton(
@@ -110,18 +110,6 @@ class _MindMapScreenState extends State<MindMapScreen> with SingleTickerProvider
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _bgController,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: LightBackgroundPainter(
-                    animationValue: _bgController.value,
-                  ),
-                );
-              },
-            ),
-          ),
           Positioned.fill(
             child: InteractiveViewer(
               transformationController: _transformationController,
@@ -153,29 +141,6 @@ class _MindMapScreenState extends State<MindMapScreen> with SingleTickerProvider
   }
 }
 
-class LightBackgroundPainter extends CustomPainter {
-  final double animationValue;
-  LightBackgroundPainter({required this.animationValue});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final random = DateTime.now().millisecondsSinceEpoch;
-    for (int i = 0; i < 20; i++) {
-      final double x = ((i * 12345 + random) % size.width.toInt()).toDouble();
-      final double y = (size.height - (animationValue * size.height + i * 100) % size.height);
-      final double radius = (i % 5 + 2).toDouble();
-      final double opacity = 0.1 + (i % 10) / 100;
-      paint.color = Colors.blueAccent.withOpacity(opacity);
-      canvas.drawCircle(Offset(x, y), radius * 5, paint);
-      paint.color = Colors.white.withAlpha((opacity * 255 * 0.5).toInt());
-      canvas.drawCircle(Offset(x, y), radius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant LightBackgroundPainter oldDelegate) => true;
-}
 
 class MindMapTreeNodeWidget extends StatefulWidget {
   final MindMapNode node;
@@ -263,7 +228,7 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
             gradient: LinearGradient(
               colors: widget.isRoot 
                   ? [primaryColor, primaryColor.withOpacity(0.8)] 
-                  : [const Color(0xFF334155), const Color(0xFF1E293B)],
+                  : [Colors.white, Colors.grey.shade50],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -274,7 +239,7 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withOpacity(0.15),
                 blurRadius: 12,
                 offset: const Offset(0, 5),
               ),
@@ -295,7 +260,7 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
                       child: Text(
                         widget.node.name,
                         style: GoogleFonts.poppins(
-                          color: Colors.white,
+                          color: widget.isRoot ? Colors.white : Colors.black87,
                           fontSize: 14,
                           fontWeight: widget.isRoot ? FontWeight.bold : FontWeight.w600,
                         ),
@@ -306,7 +271,7 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
                       const SizedBox(width: 8),
                       Icon(
                         _isExpanded ? Icons.remove_circle_outline : Icons.add_circle_outline,
-                        color: Colors.white.withOpacity(0.8),
+                        color: widget.isRoot ? Colors.white.withOpacity(0.8) : Colors.black54,
                         size: 18,
                       ),
                     ],
