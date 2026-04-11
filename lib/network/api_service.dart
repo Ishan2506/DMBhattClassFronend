@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/main.dart'; // To access navigatorKey
-import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/utils/connectivity_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -84,7 +84,7 @@ class ApiService {
 
   static http.Response _handleSession(http.Response response) {
     if (response.statusCode == 401 && !_isGuest) {
-      debugPrint("Session expired (401). Redirecting to WelcomeScreen.");
+      debugPrint("Session expired (401). Redirecting to LoginScreen.");
       
       // Clear token to prevent infinite loop or persistent bad state
       clearAuthToken();
@@ -94,7 +94,7 @@ class ApiService {
         // Schedule navigation to the next frame to avoid build conflicts
         Future.delayed(const Duration(milliseconds: 100), () {
           navigatorKey.currentState?.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
             (route) => false,
           );
         });

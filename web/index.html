@@ -34,5 +34,36 @@
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Disable right click
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    
+    // Disable keyboard shortcuts
+    document.addEventListener('keydown', e => {
+      if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
+        (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+      ) {
+        e.preventDefault();
+      }
+    });
+
+    // Continuous debugger loop
+    setInterval(() => {
+      (function() {
+        try {
+          (function b(i) {
+            if (("" + i / i).length !== 1 || i % 20 === 0) {
+              (function() {}).constructor("debugger")();
+            } else {
+              debugger;
+            }
+            b(++i);
+          })(0);
+        } catch (e) {}
+      })();
+    }, 1000);
+  </script>
 </body>
 </html>

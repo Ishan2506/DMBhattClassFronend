@@ -9,7 +9,11 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-
+import 'package:dm_bhatt_tutions/screen/authentication/force_update_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:http/http.dart' as http;
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -58,6 +62,48 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     // Wait for animation + extra time (total ~4 seconds)
     await Future.delayed(const Duration(seconds: 4));
     
+    if (!mounted) return;
+
+    try {
+      // 1. Fetch App Config
+      final response = await http.get(Uri.parse('${ApiService.baseUrl}/config/app')).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final config = json.decode(response.body);
+        
+        // 2. Get current app version (Build Number)
+        final packageInfo = await PackageInfo.fromPlatform();
+        final currentBuildNumber = int.tryParse(packageInfo.buildNumber) ?? 0;
+        
+        int minBuildNumber = 0;
+        String storeUrl = '';
+        String message = config['forceUpdateMessage'] ?? 'A new version of the app is available. Please update to continue using the app.';
+
+        if (!kIsWeb) {
+          if (Platform.isAndroid) {
+              minBuildNumber = int.tryParse(config['studentMinAndroidVersion']?.toString() ?? '0') ?? 0;
+              storeUrl = config['studentPlayStoreUrl'] ?? '';
+          } else if (Platform.isIOS) {
+              minBuildNumber = int.tryParse(config['studentMinIosVersion']?.toString() ?? '0') ?? 0;
+              storeUrl = config['studentAppStoreUrl'] ?? '';
+          }
+        }
+
+        if (!kIsWeb && currentBuildNumber > 0 && minBuildNumber > 0 && currentBuildNumber < minBuildNumber) {
+            // Force update
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => ForceUpdateScreen(
+                message: message,
+                storeUrl: storeUrl,
+              )),
+            );
+            return;
+        }
+      }
+    } catch (e) {
+      debugPrint('App Version Check Failed: $e');
+    }
+
     if (!mounted) return;
 
     await ApiService.loadToken();
