@@ -29,20 +29,14 @@ class FiveMinTestSelectionScreen extends StatefulWidget {
 
 class _FiveMinTestSelectionScreenState
     extends State<FiveMinTestSelectionScreen> {
-  String? _selectedUnit;
   String? _selectedSubject;
-  String? _selectedTitle;
 
   List<dynamic> _allTests = [];
   List<String> _subjects = [];
-  List<String> _units = [];
-  List<String> _titles = [];
   List<String> _takenTestIds = [];
   bool _isPaid = false;
   int _fiveMinTestCount = 0;
-
   bool _isLoading = true;
-  dynamic _selectedTest; // The full test object from API
 
   @override
   void initState() {
@@ -59,14 +53,9 @@ class _FiveMinTestSelectionScreenState
         final historyResponse = await ApiService.getProfile(forceRefresh: true);
         if (historyResponse.statusCode == 200) {
           final profileData = jsonDecode(historyResponse.body);
-          debugPrint("[DEBUG] 5-Min Test Profile Data: $profileData");
           _isPaid = profileData['user']?['isPaid'] ?? false;
           _fiveMinTestCount = profileData['examCounts']?['fiveMinTest'] ?? 0;
-          debugPrint(
-            "[DEBUG] 5-Min Test _isPaid: $_isPaid, _fiveMinTestCount: $_fiveMinTestCount",
-          );
 
-          // Also fetch history for specific "already taken" list
           final dashResponse = await ApiService.getDashboardData();
           if (dashResponse.statusCode == 200) {
             final dashData = jsonDecode(dashResponse.body);
@@ -78,7 +67,6 @@ class _FiveMinTestSelectionScreenState
         if (mounted) {
           setState(() {
             _allTests = data;
-            // Extract unique subjects
             _subjects = _allTests
                 .map((e) => e['subject'].toString())
                 .toSet()
@@ -86,13 +74,10 @@ class _FiveMinTestSelectionScreenState
             _isLoading = false;
           });
 
-          if (_subjects.isEmpty) {
-            _showNoTestDialog();
-          }
+          if (_subjects.isEmpty) _showNoTestDialog();
         }
       } else {
         if (mounted) setState(() => _isLoading = false);
-        debugPrint("Failed to fetch 5 min tests: ${response.statusCode}");
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
@@ -101,96 +86,117 @@ class _FiveMinTestSelectionScreenState
   }
 
   void _showNoTestDialog() {
-    if (mounted) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text("No 5 Min Tests Available"),
+        content: const Text(
+          "No 5 min tests available for your standard. Please try again later.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<dynamic> get _filteredTests {
+    if (_selectedSubject == null) return _allTests;
+    return _allTests
+        .where((t) => t['subject'].toString() == _selectedSubject)
+        .toList();
+  }
+
+  bool _isTaken(dynamic test) =>
+      _takenTestIds.contains(test['_id'].toString());
+
+  Future<void> _startTest(dynamic test) async {
+    if (!await GuestUtils.canGuestAccessExam(context, 'FIVEMIN')) return;
+
+    if (!_isPaid && _fiveMinTestCount >= 1) {
+      if (!mounted) return;
+      final theme = Theme.of(context);
       showDialog(
         context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text("No 5 Min Tests Available"),
+        builder: (_) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text("Limit Reached",
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: const Text(
-            "No 5 min tests available for your standard. Please try again later.",
+            "You have already used your 1 free attempt for 5-Min Tests. "
+            "Please upgrade your plan for unlimited access.",
           ),
           actions: [
             TextButton(
+              onPressed: () => Navigator.pop(context),
+              child:
+                  const Text("Later", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => UpgradePlanScreen()));
               },
-              child: const Text("OK"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text("Upgrade Now",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
       );
+      return;
     }
-  }
 
-  void _onSubjectChanged(String? subject) {
-    setState(() {
-      _selectedSubject = subject;
-      _selectedUnit = null;
-      _selectedTitle = null;
-      _selectedTest = null;
-      if (subject != null) {
-        _units = _allTests
-            .where((t) => t['subject'] == subject)
-            .map((t) => t['unit'].toString())
-            .toSet()
-            .toList();
-      } else {
-        _units = [];
-      }
-      _titles = [];
-    });
-  }
+    if (_isTaken(test)) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Already Taken"),
+          content: const Text(
+            "You have already performed this test. "
+            "Students can only take each test once.",
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK")),
+          ],
+        ),
+      );
+      return;
+    }
 
-  void _onUnitChanged(String? unit) {
-    setState(() {
-      _selectedUnit = unit;
-      _selectedTitle = null;
-      _selectedTest = null;
-      if (unit != null && _selectedSubject != null) {
-        _titles = _allTests
-            .where((t) => t['subject'] == _selectedSubject && t['unit'] == unit)
-            .map(
-              (t) =>
-                  (t['title'] == null || t['title'].toString().trim().isEmpty)
-                  ? 'Untitled Test'
-                  : t['title'].toString(),
-            )
-            .toSet()
-            .toList();
-
-        if (_titles.length == 1) {
-          _selectedTitle = _titles.first;
-          _onTitleChanged(_selectedTitle);
-        }
-      } else {
-        _titles = [];
-      }
-    });
-  }
-
-  void _onTitleChanged(String? title) {
-    setState(() {
-      _selectedTitle = title;
-      if (title != null && _selectedSubject != null && _selectedUnit != null) {
-        try {
-          _selectedTest = _allTests.firstWhere(
-            (t) =>
-                t['subject'] == _selectedSubject &&
-                t['unit'] == _selectedUnit &&
-                ((t['title'] == null || t['title'].toString().trim().isEmpty)
-                        ? 'Untitled Test'
-                        : t['title'].toString()) ==
-                    title,
-          );
-        } catch (e) {
-          _selectedTest = null;
-        }
-      } else {
-        _selectedTest = null;
-      }
-    });
+    if (!mounted) return;
+    CustomLoader.show(context);
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!context.mounted) return;
+    CustomLoader.hide(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FiveMinTestInstructionScreen(
+          subject: test['subject'].toString(),
+          unit: test['unit'].toString(),
+          testData: test,
+        ),
+      ),
+    ).then((_) => _fetchTests());
   }
 
   @override
@@ -201,214 +207,272 @@ class _FiveMinTestSelectionScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
     return Scaffold(
+      backgroundColor:
+          isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
       appBar: CustomAppBar(
-        title: "5 Min Test - Select",
+        title: "5 Min Test",
         actions: [
           IconButton(
             icon: const Icon(Icons.history, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StudentFiveMinHistoryScreen(),
-                ),
-              );
-            },
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const StudentFiveMinHistoryScreen()),
+            ),
           ),
         ],
       ),
       body: _isLoading
           ? const CustomLoader()
-          : Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          : Column(
+              children: [
+                // ── Subject filter chips ──
+                _buildSubjectFilter(primary, isDark),
+                // ── Test card list ──
+                Expanded(
+                  child: _filteredTests.isEmpty
+                      ? _buildEmpty(isDark)
+                      : ListView.builder(
+                          padding:
+                              const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                          itemCount: _filteredTests.length,
+                          itemBuilder: (_, i) => _buildTestCard(
+                              _filteredTests[i], theme, isDark),
+                        ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildSubjectFilter(Color primary, bool isDark) {
+    return Container(
+      color: isDark ? const Color(0xFF1A2340) : Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: CustomDropdown<String>(
+        labelText: "Field (Subject)",
+        hintText: "All Subjects",
+        value: _selectedSubject,
+        items: _subjects,
+        itemLabelBuilder: (String item) => item,
+        onChanged: (val) {
+          setState(() {
+            _selectedSubject = val;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmpty(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.quiz_outlined,
+              size: 64,
+              color:
+                  isDark ? Colors.white24 : Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text("No tests available",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: isDark
+                    ? Colors.white38
+                    : Colors.grey.shade500,
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTestCard(
+      dynamic test, ThemeData theme, bool isDark) {
+    final taken = _isTaken(test);
+    final primary = theme.colorScheme.primary;
+    final title = (test['title']?.toString().trim().isNotEmpty ?? false)
+        ? test['title'].toString()
+        : (test['unit']?.toString() ?? '5 Min Test');
+    final subject = test['subject']?.toString() ?? '';
+    final unit = test['unit']?.toString() ?? '';
+    final board = test['board']?.toString() ?? '';
+    final std = test['std']?.toString() ??
+        test['standard']?.toString() ?? '';
+    final medium = test['medium']?.toString() ?? '';
+    final qCount =
+        (test['questions'] as List?)?.length ?? 0;
+
+    return GestureDetector(
+      onTap: () => _startTest(test),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A2340) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: taken
+                ? Colors.green.withOpacity(0.4)
+                : (isDark
+                    ? Colors.white10
+                    : Colors.grey.shade200),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title + Status badge
+            Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(16, 14, 12, 0),
+              child: Row(
                 children: [
-                  CustomDropdown<String>(
-                    labelText: "Subject",
-                    hintText: "Select Subject",
-                    value: _selectedSubject,
-                    items: _subjects,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onSubjectChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomDropdown<String>(
-                    labelText: "Unit / Chapter",
-                    hintText: "Select Unit",
-                    value: _selectedUnit,
-                    items: _units,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onUnitChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomDropdown<String>(
-                    labelText: "Title",
-                    hintText: "Select Title",
-                    value: _selectedTitle,
-                    items: _titles,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onTitleChanged,
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: double.infinity,
-                    height: MediaQuery.of(context).size.height * 0.065,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withOpacity(0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: primary,
                       ),
-                      borderRadius: BorderRadius.circular(S.s12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
-                    child: ElevatedButton(
-                      onPressed: _selectedTest != null
-                          ? () async {
-                              if (!await GuestUtils.canGuestAccessExam(
-                                context,
-                                'FIVEMIN',
-                              ))
-                                return;
-
-                              if (!_isPaid && _fiveMinTestCount >= 1) {
-                                if (mounted) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      title: const Text(
-                                        "Limit Reached",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      content: const Text(
-                                        "You have already used your 1 free attempt for 5-Min Tests. Please upgrade your plan for unlimited access.",
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text(
-                                            "Later",
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    UpgradePlanScreen(),
-                                              ),
-                                            );
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                theme.colorScheme.primary,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            "Upgrade Now",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                                return;
-                              }
-
-                              if (_takenTestIds.contains(
-                                _selectedTest['_id'].toString(),
-                              )) {
-                                if (mounted) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text("Already Taken"),
-                                      content: const Text(
-                                        "You have already performed this test. Students can only take each test once.",
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text("OK"),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                                return;
-                              }
-
-                              CustomLoader.show(context);
-                              await Future.delayed(
-                                const Duration(milliseconds: 500),
-                              );
-                              if (context.mounted) {
-                                CustomLoader.hide(context);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        FiveMinTestInstructionScreen(
-                                          subject: _selectedSubject!,
-                                          unit: _selectedUnit!,
-                                          testData: _selectedTest,
-                                        ),
-                                  ),
-                                ).then((_) => _fetchTests());
-                              }
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(S.s12),
-                        ),
-                      ),
-                      child: Text(
-                        "Next",
-                        style: TextStyle(
-                          letterSpacing: 0.5,
-                          fontSize: MediaQuery.of(context).size.width * 0.045,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: taken
+                          ? Colors.green.withOpacity(0.12)
+                          : primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      taken ? "DONE" : "START",
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color:
+                            taken ? Colors.green : primary,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+
+            // Subject & Unit
+            Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(16, 6, 16, 0),
+              child: Row(
+                children: [
+                  const Icon(Icons.tag,
+                      size: 14, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    "$subject  •  Unit $unit",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? Colors.white70
+                          : Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Board / Std / Medium chips
+            Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (board.isNotEmpty) _chip(board, isDark),
+                  if (std.isNotEmpty)
+                    _chip("Std $std", isDark),
+                  if (medium.isNotEmpty)
+                    _chip(medium, isDark),
+                ],
+              ),
+            ),
+
+            // Bottom row: question count + action icon
+            Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              child: Row(
+                children: [
+                  Icon(Icons.help_outline,
+                      size: 14,
+                      color: isDark
+                          ? Colors.white38
+                          : Colors.grey.shade400),
+                  const SizedBox(width: 4),
+                  Text(
+                    "$qCount Questions",
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: isDark
+                          ? Colors.white38
+                          : Colors.grey.shade400,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    taken
+                        ? Icons.check_circle
+                        : Icons.play_circle_outline,
+                    size: 20,
+                    color: taken ? Colors.green : primary,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _chip(String label, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark
+              ? Colors.white12
+              : Colors.grey.shade300,
+        ),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: isDark
+              ? Colors.white60
+              : Colors.grey.shade700,
+        ),
+      ),
     );
   }
 }

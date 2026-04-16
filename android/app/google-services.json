@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "68228205649",
+    "project_id": "padhaku-234e5",
+    "storage_bucket": "padhaku-234e5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:68228205649:android:409f3aeb218c25d7eabc70",
+        "android_client_info": {
+          "package_name": "com.bondbyte.students"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFeyq0YojtaVhclyXFyHysykjaBEluenE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

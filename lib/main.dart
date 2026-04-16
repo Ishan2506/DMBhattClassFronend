@@ -16,6 +16,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -30,6 +32,16 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   
+  // Initialize Firebase and Push Notifications
+  try {
+    await Firebase.initializeApp();
+    await NotificationService.instance.initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      print('Firebase initialization failed: $e');
+    }
+  }
+
   // Request Microphone permission at start
   await _requestPermissions();
   
