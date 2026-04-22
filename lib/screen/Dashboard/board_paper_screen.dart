@@ -29,7 +29,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   final List<String> _mediums = ["Gujarati", "English"];
   final List<String> _stds = ["10", "12"];
   final List<String> _streams = ["Science", "Commerce", "Arts"]; // Only for 12
-  final List<String> _years = List.generate(10, (index) => (DateTime.now().year - 1 - index).toString());
+  final List<String> _years = List.generate(10, (index) => (DateTime.now().year - index).toString());
   String? _selectedSubject;
 
   String? _userBoard;
