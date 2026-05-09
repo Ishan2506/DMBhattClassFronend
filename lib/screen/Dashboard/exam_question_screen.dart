@@ -134,6 +134,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                 'correctAnswer': q['correctAnswer'],
                 'correctAnswerKey': q['correctAnswer'],
                 'optionsRaw': q['options'],
+                'questionImage': q['questionImage'],
               };
             }).toList();
             _isLoading = false;
@@ -420,42 +421,59 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
               ),
 
               // Question Card with Gradient
-              Expanded(
-                flex: 2,
-                child: Container(
-                  margin: const EdgeInsets.all(24),
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withOpacity(0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
+              Container(
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
+                constraints: const BoxConstraints(minHeight: 120),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withOpacity(0.8),
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Center(
-                    child: SingleChildScrollView(
-                      child: Text(
-                        question['question'],
-                        style: textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
                     ),
-                  ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty && question['questionImage'] != "null")
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            ApiService.getFileUrl(question['questionImage']),
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                            errorBuilder: (ctx, err, stack) => Container(
+                              height: 100,
+                              color: Colors.white24,
+                              child: const Icon(Icons.broken_image, color: Colors.white, size: 40),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Text(
+                      question['question'] ?? "",
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
 
@@ -547,6 +565,8 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
     final textTheme = Theme.of(context).textTheme;
     final theme = Theme.of(context);
 
+    final question = _questions[_currentQuestionIndex];
+
     return List.generate(answers.length, (index) {
       final answer = answers[index].toString();
       final optionLabel = String.fromCharCode(65 + index); // A, B, C, D
@@ -601,16 +621,36 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    answer,
-                    style: textTheme.titleMedium?.copyWith(
-                      color: isSelected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        answer,
+                        style: textTheme.titleMedium?.copyWith(
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      if (question['optionsRaw'][index]['image'] != null && 
+                          question['optionsRaw'][index]['image'].toString().isNotEmpty && 
+                          question['optionsRaw'][index]['image'] != "null")
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              ApiService.getFileUrl(question['optionsRaw'][index]['image']),
+                              height: 120,
+                              fit: BoxFit.contain,
+                              errorBuilder: (ctx, err, stack) => const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],

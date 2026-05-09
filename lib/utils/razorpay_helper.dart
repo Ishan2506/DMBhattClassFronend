@@ -2,6 +2,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:dm_bhatt_tutions/utils/purchase_config.dart';
 
 class RazorpayHelper {
   late Razorpay _razorpay;
@@ -9,8 +10,8 @@ class RazorpayHelper {
   final Function(PaymentSuccessResponse) onSuccess;
   final Function(PaymentFailureResponse) onFailure;
 
-  // Key provided by user
-  static const String _keyId = 'rzp_test_RlEXP3KcdFxaDU';
+  // Key fetched from config
+  final String _keyId = PurchaseConfig.instance.config.razorpayKeyId;
 
   RazorpayHelper({
     required this.context,

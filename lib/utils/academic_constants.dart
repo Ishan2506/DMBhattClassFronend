@@ -30,7 +30,7 @@ class AcademicConstants {
       "Economics",
       "Statistics",
       "English",
-      "Organization of Commerce",
+      "Organization Of Commerce",
       "Secretarial Practice"
     ],
     "GSEB-12-Commerce": [
@@ -39,7 +39,7 @@ class AcademicConstants {
       "Economics",
       "Statistics",
       "English",
-      "Organization of Commerce",
+      "Organization Of Commerce",
       "Secretarial Practice"
     ],
 

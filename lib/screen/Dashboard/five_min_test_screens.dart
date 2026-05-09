@@ -1207,6 +1207,19 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                   ),
                   child: Column(
                     children: [
+                      if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              ApiService.getFileUrl(question['questionImage']),
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
                       Text(
                         question['question'] ?? "",
                         style: GoogleFonts.poppins(
@@ -1335,17 +1348,34 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
-                                  child: Text(
-                                    option,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      color: isSelected
-                                          ? theme.colorScheme.primary
-                                          : Colors.black87,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                    ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        option,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          color: isSelected
+                                              ? theme.colorScheme.primary
+                                              : Colors.black87,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                      if (question['option${String.fromCharCode(65 + index)}Image'] != null && question['option${String.fromCharCode(65 + index)}Image'].toString().isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Image.network(
+                                              ApiService.getFileUrl(question['option${String.fromCharCode(65 + index)}Image']),
+                                              height: 100,
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ],
