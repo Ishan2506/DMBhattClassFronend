@@ -19,6 +19,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/utils/purchase_config.dart';
+import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -46,8 +47,9 @@ void main() async {
   // Request Microphone permission at start
   await _requestPermissions();
 
-  // Initialize Payment Config
+  // Initialize Payment Config & RevenueCat
   await PurchaseConfig.instance.initialize();
+  await RevenueCatService.instance.init();
   
   // await _secureScreen();
   runApp(MyApp(prefs: prefs));

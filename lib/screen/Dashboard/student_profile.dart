@@ -16,6 +16,8 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
+import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
+import 'dart:io';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
@@ -668,7 +670,25 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
             const SizedBox(height: 40),
 
-            // 7. Sign Out
+            // 7. Manage Subscription (RevenueCat Customer Center)
+            if (Platform.isIOS)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => RevenueCatService.instance.presentCustomerCenter(),
+                    icon: const Icon(Icons.manage_accounts_rounded),
+                    label: Text("Manage Subscription", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+              ),
+
+            // 8. Sign Out
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextButton.icon(

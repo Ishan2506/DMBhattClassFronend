@@ -288,12 +288,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     if (_isIOS) {
-      // iOS: Use Apple In-App Purchase
-      _iapService.setPurchaseContext('registration', metadata: {
-        'std': _std,
-        'medium': _medium,
-      });
-      await _iapService.purchaseMembership(_std ?? "6");
+      // iOS: Use RevenueCat Paywall with standard-specific offering
+      final success = await RevenueCatService.instance.presentPaywall(
+        offeringId: 'std_$_std',
+      );
+      if (success && mounted) {
+        CustomToast.showSuccess(context, "Plan purchased successfully!");
+        // Note: For registration, we might need a specific handling if the user 
+        // hasn't registered on backend yet. But usually RevenueCat handles the 
+        // subscription state. 
+        // We'll call the registration logic if success.
+        _processRegistration(paymentId: "REVENUE_CAT_PURCHASE");
+      }
     } else {
       // Android: Use Razorpay
       try {

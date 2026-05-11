@@ -367,14 +367,15 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     }
 
     if (_isIOS) {
-      // iOS: Use Apple In-App Purchase
-      _iapService.setPurchaseContext('upgrade', metadata: {
-        'newStandard': _selectedStandard!,
-        'medium': _selectedMedium!,
-        'stream': _selectedStream,
-        'amount': _finalAmount,
-      });
-      await _iapService.purchaseMembership(_selectedStandard!);
+      // iOS: Use RevenueCat Paywall with standard-specific offering
+      // Format: std_6, std_7, etc.
+      final success = await RevenueCatService.instance.presentPaywall(
+        offeringId: 'std_$_selectedStandard',
+      );
+      if (success && mounted) {
+        CustomToast.showSuccess(context, "Plan upgraded successfully!");
+        Navigator.pop(context);
+      }
     } else {
       // Android: Use Razorpay
       try {

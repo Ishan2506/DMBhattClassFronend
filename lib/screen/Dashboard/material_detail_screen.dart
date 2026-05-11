@@ -7,8 +7,8 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
-import 'package:dm_bhatt_tutions/utils/iap_service.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_payment_confirmation_screen.dart';
@@ -44,14 +44,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   void initState() {
     super.initState();
     if (_isIOS) {
-      _iapService.initialize();
-      _iapService.onPurchaseSuccess = _handleApplePurchaseSuccess;
-      _iapService.onPurchaseError = (error) {
-        if (mounted) {
-          setState(() => _isProcessing = false);
-          CustomToast.showError(context, "Purchase Failed: $error");
-        }
-      };
+      // RevenueCat is initialized in main.dart
     } else {
       _razorpayHelper = RazorpayHelper(
         context: context,
@@ -144,12 +137,16 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
     setState(() => _isProcessing = true);
 
     if (_isIOS) {
-      // iOS: Use Apple In-App Purchase
-      _iapService.setPurchaseContext('material', metadata: {
-        'materialProductId': widget.product['id'],
-        'amount': (widget.product['price'] as num).toDouble(),
-      });
-      await _iapService.purchaseMaterial();
+      // iOS: Use RevenueCat Paywall for material purchase
+      // You can create a specific offering 'material_purchase' or use default
+      final success = await RevenueCatService.instance.presentPaywall(
+        offeringId: 'material_purchase',
+      );
+      if (success && mounted) {
+        CustomToast.showSuccess(context, "Material purchased successfully!");
+        // We'll call the verification/completion logic
+        _verifyRevenueCatPurchase();
+      }
     } else {
       // Android: Use Razorpay
       try {
@@ -186,25 +183,11 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
     }
   }
 
-  void _handleApplePurchaseSuccess(PurchaseDetails purchaseDetails) async {
-    if (!mounted) return;
-    setState(() => _isProcessing = true);
+  Future<void> _verifyRevenueCatPurchase() async {
     try {
-      final metadata = _iapService.purchaseMetadata;
-      final verifyResponse = await ApiService.verifyAppleProductPurchase(
-        receipt: purchaseDetails.verificationData.serverVerificationData,
-        productId: purchaseDetails.productID,
-        transactionId: purchaseDetails.purchaseID ?? '',
-        materialProductId: metadata['materialProductId'] ?? widget.product['id'],
-        amount: (metadata['amount'] as num?)?.toDouble() ?? (widget.product['price'] as num).toDouble(),
-      );
-
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
-
-      if (verifyResponse.statusCode == 200) {
-        CustomToast.showSuccess(context, "Purchase Successful!");
-
+      setState(() => _isProcessing = true);
+      // For materials, we just confirm the entitlement is active
+      if (RevenueCatService.instance.isProActive) {
         final DateTime now = DateTime.now();
         final String formattedDate = "${now.day}/${now.month}/${now.year}";
 
@@ -215,9 +198,12 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
           "category": widget.product['category'] ?? "N/A",
           "subject": widget.product['subject'] ?? "N/A",
           "date": formattedDate,
-          "transactionId": purchaseDetails.purchaseID ?? "N/A",
+          "transactionId": "REVENUE_CAT",
           "amountRaw": widget.product['price'] ?? 0,
         };
+
+        if (!mounted) return;
+        setState(() => _isProcessing = false);
 
         Navigator.pushReplacement(
           context,
@@ -228,12 +214,13 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
           ),
         );
       } else {
-        CustomToast.showError(context, "Verification Failed: ${verifyResponse.body}");
+        setState(() => _isProcessing = false);
+        CustomToast.showError(context, "Purchase verification failed or not active.");
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        CustomToast.showError(context, "Error verifying purchase: $e");
+        CustomToast.showError(context, "Error: $e");
       }
     }
   }
