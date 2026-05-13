@@ -7,7 +7,7 @@ class RevenueCatService {
   static final RevenueCatService instance = RevenueCatService._internal();
   RevenueCatService._internal();
 
-  static const String _apiKey = "test_bLKXFNFxQPKKLdFvQoeJDessRPx";
+  static const String _apiKey = "appl_MjnwkNgBHNTDModyowxlLnKWtWp";
   static const String entitlementId = "Padhaku Pro";
 
   bool _isInitialized = false;

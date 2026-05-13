@@ -20,7 +20,7 @@ import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MaterialDetailScreen extends StatefulWidget {
@@ -34,7 +34,7 @@ class MaterialDetailScreen extends StatefulWidget {
 
 class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   RazorpayHelper? _razorpayHelper;
-  final IAPService _iapService = IAPService();
+
   bool _isProcessing = false;
   bool _previewUsed = false;
 

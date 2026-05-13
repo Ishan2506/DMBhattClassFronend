@@ -7,13 +7,11 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
-
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
-import 'package:dm_bhatt_tutions/utils/iap_service.dart';
 import 'package:intl/intl.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_receipt_screen.dart';
 
@@ -51,7 +49,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   bool _isPaid = true;
 
   RazorpayHelper? _razorpayHelper;
-  final IAPService _iapService = IAPService();
+
 
   bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
@@ -62,13 +60,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     _fetchBonusPoints();
 
     if (_isIOS) {
-      _iapService.initialize();
-      _iapService.onPurchaseSuccess = _handleApplePurchaseSuccess;
-      _iapService.onPurchaseError = (error) {
-        if (mounted) {
-          CustomToast.showError(context, "Purchase Failed: $error");
-        }
-      };
+      // RevenueCat is initialized in main.dart
     } else {
       _razorpayHelper = RazorpayHelper(
         context: context,
@@ -415,39 +407,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     }
   }
 
-  void _handleApplePurchaseSuccess(PurchaseDetails purchaseDetails) async {
-    if (!mounted) return;
-    try {
-      CustomLoader.show(context);
-      final metadata = _iapService.purchaseMetadata;
-      final response = await ApiService.verifyAppleUpgrade(
-        receipt: purchaseDetails.verificationData.serverVerificationData,
-        productId: purchaseDetails.productID,
-        transactionId: purchaseDetails.purchaseID ?? "",
-        newStandard: metadata['newStandard'] ?? _selectedStandard!,
-        medium: metadata['medium'] ?? _selectedMedium!,
-        stream: metadata['stream'],
-        amount: (metadata['amount'] as num?)?.toDouble() ?? _finalAmount,
-      );
 
-      if (!mounted) return;
-      CustomLoader.hide(context);
-
-      if (response.statusCode == 200) {
-        final l10n = AppLocalizations.of(context)!;
-        CustomToast.showSuccess(context, l10n.planUpgradeSuccess);
-        Navigator.pop(context);
-      } else {
-        final errorMsg = ApiService.getErrorMessage(response.body);
-        CustomToast.showError(context, "Verification Failed: $errorMsg");
-      }
-    } catch (e) {
-      if (mounted) {
-        CustomLoader.hide(context);
-        CustomToast.showError(context, "Error: $e");
-      }
-    }
-  }
 
   void _showUpgradeHistory() async {
     try {
