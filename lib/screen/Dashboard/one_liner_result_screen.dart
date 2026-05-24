@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,7 +12,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-class OneLinerResultScreen extends StatelessWidget {
+class OneLinerResultScreen extends StatefulWidget {
   final int totalQuestions;
   final int correctAnswers;
   final double averageAccuracy;
@@ -31,7 +34,14 @@ class OneLinerResultScreen extends StatelessWidget {
     required this.unit,
   });
 
-  Future<void> _generatePdf(BuildContext context) async {
+  @override
+  State<OneLinerResultScreen> createState() => _OneLinerResultScreenState();
+}
+
+class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
+  bool _isLoading = false;
+
+  Future<Uint8List> _generatePdfBytes() async {
     final pdf = pw.Document();
     final font = await PdfGoogleFonts.poppinsRegular();
     final fontBold = await PdfGoogleFonts.poppinsBold();
@@ -44,21 +54,6 @@ class OneLinerResultScreen extends StatelessWidget {
             base: font,
             bold: fontBold,
           ),
-          buildForeground: (context) {
-            return pw.Center(
-              child: pw.Transform.rotate(
-                angle: -0.5,
-                child: pw.Text(
-                  "DMBhatt",
-                  style: pw.TextStyle(
-                    font: fontBold,
-                    fontSize: 100,
-                    color: PdfColors.grey200,
-                  ),
-                ),
-              ),
-            );
-          },
         ),
         build: (pw.Context context) {
           return [
@@ -72,7 +67,7 @@ class OneLinerResultScreen extends StatelessWidget {
                     children: [
                       pw.Text("One-Liner Exam Result", style: pw.TextStyle(font: fontBold, fontSize: 24)),
                       pw.SizedBox(height: 4),
-                      pw.Text("$subject - $unit ($title)", style: pw.TextStyle(font: font, fontSize: 16)),
+                      pw.Text("${widget.subject} - ${widget.unit} (${widget.title})", style: pw.TextStyle(font: font, fontSize: 16)),
                     ],
                   ),
                   pw.Column(
@@ -96,16 +91,16 @@ class OneLinerResultScreen extends StatelessWidget {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                 children: [
-                   _buildPdfStat("Total Qns", "$totalQuestions", fontBold),
-                   _buildPdfStat("Marks", "$correctAnswers/$totalQuestions", fontBold, color: PdfColors.green),
-                   _buildPdfStat("Avg. Accuracy", "${averageAccuracy.toStringAsFixed(1)}%", fontBold, color: PdfColors.blue),
+                   _buildPdfStat("Total Qns", "${widget.totalQuestions}", fontBold),
+                   _buildPdfStat("Marks", "${widget.correctAnswers}/${widget.totalQuestions}", fontBold, color: PdfColors.green),
+                   _buildPdfStat("Avg. Accuracy", "${widget.averageAccuracy.toStringAsFixed(1)}%", fontBold, color: PdfColors.blue),
                 ],
               ),
             ),
             pw.SizedBox(height: 20),
-            ...List.generate(questions.length, (index) {
-              final q = questions[index];
-              final spoken = spokenAnswers[index] ?? "N/A";
+            ...List.generate(widget.questions.length, (index) {
+              final q = widget.questions[index];
+              final spoken = widget.spokenAnswers[index] ?? "N/A";
               final target = q['answer']['en'] ?? "";
               
               // Simple rough match check for color in PDF
@@ -130,10 +125,36 @@ class OneLinerResultScreen extends StatelessWidget {
       ),
     );
 
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'DMBhatt_OneLiner_${DateTime.now().millisecondsSinceEpoch}.pdf',
-    );
+    return await pdf.save();
+  }
+
+  Future<void> _previewPdf() async {
+    setState(() => _isLoading = true);
+    try {
+      final bytes = await _generatePdfBytes();
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfPreviewScreen(
+            product: {
+              'name': '${widget.unit} - ${widget.subject} (${widget.title})',
+            },
+            isFullAccess: true,
+            pdfBytes: bytes,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error generating preview: $e')),
+        );
+      }
+    }
   }
 
   pw.Widget _buildPdfStat(String label, String value, pw.Font font, {PdfColor color = PdfColors.black}) {
@@ -150,7 +171,9 @@ class OneLinerResultScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
+    return Stack(
+      children: [
+        Scaffold(
       appBar: CustomAppBar(
         title: "Exam Result",
         automaticallyImplyLeading: false,
@@ -191,9 +214,9 @@ class OneLinerResultScreen extends StatelessWidget {
                    Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildSummaryStat("Correct", "$correctAnswers/$totalQuestions", Colors.white),
-                      _buildSummaryStat("Marks", "$correctAnswers", Colors.white),
-                      _buildSummaryStat("Accuracy", "${averageAccuracy.toStringAsFixed(1)}%", Colors.white),
+                      _buildSummaryStat("Correct", "${widget.correctAnswers}/${widget.totalQuestions}", Colors.white),
+                      _buildSummaryStat("Marks", "${widget.correctAnswers}", Colors.white),
+                      _buildSummaryStat("Accuracy", "${widget.averageAccuracy.toStringAsFixed(1)}%", Colors.white),
                     ],
                   ),
                 ],
@@ -214,10 +237,10 @@ class OneLinerResultScreen extends StatelessWidget {
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: questions.length,
+              itemCount: widget.questions.length,
               itemBuilder: (context, index) {
-                final q = questions[index];
-                final spoken = spokenAnswers[index] ?? "N/A";
+                final q = widget.questions[index];
+                final spoken = widget.spokenAnswers[index] ?? "N/A";
                 final target = q['answer']['en'] ?? "";
                 
                 return Container(
@@ -243,9 +266,9 @@ class OneLinerResultScreen extends StatelessWidget {
             blankVerticalSpace24,
             
             CustomFilledButton(
-              label: "Download Questions",
-              icon: Icons.download,
-              onPressed: () => _generatePdf(context),
+              label: "Preview Questions",
+              icon: Icons.visibility_rounded,
+              onPressed: _previewPdf,
             ),
             const SizedBox(height: 16),
             TextButton(
@@ -261,6 +284,10 @@ class OneLinerResultScreen extends StatelessWidget {
           ],
         ),
       ),
+        ),
+        if (_isLoading)
+          const CustomLoader(),
+      ],
     );
   }
 
