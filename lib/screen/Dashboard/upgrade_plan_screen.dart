@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
@@ -9,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 import 'package:intl/intl.dart';

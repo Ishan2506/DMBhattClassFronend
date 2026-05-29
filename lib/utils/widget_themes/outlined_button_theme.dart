@@ -14,9 +14,9 @@ class CustomOutlinedButtonTheme {
         foregroundColor: colorScheme.onSurface,
       ).copyWith(
         // Style for when the button is selected (pressed)
-        overlayColor: MaterialStateProperty.resolveWith<Color?>(
-          (Set<MaterialState> states) {
-            if (states.contains(MaterialState.pressed)) {
+        overlayColor: WidgetStateProperty.resolveWith<Color?>(
+          (Set<WidgetState> states) {
+            if (states.contains(WidgetState.pressed)) {
               return colorScheme.primary.withOpacity(0.1);
             }
             return null; // Defer to the widget's default.

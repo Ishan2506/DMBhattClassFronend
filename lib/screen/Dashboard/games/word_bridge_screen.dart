@@ -463,7 +463,7 @@ class _WordBridgeScreenState extends State<WordBridgeScreen> {
                     ),
                   ),
                 );
-             }).toList(),
+             }),
              const SizedBox(height: 8),
              TextButton(
                onPressed: _nextLevel,

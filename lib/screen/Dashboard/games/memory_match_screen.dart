@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dm_bhatt_tutions/constant/app_images.dart'; 
 // Assuming app_images is where we might pull some assets, 
 // but we'll use icons or simple text for memory cards.
 

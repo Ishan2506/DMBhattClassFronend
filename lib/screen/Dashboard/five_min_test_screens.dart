@@ -969,14 +969,18 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
       List<String> options = [];
       if (q['type']?.toString().trim().toUpperCase() == 'MCQ' ||
           q['type'] == null) {
-        if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty)
+        if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) {
           options.add(q['optionA'].toString().trim());
-        if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty)
+        }
+        if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) {
           options.add(q['optionB'].toString().trim());
-        if (q['optionC'] != null && q['optionC'].toString().trim().isNotEmpty)
+        }
+        if (q['optionC'] != null && q['optionC'].toString().trim().isNotEmpty) {
           options.add(q['optionC'].toString().trim());
-        if (q['optionD'] != null && q['optionD'].toString().trim().isNotEmpty)
+        }
+        if (q['optionD'] != null && q['optionD'].toString().trim().isNotEmpty) {
           options.add(q['optionD'].toString().trim());
+        }
       } else if (q['type']?.toString().trim().toUpperCase() == 'TRUE/FALSE' ||
           q['type']?.toString().trim().toUpperCase() == 'TF' ||
           q['type']?.toString().trim().toUpperCase() == 'T/F' ||
@@ -993,10 +997,12 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
         );
       } else {
         // Fallback for other types or implicit TF
-        if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty)
+        if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) {
           options.add(q['optionA'].toString().trim());
-        if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty)
+        }
+        if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) {
           options.add(q['optionB'].toString().trim());
+        }
       }
 
       final userAnswer = _selectedAnswers[i];
@@ -1018,7 +1024,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
       });
     }
 
-    Future<void> _submitAndNavigate() async {
+    Future<void> submitAndNavigate() async {
       try {
         CustomLoader.show(context);
         // Token managed internally
@@ -1067,7 +1073,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
       }
     }
 
-    await _submitAndNavigate();
+    await submitAndNavigate();
   }
 
   @override
@@ -1089,17 +1095,21 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
     if (question['type']?.toString().trim().toUpperCase() == 'MCQ' ||
         question['type'] == null) {
       if (question['optionA'] != null &&
-          question['optionA'].toString().trim().isNotEmpty)
+          question['optionA'].toString().trim().isNotEmpty) {
         options.add(question['optionA'].toString().trim());
+      }
       if (question['optionB'] != null &&
-          question['optionB'].toString().trim().isNotEmpty)
+          question['optionB'].toString().trim().isNotEmpty) {
         options.add(question['optionB'].toString().trim());
+      }
       if (question['optionC'] != null &&
-          question['optionC'].toString().trim().isNotEmpty)
+          question['optionC'].toString().trim().isNotEmpty) {
         options.add(question['optionC'].toString().trim());
+      }
       if (question['optionD'] != null &&
-          question['optionD'].toString().trim().isNotEmpty)
+          question['optionD'].toString().trim().isNotEmpty) {
         options.add(question['optionD'].toString().trim());
+      }
     } else if (question['type']?.toString().trim().toUpperCase() ==
             'TRUE/FALSE' ||
         question['type']?.toString().trim().toUpperCase() == 'TF' ||
@@ -1119,11 +1129,13 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
     } else {
       // Fallback
       if (question['optionA'] != null &&
-          question['optionA'].toString().trim().isNotEmpty)
+          question['optionA'].toString().trim().isNotEmpty) {
         options.add(question['optionA'].toString().trim());
+      }
       if (question['optionB'] != null &&
-          question['optionB'].toString().trim().isNotEmpty)
+          question['optionB'].toString().trim().isNotEmpty) {
         options.add(question['optionB'].toString().trim());
+      }
     }
 
     return PopScope(

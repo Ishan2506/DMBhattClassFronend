@@ -39,9 +39,9 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   String? _selectedStream;
   String? _selectedState;
   String? _selectedCity;
-  String? _selectedInstitute = "The Learning Institute";
+  final String? _selectedInstitute = "The Learning Institute";
   String? _selectedBoard;
-  String? _selectedRole = "Student";
+  final String? _selectedRole = "Student";
 
   // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];

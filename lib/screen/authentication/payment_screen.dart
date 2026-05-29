@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -8,7 +7,6 @@ import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
@@ -279,9 +277,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     if (_isIOS) {
-      // iOS: Use RevenueCat Paywall with standard-specific offering
+      // iOS: Use RevenueCat Paywall with the default offering.
       final success = await RevenueCatService.instance.presentPaywall(
-        offeringId: 'std_$_std',
+        offeringId: 'default',
       );
       if (success && mounted) {
         CustomToast.showSuccess(context, "Plan purchased successfully!");

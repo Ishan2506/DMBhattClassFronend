@@ -182,7 +182,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   Text(l10n.selectSubject, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _selectedSubject,
+                    initialValue: _selectedSubject,
                     hint: Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                     items: _getFilteredSubjects().map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                     onChanged: (val) {
@@ -242,7 +242,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                   ),
                   const SizedBox(height: 12),
-                  ..._displayNotes.map((note) => _buildNoteCard(note, theme)).toList(),
+                  ..._displayNotes.map((note) => _buildNoteCard(note, theme)),
                 ],
               ),
           ],

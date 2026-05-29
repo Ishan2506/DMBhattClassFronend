@@ -247,7 +247,7 @@ class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: P.all16,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceVariant.withOpacity(0.3),
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
                   ),

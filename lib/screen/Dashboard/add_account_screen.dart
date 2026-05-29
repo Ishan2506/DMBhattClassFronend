@@ -122,11 +122,31 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           // Switch to this new account (Update root prefs)
           await prefs.setString('auth_token', token);
           await prefs.setString('user_password', _passwordController.text);
-          if (userId.isNotEmpty) await prefs.setString('userId', userId); else await prefs.remove('userId');
-          if (std.isNotEmpty) await prefs.setString('std', std); else await prefs.remove('std');
-          if (medium.isNotEmpty) await prefs.setString('medium', medium); else await prefs.remove('medium');
-          if (board.isNotEmpty) await prefs.setString('board', board); else await prefs.remove('board');
-          if (stream.isNotEmpty) await prefs.setString('stream', stream); else await prefs.remove('stream');
+          if (userId.isNotEmpty) {
+            await prefs.setString('userId', userId);
+          } else {
+            await prefs.remove('userId');
+          }
+          if (std.isNotEmpty) {
+            await prefs.setString('std', std);
+          } else {
+            await prefs.remove('std');
+          }
+          if (medium.isNotEmpty) {
+            await prefs.setString('medium', medium);
+          } else {
+            await prefs.remove('medium');
+          }
+          if (board.isNotEmpty) {
+            await prefs.setString('board', board);
+          } else {
+            await prefs.remove('board');
+          }
+          if (stream.isNotEmpty) {
+            await prefs.setString('stream', stream);
+          } else {
+            await prefs.remove('stream');
+          }
 
           if (mounted) {
             CustomToast.showSuccess(context, "Account Added & Switched");

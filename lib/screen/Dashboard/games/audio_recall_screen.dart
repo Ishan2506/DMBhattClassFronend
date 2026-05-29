@@ -19,8 +19,8 @@ class _AudioRecallScreenState extends State<AudioRecallScreen> {
   bool _gameOver = false;
   
   final List<String> _words = ["Cat", "Dog", "Bird", "Fish", "Sun", "Moon", "Star", "Sky"];
-  List<String> _sequence = [];
-  List<String> _currentInput = [];
+  final List<String> _sequence = [];
+  final List<String> _currentInput = [];
   bool _isPlayingSequence = false;
   int _sequenceLength = 3;
 

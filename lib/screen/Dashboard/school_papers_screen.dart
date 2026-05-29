@@ -203,7 +203,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                   Text(l10n.selectSubject, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _selectedSubject,
+                    initialValue: _selectedSubject,
                     hint: Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                     items: _getFilteredSubjects().map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                     onChanged: (val) {
@@ -264,7 +264,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                   ),
                   const SizedBox(height: 12),
-                  ..._displayPapers.map((paper) => _buildPaperCard(paper, theme)).toList(),
+                  ..._displayPapers.map((paper) => _buildPaperCard(paper, theme)),
                 ],
               ),
           ],

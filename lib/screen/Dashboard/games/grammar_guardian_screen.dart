@@ -440,7 +440,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                   ),
                 ),
               );
-            }).toList(),
+            }),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () {

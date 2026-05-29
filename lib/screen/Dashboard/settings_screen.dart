@@ -68,8 +68,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
 
               String langText;
-              if (state.locale.languageCode == 'gu') langText = l10n.gujarati;
-              else if (state.locale.languageCode == 'hi') langText = l10n.hindi;
+              if (state.locale.languageCode == 'gu') {
+                langText = l10n.gujarati;
+              } else if (state.locale.languageCode == 'hi') langText = l10n.hindi;
               else if (state.locale.languageCode == 'ta') langText = l10n.tamil;
               else if (state.locale.languageCode == 'mr') langText = l10n.marathi;
               else langText = l10n.english;

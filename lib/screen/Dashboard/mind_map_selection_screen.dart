@@ -5,7 +5,6 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
-import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/model/mind_map_model.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';

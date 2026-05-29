@@ -51,5 +51,7 @@
 	<string>This app uses speech recognition to convert voice to text.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app requires camera access to capture photos.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 </dict>
 </plist>

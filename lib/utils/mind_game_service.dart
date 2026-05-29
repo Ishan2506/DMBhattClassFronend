@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 
 class MindGameService {
   static final MindGameService _instance = MindGameService._internal();

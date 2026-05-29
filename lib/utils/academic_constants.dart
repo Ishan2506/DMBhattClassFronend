@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 
 class AcademicConstants {
   static const List<String> boards = ["GSEB", "CBSE"];

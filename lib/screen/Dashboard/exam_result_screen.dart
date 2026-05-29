@@ -396,7 +396,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
                     ),
@@ -468,14 +468,14 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                                  color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     if (!isSkipped)
-                                      _buildAnswerRow(context, "Your Answer", userAns!, isCorrect ? Colors.green : Colors.red),
+                                      _buildAnswerRow(context, "Your Answer", userAns, isCorrect ? Colors.green : Colors.red),
                                     
                                     if (!isCorrect) ...[
                                       if (!isSkipped) const SizedBox(height: 8),
@@ -566,7 +566,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
       ),

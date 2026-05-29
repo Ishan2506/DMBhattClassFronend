@@ -291,7 +291,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                                 child: Center(
                                   child: isCloudinary
                                       ? Image.network(
-                                          _getPdfPageUrl(ApiService.getFileUrl(pdfUrl!), pageNumber),
+                                          _getPdfPageUrl(ApiService.getFileUrl(pdfUrl), pageNumber),
                                           fit: BoxFit.contain,
                                           loadingBuilder: (context, child, loadingProgress) {
                                             if (loadingProgress == null) return child;

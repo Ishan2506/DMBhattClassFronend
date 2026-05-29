@@ -24,7 +24,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
   bool _isGameOver = false;
   int _score = 0;
   int _hintsRemaining = 3;
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   bool _isLoading = true;
 
   @override

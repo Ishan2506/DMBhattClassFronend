@@ -4,8 +4,6 @@ import 'package:dm_bhatt_tutions/model/chat_message.dart';
 import 'package:dm_bhatt_tutions/network/ai_service.dart';
 import 'package:dm_bhatt_tutions/widget/chat_bubble.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
