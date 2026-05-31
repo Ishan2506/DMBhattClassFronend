@@ -5,12 +5,14 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:http/http.dart' as http;
 
 class ExamResultScreen extends StatefulWidget {
   final int totalQuestions;
@@ -41,13 +43,46 @@ class ExamResultScreen extends StatefulWidget {
 class _ExamResultScreenState extends State<ExamResultScreen> {
   bool _isLoading = false;
 
+  Future<Uint8List?> _loadImageFromUrl(String? imageUrl) async {
+    if (imageUrl == null || imageUrl.isEmpty) return null;
+    try {
+      // Convert relative paths to full URLs using ApiService.getFileUrl
+      final fullUrl = ApiService.getFileUrl(imageUrl);
+      if (fullUrl.isEmpty) return null;
+
+      final response = await http.get(Uri.parse(fullUrl));
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      }
+    } catch (e) {
+      debugPrint('Error loading image: $e');
+    }
+    return null;
+  }
+
   Future<Uint8List> _generatePdfBytes() async {
     final pdf = pw.Document();
-    
-    // Load custom font if needed, or use standard fonts
-    // For simplicity using standard fonts first, can upgrade to custom if needed
+
     final font = await PdfGoogleFonts.poppinsRegular();
     final fontBold = await PdfGoogleFonts.poppinsBold();
+
+    // Pre-load all question images to avoid async in build context
+    final Map<int, Uint8List?> questionImages = {};
+    for (int i = 0; i < widget.questions.length; i++) {
+      final imageUrl = widget.questions[i]['questionImage'];
+      questionImages[i] = await _loadImageFromUrl(imageUrl);
+    }
+
+    // Pre-load answer images from optionsRaw if they exist
+    final Map<String, Uint8List?> answerImages = {};
+    for (int i = 0; i < widget.questions.length; i++) {
+      final optionsRaw = widget.questions[i]['optionsRaw'] as List? ?? [];
+      for (var option in optionsRaw) {
+        if (option['image'] != null) {
+          answerImages['${i}_${option['key']}'] = await _loadImageFromUrl(option['image']);
+        }
+      }
+    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -60,62 +95,76 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
         ),
         build: (pw.Context context) {
           return [
-            // Header
-            pw.Header(
-              level: 0,
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text("Result Summary", style: pw.TextStyle(font: fontBold, fontSize: 24)),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        "${widget.unit ?? 'Unit Test'} , ${widget.subject ?? 'Subject'}",
-                        style: pw.TextStyle(font: font, fontSize: 16, color: PdfColors.grey700),
+            pw.Stack(
+              children: [
+                pw.Transform.rotate(
+                  angle: 0.785398, // 45 degrees in radians
+                  child: pw.Center(
+                    child: pw.Text(
+                      'Padhaku',
+                      style: pw.TextStyle(
+                        font: fontBold,
+                        fontSize: 80,
+                        color: PdfColors.grey400.withOpacity(0.3),
                       ),
-                    ],
+                    ),
                   ),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    children: [
-                      pw.Text("DMBhatt Tuitions", style: pw.TextStyle(font: fontBold, fontSize: 14)),
-                      pw.Text("Date: ${DateTime.now().toString().split(' ')[0]}", style: pw.TextStyle(font: font, fontSize: 10)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            pw.Divider(),
-            pw.SizedBox(height: 20),
+                ),
+                pw.Column(
+                  children: [
+                    pw.Header(
+                      level: 0,
+                      child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text("Result Summary", style: pw.TextStyle(font: fontBold, fontSize: 24)),
+                              pw.SizedBox(height: 4),
+                              pw.Text(
+                                "${widget.unit ?? 'Unit Test'} , ${widget.subject ?? 'Subject'}",
+                                style: pw.TextStyle(font: font, fontSize: 16, color: PdfColors.grey700),
+                              ),
+                            ],
+                          ),
+                          pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
+                            children: [
+                              pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 14)),
+                              pw.Text("Date: ${DateTime.now().toString().split(' ')[0]}", style: pw.TextStyle(font: font, fontSize: 10)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    pw.Divider(),
+                    pw.SizedBox(height: 20),
 
-            // Score Summary
-            pw.Container(
-              padding: const pw.EdgeInsets.all(10),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey400),
-                borderRadius: pw.BorderRadius.circular(8),
-              ),
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
-                children: [
-                  _buildPdfStat("Total", "${widget.totalQuestions}", fontBold),
-                  _buildPdfStat("Correct", "${widget.correctAnswers}", fontBold, color: PdfColors.green),
-                  _buildPdfStat("Wrong", "${widget.wrongAnswers}", fontBold, color: PdfColors.red),
-                  _buildPdfStat("Skipped", "${widget.skippedAnswers}", fontBold, color: PdfColors.orange),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 20),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(10),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(color: PdfColors.grey400),
+                        borderRadius: pw.BorderRadius.circular(8),
+                      ),
+                      child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildPdfStat("Total", "${widget.totalQuestions}", fontBold),
+                          _buildPdfStat("Correct", "${widget.correctAnswers}", fontBold, color: PdfColors.green),
+                          _buildPdfStat("Wrong", "${widget.wrongAnswers}", fontBold, color: PdfColors.red),
+                          _buildPdfStat("Skipped", "${widget.skippedAnswers}", fontBold, color: PdfColors.orange),
+                        ],
+                      ),
+                    ),
+                    pw.SizedBox(height: 20),
 
-            // Questions
-            ...List.generate(widget.questions.length, (index) {
+                    ...List.generate(widget.questions.length, (index) {
               final question = widget.questions[index];
               final userAns = widget.selectedAnswers[index];
               final optionsRaw = question['optionsRaw'] as List? ?? [];
               final correctKey = question['correctAnswerKey'] ?? question['correctAnswer'];
-              
+
               String resolvedCorrectText = "";
               try {
                 final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
@@ -126,35 +175,86 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
 
               final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
               final isSkipped = userAns == null || userAns.trim().isEmpty;
+              final questionImageData = questionImages[index];
 
               return pw.Container(
                 margin: const pw.EdgeInsets.only(bottom: 16),
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                     pw.Text(
-                       "Q${index + 1}: ${question['question'] ?? ''}",
-                       style: pw.TextStyle(font: fontBold, fontSize: 12),
-                     ),
-                     pw.SizedBox(height: 4),
-                     pw.Text(
-                       "Your Answer: ${userAns ?? 'Skipped'}",
-                       style: pw.TextStyle(
-                         font: font, 
-                         fontSize: 10,
-                         color: isCorrect ? PdfColors.green : (isSkipped ? PdfColors.orange : PdfColors.red),
-                       ),
-                     ),
-                     if (!isCorrect)
-                       pw.Text(
-                         "Correct Answer: $resolvedCorrectText",
-                         style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green),
-                       ),
-                     pw.Divider(color: PdfColors.grey200),
+                    pw.Text(
+                      "Q${index + 1}: ${question['question'] ?? ''}",
+                      style: pw.TextStyle(font: fontBold, fontSize: 12),
+                    ),
+                    if (questionImageData != null) ...[
+                      pw.SizedBox(height: 8),
+                      pw.Container(
+                        constraints: pw.BoxConstraints(maxWidth: 400, maxHeight: 200),
+                        child: pw.Image(
+                          pw.MemoryImage(questionImageData),
+                          fit: pw.BoxFit.contain,
+                        ),
+                      ),
+                    ],
+                    pw.SizedBox(height: 8),
+
+                    // Display answer options with images
+                    ...List.generate(optionsRaw.length, (optIdx) {
+                      final option = optionsRaw[optIdx];
+                      final optionKey = option['key']?.toString() ?? '';
+                      final optionText = option['text']?.toString() ?? '';
+                      final optionImageData = answerImages['${index}_${option['key']}'];
+                      final isOptionCorrect = optionKey == correctKey;
+
+                      return pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            '$optionKey) $optionText',
+                            style: pw.TextStyle(
+                              font: font,
+                              fontSize: 9,
+                              color: isOptionCorrect ? PdfColors.green : PdfColors.black,
+                            ),
+                          ),
+                          if (optionImageData != null) ...[
+                            pw.SizedBox(height: 4),
+                            pw.Container(
+                              constraints: pw.BoxConstraints(maxWidth: 200, maxHeight: 120),
+                              child: pw.Image(
+                                pw.MemoryImage(optionImageData),
+                                fit: pw.BoxFit.contain,
+                              ),
+                            ),
+                            pw.SizedBox(height: 4),
+                          ],
+                        ],
+                      );
+                    }),
+
+                    pw.SizedBox(height: 8),
+                    pw.Text(
+                      "Your Answer: ${userAns ?? 'Skipped'}",
+                      style: pw.TextStyle(
+                        font: font,
+                        fontSize: 10,
+                        color: isCorrect ? PdfColors.green : (isSkipped ? PdfColors.orange : PdfColors.red),
+                      ),
+                    ),
+                    if (!isCorrect)
+                      pw.Text(
+                        "Correct Answer: $resolvedCorrectText",
+                        style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green),
+                      ),
+                    pw.Divider(color: PdfColors.grey200),
                   ],
                 ),
               );
-            }),
+                    }),
+                  ],
+                ),
+              ],
+            ),
           ];
         },
       ),
@@ -167,21 +267,28 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
     setState(() => _isLoading = true);
     try {
       final bytes = await _generatePdfBytes();
-      if (!mounted) return;
+      if (!mounted) {
+        if (bytes != null) {
+          // PDF generated but widget unmounted
+        }
+        return;
+      }
       setState(() => _isLoading = false);
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PdfPreviewScreen(
-            product: {
-              'name': '${widget.unit ?? 'Unit Test'} - ${widget.subject ?? 'Question Paper'}',
-            },
-            isFullAccess: true,
-            pdfBytes: bytes,
+      if (bytes != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PdfPreviewScreen(
+              product: {
+                'name': '${widget.unit ?? 'Unit Test'} - ${widget.subject ?? 'Question Paper'}',
+              },
+              isFullAccess: true,
+              pdfBytes: bytes,
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

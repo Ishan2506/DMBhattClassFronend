@@ -6,11 +6,13 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:http/http.dart' as http;
 
 class OneLinerResultScreen extends StatefulWidget {
   final int totalQuestions;
@@ -41,10 +43,34 @@ class OneLinerResultScreen extends StatefulWidget {
 class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
   bool _isLoading = false;
 
+  Future<Uint8List?> _loadImageFromUrl(String? imageUrl) async {
+    if (imageUrl == null || imageUrl.isEmpty) return null;
+    try {
+      // Convert relative paths to full URLs using ApiService.getFileUrl
+      final fullUrl = ApiService.getFileUrl(imageUrl);
+      if (fullUrl.isEmpty) return null;
+
+      final response = await http.get(Uri.parse(fullUrl));
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      }
+    } catch (e) {
+      debugPrint('Error loading image: $e');
+    }
+    return null;
+  }
+
   Future<Uint8List> _generatePdfBytes() async {
     final pdf = pw.Document();
     final font = await PdfGoogleFonts.poppinsRegular();
     final fontBold = await PdfGoogleFonts.poppinsBold();
+
+    // Pre-load all question images
+    final Map<int, Uint8List?> questionImages = {};
+    for (int i = 0; i < widget.questions.length; i++) {
+      final imageUrl = widget.questions[i]['questionImage'];
+      questionImages[i] = await _loadImageFromUrl(imageUrl);
+    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -102,8 +128,8 @@ class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
               final q = widget.questions[index];
               final spoken = widget.spokenAnswers[index] ?? "N/A";
               final target = q['answer']['en'] ?? "";
-              
-              // Simple rough match check for color in PDF
+              final questionImageData = questionImages[index];
+
               bool isCorrect = spoken.toLowerCase().trim() == target.toLowerCase().trim();
 
               return pw.Container(
@@ -112,7 +138,17 @@ class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text("Q${index + 1}: ${q['question']['en']}", style: pw.TextStyle(font: fontBold, fontSize: 12)),
-                    pw.SizedBox(height: 4),
+                    if (questionImageData != null) ...[
+                      pw.SizedBox(height: 8),
+                      pw.Container(
+                        constraints: pw.BoxConstraints(maxWidth: 400, maxHeight: 200),
+                        child: pw.Image(
+                          pw.MemoryImage(questionImageData),
+                          fit: pw.BoxFit.contain,
+                        ),
+                      ),
+                    ],
+                    pw.SizedBox(height: 8),
                     pw.Text("Admin Keyword: $target", style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green)),
                     pw.Text("Your Answer: $spoken", style: pw.TextStyle(font: font, fontSize: 10, color: isCorrect ? PdfColors.green : PdfColors.red)),
                     pw.Divider(color: PdfColors.grey200),

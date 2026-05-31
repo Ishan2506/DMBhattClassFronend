@@ -298,6 +298,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                     'correctAnswer': q['correctAnswer'] ?? '',
                     'correctAnswerKey': q['correctAnswerKey'],
                     'optionsRaw': q['optionsRaw'],
+                    'questionImage': q['questionImage'],
                   },
                 )
                 .toList(),

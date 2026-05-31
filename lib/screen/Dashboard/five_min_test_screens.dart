@@ -1021,6 +1021,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
         'question': q['question'] ?? '',
         'answers': options,
         'correctAnswer': correctAnswer ?? '',
+        'questionImage': q['questionImage'],
       });
     }
 
