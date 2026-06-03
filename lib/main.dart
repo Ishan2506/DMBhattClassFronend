@@ -19,6 +19,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/utils/purchase_config.dart';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -48,6 +49,9 @@ void main() async {
 
   // Initialize Payment Config
   await PurchaseConfig.instance.initialize();
+
+  // Load standards and subjects from the admin API for all subject dropdowns.
+  await AcademicConstants.loadFromServer();
   
   // await _secureScreen();
   runApp(MyApp(prefs: prefs));
