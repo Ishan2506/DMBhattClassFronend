@@ -119,20 +119,32 @@ class ExamResultScreen extends StatelessWidget {
             // Questions
             ...List.generate(questions.length, (index) {
               final question = questions[index];
-              final userAns = selectedAnswers[index];
+              final userAnsKey = selectedAnswers[index];
               final optionsRaw = question['optionsRaw'] as List? ?? [];
-              final correctKey = question['correctAnswerKey'] ?? question['correctAnswer'];
+              final correctKey = (question['correctAnswerKey'] ?? question['correctAnswer'])?.toString() ?? '';
               
-              String resolvedCorrectText = "";
-              try {
-                final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
-                resolvedCorrectText = correctOption['text']?.toString() ?? "";
-              } catch (e) {
-                resolvedCorrectText = question['correctAnswer']?.toString() ?? "";
+              final isCorrect = userAnsKey?.trim().toUpperCase() == correctKey.trim().toUpperCase();
+              final isSkipped = userAnsKey == null || userAnsKey.trim().isEmpty;
+
+              String resolvedUserText = "Skipped";
+              if (!isSkipped) {
+                try {
+                  final selectedOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == userAnsKey.trim().toUpperCase());
+                  final String text = selectedOption['text']?.toString() ?? "";
+                  resolvedUserText = text.isNotEmpty ? "Option $userAnsKey ($text)" : "Option $userAnsKey";
+                } catch (e) {
+                  resolvedUserText = userAnsKey;
+                }
               }
 
-              final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
-              final isSkipped = userAns == null || userAns.trim().isEmpty;
+              String resolvedCorrectText = "";
+              try {
+                final correctOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == correctKey.trim().toUpperCase());
+                final String text = correctOption['text']?.toString() ?? "";
+                resolvedCorrectText = text.isNotEmpty ? "Option $correctKey ($text)" : "Option $correctKey";
+              } catch (e) {
+                resolvedCorrectText = correctKey;
+              }
 
               return pw.Container(
                 margin: const pw.EdgeInsets.only(bottom: 16),
@@ -145,7 +157,7 @@ class ExamResultScreen extends StatelessWidget {
                      ),
                      pw.SizedBox(height: 4),
                      pw.Text(
-                       "Your Answer: ${userAns ?? 'Skipped'}",
+                       "Your Answer: $resolvedUserText",
                        style: pw.TextStyle(
                          font: font, 
                          fontSize: 10,
@@ -357,20 +369,32 @@ class ExamResultScreen extends StatelessWidget {
                 itemCount: questions.length,
                 itemBuilder: (context, index) {
                   final question = questions[index];
-                  final userAns = selectedAnswers[index];
+                  final userAnsKey = selectedAnswers[index];
                   final optionsRaw = question['optionsRaw'] as List? ?? [];
-                  final correctKey = question['correctAnswerKey'] ?? question['correctAnswer'];
+                  final correctKey = (question['correctAnswerKey'] ?? question['correctAnswer'])?.toString() ?? '';
+
+                  final isCorrect = userAnsKey?.trim().toUpperCase() == correctKey.trim().toUpperCase();
+                  final isSkipped = userAnsKey == null || userAnsKey.trim().isEmpty;
+
+                  String resolvedUserText = "Skipped";
+                  if (!isSkipped) {
+                    try {
+                      final selectedOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == userAnsKey.trim().toUpperCase());
+                      final String text = selectedOption['text']?.toString() ?? "";
+                      resolvedUserText = text.isNotEmpty ? "Option $userAnsKey ($text)" : "Option $userAnsKey";
+                    } catch (e) {
+                      resolvedUserText = userAnsKey;
+                    }
+                  }
 
                   String resolvedCorrectText = "";
                   try {
-                    final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
-                    resolvedCorrectText = correctOption['text']?.toString() ?? "";
+                    final correctOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == correctKey.trim().toUpperCase());
+                    final String text = correctOption['text']?.toString() ?? "";
+                    resolvedCorrectText = text.isNotEmpty ? "Option $correctKey ($text)" : "Option $correctKey";
                   } catch (e) {
-                    resolvedCorrectText = question['correctAnswer']?.toString() ?? "";
+                    resolvedCorrectText = correctKey;
                   }
-
-                  final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
-                  final isSkipped = userAns == null || userAns.trim().isEmpty;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
@@ -454,7 +478,7 @@ class ExamResultScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     if (!isSkipped)
-                                      _buildAnswerRow(context, "Your Answer", userAns!, isCorrect ? Colors.green : Colors.red),
+                                      _buildAnswerRow(context, "Your Answer", resolvedUserText, isCorrect ? Colors.green : Colors.red),
                                     
                                     if (!isCorrect) ...[
                                       if (!isSkipped) const SizedBox(height: 8),

@@ -211,27 +211,14 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
     int skipped = 0;
 
     for (int i = 0; i < _questions.length; i++) {
-      final userAns = _selectedAnswers[i];
+      final userAns = _selectedAnswers[i]; // This is now option key, e.g., 'A'
 
       final q = _questions[i];
-      final correctKey = q['correctAnswerKey']; // 'A'
-      final optionsRaw =
-          q['optionsRaw'] as List; // [{key:'A', text:'...'}, ...]
-
-      String? correctText;
-      try {
-        final correctOption = optionsRaw.firstWhere(
-          (o) => o['key'] == correctKey,
-        );
-        correctText = correctOption['text'];
-      } catch (e) {
-        // Fallback
-        correctText = q['correctAnswer'];
-      }
+      final correctKey = q['correctAnswerKey']?.toString() ?? q['correctAnswer']?.toString() ?? ''; // 'A'
 
       if (userAns == null) {
         skipped++;
-      } else if (userAns == correctText) {
+      } else if (userAns.trim().toUpperCase() == correctKey.trim().toUpperCase()) {
         correct++;
       } else {
         wrong++;
@@ -571,7 +558,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
       final answer = answers[index].toString();
       final optionLabel = String.fromCharCode(65 + index); // A, B, C, D
       final String? selectedAns = _selectedAnswers[_currentQuestionIndex];
-      final bool isSelected = selectedAns == answer;
+      final bool isSelected = selectedAns == optionLabel;
 
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -595,7 +582,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
         child: InkWell(
           onTap: () {
             setState(() {
-              _selectedAnswers[_currentQuestionIndex] = answer;
+              _selectedAnswers[_currentQuestionIndex] = optionLabel;
             });
           },
           borderRadius: BorderRadius.circular(16),

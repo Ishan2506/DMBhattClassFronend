@@ -965,47 +965,61 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
     for (int i = 0; i < _questions.length; i++) {
       final q = _questions[i];
 
-      // Construct options list based on type
+      // Build optionsRaw and answers list
+      List<Map<String, dynamic>> optionsRaw = [];
       List<String> options = [];
+
       if (q['type']?.toString().trim().toUpperCase() == 'MCQ' ||
           q['type'] == null) {
-        if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty)
-          options.add(q['optionA'].toString().trim());
-        if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty)
-          options.add(q['optionB'].toString().trim());
-        if (q['optionC'] != null && q['optionC'].toString().trim().isNotEmpty)
-          options.add(q['optionC'].toString().trim());
-        if (q['optionD'] != null && q['optionD'].toString().trim().isNotEmpty)
-          options.add(q['optionD'].toString().trim());
+        if ((q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) ||
+            (q['optionAImage'] != null && q['optionAImage'].toString().trim().isNotEmpty)) {
+          optionsRaw.add({'key': 'A', 'text': q['optionA']?.toString().trim() ?? '', 'image': q['optionAImage']});
+          options.add(q['optionA']?.toString().trim() ?? '');
+        }
+        if ((q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) ||
+            (q['optionBImage'] != null && q['optionBImage'].toString().trim().isNotEmpty)) {
+          optionsRaw.add({'key': 'B', 'text': q['optionB']?.toString().trim() ?? '', 'image': q['optionBImage']});
+          options.add(q['optionB']?.toString().trim() ?? '');
+        }
+        if ((q['optionC'] != null && q['optionC'].toString().trim().isNotEmpty) ||
+            (q['optionCImage'] != null && q['optionCImage'].toString().trim().isNotEmpty)) {
+          optionsRaw.add({'key': 'C', 'text': q['optionC']?.toString().trim() ?? '', 'image': q['optionCImage']});
+          options.add(q['optionC']?.toString().trim() ?? '');
+        }
+        if ((q['optionD'] != null && q['optionD'].toString().trim().isNotEmpty) ||
+            (q['optionDImage'] != null && q['optionDImage'].toString().trim().isNotEmpty)) {
+          optionsRaw.add({'key': 'D', 'text': q['optionD']?.toString().trim() ?? '', 'image': q['optionDImage']});
+          options.add(q['optionD']?.toString().trim() ?? '');
+        }
       } else if (q['type']?.toString().trim().toUpperCase() == 'TRUE/FALSE' ||
           q['type']?.toString().trim().toUpperCase() == 'TF' ||
           q['type']?.toString().trim().toUpperCase() == 'T/F' ||
           q['type'] == 'True/False') {
-        options.add(
-          (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty)
-              ? q['optionA'].toString().trim()
-              : "True",
-        );
-        options.add(
-          (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty)
-              ? q['optionB'].toString().trim()
-              : "False",
-        );
+        final valA = (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) ? q['optionA'].toString().trim() : "True";
+        final valB = (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) ? q['optionB'].toString().trim() : "False";
+        optionsRaw.add({'key': 'A', 'text': valA, 'image': q['optionAImage']});
+        optionsRaw.add({'key': 'B', 'text': valB, 'image': q['optionBImage']});
+        options.add(valA);
+        options.add(valB);
       } else {
-        // Fallback for other types or implicit TF
-        if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty)
-          options.add(q['optionA'].toString().trim());
-        if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty)
-          options.add(q['optionB'].toString().trim());
+        if ((q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) ||
+            (q['optionAImage'] != null && q['optionAImage'].toString().trim().isNotEmpty)) {
+          optionsRaw.add({'key': 'A', 'text': q['optionA']?.toString().trim() ?? '', 'image': q['optionAImage']});
+          options.add(q['optionA']?.toString().trim() ?? '');
+        }
+        if ((q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) ||
+            (q['optionBImage'] != null && q['optionBImage'].toString().trim().isNotEmpty)) {
+          optionsRaw.add({'key': 'B', 'text': q['optionB']?.toString().trim() ?? '', 'image': q['optionBImage']});
+          options.add(q['optionB']?.toString().trim() ?? '');
+        }
       }
 
-      final userAnswer = _selectedAnswers[i];
-      final correctAnswer = q['correctAnswer'];
+      final userAnswerKey = _selectedAnswers[i]; // This is now option key, e.g., 'A'
+      final correctAnswerKey = q['correctAnswer']?.toString() ?? ''; // 'A'
 
-      if (userAnswer == null || userAnswer.trim().isEmpty) {
+      if (userAnswerKey == null || userAnswerKey.trim().isEmpty) {
         skipped++;
-      } else if (userAnswer.trim().toLowerCase() ==
-          correctAnswer.toString().trim().toLowerCase()) {
+      } else if (userAnswerKey.trim().toUpperCase() == correctAnswerKey.trim().toUpperCase()) {
         correct++;
       } else {
         wrong++;
@@ -1014,7 +1028,9 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
       mappedQuestions.add({
         'question': q['question'] ?? '',
         'answers': options,
-        'correctAnswer': correctAnswer ?? '',
+        'correctAnswer': correctAnswerKey,
+        'correctAnswerKey': correctAnswerKey,
+        'optionsRaw': optionsRaw,
       });
     }
 
@@ -1085,45 +1101,53 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
     final selectedOption = _selectedAnswers[_currentQuestionIndex];
 
     // Build options list dynamically
-    List<String> options = [];
+    List<Map<String, dynamic>> optionsList = [];
     if (question['type']?.toString().trim().toUpperCase() == 'MCQ' ||
         question['type'] == null) {
-      if (question['optionA'] != null &&
-          question['optionA'].toString().trim().isNotEmpty)
-        options.add(question['optionA'].toString().trim());
-      if (question['optionB'] != null &&
-          question['optionB'].toString().trim().isNotEmpty)
-        options.add(question['optionB'].toString().trim());
-      if (question['optionC'] != null &&
-          question['optionC'].toString().trim().isNotEmpty)
-        options.add(question['optionC'].toString().trim());
-      if (question['optionD'] != null &&
-          question['optionD'].toString().trim().isNotEmpty)
-        options.add(question['optionD'].toString().trim());
-    } else if (question['type']?.toString().trim().toUpperCase() ==
-            'TRUE/FALSE' ||
+      if ((question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty) ||
+          (question['optionAImage'] != null && question['optionAImage'].toString().trim().isNotEmpty)) {
+        optionsList.add({'key': 'A', 'text': question['optionA']?.toString().trim() ?? '', 'image': question['optionAImage']});
+      }
+      if ((question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty) ||
+          (question['optionBImage'] != null && question['optionBImage'].toString().trim().isNotEmpty)) {
+        optionsList.add({'key': 'B', 'text': question['optionB']?.toString().trim() ?? '', 'image': question['optionBImage']});
+      }
+      if ((question['optionC'] != null && question['optionC'].toString().trim().isNotEmpty) ||
+          (question['optionCImage'] != null && question['optionCImage'].toString().trim().isNotEmpty)) {
+        optionsList.add({'key': 'C', 'text': question['optionC']?.toString().trim() ?? '', 'image': question['optionCImage']});
+      }
+      if ((question['optionD'] != null && question['optionD'].toString().trim().isNotEmpty) ||
+          (question['optionDImage'] != null && question['optionDImage'].toString().trim().isNotEmpty)) {
+        optionsList.add({'key': 'D', 'text': question['optionD']?.toString().trim() ?? '', 'image': question['optionDImage']});
+      }
+    } else if (question['type']?.toString().trim().toUpperCase() == 'TRUE/FALSE' ||
         question['type']?.toString().trim().toUpperCase() == 'TF' ||
-        question['type']?.toString().trim().toUpperCase() == 'T/F') {
-      options.add(
-        (question['optionA'] != null &&
-                question['optionA'].toString().trim().isNotEmpty)
+        question['type']?.toString().trim().toUpperCase() == 'T/F' ||
+        question['type'] == 'True/False') {
+      optionsList.add({
+        'key': 'A',
+        'text': (question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty)
             ? question['optionA'].toString().trim()
             : "True",
-      );
-      options.add(
-        (question['optionB'] != null &&
-                question['optionB'].toString().trim().isNotEmpty)
+        'image': question['optionAImage']
+      });
+      optionsList.add({
+        'key': 'B',
+        'text': (question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty)
             ? question['optionB'].toString().trim()
             : "False",
-      );
+        'image': question['optionBImage']
+      });
     } else {
       // Fallback
-      if (question['optionA'] != null &&
-          question['optionA'].toString().trim().isNotEmpty)
-        options.add(question['optionA'].toString().trim());
-      if (question['optionB'] != null &&
-          question['optionB'].toString().trim().isNotEmpty)
-        options.add(question['optionB'].toString().trim());
+      if ((question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty) ||
+          (question['optionAImage'] != null && question['optionAImage'].toString().trim().isNotEmpty)) {
+        optionsList.add({'key': 'A', 'text': question['optionA']?.toString().trim() ?? '', 'image': question['optionAImage']});
+      }
+      if ((question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty) ||
+          (question['optionBImage'] != null && question['optionBImage'].toString().trim().isNotEmpty)) {
+        optionsList.add({'key': 'B', 'text': question['optionB']?.toString().trim() ?? '', 'image': question['optionBImage']});
+      }
     }
 
     return PopScope(
@@ -1299,15 +1323,18 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                 else
                   Expanded(
                     child: ListView.separated(
-                      itemCount: options.length,
+                      itemCount: optionsList.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        final option = options[index];
-                        final isSelected = selectedOption == option;
+                        final opt = optionsList[index];
+                        final optionKey = opt['key'] as String;
+                        final optionText = opt['text'] as String;
+                        final optionImage = opt['image'];
+                        final isSelected = selectedOption == optionKey;
 
                         return InkWell(
-                          onTap: () => _selectAnswer(option),
+                          onTap: () => _selectAnswer(optionKey),
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -1352,7 +1379,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        option,
+                                        optionText,
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
                                           color: isSelected
@@ -1363,13 +1390,13 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                                               : FontWeight.normal,
                                         ),
                                       ),
-                                      if (question['option${String.fromCharCode(65 + index)}Image'] != null && question['option${String.fromCharCode(65 + index)}Image'].toString().isNotEmpty)
+                                      if (optionImage != null && optionImage.toString().isNotEmpty && optionImage.toString() != "null")
                                         Padding(
                                           padding: const EdgeInsets.only(top: 8.0),
                                           child: ClipRRect(
                                             borderRadius: BorderRadius.circular(8),
                                             child: Image.network(
-                                              ApiService.getFileUrl(question['option${String.fromCharCode(65 + index)}Image']),
+                                              ApiService.getFileUrl(optionImage),
                                               height: 100,
                                               fit: BoxFit.contain,
                                             ),
