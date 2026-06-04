@@ -105,7 +105,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                       style: pw.TextStyle(
                         font: fontBold,
                         fontSize: 80,
-                        color: PdfColors.grey400.withOpacity(0.3),
+                        color: PdfColors.grey300,
                       ),
                     ),
                   ),
@@ -160,9 +160,9 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                     pw.SizedBox(height: 20),
 
             // Questions
-            ...List.generate(questions.length, (index) {
-              final question = questions[index];
-              final userAnsKey = selectedAnswers[index];
+            ...List.generate(widget.questions.length, (index) {
+              final question = widget.questions[index];
+              final userAnsKey = widget.selectedAnswers[index];
               final optionsRaw = question['optionsRaw'] as List? ?? [];
               final correctKey = (question['correctAnswerKey'] ?? question['correctAnswer'])?.toString() ?? '';
               
@@ -450,8 +450,8 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: widget.questions.length,
                 itemBuilder: (context, index) {
-                  final question = questions[index];
-                  final userAnsKey = selectedAnswers[index];
+                  final question = widget.questions[index];
+                  final userAnsKey = widget.selectedAnswers[index];
                   final optionsRaw = question['optionsRaw'] as List? ?? [];
                   final correctKey = (question['correctAnswerKey'] ?? question['correctAnswer'])?.toString() ?? '';
 

@@ -28,6 +28,15 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   String? _selectedSubject;
   List<String> _subjects = [];
 
+  // Unit/Title/Marks filters
+  String? _selectedUnit;
+  String? _selectedTitle;
+  String? _selectedMarks;
+  String? _selectedExamId;
+  List<String> _titles = [];
+  List<String> _units = [];
+  List<String> _marksOptions = [];
+
   List<String> _takenExamIds = [];
   String? _userRole;
   String? _userMedium;
