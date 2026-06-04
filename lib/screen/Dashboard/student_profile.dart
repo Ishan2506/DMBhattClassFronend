@@ -20,6 +20,7 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'dart:io';
+import 'package:intl/intl.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
@@ -285,6 +286,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String email = "";
   String parentMobile = "";
   String profilePic = "";
+  String dob = "";
   String? _photoPath;
 
   List<dynamic> _examResults = [];
@@ -347,6 +349,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             parentMobile =
                 profile['parentPhone'] ??
                 (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
+          }
+
+          final rawDob = user['dob'];
+          if (rawDob != null && rawDob.toString().isNotEmpty) {
+            try {
+              final parsedDate = DateTime.parse(rawDob.toString());
+              dob = DateFormat('dd/MM/yyyy').format(parsedDate);
+            } catch (e) {
+              dob = rawDob.toString();
+            }
+          } else {
+            dob = "";
           }
 
           // Update saved accounts list with latest info
