@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
-import 'package:dm_bhatt_tutions/bloc/theme/theme_cubit.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';

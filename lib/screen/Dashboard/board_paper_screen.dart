@@ -177,7 +177,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                           style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                         ),
                         const SizedBox(height: 12),
-                        ..._papers.where((p) => _selectedSubject == null || p['subject'] == _selectedSubject).map((paper) => _buildPaperCard(paper, colorScheme, isDark)).toList(),
+                        ..._papers.where((p) => _selectedSubject == null || p['subject'] == _selectedSubject).map((paper) => _buildPaperCard(paper, colorScheme, isDark)),
                         if (_papers.where((p) => _selectedSubject == null || p['subject'] == _selectedSubject).isEmpty)
                            Center(
                              child: Padding(
@@ -295,7 +295,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
   Widget _buildDropdown(String label, List<String> items, String? value, Function(String?)? onChanged, {bool enabled = true}) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: enabled ? onChanged : null,
       decoration: InputDecoration(

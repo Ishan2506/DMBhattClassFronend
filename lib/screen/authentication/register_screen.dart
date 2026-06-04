@@ -43,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _selectedCity;
   String? _selectedInstitute;
   String? _selectedBoard;
-  String? _selectedRole = "Student";
+  final String? _selectedRole = "Student";
 
   // Data Lists
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];

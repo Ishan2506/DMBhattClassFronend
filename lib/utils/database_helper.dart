@@ -66,8 +66,11 @@ class DatabaseHelper {
       };
       // Upsert
       int index = accounts.indexWhere((a) => a['userId'] == userId);
-      if (index >= 0) accounts[index] = newAcc;
-      else accounts.add(newAcc);
+      if (index >= 0) {
+        accounts[index] = newAcc;
+      } else {
+        accounts.add(newAcc);
+      }
       await prefs.setString('web_accounts_fallback', jsonEncode(accounts));
       return;
     }

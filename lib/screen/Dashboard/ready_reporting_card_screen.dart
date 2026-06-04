@@ -31,7 +31,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
   List<dynamic> _allExams = [];
   List<dynamic> _manualExams = [];
   List<dynamic> _appExams = [];
-  String _remark = "Keep up the good work!"; // Default mock remark
+  final String _remark = "Keep up the good work!"; // Default mock remark
 
   @override
   void initState() {

@@ -7,7 +7,6 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 
 
-import 'package:dm_bhatt_tutions/constant/app_images.dart';
 
 class ForgotPasswordOtpScreen extends StatefulWidget {
   final String email;

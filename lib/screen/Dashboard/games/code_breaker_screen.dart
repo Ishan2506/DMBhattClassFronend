@@ -16,8 +16,8 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
   final MindGameService _gameService = MindGameService();
   // Logic: 4-digit code (1-6)
   List<int> _secretCode = [];
-  List<List<int>> _guesses = [];
-  List<Map<String, int>> _guessResults = []; // {Bulls: X, Cows: Y}
+  final List<List<int>> _guesses = [];
+  final List<Map<String, int>> _guessResults = []; // {Bulls: X, Cows: Y}
   
   final int _maxAttempts = 10;
   bool _isGameOver = false;

@@ -13,7 +13,8 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 class PdfPreviewScreen extends StatefulWidget {
   final Map<String, dynamic> product;
   final bool isFullAccess;
-  const PdfPreviewScreen({super.key, required this.product, this.isFullAccess = false});
+  final Uint8List? pdfBytes;
+  const PdfPreviewScreen({super.key, required this.product, this.isFullAccess = false, this.pdfBytes});
 
   @override
   State<PdfPreviewScreen> createState() => _PdfPreviewScreenState();
@@ -28,6 +29,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   int _actualTotalPages = 1; // Actual total pages in PDF (dynamic)
   bool _isLoading = true;
   Uint8List? _pdfBytes;
+  bool _isFullScreen = false;
 
   @override
   void initState() {
@@ -65,6 +67,34 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
   Future<void> _loadPdfInfo() async {
     try {
+      // If pdfBytes are provided directly, use them
+      if (widget.pdfBytes != null) {
+        _pdfBytes = widget.pdfBytes;
+        debugPrint("✅ Using pre-provided PDF bytes (${_pdfBytes!.length} bytes)");
+
+        // Robust page counting using syncfusion_flutter_pdf
+        try {
+          final PdfDocument document = PdfDocument(inputBytes: _pdfBytes!);
+          _actualTotalPages = document.pages.count;
+          document.dispose();
+          debugPrint("📊 PDF Page Count detected: $_actualTotalPages");
+        } catch (parseError) {
+          debugPrint("Error parsing PDF with Syncfusion: $parseError");
+          // Fallback to minimal page count if parsing fails
+          _actualTotalPages = 1;
+        }
+
+        if (_actualTotalPages <= 0) _actualTotalPages = 1;
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
+      // Otherwise, fetch from URL
       final String? pdfUrl = widget.product['file'] ?? widget.product['fileUrl'] ?? widget.product['image'] ?? widget.product['url'];
       if (pdfUrl == null || pdfUrl.isEmpty) {
         if (mounted) setState(() => _isLoading = false);
@@ -76,7 +106,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
       if (response.statusCode == 200) {
         debugPrint("✅ PDF info fetched successfully (${response.bodyBytes.length} bytes)");
         _pdfBytes = response.bodyBytes;
-        
+
         // Robust page counting using syncfusion_flutter_pdf
         if (_pdfBytes == null) return;
         try {
@@ -87,7 +117,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
         } catch (parseError) {
           debugPrint("Error parsing PDF with Syncfusion: $parseError");
           // Fallback to minimal page count if parsing fails
-          _actualTotalPages = 1; 
+          _actualTotalPages = 1;
         }
 
         if (_actualTotalPages <= 0) _actualTotalPages = 1;
@@ -133,59 +163,71 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: CustomAppBar(
+      appBar: _isFullScreen ? null : CustomAppBar(
         title: "PDF Preview",
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(_isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen, color: Colors.white),
+            onPressed: () {
+              setState(() {
+                _isFullScreen = !_isFullScreen;
+              });
+            },
+          ),
+        ],
         centerTitle: true,
       ),
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       body: Column(
         children: [
           // Page indicator
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.product['name'] ?? 'PDF Preview',
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+          if (!_isFullScreen)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.product['name'] ?? 'PDF Preview',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Page ${_currentPage + 1} / $_actualTotalPages',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Page ${_currentPage + 1} / $_actualTotalPages',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
           // Free preview notice
-          if (!widget.isFullAccess && _currentPage < _freePages)
+          if (!widget.isFullAccess && _currentPage < _freePages && !_isFullScreen)
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(12),
@@ -193,16 +235,18 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 20, color: Colors.green.shade700),
-                  const SizedBox(width: 12),
+                  Icon(Icons.info_outline, size: 18, color: Colors.green.shade700),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       "You are viewing a free preview of this document.",
                       style: GoogleFonts.poppins(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Colors.green.shade700,
                         fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -229,7 +273,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                       final bool isCloudinary = pdfUrl != null && pdfUrl.contains('/upload/');
 
                       return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: isDark ? Colors.grey.shade900 : Colors.white,
                           borderRadius: BorderRadius.circular(16),
@@ -251,25 +295,25 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                                 transformationController: _transformationController,
                                 minScale: 1.0,
                                 maxScale: 4.0,
+                                boundaryMargin: const EdgeInsets.all(0),
                                 onInteractionUpdate: (details) {
                                   // Update internal scale when pinch-zooming
                                   _currentScale = _transformationController.value.getMaxScaleOnAxis();
                                 },
-                                child: isCloudinary
-                                    ? Image.network(
-                                        _getPdfPageUrl(ApiService.getFileUrl(pdfUrl!), pageNumber),
-                                        fit: BoxFit.contain,
-                                        width: double.infinity,
-                                        loadingBuilder: (context, child, loadingProgress) {
-                                          if (loadingProgress == null) return child;
-                                          return Center(
-                                            child: const CustomLoader(),
-                                          );
-                                        },
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            _buildRasterizedFallback(pageNumber),
-                                      )
-                                    : _buildRasterizedFallback(pageNumber),
+                                child: Center(
+                                  child: isCloudinary
+                                      ? Image.network(
+                                          _getPdfPageUrl(ApiService.getFileUrl(pdfUrl), pageNumber),
+                                          fit: BoxFit.contain,
+                                          loadingBuilder: (context, child, loadingProgress) {
+                                            if (loadingProgress == null) return child;
+                                            return const CustomLoader();
+                                          },
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              _buildRasterizedFallback(pageNumber),
+                                        )
+                                      : _buildRasterizedFallback(pageNumber),
+                                ),
                               ),
                             ),
 
@@ -348,17 +392,24 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                             ),
                           ),
                         ),
-                      // Zoom Controls
+                      // Zoom Controls & Exit fullscreen button
                       Positioned(
                         bottom: 16,
                         right: 16,
                         child: Column(
                           children: [
-                            _buildZoomButton(Icons.add, () => _zoom(1.2)),
-                            const SizedBox(height: 8),
-                            _buildZoomButton(Icons.remove, () => _zoom(0.8)),
-                            const SizedBox(height: 8),
-                            _buildZoomButton(Icons.refresh, _resetZoom),
+                            if (!_isFullScreen) ...[
+                              _buildZoomButton(Icons.add, () => _zoom(1.2)),
+                              const SizedBox(height: 8),
+                              _buildZoomButton(Icons.remove, () => _zoom(0.8)),
+                              const SizedBox(height: 8),
+                              _buildZoomButton(Icons.refresh, _resetZoom),
+                            ] else
+                              _buildZoomButton(Icons.fullscreen_exit, () {
+                                setState(() {
+                                  _isFullScreen = false;
+                                });
+                              }),
                           ],
                         ),
                       ),
@@ -371,63 +422,64 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
 
           // Navigation controls
-          Container(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Previous button
-                ElevatedButton.icon(
-                  onPressed: _currentPage > 0
-                      ? () {
-                          _pageController.previousPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      : null,
-                  icon: const Icon(Icons.arrow_back),
-                  label: Text(
-                    'Previous',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                    foregroundColor: isDark ? Colors.white : Colors.black87,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+          if (!_isFullScreen)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Previous button
+                  ElevatedButton.icon(
+                    onPressed: _currentPage > 0
+                        ? () {
+                            _pageController.previousPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        : null,
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: Text(
+                      'Previous',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                      foregroundColor: isDark ? Colors.white : Colors.black87,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
-                ),
 
-                // Next button
-                ElevatedButton.icon(
-                  onPressed: _currentPage < (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1
-                      ? () {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      : null,
-                  icon: const Icon(Icons.arrow_forward),
-                  label: Text(
-                    _currentPage == _freePages - 1 ? 'Unlock All' : 'Next',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  // Next button
+                  ElevatedButton.icon(
+                    onPressed: _currentPage < (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1
+                        ? () {
+                            _pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        : null,
+                    icon: const Icon(Icons.arrow_forward, size: 18),
+                    label: Text(
+                      _currentPage == _freePages - 1 && !widget.isFullAccess ? 'Unlock All' : 'Next',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -442,7 +494,9 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
           return const CustomLoader();
         }
         if (snapshot.hasData && snapshot.data != null) {
-          return Image.memory(snapshot.data!, fit: BoxFit.contain);
+          return SingleChildScrollView(
+            child: Image.memory(snapshot.data!, fit: BoxFit.contain),
+          );
         }
         return Center(
           child: Column(

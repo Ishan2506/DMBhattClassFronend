@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart'; 
@@ -948,7 +947,7 @@ class ApiService {
       body: jsonEncode({
         'receipt': receipt,
         'productId': productId,
-        'transactionId': transactionId,
+        'apple_transaction_id': transactionId,
         'standard': standard,
         'medium': medium,
         if (stream != null) 'stream': stream,
@@ -975,7 +974,7 @@ class ApiService {
       body: jsonEncode({
         'receipt': receipt,
         'productId': productId,
-        'transactionId': transactionId,
+        'apple_transaction_id': transactionId,
         'newStandard': newStandard,
         'medium': medium,
         if (stream != null) 'stream': stream,
@@ -1001,7 +1000,7 @@ class ApiService {
       body: jsonEncode({
         'receipt': receipt,
         'productId': productId,
-        'transactionId': transactionId,
+        'apple_transaction_id': transactionId,
         'materialProductId': materialProductId,
         'amount': amount,
       }),

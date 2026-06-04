@@ -99,8 +99,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _selectedStandard = parts[0];
               _selectedStream = parts.skip(1).join(' ');
             }
-            if (!_standards.contains(_selectedStandard))
+            if (!_standards.contains(_selectedStandard)) {
               _selectedStandard = null;
+            }
 
             _selectedMedium = profile['medium'];
             if (!_mediums.contains(_selectedMedium)) _selectedMedium = null;
@@ -122,8 +123,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 profile['state'] ??
                 user['address']?['state'] ??
                 "Gujarat";
-            if (!_stateCityMap.keys.contains(_selectedState))
+            if (!_stateCityMap.keys.contains(_selectedState)) {
               _selectedState = "Gujarat";
+            }
 
             // Validate city against state
             if (_selectedCity != null && 
@@ -193,28 +195,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               "${updatedUser['firstName'] ?? ''} ${updatedUser['middleName'] ?? ''} ${updatedUser['lastName'] ?? ''}"
                   .trim();
           await prefs.setString('userName', fullName);
-          if (updatedUser['phoneNum'] != null)
+          if (updatedUser['phoneNum'] != null) {
             await prefs.setString('userPhone', updatedUser['phoneNum']);
-          if (updatedUser['photoPath'] != null)
+          }
+          if (updatedUser['photoPath'] != null) {
             await prefs.setString('userPic', updatedUser['photoPath']);
+          }
         }
 
         final updatedProfile = responseData['profile'];
         if (updatedProfile != null) {
-          if (updatedProfile['std'] != null)
+          if (updatedProfile['std'] != null) {
             await prefs.setString('std', updatedProfile['std'].toString());
-          if (updatedProfile['medium'] != null)
+          }
+          if (updatedProfile['medium'] != null) {
             await prefs.setString(
               'medium',
               updatedProfile['medium'].toString(),
             );
-          if (updatedProfile['board'] != null)
+          }
+          if (updatedProfile['board'] != null) {
             await prefs.setString('board', updatedProfile['board'].toString());
-          if (updatedProfile['stream'] != null)
+          }
+          if (updatedProfile['stream'] != null) {
             await prefs.setString(
               'stream',
               updatedProfile['stream'].toString(),
             );
+          }
         }
 
         if (!mounted) return;
@@ -384,8 +392,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             if (val == null || val.isEmpty) return "Required";
                             if (!RegExp(
                               r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                            ).hasMatch(val))
+                            ).hasMatch(val)) {
                               return "Invalid Email";
+                            }
                             return null;
                           },
                         ),
@@ -560,7 +569,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     TextEditingController? controller,
     bool isPassword = false,
     bool isVisible = false,
-    VoidCallback? onVisibilityChanged,
     TextInputType inputType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,

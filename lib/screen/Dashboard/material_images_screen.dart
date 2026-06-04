@@ -153,7 +153,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
 
   Widget _buildDropdown(String label, List<String> items, String? value, Function(String?) onChanged) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: onChanged,
       decoration: InputDecoration(

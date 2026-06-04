@@ -18,8 +18,8 @@ class _VisualPathwayScreenState extends State<VisualPathwayScreen> {
   int _score = 0;
   bool _gameOver = false;
   
-  List<int> _sequence = [];
-  List<int> _currentInput = [];
+  final List<int> _sequence = [];
+  final List<int> _currentInput = [];
   bool _isPlayingSequence = false;
   int _sequenceLength = 3;
   int _flashIndex = -1;

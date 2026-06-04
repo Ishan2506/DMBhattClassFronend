@@ -30,14 +30,14 @@ class GrammarWord {
 class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
   final MindGameService _gameService = MindGameService();
   final Random _random = Random();
-  
+
   int _score = 0;
   int _level = 1;
   bool _isLoading = true;
-  
+
   List<GrammarWord> _wordsToFall = [];
   List<GrammarWord> _fallingWords = [];
-  
+
   List<GrammarWord> _allWords = [];
 
   @override
@@ -53,7 +53,12 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          _allWords = data.map((json) => GrammarWord.fromGameQuestion(GameQuestion.fromJson(json))).toList();
+          _allWords = data
+              .map(
+                (json) =>
+                    GrammarWord.fromGameQuestion(GameQuestion.fromJson(json)),
+              )
+              .toList();
           _isLoading = false;
           _startSession();
         });
@@ -92,10 +97,10 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
         _score += 10;
         _fallingWords.remove(word);
         if (_wordsToFall.isNotEmpty) {
-           _fallingWords.add(_wordsToFall.removeLast());
+          _fallingWords.add(_wordsToFall.removeLast());
         } else {
-           // All dynamic questions exhausted
-           _showWinDialog();
+          // All dynamic questions exhausted
+          _showWinDialog();
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,9 +115,9 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
         _score = max(0, _score - 5);
         _fallingWords.remove(word);
         if (_wordsToFall.isNotEmpty) {
-           _fallingWords.add(_wordsToFall.removeLast());
+          _fallingWords.add(_wordsToFall.removeLast());
         } else {
-           _showWinDialog();
+          _showWinDialog();
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,7 +135,10 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text("Game Complete!", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(
+          "Game Complete!",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
         content: Text(
           "You've sorted all available words!\nFinal Score: $_score",
           style: GoogleFonts.poppins(fontSize: 18),
@@ -154,7 +162,6 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
       ),
     );
   }
-
 
   void _showHowToPlay() {
     final theme = Theme.of(context);
@@ -181,7 +188,11 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                       color: colorScheme.primary.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.videogame_asset, color: colorScheme.primary, size: 28),
+                    child: Icon(
+                      Icons.videogame_asset,
+                      color: colorScheme.primary,
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Text(
@@ -195,13 +206,29 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              _buildInstructionRow(theme, "1", "A word will appear in the center of the screen."),
+              _buildInstructionRow(
+                theme,
+                "1",
+                "A word will appear in the center of the screen.",
+              ),
               const SizedBox(height: 12),
-              _buildInstructionRow(theme, "2", "Determine if the word is a NOUN, VERB, or ADJECTIVE."),
+              _buildInstructionRow(
+                theme,
+                "2",
+                "Determine if the word is a NOUN, VERB, or ADJECTIVE.",
+              ),
               const SizedBox(height: 12),
-              _buildInstructionRow(theme, "3", "Drag the word into the correct bucket at the bottom."),
+              _buildInstructionRow(
+                theme,
+                "3",
+                "Drag the word into the correct bucket at the bottom.",
+              ),
               const SizedBox(height: 12),
-              _buildInstructionRow(theme, "4", "You have 3 lives. Make sure you drop it in the right bucket!"),
+              _buildInstructionRow(
+                theme,
+                "4",
+                "You have 3 lives. Make sure you drop it in the right bucket!",
+              ),
               const SizedBox(height: 24),
               // Example Box
               Container(
@@ -209,7 +236,9 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                 decoration: BoxDecoration(
                   color: colorScheme.tertiaryContainer.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(
+                    color: colorScheme.tertiary.withOpacity(0.5),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -224,13 +253,21 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                     const SizedBox(height: 12),
                     Text(
                       "'Happy' -> Drop into ADJECTIVE bucket",
-                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       "'Run' -> Drop into VERB bucket",
-                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue),
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -242,11 +279,19 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   foregroundColor: colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   elevation: 2,
                 ),
-                child: Text("Let's Play!", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
+                child: Text(
+                  "Let's Play!",
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ],
           ),
@@ -307,13 +352,16 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
             children: [
               const Icon(Icons.category_outlined, size: 64, color: Colors.grey),
               const SizedBox(height: 16),
-              Text("No grammar words found.", style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey)),
+              Text(
+                "No grammar words found.",
+                style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey),
+              ),
             ],
           ),
         ),
       );
     }
-  
+
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -340,10 +388,17 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                   const SizedBox(width: 28), // Spacer where hearts were
                   Text(
                     "Lvl $_level",
-                    style: GoogleFonts.poppins(fontSize: 20, color: Colors.grey, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amber.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -372,38 +427,47 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                     icon: const Icon(Icons.skip_next, size: 20),
                     label: Text(
                       AppLocalizations.of(context)!.skip,
-                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             Expanded(
               child: Stack(
-                 alignment: Alignment.center,
-                 children: _fallingWords.map((wordObj) {
-                    return Positioned(
-                       top: MediaQuery.of(context).size.height * 0.2, // Simplified for drag and drop
-                       child: Draggable<GrammarWord>(
-                         data: wordObj,
-                         feedback: Material(
-                           color: Colors.transparent,
-                           child: _buildWordChip(wordObj.word, theme, isDragging: true),
-                         ),
-                         childWhenDragging: Opacity(
-                            opacity: 0.3,
-                            child: _buildWordChip(wordObj.word, theme),
-                         ),
-                         child: _buildWordChip(wordObj.word, theme),
-                       ),
-                    );
-                 }).toList(),
-              )
+                alignment: Alignment.center,
+                children: _fallingWords.map((wordObj) {
+                  return Positioned(
+                    top:
+                        MediaQuery.of(context).size.height *
+                        0.2, // Simplified for drag and drop
+                    child: Draggable<GrammarWord>(
+                      data: wordObj,
+                      feedback: Material(
+                        color: Colors.transparent,
+                        child: _buildWordChip(
+                          wordObj.word,
+                          theme,
+                          isDragging: true,
+                        ),
+                      ),
+                      childWhenDragging: Opacity(
+                        opacity: 0.3,
+                        child: _buildWordChip(wordObj.word, theme),
+                      ),
+                      child: _buildWordChip(wordObj.word, theme),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
-            
+
             // Buckets
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -422,33 +486,41 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
       ),
     );
   }
-  
-  Widget _buildWordChip(String text, ThemeData theme, {bool isDragging = false}) {
-      return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          decoration: BoxDecoration(
-             color: theme.colorScheme.primary,
-             borderRadius: BorderRadius.circular(24),
-             boxShadow: [
-                BoxShadow(color: Colors.black26, blurRadius: isDragging ? 20 : 10, offset: Offset(0, isDragging ? 10 : 4))
-             ],
+
+  Widget _buildWordChip(
+    String text,
+    ThemeData theme, {
+    bool isDragging = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: isDragging ? 20 : 10,
+            offset: Offset(0, isDragging ? 10 : 4),
           ),
-          child: Text(
-             text,
-             style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                decoration: TextDecoration.none,
-             ),
-          ),
-      );
+        ],
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.poppins(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          decoration: TextDecoration.none,
+        ),
+      ),
+    );
   }
 
   Widget _buildBucket(String title, Color color) {
     return DragTarget<GrammarWord>(
-      onWillAccept: (data) => true,
-      onAccept: (data) => _checkDrop(title, data),
+      onWillAcceptWithDetails: (data) => true,
+      onAcceptWithDetails: (details) => _checkDrop(title, details.data),
       builder: (context, candidateData, rejectedData) {
         final isHovered = candidateData.isNotEmpty;
         return Container(
@@ -457,10 +529,10 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
           decoration: BoxDecoration(
             color: isHovered ? color.withOpacity(0.4) : color.withOpacity(0.1),
             borderRadius: const BorderRadius.only(
-               bottomLeft: Radius.circular(32),
-               bottomRight: Radius.circular(32),
-               topLeft: Radius.circular(8),
-               topRight: Radius.circular(8),
+              bottomLeft: Radius.circular(32),
+              bottomRight: Radius.circular(32),
+              topLeft: Radius.circular(8),
+              topRight: Radius.circular(8),
             ),
             border: Border.all(color: color, width: isHovered ? 4 : 2),
           ),

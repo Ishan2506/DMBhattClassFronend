@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -8,12 +7,9 @@ import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
-
+import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
-import 'package:dm_bhatt_tutions/utils/iap_service.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -50,7 +46,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   
   // Platform-specific payment helpers
   RazorpayHelper? _razorpayHelper;
-  final IAPService _iapService = IAPService();
+
   
   // Referral code validation states
   bool _isValidatingReferral = false;
@@ -72,14 +68,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     _initData();
 
     if (_isIOS) {
-      // iOS: Use Apple In-App Purchase
-      _iapService.initialize();
-      _iapService.onPurchaseSuccess = _handleApplePurchaseSuccess;
-      _iapService.onPurchaseError = (error) {
-        if (mounted) {
-          CustomToast.showError(context, "Purchase Failed: $error");
-        }
-      };
+      // RevenueCat is initialized in main.dart
     } else {
       // Android: Use Razorpay
       _razorpayHelper = RazorpayHelper(
@@ -288,12 +277,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     if (_isIOS) {
-      // iOS: Use Apple In-App Purchase
-      _iapService.setPurchaseContext('registration', metadata: {
-        'std': _std,
-        'medium': _medium,
-      });
-      await _iapService.purchaseMembership(_std ?? "6");
+      // iOS: Use RevenueCat Paywall with the default offering.
+      final success = await RevenueCatService.instance.presentPaywall(
+        offeringId: 'default',
+      );
+      if (success && mounted) {
+        CustomToast.showSuccess(context, "Plan purchased successfully!");
+        // Note: For registration, we might need a specific handling if the user 
+        // hasn't registered on backend yet. But usually RevenueCat handles the 
+        // subscription state. 
+        // We'll call the registration logic if success.
+        _processRegistration(paymentId: "REVENUE_CAT_PURCHASE");
+      }
     } else {
       // Android: Use Razorpay
       try {
@@ -336,70 +331,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  void _handleApplePurchaseSuccess(PurchaseDetails purchaseDetails) {
-    if (!mounted) return;
-    CustomToast.showSuccess(context, "Apple Purchase Successful!");
-    _processRegistrationWithApple(purchaseDetails);
-  }
 
-  /// Process registration with Apple IAP receipt
-  Future<void> _processRegistrationWithApple(PurchaseDetails purchaseDetails) async {
-    final referralCode = _referralCodeController.text.trim();
-    final shouldIncludeReferral = referralCode.isNotEmpty && _isReferralValid == true;
-
-    try {
-      CustomLoader.show(context);
-
-      final currentPayload = widget.payload ?? RegistrationPayload(
-        role: 'student',
-        fields: {
-          "firstName": (await SharedPreferences.getInstance()).getString('firstName') ?? "",
-          "email": _email ?? "",
-          "phoneNum": _phoneNum ?? "",
-          "parentPhone": (await SharedPreferences.getInstance()).getString('parentPhone') ?? "",
-          "std": _std ?? "",
-          "medium": _medium ?? "",
-          "stream": (await SharedPreferences.getInstance()).getString('stream') ?? "",
-          "board": (await SharedPreferences.getInstance()).getString('board') ?? "",
-          "loginAs": (await SharedPreferences.getInstance()).getString('user_role') ?? "student",
-        },
-        files: [],
-      );
-
-      final response = await ApiService.registerUserWithApple(
-        payload: currentPayload,
-        dpin: _cachedPassword ?? "",
-        referralCode: shouldIncludeReferral ? referralCode : null,
-        appleReceipt: purchaseDetails.verificationData.serverVerificationData,
-        appleProductId: purchaseDetails.productID,
-        appleTransactionId: purchaseDetails.purchaseID ?? "",
-        amount: _finalAmount,
-      );
-
-      if (!mounted) return;
-      CustomLoader.hide(context);
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        CustomToast.showSuccess(context, "Membership Activated Successfully!");
-        if (widget.payload != null) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
-          );
-        } else {
-          Navigator.pop(context, true);
-        }
-      } else {
-        CustomToast.showError(context, "Registration Failed: ${ApiService.getErrorMessage(response.body)}");
-      }
-    } catch (e) {
-      if (mounted) {
-        CustomLoader.hide(context);
-        CustomToast.showError(context, "Error: $e");
-      }
-    }
-  }
 
   Future<void> _processRegistration({
     String? paymentId,

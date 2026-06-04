@@ -6,13 +6,10 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:dm_bhatt_tutions/constant/string_constant.dart';
-import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ExamQuestionScreen extends StatefulWidget {
   final String subject;
@@ -288,6 +285,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                     'correctAnswer': q['correctAnswer'] ?? '',
                     'correctAnswerKey': q['correctAnswerKey'],
                     'optionsRaw': q['optionsRaw'],
+                    'questionImage': q['questionImage'],
                   },
                 )
                 .toList(),

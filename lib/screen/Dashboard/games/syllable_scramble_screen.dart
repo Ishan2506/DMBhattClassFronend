@@ -54,7 +54,7 @@ class _SyllableScrambleScreenState extends State<SyllableScrambleScreen> {
   bool _isLoading = true;
   
   List<String> _shuffledSyllables = [];
-  List<String> _selectedSyllables = [];
+  final List<String> _selectedSyllables = [];
 
   @override
   void initState() {

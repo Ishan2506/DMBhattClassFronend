@@ -1,8 +1,5 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:dm_bhatt_tutions/constant/app_images.dart';
-import 'package:dm_bhatt_tutions/constant/string_constant.dart';
-import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_start_exam_form.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -11,13 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_dashboard_widgets.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_exam_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_selection_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});

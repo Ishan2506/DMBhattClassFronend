@@ -10,10 +10,37 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:convert';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  String _appVersion = 'Loading...';
+
+  @override
+  void initState() {
+    super.initState();
+    _getAppVersion();
+  }
+
+  Future<void> _getAppVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      setState(() {
+        _appVersion = 'v${packageInfo.version}.${packageInfo.buildNumber}';
+      });
+    } catch (e) {
+      setState(() {
+        _appVersion = 'v1.0.0.0';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +68,9 @@ class SettingsScreen extends StatelessWidget {
               }
 
               String langText;
-              if (state.locale.languageCode == 'gu') langText = l10n.gujarati;
-              else if (state.locale.languageCode == 'hi') langText = l10n.hindi;
+              if (state.locale.languageCode == 'gu') {
+                langText = l10n.gujarati;
+              } else if (state.locale.languageCode == 'hi') langText = l10n.hindi;
               else if (state.locale.languageCode == 'ta') langText = l10n.tamil;
               else if (state.locale.languageCode == 'mr') langText = l10n.marathi;
               else langText = l10n.english;
@@ -91,10 +119,39 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   _buildDeleteAccountItem(context),
+                  const SizedBox(height: 32),
+                  _buildAppVersionSection(context),
                 ],
               );
             }
          ),
+      ),
+    );
+  }
+
+  Widget _buildAppVersionSection(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            'App Version',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _appVersion,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

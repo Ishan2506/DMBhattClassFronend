@@ -57,9 +57,7 @@ extension AppThemeSchemes on MaterialTheme {
       onTertiary: Colors.white,
       tertiaryContainer: Color(0xFFFFDBCF),
       onTertiaryContainer: Color(0xFF3B0B00),
-      background: Color(0xFFEDF6F9),
-      onBackground: Color(0xFF006D77),
-      surfaceVariant: Color(0xFFDBE4E6),
+      surfaceContainerHighest: Color(0xFFDBE4E6),
       onSurfaceVariant: Color(0xFF3F484A),
       outline: Color(0xFF6F797A),
   ).copyWith(surface: const Color(0xFFEDF6F9)); // Ensure surface is set
@@ -74,8 +72,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFFE1E3E3),
       error: Color(0xFFFFB4AB),
       onError: Color(0xFF690005),
-      background: Color(0xFF191C1C),
-      onBackground: Color(0xFFE1E3E3),
   ).copyWith(surface: const Color(0xFF191C1C));
 
   // --- Sunset Scheme (Orange/Purple) ---
@@ -89,8 +85,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFF422343),
       error: Color(0xFFBA1A1A),
       onError: Colors.white,
-      background: Color(0xFFFFF5E4),
-      onBackground: Color(0xFF422343),
   ).copyWith(surface: const Color(0xFFFFF5E4));
 
   ColorScheme _sunsetDark() => const ColorScheme(
@@ -103,8 +97,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFFEAE0E3),
       error: Color(0xFFFFB4AB),
       onError: Color(0xFF690005),
-       background: Color(0xFF1F1A1D),
-      onBackground: Color(0xFFEAE0E3),
   ).copyWith(surface: const Color(0xFF1F1A1D));
 
    // --- Forest Scheme (Green/Brown) ---
@@ -118,8 +110,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFF1B5E20),
       error: Color(0xFFBA1A1A),
       onError: Colors.white,
-       background: Color(0xFFE8F5E9),
-      onBackground: Color(0xFF1B5E20),
   ).copyWith(surface: const Color(0xFFE8F5E9));
 
   ColorScheme _forestDark() => const ColorScheme(
@@ -132,8 +122,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFFE2E3DE),
       error: Color(0xFFFFB4AB),
       onError: Color(0xFF690005),
-       background: Color(0xFF1A1C1A),
-      onBackground: Color(0xFFE2E3DE),
   ).copyWith(surface: const Color(0xFF1A1C1A));
 
    // --- Lavender Scheme (Purple/Soft Pink) ---
@@ -147,8 +135,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFF1D1B20),
       error: Color(0xFFB3261E),
       onError: Colors.white,
-       background: Color(0xFFF3EDF7),
-      onBackground: Color(0xFF1D1B20),
   ).copyWith(surface: const Color(0xFFF3EDF7));
 
   ColorScheme _lavenderDark() => const ColorScheme(
@@ -161,8 +147,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFFE6E1E5),
       error: Color(0xFFF2B8B5),
       onError: Color(0xFF601410),
-       background: Color(0xFF141218),
-      onBackground: Color(0xFFE6E1E5),
   ).copyWith(surface: const Color(0xFF141218));
 
   // --- Midnight Scheme (Deep Blue/Gold) ---
@@ -176,8 +160,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFF1A237E),
       error: Color(0xFFBA1A1A),
       onError: Colors.white,
-       background: Color(0xFFE8EAF6),
-      onBackground: Color(0xFF1A237E),
   ).copyWith(surface: const Color(0xFFE8EAF6));
 
   ColorScheme _midnightDark() => const ColorScheme(
@@ -190,8 +172,6 @@ extension AppThemeSchemes on MaterialTheme {
       onSurface: Color(0xFFE0E2EC),
       error: Color(0xFFFFB4AB),
       onError: Color(0xFF690005),
-       background: Color(0xFF0D101E),
-      onBackground: Color(0xFFE0E2EC),
   ).copyWith(surface: const Color(0xFF0D101E));
 
 }

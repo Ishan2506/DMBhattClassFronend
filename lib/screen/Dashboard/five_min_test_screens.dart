@@ -1038,7 +1038,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
       });
     }
 
-    Future<void> _submitAndNavigate() async {
+    Future<void> submitAndNavigate() async {
       try {
         CustomLoader.show(context);
         // Token managed internally
@@ -1087,7 +1087,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
       }
     }
 
-    await _submitAndNavigate();
+    await submitAndNavigate();
   }
 
   @override

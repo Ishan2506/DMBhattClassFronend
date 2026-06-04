@@ -90,7 +90,7 @@ const lblAnswer4_2 = 'H2O';
 const lblAnswer4_3 = 'CO2';
 const lblAnswer4_4 = 'NaCl';
 
-const lblQuestion5 = 'Who wrote \"Hamlet\"?';
+const lblQuestion5 = 'Who wrote "Hamlet"?';
 const lblAnswer5_1 = 'Charles Dickens';
 const lblAnswer5_2 = 'William Shakespeare';
 const lblAnswer5_3 = 'Mark Twain';

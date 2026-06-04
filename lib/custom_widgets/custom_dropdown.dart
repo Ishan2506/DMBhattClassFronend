@@ -26,6 +26,7 @@ class CustomDropdown<T> extends StatelessWidget {
     return DropdownButtonFormField<T>(
       value: value,
       isExpanded: true,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,

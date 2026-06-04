@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/mind_game_service.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
-import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 class StroopColor {
   final String name;

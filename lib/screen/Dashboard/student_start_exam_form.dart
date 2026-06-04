@@ -4,15 +4,14 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/exam_instruction_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'upgrade_plan_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class StudentStartExamForm extends StatefulWidget {
   const StudentStartExamForm({super.key});
@@ -25,20 +24,10 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
   List<dynamic> _allExams = [];
   bool _isLoading = true;
 
-  // Dropdown Selections
+  // Subject Filter
   String? _selectedSubject;
-  String? _selectedUnit;
-  String? _selectedMarks;
-  final TextEditingController _titleController = TextEditingController();
-
-  // Dropdown Options
   List<String> _subjects = [];
-  List<String> _units = [];
-  List<String> _titles = [];
-  List<String> _marksOptions = [];
 
-  String? _selectedExamId;
-  String? _selectedTitle;
   List<String> _takenExamIds = [];
   String? _userRole;
   String? _userMedium;
@@ -196,111 +185,96 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
     });
   }
 
-  void _onUnitChanged(String? unit) {
-    String? newTitle;
-    List<String> newTitles = [];
-
-    if (unit != null) {
-      // Filter exams for this subject and unit to get titles
-      final matchingExams = _allExams.where((e) =>
-          e['subject'] == _selectedSubject && (e['unit']?.toString() ?? 'Default Unit') == unit);
-
-      newTitles = matchingExams
-          .map((e) => e['title']?.toString() ?? 'Untitled Exam')
-          .toSet()
-          .toList();
-      
-      if (newTitles.length == 1) {
-         newTitle = newTitles.first;
-      }
-    }
-
-    setState(() {
-      _selectedUnit = unit;
-      _titles = newTitles;
-      // We do not set title directly here because it has cascading effects.
-      // Instead we let the user select it, or we trigger it post-frame if we want to auto-select it.
-      // Since auto-select title wasn't fully refactored, let's just clear these:
-      _selectedTitle = null;
-      _marksOptions = [];
-      _selectedMarks = null;
-      _selectedExamId = null;
-    });
-
-    // If there is only one title, auto-select it safely AFTER the build frame
-    if (newTitle != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _onTitleChanged(newTitle);
-        }
-      });
-    }
+  List<dynamic> get _filteredExams {
+    if (_selectedSubject == null) return _allExams;
+    return _allExams.where((e) => e['subject'] == _selectedSubject).toList();
   }
 
-  void _onTitleChanged(String? title) {
-    String? newMarks;
-    String? newExamId;
-    List<String> newMarksOptions = [];
+  bool _isTaken(dynamic exam) => _takenExamIds.contains(exam['_id'].toString());
 
-    if (title != null) {
-      // Filter exams for this subject, unit and title to get marks
-      final matchingExams = _allExams.where((e) =>
-          e['subject'] == _selectedSubject && 
-          (e['unit']?.toString() ?? 'Default Unit') == _selectedUnit &&
-          (e['title']?.toString() ?? 'Untitled Exam') == title);
+  Future<void> _startExam(dynamic exam) async {
+    if (!await GuestUtils.canGuestAccessExam(context, 'REGULAR')) return;
 
-      newMarksOptions = matchingExams
-          .map((e) => e['totalMarks'].toString())
-          .toSet()
-          .toList();
-      
-      if (newMarksOptions.length == 1) {
-         newMarks = newMarksOptions.first;
-         try {
-           final exam = matchingExams.firstWhere((e) => e['totalMarks'].toString() == newMarks);
-           newExamId = exam['_id'];
-         } catch (e) {
-           newExamId = null;
-         }
-      }
+    if (!_isPaid && _mainExamCount >= 1) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text("Limit Reached",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text(
+            "You have already used your 1 free attempt for Regular Exams. "
+            "Please upgrade your plan for unlimited access.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Later", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => UpgradePlanScreen()));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text("Upgrade Now",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+      return;
     }
 
-    setState(() {
-      _selectedTitle = title;
-      _marksOptions = newMarksOptions;
-      _selectedMarks = newMarks;
-      _selectedExamId = newExamId;
-    });
-  }
+    if (_isTaken(exam)) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Already Taken"),
+          content: const Text(
+              "You have already performed this exam. Students can only take each exam once."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
-  void _onMarksChanged(String? marks) {
-    setState(() {
-      _selectedMarks = marks;
-      if (marks != null && _selectedSubject != null && _selectedUnit != null && _selectedTitle != null) {
-         // Find the exact exam ID
-         try {
-           final exam = _allExams.firstWhere((e) => 
-             e['subject'] == _selectedSubject &&
-             (e['unit']?.toString() ?? 'Default Unit') == _selectedUnit &&
-             (e['title']?.toString() ?? 'Untitled Exam') == _selectedTitle &&
-             e['totalMarks'].toString() == marks
-           );
-           _selectedExamId = exam['_id'];
-         } catch (e) {
-           _selectedExamId = null;
-         }
-      }
-    });
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ExamInstructionScreen(
+          subject: exam['subject'] ?? 'Exam',
+          examId: exam['_id'],
+          title: exam['title'] ?? 'Exam',
+        ),
+      ),
+    ).then((_) => _fetchExams());
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
     return Scaffold(
       appBar: CustomAppBar(
         title: lblStartNewExam,
@@ -318,168 +292,207 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
       ),
       body: _isLoading
           ? const CustomLoader()
-          : Padding(
-              padding: P.all24,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          : Column(
+              children: [
+                _buildSubjectFilter(primary, isDark),
+                Expanded(
+                  child: _filteredExams.isEmpty
+                      ? _buildEmpty(isDark)
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                          itemCount: _filteredExams.length,
+                          itemBuilder: (context, index) {
+                            final exam = _filteredExams[index];
+                            return _buildExamCard(exam, theme, isDark);
+                          },
+                        ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildSubjectFilter(Color primary, bool isDark) {
+    return Container(
+      color: isDark ? const Color(0xFF1A2340) : Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: CustomDropdown<String>(
+        labelText: "Subject",
+        hintText: "All Subjects",
+        value: _selectedSubject,
+        items: _subjects,
+        itemLabelBuilder: (String item) => item,
+        onChanged: (val) {
+          setState(() {
+            _selectedSubject = val;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmpty(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.quiz_outlined,
+              size: 64,
+              color: isDark ? Colors.white24 : Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text("No exams available",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: isDark ? Colors.white38 : Colors.grey.shade500,
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExamCard(dynamic exam, ThemeData theme, bool isDark) {
+    final taken = _isTaken(exam);
+    final primary = theme.colorScheme.primary;
+    final title = exam['title']?.toString().trim().isNotEmpty ?? false
+        ? exam['title'].toString()
+        : 'Exam';
+    final subject = exam['subject']?.toString() ?? '';
+    final unit = exam['unit']?.toString() ?? '';
+    final marks = exam['totalMarks']?.toString() ?? '0';
+    final duration = exam['duration']?.toString() ?? '';
+
+    return GestureDetector(
+      onTap: () => _startExam(exam),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A2340) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: taken
+                ? Colors.green.withOpacity(0.4)
+                : (isDark ? Colors.white10 : Colors.grey.shade200),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title + Status badge
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 12, 0),
+              child: Row(
                 children: [
-                  CustomDropdown<String>(
-                    labelText: lblSubject,
-                    hintText: lblSelectSubject,
-                    value: _selectedSubject,
-                    items: _subjects,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onSubjectChanged,
-                  ),
-                  blankVerticalSpace16,
-                  CustomDropdown<String>(
-                    labelText: "Unit",
-                    hintText: "Select Unit",
-                    value: _selectedUnit,
-                    items: _units,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onUnitChanged,
-                  ),
-                  blankVerticalSpace16,
-                  CustomDropdown<String>(
-                    labelText: "Title",
-                    hintText: "Select Title",
-                    value: _selectedTitle,
-                    items: _titles,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onTitleChanged,
-                  ),
-                  blankVerticalSpace16,
-                  CustomDropdown<String>(
-                    labelText: lblMarks,
-                    hintText: lblSelectMarks,
-                    value: _selectedMarks,
-                    items: _marksOptions,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onMarksChanged,
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: double.infinity,
-                    height: MediaQuery.of(context).size.height * 0.065,
-                    decoration: BoxDecoration(
-                      gradient: _selectedExamId == null
-                          ? null
-                          : LinearGradient(
-                              colors: [
-                                Theme.of(context).primaryColor,
-                                Theme.of(context).primaryColor.withOpacity(0.8)
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                      // Removed color property to let Button handle disabled state
-                      borderRadius: BorderRadius.circular(S.s12),
-                      boxShadow: _selectedExamId == null
-                          ? []
-                          : [
-                              BoxShadow(
-                                color: Theme.of(context).primaryColor.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _selectedExamId == null
-                          ? null
-                          : () async {
-                              if (!await GuestUtils.canGuestAccessExam(context, 'REGULAR')) return;
-                              
-                              if (!_isPaid && _mainExamCount >= 1) {
-                                if (context.mounted) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                      title: const Text("Limit Reached", style: TextStyle(fontWeight: FontWeight.bold)),
-                                      content: const Text("You have already used your 1 free attempt for Main Exams. Please upgrade your plan for unlimited access."),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context),
-                                          child: const Text("Later", style: TextStyle(color: Colors.grey)),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(builder: (context) => UpgradePlanScreen()),
-                                            );
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Theme.of(context).primaryColor,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                          ),
-                                          child: const Text("Upgrade Now", style: TextStyle(fontWeight: FontWeight.bold)),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                                return;
-                              }
-                              
-                              if (_takenExamIds.contains(_selectedExamId)) {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text("Already Taken"),
-                                    content: const Text("You have already performed this exam. Students can only take each exam once."),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text("OK"),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                return;
-                              }
-                              
-                              CustomLoader.show(context);
-                              await Future.delayed(const Duration(milliseconds: 500));
-                              if (context.mounted) {
-                                CustomLoader.hide(context);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ExamInstructionScreen(
-                                      subject: _selectedSubject ?? 'Math',
-                                      examId: _selectedExamId!, 
-                                      title: _selectedTitle ?? 'Untitled Exam',
-                                    ),
-                                  ),
-                                ).then((_) => _fetchExams());
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        disabledBackgroundColor: Colors.grey.shade400, // Explicit disabled color
-                        disabledForegroundColor: Colors.white, // Explicit disabled text color
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(S.s12)),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: primary,
                       ),
-                      child: Text(
-                        lblStartExam,
-                        style: TextStyle(
-                            letterSpacing: 0.5,
-                            fontSize: MediaQuery.of(context).size.width * 0.045,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: taken
+                          ? Colors.green.withOpacity(0.12)
+                          : primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      taken ? "DONE" : "START",
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: taken ? Colors.green : primary,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+
+            // Subject & Unit
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+              child: Row(
+                children: [
+                  const Icon(Icons.tag, size: 14, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    unit.isNotEmpty ? "$subject  •  Unit $unit" : subject,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color:
+                          isDark ? Colors.white70 : Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Marks & Duration chips
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (marks.isNotEmpty) _chip("$marks Marks", isDark),
+                  if (duration.isNotEmpty) _chip("$duration min", isDark),
+                ],
+              ),
+            ),
+
+            // Bottom row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  Icon(
+                    taken ? Icons.check_circle : Icons.play_circle_outline,
+                    size: 20,
+                    color: taken ? Colors.green : primary,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _chip(String label, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white12 : Colors.grey.shade300,
+        ),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: isDark ? Colors.white60 : Colors.grey.shade700,
+        ),
+      ),
     );
   }
 }

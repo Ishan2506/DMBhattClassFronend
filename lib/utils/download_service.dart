@@ -67,23 +67,21 @@ class DownloadService {
           return true;
         }
 
-        if (outputFile != null) {
-          final file = File(outputFile);
-          try {
-            // On some versions of file_picker, saveFile already writes the bytes if provided.
-            // On others, it just returns the path. 
-            // We'll attempt a write if the file is empty or doesn't exist.
-            if (!await file.exists() || (await file.length()) == 0) {
-              await file.writeAsBytes(bytes);
-              debugPrint("✅ File bytes written successfully: $outputFile");
-            }
-            return true;
-          } catch (writeError) {
-             debugPrint("⚠️ Write error (might be handled by OS): $writeError");
-             return true; // Likely handled by SAF/picker if it exists now
+        final file = File(outputFile);
+        try {
+          // On some versions of file_picker, saveFile already writes the bytes if provided.
+          // On others, it just returns the path. 
+          // We'll attempt a write if the file is empty or doesn't exist.
+          if (!await file.exists() || (await file.length()) == 0) {
+            await file.writeAsBytes(bytes);
+            debugPrint("✅ File bytes written successfully: $outputFile");
           }
+          return true;
+        } catch (writeError) {
+           debugPrint("⚠️ Write error (might be handled by OS): $writeError");
+           return true; // Likely handled by SAF/picker if it exists now
         }
-        return false;
+              return false;
       } catch (pickerError) {
         debugPrint("❌ Error during Save As process: $pickerError");
         return false;

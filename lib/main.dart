@@ -5,12 +5,11 @@ import 'package:dm_bhatt_tutions/utils/app_theme.dart';
 import 'package:dm_bhatt_tutions/utils/text_theme.dart';
 import 'package:dm_bhatt_tutions/utils/app_theme_extensions.dart'; // Import extension
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:flutter_windowmanager/flutter_windowmanager.dart';
-import 'package:device_preview/device_preview.dart';
 import 'constant/app_constant.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
@@ -20,11 +19,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/utils/purchase_config.dart';
 import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
+import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  debugPaintBaselinesEnabled = false;
+  debugPaintSizeEnabled = false;
 
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
     // Initialize sqflite for desktop
@@ -33,7 +35,7 @@ void main() async {
   }
 
   final prefs = await SharedPreferences.getInstance();
-  
+
   // Initialize Firebase and Push Notifications
   try {
     await Firebase.initializeApp();
@@ -47,12 +49,14 @@ void main() async {
   // Request Microphone permission at start
   await _requestPermissions();
 
-  // Initialize Payment Config
+  // Initialize Payment Config & RevenueCat
   await PurchaseConfig.instance.initialize();
 
   // Load standards and subjects from the admin API for all subject dropdowns.
   await AcademicConstants.loadFromServer();
   
+  await RevenueCatService.instance.init();
+
   // await _secureScreen();
   runApp(MyApp(prefs: prefs));
 }
@@ -75,15 +79,13 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthenticationCubit>(
           create: (context) => AuthenticationCubit(),
         ),
-        BlocProvider<ThemeCubit>(
-          create: (context) => ThemeCubit(prefs),
-        ),
+        BlocProvider<ThemeCubit>(create: (context) => ThemeCubit(prefs)),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, state) {
           // Determine the style name from enum
           final styleName = state.selectedStyle.name;
-          
+
           return MaterialApp(
             navigatorKey: navigatorKey,
             useInheritedMediaQuery: true,

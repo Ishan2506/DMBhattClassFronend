@@ -5,6 +5,8 @@ import 'package:dm_bhatt_tutions/model/chat_message.dart';
 import 'package:flutter/material.dart';
 
 class AIChatScreen extends StatefulWidget {
+  const AIChatScreen({super.key});
+
   @override
   _AIChatScreenState createState() => _AIChatScreenState();
 }
@@ -13,7 +15,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
   final TuitionAIService _aiService = TuitionAIService();
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  List<ChatMessage> _messages = [];
+  final List<ChatMessage> _messages = [];
   bool _isLoading = false;
 
   @override

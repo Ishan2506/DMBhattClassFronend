@@ -1,10 +1,7 @@
-import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/ai_chat_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/dm_ai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_home_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/explore_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/dmai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/payment_screen.dart';
