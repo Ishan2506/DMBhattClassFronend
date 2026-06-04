@@ -83,7 +83,8 @@ class RevenueCatService {
       await Purchases.setLogLevel(LogLevel.debug);
     }
 
-    if (Platform.isIOS || Platform.isAndroid) {
+    // RevenueCat only works on mobile platforms
+    if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)) {
       PurchasesConfiguration configuration = PurchasesConfiguration(_apiKey);
       await Purchases.configure(configuration);
       _isInitialized = true;

@@ -38,8 +38,14 @@ void main() async {
 
   // Initialize Firebase and Push Notifications
   try {
-    await Firebase.initializeApp();
-    await NotificationService.instance.initialize();
+    if (kIsWeb) {
+      // On web, Firebase needs explicit options
+      // For now, skip Firebase on web since it requires backend setup
+      debugPrint('Firebase initialization skipped on web platform');
+    } else {
+      await Firebase.initializeApp();
+      await NotificationService.instance.initialize();
+    }
   } catch (e) {
     if (kDebugMode) {
       print('Firebase initialization failed: $e');
