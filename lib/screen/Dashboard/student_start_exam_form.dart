@@ -177,8 +177,10 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
     setState(() {
       _selectedSubject = subject;
       _selectedUnit = null;
+      _selectedTitle = null;
       _selectedMarks = null;
       _selectedExamId = null;
+      _titles = [];
 
       if (subject != null) {
         // Filter exams for this subject to get units
