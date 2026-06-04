@@ -25,6 +25,7 @@ class CustomDropdown<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
       value: value,
+      isExpanded: true,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
@@ -35,7 +36,11 @@ class CustomDropdown<T> extends StatelessWidget {
       items: items.map((T item) {
         return DropdownMenuItem<T>(
           value: item,
-          child: Text(itemLabelBuilder(item)),
+          child: Text(
+            itemLabelBuilder(item),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         );
       }).toList(),
       onChanged: onChanged,

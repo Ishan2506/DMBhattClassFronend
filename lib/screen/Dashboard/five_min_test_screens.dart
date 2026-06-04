@@ -381,14 +381,18 @@ class _FiveMinTestSelectionScreenState
                   const Icon(Icons.tag,
                       size: 14, color: Colors.grey),
                   const SizedBox(width: 4),
-                  Text(
-                    "$subject  •  Unit $unit",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: isDark
-                          ? Colors.white70
-                          : Colors.grey.shade700,
+                  Expanded(
+                    child: Text(
+                      "$subject  •  Unit $unit",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isDark
+                            ? Colors.white70
+                            : Colors.grey.shade700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                 ],
@@ -1174,249 +1178,251 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
           ),
         ),
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Question Count Badge
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withOpacity(
-                        0.3,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Text(
-                      "Question ${_currentQuestionIndex + 1} of ${_questions.length}",
-                      style: GoogleFonts.poppins(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Question Card
-                Container(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withOpacity(0.8),
-                      ], // Consistent with App Theme
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              ApiService.getFileUrl(question['questionImage']),
-                              height: 150,
-                              width: double.infinity,
-                              fit: BoxFit.contain,
+                      // Question Count Badge
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer.withOpacity(
+                              0.3,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withOpacity(0.2),
+                            ),
+                          ),
+                          child: Text(
+                            "Question ${_currentQuestionIndex + 1} of ${_questions.length}",
+                            style: GoogleFonts.poppins(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
                             ),
                           ),
                         ),
-                      Text(
-                        question['question'] ?? "",
-                        style: GoogleFonts.poppins(
-                          fontSize: 18, // Adjusted font size
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24), // Reduced spacing
+                      const SizedBox(height: 16),
 
-                if (question['type'] == 'Fill in the Blanks')
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
+                      // Question Card
+                      Container(
+                        padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade300),
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colorScheme.primary,
+                              theme.colorScheme.primary.withOpacity(0.8),
+                            ], // Consistent with App Theme
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    ApiService.getFileUrl(question['questionImage']),
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
                             Text(
-                              "Your Answer:",
+                              question['question'] ?? "",
                               style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade700,
+                                fontSize: 18, // Adjusted font size
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                height: 1.4,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller:
-                                  _textControllers[_currentQuestionIndex],
-                              onChanged: (val) {
-                                _selectedAnswers[_currentQuestionIndex] = val;
-                              },
-                              decoration: InputDecoration(
-                                hintText: "Type your answer here...",
-                                hintStyle: GoogleFonts.poppins(
-                                  color: Colors.grey.shade400,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: theme.colorScheme.primary,
-                                    width: 2,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                              ),
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  )
-                else
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: optionsList.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final opt = optionsList[index];
-                        final optionKey = opt['key'] as String;
-                        final optionText = opt['text'] as String;
-                        final optionImage = opt['image'];
-                        final isSelected = selectedOption == optionKey;
+                      const SizedBox(height: 24), // Reduced spacing
 
-                        return InkWell(
-                          onTap: () => _selectAnswer(optionKey),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? theme.colorScheme.primary.withOpacity(0.1)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected
-                                    ? theme.colorScheme.primary
-                                    : Colors.grey.shade300,
-                                width: 1.5,
+                      if (question['type'] == 'Fill in the Blanks')
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Your Answer:",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade700,
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 28,
-                                  height: 28,
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller:
+                                    _textControllers[_currentQuestionIndex],
+                                onChanged: (val) {
+                                  _selectedAnswers[_currentQuestionIndex] = val;
+                                },
+                                decoration: InputDecoration(
+                                  hintText: "Type your answer here...",
+                                  hintStyle: GoogleFonts.poppins(
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: theme.colorScheme.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        Column(
+                          children: List.generate(optionsList.length, (index) {
+                            final opt = optionsList[index];
+                            final optionKey = opt['key'] as String;
+                            final optionText = opt['text'] as String;
+                            final optionImage = opt['image'];
+                            final isSelected = selectedOption == optionKey;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: InkWell(
+                                onTap: () => _selectAnswer(optionKey),
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
                                     color: isSelected
-                                        ? theme.colorScheme.primary
-                                        : Colors.transparent,
+                                        ? theme.colorScheme.primary.withOpacity(0.1)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
                                       color: isSelected
                                           ? theme.colorScheme.primary
-                                          : Colors.grey.shade400,
+                                          : Colors.grey.shade300,
+                                      width: 1.5,
                                     ),
                                   ),
-                                  child: isSelected
-                                      ? const Icon(
-                                          Icons.check,
-                                          size: 16,
-                                          color: Colors.white,
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  child: Row(
                                     children: [
-                                      Text(
-                                        optionText,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 16,
+                                      Container(
+                                        width: 28,
+                                        height: 28,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
                                           color: isSelected
                                               ? theme.colorScheme.primary
-                                              : Colors.black87,
-                                          fontWeight: isSelected
-                                              ? FontWeight.w600
-                                              : FontWeight.normal,
-                                        ),
-                                      ),
-                                      if (optionImage != null && optionImage.toString().isNotEmpty && optionImage.toString() != "null")
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 8.0),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Image.network(
-                                              ApiService.getFileUrl(optionImage),
-                                              height: 100,
-                                              fit: BoxFit.contain,
-                                            ),
+                                              : Colors.transparent,
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? theme.colorScheme.primary
+                                                : Colors.grey.shade400,
                                           ),
                                         ),
+                                        child: isSelected
+                                            ? const Icon(
+                                                Icons.check,
+                                                size: 16,
+                                                color: Colors.white,
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              optionText,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 16,
+                                                color: isSelected
+                                                    ? theme.colorScheme.primary
+                                                    : Colors.black87,
+                                                fontWeight: isSelected
+                                                    ? FontWeight.w600
+                                                    : FontWeight.normal,
+                                              ),
+                                            ),
+                                            if (optionImage != null && optionImage.toString().isNotEmpty && optionImage.toString() != "null")
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 8.0),
+                                                child: ClipRRect(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  child: Image.network(
+                                                    ApiService.getFileUrl(optionImage),
+                                                    height: 100,
+                                                    fit: BoxFit.contain,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                              ),
+                            );
+                          }),
+                        ),
+                    ],
                   ),
+                ),
+              ),
 
-                const SizedBox(height: 16),
-
-                // Navigation Buttons
-                Row(
+              // Navigation Buttons
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (_currentQuestionIndex > 0)
@@ -1455,8 +1461,8 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
