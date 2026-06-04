@@ -65,6 +65,8 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
 
     final font = await PdfGoogleFonts.poppinsRegular();
     final fontBold = await PdfGoogleFonts.poppinsBold();
+    final gujaratiFont = await PdfGoogleFonts.notoSansGujaratiRegular();
+    final devanagariFont = await PdfGoogleFonts.notoSansDevanagariRegular();
 
     // Pre-load all question images to avoid async in build context
     final Map<int, Uint8List?> questionImages = {};
@@ -91,73 +93,78 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
           theme: pw.ThemeData.withFont(
             base: font,
             bold: fontBold,
+            fontFallback: [
+              gujaratiFont,
+              devanagariFont,
+            ],
           ),
-        ),
-        build: (pw.Context context) {
-          return [
-            pw.Stack(
-              children: [
-                pw.Transform.rotate(
+          buildBackground: (pw.Context context) {
+            return pw.FullPage(
+              ignoreMargins: true,
+              child: pw.Center(
+                child: pw.Transform.rotate(
                   angle: 0.785398, // 45 degrees in radians
-                  child: pw.Center(
-                    child: pw.Text(
-                      'Padhaku',
-                      style: pw.TextStyle(
-                        font: fontBold,
-                        fontSize: 80,
-                        color: PdfColors.grey300,
-                      ),
+                  child: pw.Text(
+                    'Padhaku',
+                    style: pw.TextStyle(
+                      font: fontBold,
+                      fontSize: 80,
+                      color: PdfColors.grey300,
                     ),
                   ),
                 ),
-                pw.Column(
-                  children: [
-                    pw.Header(
-                      level: 0,
-                      child: pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              pw.Text("Result Summary", style: pw.TextStyle(font: fontBold, fontSize: 24)),
-                              pw.SizedBox(height: 4),
-                              pw.Text(
-                                "${widget.unit ?? 'Unit Test'} , ${widget.subject ?? 'Subject'}",
-                                style: pw.TextStyle(font: font, fontSize: 16, color: PdfColors.grey700),
-                              ),
-                            ],
-                          ),
-                          pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.end,
-                            children: [
-                              pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 14)),
-                              pw.Text("Date: ${DateTime.now().toString().split(' ')[0]}", style: pw.TextStyle(font: font, fontSize: 10)),
-                            ],
-                          ),
-                        ],
+              ),
+            );
+          },
+        ),
+        build: (pw.Context context) {
+          return [
+            pw.Header(
+              level: 0,
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text("Result Summary", style: pw.TextStyle(font: fontBold, fontSize: 24)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        "${widget.unit ?? 'Unit Test'} , ${widget.subject ?? 'Subject'}",
+                        style: pw.TextStyle(font: font, fontSize: 16, color: PdfColors.grey700),
                       ),
-                    ),
-                    pw.Divider(),
-                    pw.SizedBox(height: 20),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 14)),
+                      pw.Text("Date: ${DateTime.now().toString().split(' ')[0]}", style: pw.TextStyle(font: font, fontSize: 10)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.Divider(),
+            pw.SizedBox(height: 20),
 
-                    pw.Container(
-                      padding: const pw.EdgeInsets.all(10),
-                      decoration: pw.BoxDecoration(
-                        border: pw.Border.all(color: PdfColors.grey400),
-                        borderRadius: pw.BorderRadius.circular(8),
-                      ),
-                      child: pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildPdfStat("Total", "${widget.totalQuestions}", fontBold),
-                          _buildPdfStat("Correct", "${widget.correctAnswers}", fontBold, color: PdfColors.green),
-                          _buildPdfStat("Wrong", "${widget.wrongAnswers}", fontBold, color: PdfColors.red),
-                          _buildPdfStat("Skipped", "${widget.skippedAnswers}", fontBold, color: PdfColors.orange),
-                        ],
-                      ),
-                    ),
-                    pw.SizedBox(height: 20),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey400),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                children: [
+                  _buildPdfStat("Total", "${widget.totalQuestions}", fontBold),
+                  _buildPdfStat("Correct", "${widget.correctAnswers}", fontBold, color: PdfColors.green),
+                  _buildPdfStat("Wrong", "${widget.wrongAnswers}", fontBold, color: PdfColors.red),
+                  _buildPdfStat("Skipped", "${widget.skippedAnswers}", fontBold, color: PdfColors.orange),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 20),
 
             // Questions
             ...List.generate(widget.questions.length, (index) {
@@ -170,9 +177,11 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
               final isSkipped = userAnsKey == null || userAnsKey.trim().isEmpty;
 
               String resolvedUserText = "Skipped";
+              String? userOptionKey;
               if (!isSkipped) {
                 try {
                   final selectedOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == userAnsKey.trim().toUpperCase());
+                  userOptionKey = selectedOption['key']?.toString();
                   final String text = selectedOption['text']?.toString() ?? "";
                   resolvedUserText = text.isNotEmpty ? "Option $userAnsKey ($text)" : "Option $userAnsKey";
                 } catch (e) {
@@ -181,13 +190,19 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
               }
 
               String resolvedCorrectText = "";
+              String? correctOptionKey;
               try {
                 final correctOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == correctKey.trim().toUpperCase());
+                correctOptionKey = correctOption['key']?.toString();
                 final String text = correctOption['text']?.toString() ?? "";
                 resolvedCorrectText = text.isNotEmpty ? "Option $correctKey ($text)" : "Option $correctKey";
               } catch (e) {
                 resolvedCorrectText = correctKey;
               }
+
+              final questionImageData = questionImages[index];
+              final userOptionImageData = userOptionKey != null ? answerImages['${index}_$userOptionKey'] : null;
+              final correctOptionImageData = correctOptionKey != null ? answerImages['${index}_$correctOptionKey'] : null;
 
               return pw.Container(
                 margin: const pw.EdgeInsets.only(bottom: 16),
@@ -198,6 +213,16 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                        "Q${index + 1}: ${question['question'] ?? ''}",
                        style: pw.TextStyle(font: fontBold, fontSize: 12),
                      ),
+                     if (questionImageData != null) ...[
+                       pw.SizedBox(height: 6),
+                       pw.Container(
+                         constraints: const pw.BoxConstraints(maxWidth: 300, maxHeight: 150),
+                         child: pw.Image(
+                           pw.MemoryImage(questionImageData),
+                           fit: pw.BoxFit.contain,
+                         ),
+                       ),
+                     ],
                      pw.SizedBox(height: 4),
                      pw.Text(
                        "Your Answer: $resolvedUserText",
@@ -207,20 +232,38 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                          color: isCorrect ? PdfColors.green : (isSkipped ? PdfColors.orange : PdfColors.red),
                        ),
                      ),
-                     if (!isCorrect)
+                     if (userOptionImageData != null) ...[
+                       pw.SizedBox(height: 4),
+                       pw.Container(
+                         constraints: const pw.BoxConstraints(maxWidth: 150, maxHeight: 80),
+                         child: pw.Image(
+                           pw.MemoryImage(userOptionImageData),
+                           fit: pw.BoxFit.contain,
+                         ),
+                       ),
+                     ],
+                     if (!isCorrect) ...[
+                       pw.SizedBox(height: 2),
                        pw.Text(
                          "Correct Answer: $resolvedCorrectText",
                          style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green),
                        ),
+                       if (correctOptionImageData != null) ...[
+                         pw.SizedBox(height: 4),
+                         pw.Container(
+                           constraints: const pw.BoxConstraints(maxWidth: 150, maxHeight: 80),
+                           child: pw.Image(
+                             pw.MemoryImage(correctOptionImageData),
+                             fit: pw.BoxFit.contain,
+                           ),
+                         ),
+                       ],
+                     ],
                      pw.Divider(color: PdfColors.grey200),
                   ],
                 ),
               );
-                    }),
-                  ],
-                ),
-              ],
-            ),
+            }),
           ];
         },
       ),
@@ -251,6 +294,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
               },
               isFullAccess: true,
               pdfBytes: bytes,
+              showHomeButtonOnLastPage: true,
             ),
           ),
         );

@@ -10,18 +10,28 @@ import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
+
 class PdfPreviewScreen extends StatefulWidget {
   final Map<String, dynamic> product;
   final bool isFullAccess;
   final Uint8List? pdfBytes;
-  const PdfPreviewScreen({super.key, required this.product, this.isFullAccess = false, this.pdfBytes});
+  final bool showHomeButtonOnLastPage;
+
+  const PdfPreviewScreen({
+    super.key,
+    required this.product,
+    this.isFullAccess = false,
+    this.pdfBytes,
+    this.showHomeButtonOnLastPage = false,
+  });
 
   @override
   State<PdfPreviewScreen> createState() => _PdfPreviewScreenState();
 }
 
 class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
-  final PageController _pageController = PageController();
+  late PageController _pageController;
   final TransformationController _transformationController = TransformationController(); // Shared controller
   int _currentPage = 0;
   double _currentScale = 1.0;
@@ -34,6 +44,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentPage);
     _loadPdfInfo();
     _markPreviewAsUsed(); // Mark as used immediately when entering
   }
@@ -49,6 +60,14 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     setState(() {
       _currentScale = 1.0;
       _transformationController.value = Matrix4.identity();
+    });
+  }
+
+  void _toggleFullScreen() {
+    setState(() {
+      _isFullScreen = !_isFullScreen;
+      _pageController.dispose();
+      _pageController = PageController(initialPage: _currentPage);
     });
   }
 
@@ -172,11 +191,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
         actions: [
           IconButton(
             icon: Icon(_isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen, color: Colors.white),
-            onPressed: () {
-              setState(() {
-                _isFullScreen = !_isFullScreen;
-              });
-            },
+            onPressed: _toggleFullScreen,
           ),
         ],
         centerTitle: true,
@@ -405,11 +420,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                               const SizedBox(height: 8),
                               _buildZoomButton(Icons.refresh, _resetZoom),
                             ] else
-                              _buildZoomButton(Icons.fullscreen_exit, () {
-                                setState(() {
-                                  _isFullScreen = false;
-                                });
-                              }),
+                              _buildZoomButton(Icons.fullscreen_exit, _toggleFullScreen),
                           ],
                         ),
                       ),
@@ -453,30 +464,54 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                     ),
                   ),
 
-                  // Next button
-                  ElevatedButton.icon(
-                    onPressed: _currentPage < (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1
-                        ? () {
-                            _pageController.nextPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          }
-                        : null,
-                    icon: const Icon(Icons.arrow_forward, size: 18),
-                    label: Text(
-                      _currentPage == _freePages - 1 && !widget.isFullAccess ? 'Unlock All' : 'Next',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  // Next button or Home button
+                  if (widget.showHomeButtonOnLastPage && _currentPage == (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LandingScreen()),
+                          (route) => false,
+                        );
+                      },
+                      icon: const Icon(Icons.home_rounded, size: 18),
+                      label: Text(
+                        'Home',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    )
+                  else
+                    ElevatedButton.icon(
+                      onPressed: _currentPage < (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1
+                          ? () {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            }
+                          : null,
+                      icon: const Icon(Icons.arrow_forward, size: 18),
+                      label: Text(
+                        _currentPage == _freePages - 1 && !widget.isFullAccess ? 'Unlock All' : 'Next',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

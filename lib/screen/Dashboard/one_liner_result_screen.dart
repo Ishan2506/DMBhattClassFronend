@@ -180,6 +180,7 @@ class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
             },
             isFullAccess: true,
             pdfBytes: bytes,
+            showHomeButtonOnLastPage: true,
           ),
         ),
       );
