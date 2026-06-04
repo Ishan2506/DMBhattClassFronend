@@ -1100,4 +1100,13 @@ class AppLocalizationsMr extends AppLocalizations {
   @override
   String get sequenceMemoryDesc =>
       'Memorize and repeat a growing sequence of colors.';
+
+  @override
+  String get dateOfBirth => 'जन्म तारीख';
+
+  @override
+  String get selectDateOfBirth => 'जन्म तारीख निवडा';
+
+  @override
+  String get pleaseSelectDob => 'कृपया जन्म तारीख निवडा';
 }

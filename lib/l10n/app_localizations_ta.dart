@@ -1112,4 +1112,13 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get sequenceMemoryDesc =>
       'Memorize and repeat a growing sequence of colors.';
+
+  @override
+  String get dateOfBirth => 'பிறந்த தேதி';
+
+  @override
+  String get selectDateOfBirth => 'பிறந்த தேதியைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get pleaseSelectDob => 'பிறந்த தேதியைத் தேர்ந்தெடுக்கவும்';
 }

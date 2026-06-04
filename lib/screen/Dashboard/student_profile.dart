@@ -16,6 +16,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
+import 'package:intl/intl.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
@@ -220,6 +221,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String email = "";
   String parentMobile = "";
   String profilePic = "";
+  String dob = "";
   String? _photoPath;
 
   List<dynamic> _examResults = [];
@@ -273,6 +275,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
              profilePic = user['photoPath'] ?? ""; // Use photoPath from user
              // Check parentPhone, then parentNo, then maybe in user object?
              parentMobile = profile['parentPhone'] ?? (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
+          }
+
+          final rawDob = user['dob'];
+          if (rawDob != null && rawDob.toString().isNotEmpty) {
+            try {
+              final parsedDate = DateTime.parse(rawDob.toString());
+              dob = DateFormat('dd/MM/yyyy').format(parsedDate);
+            } catch (e) {
+              dob = rawDob.toString();
+            }
+          } else {
+            dob = "";
           }
 
           // Update saved accounts list with latest info
@@ -459,6 +473,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                         mobileNo = user['phoneNum'] ?? "";
                                         _photoPath = user['photoPath'];
                                         profilePic = user['photoPath'] ?? "";
+                                        
+                                        final rawDob = user['dob'];
+                                        if (rawDob != null && rawDob.toString().isNotEmpty) {
+                                          try {
+                                            final parsedDate = DateTime.parse(rawDob.toString());
+                                            dob = DateFormat('dd/MM/yyyy').format(parsedDate);
+                                          } catch (e) {
+                                            dob = rawDob.toString();
+                                          }
+                                        } else {
+                                          dob = "";
+                                        }
                                       }
                                       if (profile != null) {
                                         studentStandard = "${profile['std'] ?? 'N/A'}${l10n.th} - ${profile['medium'] ?? ''}";
@@ -662,6 +688,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   _buildDetailItem(context, Icons.email_rounded, l10n.email, email.isEmpty ? l10n.notProvided : email),
                   const SizedBox(height: 12),
                   _buildDetailItem(context, Icons.family_restroom_rounded, l10n.parentsContact, parentMobile.isEmpty ? l10n.notApplicable : parentMobile),
+                  const SizedBox(height: 12),
+                  _buildDetailItem(context, Icons.cake_rounded, l10n.dateOfBirth, dob.isEmpty ? l10n.notProvided : dob),
                 ],
               ),
             ),
