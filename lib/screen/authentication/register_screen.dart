@@ -13,6 +13,8 @@ import 'package:dm_bhatt_tutions/screen/authentication/payment_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:intl/intl.dart';
+import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -36,6 +38,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
   final TextEditingController _schoolNameController = TextEditingController();
+  final TextEditingController _customCityController = TextEditingController();
+
 
   // Selection States
   String? _selectedStandard;
@@ -56,12 +60,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> _boards = ["GSEB", "CBSE"];
   final List<String> _roles = ["Student", "Teacher"];
 
-  
-  final Map<String, List<String>> _stateCityMap = {
-    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
-    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
-    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
-  };
 
   Future<void> _selectDob(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -386,11 +384,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               hint: l10n.state,
               icon: Icons.map_outlined,
               value: _selectedState,
-              items: _stateCityMap.keys.toList(),
+              items: indiaStatesCities.keys.toList(),
               onChanged: (val) {
                 setState(() {
                   _selectedState = val;
                   _selectedCity = null; // Reset city when state changes
+                  _customCityController.clear();
                 });
               },
               colorScheme: colorScheme,
@@ -403,14 +402,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
               hint: l10n.city,
               icon: Icons.location_city,
               value: _selectedCity,
-              items: _selectedState != null ? _stateCityMap[_selectedState]! : [],
+              items: _selectedState != null ? indiaStatesCities[_selectedState]! : [],
               onChanged: (val) {
                 setState(() {
                   _selectedCity = val;
+                  if (val != "Other") {
+                    _customCityController.clear();
+                  }
                 });
               },
               colorScheme: colorScheme,
             ),
+            if (_selectedCity == "Other") ...[
+              const SizedBox(height: 16),
+              _buildTextField(
+                hint: "Enter City Name",
+                icon: Icons.location_city_outlined,
+                controller: _customCityController,
+                colorScheme: colorScheme,
+                validator: (val) {
+                  if (_selectedCity == "Other" && (val == null || val.trim().isEmpty)) {
+                    return "Please enter your city name";
+                  }
+                  return null;
+                },
+              ),
+            ],
             const SizedBox(height: 16),
 
 
@@ -556,6 +573,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         CustomToast.showError(context, l10n.pleaseSelectAllFields);
                       return;
                     }
+                    if (_selectedCity == "Other" && _customCityController.text.trim().isEmpty) {
+                      CustomToast.showError(context, "Please enter your city name");
+                      return;
+                    }
                     if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
                           CustomToast.showError(context, l10n.pleaseSelectStream);
                       return;
@@ -596,7 +617,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         "stream": _selectedStream ?? "",
                         "board": _selectedBoard!,
                         "loginAs": _selectedRole!,
-                        "city": _selectedCity!,
+                        "city": _selectedCity == "Other" ? _customCityController.text.trim() : _selectedCity!,
                         "state": _selectedState!,
                       },
                       files: [], 
@@ -734,7 +755,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               Icon(icon, color: colorScheme.onSurfaceVariant),
               const SizedBox(width: 12),
-              Text(hint, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+              Expanded(
+                child: Text(
+                  hint,
+                  style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
             ],
           ),
           value: value,
@@ -752,9 +780,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                    children: [
                      Icon(icon, color: colorScheme.onSurfaceVariant), 
                      const SizedBox(width: 12),
-                     Text(
-                       label,
-                       style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold), 
+                     Expanded(
+                       child: Text(
+                         label,
+                         style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold), 
+                         overflow: TextOverflow.ellipsis,
+                         maxLines: 1,
+                       ),
                      ),
                    ],
                  ),
@@ -771,6 +803,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Text(
                 label, 
                 style: GoogleFonts.poppins(color: colorScheme.onSurface), // Black text for readability
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             );
           }).toList(),

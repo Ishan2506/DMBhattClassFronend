@@ -11,6 +11,8 @@ import 'package:http/http.dart' as http;
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
+import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
+
 
 class GuestRegisterScreen extends StatefulWidget {
   const GuestRegisterScreen({super.key});
@@ -32,6 +34,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
   final TextEditingController _schoolNameController = TextEditingController(text: "The Learning Institute");
+  final TextEditingController _customCityController = TextEditingController();
+
 
   // Selection States
   String? _selectedStandard;
@@ -51,13 +55,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   final List<String> _streams = ["Science", "Commerce"];
   final List<String> _boards = ["GSEB", "CBSE"];
   final List<String> _roles = ["Student", "Teacher"];
-  
-  final Map<String, List<String>> _stateCityMap = {
-    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
-    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
-    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
-    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
-  };
+
 
   void _showTermsDialog() {
     showDialog(
@@ -310,11 +308,12 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
               hint: AppLocalizations.of(context)!.state,
               icon: Icons.map_outlined,
               value: _selectedState,
-              items: _stateCityMap.keys.toList(),
+              items: indiaStatesCities.keys.toList(),
               onChanged: (val) {
                 setState(() {
                   _selectedState = val;
                   _selectedCity = null; // Reset city when state changes
+                  _customCityController.clear();
                 });
               },
             ),
@@ -326,13 +325,30 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
               hint: AppLocalizations.of(context)!.city,
               icon: Icons.location_city,
               value: _selectedCity,
-              items: _selectedState != null ? _stateCityMap[_selectedState]! : [],
+              items: _selectedState != null ? indiaStatesCities[_selectedState]! : [],
               onChanged: (val) {
                 setState(() {
                   _selectedCity = val;
+                  if (val != "Other") {
+                    _customCityController.clear();
+                  }
                 });
               },
             ),
+            if (_selectedCity == "Other") ...[
+              const SizedBox(height: 16),
+              _buildTextField(
+                hint: "Enter City Name",
+                icon: Icons.location_city_outlined,
+                controller: _customCityController,
+                validator: (val) {
+                  if (_selectedCity == "Other" && (val == null || val.trim().isEmpty)) {
+                    return "Please enter your city name";
+                  }
+                  return null;
+                },
+              ),
+            ],
             const SizedBox(height: 16),
 
             // Institute Dropdown
@@ -504,42 +520,48 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       return;
                     }
                     // Validate Dropdowns
-                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedBoard == null) {
+                      if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedBoard == null) {
                         CustomToast.showError(context, l10n.pleaseSelectAllFields);
-                      return;
-                     }
-                    if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
-                         CustomToast.showError(context, l10n.pleaseSelectStream);
-                      return;
+                       return;
                       }
+                      if (_selectedCity == "Other" && _customCityController.text.trim().isEmpty) {
+                        CustomToast.showError(context, "Please enter your city name");
+                        return;
+                      }
+                      if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
+                          CustomToast.showError(context, l10n.pleaseSelectStream);
+                       return;
+                       }
 
-                    // Validate Phone != Parent Phone
-                    // Validate Phone != Parent Phone
-                    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
-                      CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
-                      return;
-                    }
+                     // Validate Phone != Parent Phone
+                     // Validate Phone != Parent Phone
+                     if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
+                       CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
+                       return;
+                     }
 
-                    // Split Name
-                    final nameParts = _nameController.text.trim().split(' ');
-                    final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
+                     // Split Name
+                     final nameParts = _nameController.text.trim().split(' ');
+                     final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
 
 
-                    final payload = RegistrationPayload(
-                      role: 'guest',
-                      fields: {
-                        "firstName": firstName,
-                        "email": _emailController.text,
-                        "phoneNum": _phoneController.text,
-                        "parentPhone": _parentPhoneController.text,
-                        "std": _selectedStandard!,
-                        "medium": _selectedMedium!,
-                        "board": _selectedBoard!,
-                        "stream": _selectedStream ?? "-",
-                        // "schoolName": _schoolNameController.text,
-                      },
-                      files: [],
-                    );
+                     final payload = RegistrationPayload(
+                       role: 'guest',
+                       fields: {
+                         "firstName": firstName,
+                         "email": _emailController.text,
+                         "phoneNum": _phoneController.text,
+                         "parentPhone": _parentPhoneController.text,
+                         "std": _selectedStandard!,
+                         "medium": _selectedMedium!,
+                         "board": _selectedBoard!,
+                         "stream": _selectedStream ?? "-",
+                         "city": _selectedCity == "Other" ? _customCityController.text.trim() : _selectedCity!,
+                         "state": _selectedState!,
+                         // "schoolName": _schoolNameController.text,
+                       },
+                       files: [],
+                     );
 
                     try {
                       CustomLoader.show(context); // Show Loader
@@ -672,7 +694,14 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             children: [
               Icon(icon, color: Colors.black54),
               const SizedBox(width: 12),
-              Text(hint, style: GoogleFonts.poppins(color: Colors.grey)),
+              Expanded(
+                child: Text(
+                  hint,
+                  style: GoogleFonts.poppins(color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
             ],
           ),
           value: value,
@@ -690,9 +719,13 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                    children: [
                      Icon(icon, color: Colors.black54), 
                      const SizedBox(width: 12),
-                     Text(
-                       label,
-                       style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), 
+                     Expanded(
+                       child: Text(
+                         label,
+                         style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), 
+                         overflow: TextOverflow.ellipsis,
+                         maxLines: 1,
+                       ),
                      ),
                    ],
                  ),
@@ -709,6 +742,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
               child: Text(
                 label, 
                 style: GoogleFonts.poppins(color: Colors.black87), // Black text for readability
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             );
           }).toList(),

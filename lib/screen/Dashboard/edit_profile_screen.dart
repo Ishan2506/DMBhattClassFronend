@@ -14,6 +14,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:intl/intl.dart';
+import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -31,6 +32,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
+  final TextEditingController _customCityController = TextEditingController();
 
   // Selection States
   String? _selectedStandard;
@@ -53,11 +55,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final List<String> _boards = ["GSEB", "CBSE"];
   final List<String> _roles = ["Student", "Teacher"];
 
-  final Map<String, List<String>> _stateCityMap = {
-    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
-    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
-    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
-  };
+
 
   @override
   void initState() {
@@ -100,7 +98,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               profile?['city'] ??
               user['address']?['city'] ??
               "";
-          _selectedCity = city.isNotEmpty ? city : null;
+          // Check if city exists in the known list for the state; otherwise use "Other" + text field
+          final bool cityKnown = city.isNotEmpty &&
+              _selectedState != null &&
+              (indiaStatesCities[_selectedState]?.contains(city) ?? false);
+          if (city.isNotEmpty && !cityKnown) {
+            _selectedCity = "Other";
+            _customCityController.text = city;
+          } else {
+            _selectedCity = city.isNotEmpty ? city : null;
+          }
 
           if (profile != null) {
             _selectedStandard = profile['std'];
@@ -134,15 +141,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 profile['state'] ??
                 user['address']?['state'] ??
                 "Gujarat";
-            if (!_stateCityMap.keys.contains(_selectedState)) {
+            if (!indiaStatesCities.keys.contains(_selectedState)) {
               _selectedState = "Gujarat";
             }
 
-            // Validate city against state
-            if (_selectedCity != null && 
-                _stateCityMap[_selectedState] != null && 
-                !_stateCityMap[_selectedState]!.contains(_selectedCity)) {
-              _selectedCity = null;
+            // Validate city against state (allow "Other" for custom cities)
+            if (_selectedCity != null &&
+                _selectedCity != "Other" &&
+                indiaStatesCities[_selectedState] != null &&
+                !indiaStatesCities[_selectedState]!.contains(_selectedCity)) {
+              _selectedCity = "Other";
+              _customCityController.text = _selectedCity ?? "";
             }
           }
           _currentPhotoPath = user['photoPath'];
@@ -185,7 +194,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'medium': _selectedMedium,
         'board': _selectedBoard,
         'loginAs': _selectedRole,
-        'city': _selectedCity,
+        'city': _selectedCity == "Other"
+            ? _customCityController.text.trim()
+            : _selectedCity,
         'state': _selectedState,
         'parentPhone': _parentPhoneController.text,
       };
@@ -532,11 +543,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           hint: "State",
                           icon: Icons.map_outlined,
                           value: _selectedState,
-                          items: _stateCityMap.keys.toList(),
+                          items: indiaStatesCities.keys.toList(),
                           onChanged: (val) {
                             setState(() {
                               _selectedState = val;
                               _selectedCity = null; // Reset city when state changes
+                              _customCityController.clear();
                             });
                           },
                         ),
@@ -548,9 +560,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           hint: "City",
                           icon: Icons.location_city,
                           value: _selectedCity,
-                          items: _selectedState != null ? (_stateCityMap[_selectedState] ?? []) : [],
-                          onChanged: (val) => setState(() => _selectedCity = val),
+                          items: _selectedState != null ? (indiaStatesCities[_selectedState] ?? []) : [],
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedCity = val;
+                              if (val != "Other") _customCityController.clear();
+                            });
+                          },
                         ),
+                        if (_selectedCity == "Other") ...[
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            context,
+                            hint: "Enter City Name",
+                            icon: Icons.location_city_outlined,
+                            controller: _customCityController,
+                            validator: (val) {
+                              if (_selectedCity == "Other" && (val == null || val.trim().isEmpty)) {
+                                return "Please enter your city name";
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                         const SizedBox(height: 16),
 
                         const SizedBox(height: 16),
@@ -681,10 +713,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             children: [
               Icon(icon, color: isDark ? Colors.grey : Colors.black54),
               const SizedBox(width: 12),
-              Text(
-                hint,
-                style: GoogleFonts.poppins(
-                  color: isDark ? Colors.grey.shade400 : Colors.grey,
+              Expanded(
+                child: Text(
+                  hint,
+                  style: GoogleFonts.poppins(
+                    color: isDark ? Colors.grey.shade400 : Colors.grey,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
@@ -713,11 +749,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     Icon(icon, color: isDark ? Colors.grey : Colors.black54),
                     const SizedBox(width: 12),
-                    Text(
-                      label,
-                      style: GoogleFonts.poppins(
-                        color: theme.textTheme.bodyLarge?.color,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: GoogleFonts.poppins(
+                          color: theme.textTheme.bodyLarge?.color,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                   ],
@@ -730,7 +770,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             String label = value;
             if (value == "Student") label = l10n.student;
             if (value == "Teacher") label = l10n.teacher;
-            return DropdownMenuItem<String>(value: value, child: Text(label));
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            );
           }).toList(),
           onChanged: isReadOnly ? null : onChanged, // Disable interaction
         ),
