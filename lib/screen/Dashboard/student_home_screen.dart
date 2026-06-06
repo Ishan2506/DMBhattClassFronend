@@ -359,8 +359,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.orange.shade700,
-                    Colors.orange.shade400
+                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.7)
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -368,7 +368,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.orange.withOpacity(0.3),
+                    color: colorScheme.primary.withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 8),
                   ),
@@ -405,8 +405,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.orange.shade700,
+                            backgroundColor: colorScheme.surface,
+                            foregroundColor: colorScheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
