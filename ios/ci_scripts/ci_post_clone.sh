@@ -18,9 +18,12 @@ flutter precache --ios
 # Get dependencies
 flutter pub get
 
-# Install pods
+# Generate Flutter build config
+flutter build ios --config-only
+
+# Install pods - skip repo update to avoid CDN issues
 cd ios
-pod install
+pod install --repo-update=false || pod install
 cd ..
 
 echo "=== Xcode Cloud Post Clone Complete ==="
