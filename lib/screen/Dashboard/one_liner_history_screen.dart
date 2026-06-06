@@ -83,16 +83,9 @@ class _OneLinerHistoryScreenState extends State<OneLinerHistoryScreen> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.history_toggle_off_rounded, size: 80, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          Text(
-            "No one-liner history found",
-            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
-          ),
-        ],
+      child: Text(
+        "No one-liner history found",
+        style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
       ),
     );
   }
