@@ -1,25 +1,71 @@
 #!/bin/sh
 set -e
 
-# Navigate to the root directory of the project
+echo "======================================="
+echo "Starting Xcode Cloud Post Clone Script"
+echo "======================================="
+
+# Navigate to repository root
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 
-# Clone the Flutter SDK (stable branch)
-git clone https://github.com/flutter/flutter.git --depth 1 -b stable $HOME/flutter
+echo "Repository Path:"
+pwd
+
+echo "---------------------------------------"
+echo "Installing Flutter SDK"
+echo "---------------------------------------"
+
+# Remove old Flutter SDK if exists
+rm -rf "$HOME/flutter"
+
+# Install Flutter Stable
+git clone https://github.com/flutter/flutter.git --depth 1 -b stable "$HOME/flutter"
 
 # Add Flutter to PATH
-export PATH="$PATH:$HOME/flutter/bin"
+export PATH="$HOME/flutter/bin:$PATH"
 
-# Pre-download iOS artifacts
+echo "Flutter Version:"
+flutter --version
+
+echo "---------------------------------------"
+echo "Flutter Doctor"
+echo "---------------------------------------"
+flutter doctor -v
+
+echo "---------------------------------------"
+echo "Downloading iOS Artifacts"
+echo "---------------------------------------"
 flutter precache --ios
 
-# Fetch dependencies
+echo "---------------------------------------"
+echo "Fetching Flutter Packages"
+echo "---------------------------------------"
 flutter pub get
 
-# Generate iOS build configuration files
-flutter build ios --config-only
+echo "---------------------------------------"
+echo "Cleaning Flutter"
+echo "---------------------------------------"
+flutter clean
 
-# Install CocoaPods and project pods
-HOMEBREW_NO_AUTO_UPDATE=1 brew install cocoapods
+echo "---------------------------------------"
+echo "Generating iOS Configuration"
+echo "---------------------------------------"
+flutter build ios --release --no-codesign
+
+echo "---------------------------------------"
+echo "Installing CocoaPods"
+echo "---------------------------------------"
+
 cd ios
-pod install
+
+# Update pod repository
+pod repo update
+
+# Install pods
+pod install --verbose
+
+cd ..
+
+echo "======================================="
+echo "Post Clone Script Completed Successfully"
+echo "======================================="
