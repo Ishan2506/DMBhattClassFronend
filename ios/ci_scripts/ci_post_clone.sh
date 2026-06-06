@@ -19,20 +19,23 @@ flutter --version
 # Download Flutter iOS artifacts
 flutter precache --ios
 
-# Get dependencies
+# Match the local recovery steps used before archiving from Xcode.
+echo "Cleaning Flutter build outputs..."
+flutter clean
+
+echo "Resetting iOS CocoaPods state..."
+rm -rf ios/Pods ios/.symlinks ios/Flutter/Flutter.podspec
+
+# Get dependencies and regenerate Flutter's iOS configuration.
 flutter pub get
 
-# Generate Flutter build config
 flutter build ios --config-only
 
 # Clean derived data before building
 rm -rf ~/Library/Developer/Xcode/DerivedData/* || true
 
-# Install pods - keep Podfile.lock so CI resolves the same pod versions as local builds.
+# Install pods after Flutter has regenerated Generated.xcconfig.
 cd ios
-
-echo "Removing old Pods..."
-rm -rf Pods/ || true
 
 echo "Installing CocoaPods..."
 pod install || {
