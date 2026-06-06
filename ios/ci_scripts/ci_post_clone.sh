@@ -5,8 +5,9 @@ echo "=== Xcode Cloud Post Clone Start ==="
 
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 
-# Install Flutter
-git clone https://github.com/flutter/flutter.git --depth 1 -b stable "$HOME/flutter"
+# Install Flutter (Clean clone with single-branch and blobless filters to avoid timeouts)
+rm -rf "$HOME/flutter"
+git clone https://github.com/flutter/flutter.git --depth 1 --branch stable --single-branch --filter=blob:none "$HOME/flutter"
 
 export PATH="$HOME/flutter/bin:$PATH"
 
