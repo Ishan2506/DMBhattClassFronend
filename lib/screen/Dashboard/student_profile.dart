@@ -6,7 +6,6 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/mcq_Detail.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/edit_profile_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/add_account_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
@@ -20,6 +19,7 @@ import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
 class StudentProfileScreen extends StatefulWidget {
@@ -800,17 +800,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                         : Colors.grey,
                                     isOnline: exam['isOnline'] ?? false,
                                     l10n: l10n,
-                                    onTap: () {
-                                      if (exam['isOnline'] == true) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const McqDetailScreen(),
-                                          ),
-                                        );
-                                      }
-                                    },
                                   ),
                                 ),
                               ),
@@ -864,7 +853,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   const SizedBox(height: 40),
 
                   // 7. Manage Subscription
-                  if (Platform.isIOS)
+                  if (!kIsWeb && Platform.isIOS)
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -1213,81 +1202,76 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     required String marks,
     required Color color,
     bool isOnline = false,
-    required VoidCallback onTap,
     required AppLocalizations l10n,
   }) {
     final theme = Theme.of(context);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-          ],
-          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.auto_stories_rounded,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
+            child: Icon(
+              Icons.auto_stories_rounded,
+              color: theme.colorScheme.primary,
+              size: 20,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
-                  Text(
-                    isOnline ? l10n.onlineExam : l10n.offlineExam,
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                marks,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: color,
                 ),
+                Text(
+                  isOnline ? l10n.onlineExam : l10n.offlineExam,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              marks,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: color,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
