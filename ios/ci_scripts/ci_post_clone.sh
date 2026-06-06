@@ -16,6 +16,9 @@ flutter precache --ios
 # Fetch dependencies
 flutter pub get
 
+# Generate iOS build configuration files
+flutter build ios --config-only
+
 # Install CocoaPods and project pods
 HOMEBREW_NO_AUTO_UPDATE=1 brew install cocoapods
 cd ios
