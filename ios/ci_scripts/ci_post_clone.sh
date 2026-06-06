@@ -28,11 +28,11 @@ flutter build ios --config-only
 # Clean derived data before building
 rm -rf ~/Library/Developer/Xcode/DerivedData/* || true
 
-# Install pods - with better error handling
+# Install pods - keep Podfile.lock so CI resolves the same pod versions as local builds.
 cd ios
 
 echo "Removing old Pods..."
-rm -rf Pods/ Podfile.lock || true
+rm -rf Pods/ || true
 
 echo "Installing CocoaPods..."
 pod install || {
