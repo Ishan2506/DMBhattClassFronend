@@ -43,6 +43,8 @@ post_install do |installer|
     # ✅ Force correct iOS version everywhere
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      # Suppress deprecation warnings from Firebase and local notifications
+      config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
     end
   end
 end

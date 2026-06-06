@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "======================================="
@@ -7,6 +7,7 @@ echo "======================================="
 
 # Navigate to repository root
 cd "$CI_PRIMARY_REPOSITORY_PATH"
+echo "📍 Working directory: $(pwd)"
 
 echo "Repository Path:"
 pwd
