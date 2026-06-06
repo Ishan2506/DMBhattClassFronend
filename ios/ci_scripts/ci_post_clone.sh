@@ -25,9 +25,21 @@ flutter pub get
 # Generate Flutter build config
 flutter build ios --config-only
 
-# Install pods - skip repo update to avoid CDN issues
+# Clean derived data before building
+rm -rf ~/Library/Developer/Xcode/DerivedData/* || true
+
+# Install pods - with better error handling
 cd ios
-pod install --repo-update=false || pod install
+
+echo "Removing old Pods..."
+rm -rf Pods/ Podfile.lock || true
+
+echo "Installing CocoaPods..."
+pod install || {
+  echo "Pod install failed, trying with repo update..."
+  pod install --repo-update
+}
+
 cd ..
 
 echo "=== Xcode Cloud Post Clone Complete ==="
