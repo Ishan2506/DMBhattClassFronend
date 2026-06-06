@@ -18,9 +18,6 @@ flutter precache --ios
 # Get dependencies
 flutter pub get
 
-# Generate iOS configs only
-flutter build ios --config-only
-
 # Install pods
 cd ios
 pod install
