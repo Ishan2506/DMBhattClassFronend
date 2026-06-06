@@ -145,7 +145,9 @@ class _FiveMinTestSelectionScreenState
               onPressed: () {
                 Navigator.pop(context);
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => UpgradePlanScreen()));
+                    MaterialPageRoute(builder: (_) => const UpgradePlanScreen())).then((_) {
+                  _fetchTests();
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,

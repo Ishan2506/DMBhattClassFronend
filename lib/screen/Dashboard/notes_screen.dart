@@ -90,7 +90,9 @@ class _NotesScreenState extends State<NotesScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-              );
+              ).then((_) {
+                _loadProfileAndCheckGuest();
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -184,7 +186,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   DropdownButtonFormField<String>(
                     initialValue: _selectedSubject,
                     hint: Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
-                    items: _getFilteredSubjects().map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    items: _getFilteredSubjects().map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)))).toList(),
                     onChanged: (val) {
                       _selectedSubject = val;
                       _filterNotes();
@@ -195,7 +197,7 @@ class _NotesScreenState extends State<NotesScreen> {
                       filled: true,
                       fillColor: theme.cardColor,
                     ),
-                    style: GoogleFonts.poppins(color: colorScheme.onSurface),
+                    style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
                     dropdownColor: theme.cardColor,
                     icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
                   ),

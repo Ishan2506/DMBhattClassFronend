@@ -225,7 +225,9 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
               onPressed: () {
                 Navigator.pop(context);
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => UpgradePlanScreen()));
+                    MaterialPageRoute(builder: (_) => const UpgradePlanScreen())).then((_) {
+                  _fetchExams();
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,

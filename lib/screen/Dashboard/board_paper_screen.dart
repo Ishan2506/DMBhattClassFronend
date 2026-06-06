@@ -271,7 +271,8 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
             l10n.subject, 
             _getFilteredSubjects(), 
             _selectedSubject, 
-            (val) => setState(() => _selectedSubject = val)
+            (val) => setState(() => _selectedSubject = val),
+            isBold: true,
           ),
 
           const SizedBox(height: 20),
@@ -293,10 +294,10 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     );
   }
 
-  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?)? onChanged, {bool enabled = true}) {
+  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?)? onChanged, {bool enabled = true, bool isBold = false}) {
     return DropdownButtonFormField<String>(
       initialValue: value,
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.poppins(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)))).toList(),
       onChanged: enabled ? onChanged : null,
       decoration: InputDecoration(
         labelText: label,
@@ -306,7 +307,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
         filled: true,
         fillColor: Theme.of(context).cardColor,
       ),
-      style: GoogleFonts.poppins(color: Theme.of(context).textTheme.bodyMedium?.color),
+      style: GoogleFonts.poppins(color: Theme.of(context).textTheme.bodyMedium?.color, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
       dropdownColor: Theme.of(context).cardColor,
     );
   }

@@ -100,7 +100,9 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-              );
+              ).then((_) {
+                _loadProfileAndCheckGuest();
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -205,7 +207,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                   DropdownButtonFormField<String>(
                     initialValue: _selectedSubject,
                     hint: Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
-                    items: _getFilteredSubjects().map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    items: _getFilteredSubjects().map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)))).toList(),
                     onChanged: (val) {
                       _selectedSubject = val;
                       _filterPapers();
@@ -216,7 +218,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                       filled: true,
                       fillColor: theme.cardColor,
                     ),
-                    style: GoogleFonts.poppins(color: colorScheme.onSurface),
+                    style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
                     dropdownColor: theme.cardColor,
                     icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
                   ),

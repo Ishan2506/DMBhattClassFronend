@@ -129,7 +129,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
       ),
       child: Column(
         children: [
-          _buildDropdown(l10n.selectSubject, _getFilteredSubjects(), _selectedSubject, (val) => setState(() => _selectedSubject = val)),
+          _buildDropdown(l10n.selectSubject, _getFilteredSubjects(), _selectedSubject, (val) => setState(() => _selectedSubject = val), isBold: true),
           const SizedBox(height: 12),
           _buildDropdown(l10n.selectUnit, _units, _selectedUnit, (val) => setState(() => _selectedUnit = val)),
           const SizedBox(height: 20),
@@ -151,10 +151,10 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
     );
   }
 
-  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?) onChanged) {
+  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?) onChanged, {bool isBold = false}) {
     return DropdownButtonFormField<String>(
       initialValue: value,
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.poppins(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)))).toList(),
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
@@ -164,6 +164,8 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
         filled: true,
         fillColor: Theme.of(context).cardColor,
       ),
+      style: GoogleFonts.poppins(color: Theme.of(context).textTheme.bodyMedium?.color, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+      dropdownColor: Theme.of(context).cardColor,
     );
   }
 
@@ -337,7 +339,9 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-              );
+              ).then((_) {
+                _checkUserStatus();
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,

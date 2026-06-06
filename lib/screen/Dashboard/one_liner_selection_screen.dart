@@ -164,7 +164,9 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
               onPressed: () {
                 Navigator.pop(context);
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => UpgradePlanScreen()));
+                    MaterialPageRoute(builder: (_) => const UpgradePlanScreen())).then((_) {
+                  _fetchOneLinerExams();
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
