@@ -22,8 +22,17 @@ flutter --version
 echo "⬇️ Precaching iOS artifacts..."
 flutter precache --ios
 
-# Fetch dependencies
+# Fetch dependencies and regenerate Flutter config
 echo "📦 Getting Flutter dependencies..."
+flutter pub get
+
+# CRITICAL: Regenerate Generated.xcconfig with correct paths for CI
+echo "🔧 Regenerating Flutter build config..."
+cd ios
+rm -f Flutter/Generated.xcconfig
+cd ..
+flutter pub get  # This regenerates the config file
+flutter clean
 flutter pub get
 
 # Install CocoaPods if needed
