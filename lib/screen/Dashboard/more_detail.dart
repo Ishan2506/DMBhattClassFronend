@@ -20,6 +20,8 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 
 class MoreScreen extends StatelessWidget {
@@ -218,9 +220,32 @@ class _StudentActivitiesScreen extends StatelessWidget {
 class _AppInfoScreen extends StatelessWidget {
   const _AppInfoScreen();
 
-  void _shareApp() {
-    Share.share(
-        'Check out D. M. Bhatt Tuition Classes App! Download now: https://play.google.com/store/apps/details?id=com.dmbhatt.tutions');
+  void _shareApp(BuildContext context) {
+    if (kIsWeb) {
+      launchUrl(
+        Uri.parse('https://play.google.com/store/apps/details?id=com.bondbyte.students'),
+        mode: LaunchMode.externalApplication,
+      );
+    } else if (Platform.isAndroid) {
+      Share.share(
+        'Check out D. M. Bhatt Tuition Classes App! Download now: https://play.google.com/store/apps/details?id=com.bondbyte.students',
+      );
+    } else if (Platform.isIOS) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text("Coming Soon"),
+          content: const Text("Sharing is not yet available on iOS. Coming soon!"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   void _showRateUsDialog(BuildContext context) {
@@ -398,7 +423,7 @@ class _AppInfoScreen extends StatelessWidget {
               title: l10n.shareApp,
               value: "",
               icon: Icons.share,
-              onTap: _shareApp,
+              onTap: () => _shareApp(context),
             ),
             _MoreScreenItem(
               title: l10n.rateUs,
