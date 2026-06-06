@@ -606,31 +606,46 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: isPassword && !isVisible,
-        keyboardType: inputType,
-        inputFormatters: inputFormatters,
-        validator: validator,
-        style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), // Black Bold Input
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey),
-          prefixIcon: Icon(icon, color: Colors.black54),
-          suffixIcon: isPassword 
-              ? IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
-                  onPressed: onVisibilityChanged,
-                ) 
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword && !isVisible,
+      keyboardType: inputType,
+      inputFormatters: inputFormatters,
+      validator: validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold), // Black Bold Input
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(color: Colors.grey),
+        prefixIcon: Icon(icon, color: Colors.black54),
+        suffixIcon: isPassword 
+            ? IconButton(
+                icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                onPressed: onVisibilityChanged,
+              ) 
+            : null,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.blue, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
       ),
     );

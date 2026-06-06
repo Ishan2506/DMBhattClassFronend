@@ -667,31 +667,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String? Function(String?)? validator,
     required ColorScheme colorScheme,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: isPassword && !isVisible,
-        keyboardType: inputType,
-        inputFormatters: inputFormatters,
-        validator: validator,
-        style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold), // Black Bold Input
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
-          prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant),
-          suffixIcon: isPassword 
-              ? IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: colorScheme.onSurfaceVariant),
-                  onPressed: onVisibilityChanged,
-                ) 
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword && !isVisible,
+      keyboardType: inputType,
+      inputFormatters: inputFormatters,
+      validator: validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold), // Black Bold Input
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: colorScheme.surfaceContainer,
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
+        prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant),
+        suffixIcon: isPassword 
+            ? IconButton(
+                icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: colorScheme.onSurfaceVariant),
+                onPressed: onVisibilityChanged,
+              ) 
+            : null,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.outlineVariant),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.error, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.error, width: 2),
         ),
       ),
     );

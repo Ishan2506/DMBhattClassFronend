@@ -83,6 +83,16 @@ class ApiService {
 
   static http.Response _handleSession(http.Response response) {
     if (response.statusCode == 401 && !_isGuest) {
+      // Avoid redirecting to LoginScreen if the request is to an authentication endpoint
+      final path = response.request?.url.path ?? '';
+      if (path.contains('/auth/login') ||
+          path.contains('/auth/register') ||
+          path.contains('/auth/forget-password') ||
+          path.contains('/auth/verify-otp') ||
+          path.contains('/auth/reset-password')) {
+        return response;
+      }
+
       debugPrint("Session expired (401). Redirecting to LoginScreen.");
       
       // Clear token to prevent infinite loop or persistent bad state
