@@ -11,6 +11,9 @@ git clone https://github.com/flutter/flutter.git --depth 1 --branch stable --sin
 
 export PATH="$HOME/flutter/bin:$PATH"
 
+# Disable Swift Package Manager globally for the runner
+flutter config --no-enable-swift-package-manager
+
 flutter --version
 
 # Download Flutter iOS artifacts
