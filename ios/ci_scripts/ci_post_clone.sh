@@ -1,12 +1,22 @@
 #!/bin/sh
 set -e
 
-echo "Flutter version:"
-flutter --version
+# Navigate to the root directory of the project
+cd "$CI_PRIMARY_REPOSITORY_PATH"
 
-echo "Getting dependencies"
+# Clone the Flutter SDK (stable branch)
+git clone https://github.com/flutter/flutter.git --depth 1 -b stable $HOME/flutter
+
+# Add Flutter to PATH
+export PATH="$PATH:$HOME/flutter/bin"
+
+# Pre-download iOS artifacts
+flutter precache --ios
+
+# Fetch dependencies
 flutter pub get
 
-echo "Installing CocoaPods"
+# Install CocoaPods and project pods
+HOMEBREW_NO_AUTO_UPDATE=1 brew install cocoapods
 cd ios
 pod install
