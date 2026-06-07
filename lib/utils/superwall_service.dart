@@ -19,9 +19,7 @@ class SuperWallService {
     if (_initialized) return;
 
     try {
-      await Superwall.instance.configure(
-        apiKey: apiKey,
-      );
+      Superwall.configure(apiKey);
       _initialized = true;
       if (kDebugMode) print('✅ SuperWall initialized successfully');
     } catch (e) {
@@ -43,7 +41,7 @@ class SuperWallService {
 
     try {
       // Register event that triggers the paywall
-      await Superwall.instance.register(
+      await Superwall.shared.registerEvent(
         event: 'explore_premium_requested',
         params: {
           'user_id': userId,
@@ -67,7 +65,7 @@ class SuperWallService {
     if (!_initialized) return false;
 
     try {
-      final entitlements = await Superwall.instance.getEntitlements();
+      final entitlements = await Superwall.shared.getEntitlements();
       final hasPremium = entitlements.contains('premium_explore');
       if (kDebugMode) {
         print('👤 User premium status: $hasPremium');
@@ -100,7 +98,7 @@ class SuperWallService {
     if (!_initialized) return;
 
     try {
-      await Superwall.instance.setUserAttributes({
+      await Superwall.shared.setUserAttributes({
         'user_id': userId,
         'region': region,
         'explore_visits': exploreVisitCount.toString(),
