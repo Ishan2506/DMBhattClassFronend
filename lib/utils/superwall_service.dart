@@ -1,4 +1,4 @@
-import 'package:superwall/superwall.dart';
+import 'package:superwallkit_flutter/superwallkit_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 class SuperWallService {
