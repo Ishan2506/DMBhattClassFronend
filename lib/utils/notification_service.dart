@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
   NotificationService._();
@@ -59,8 +60,14 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
-    // 3. Subscribe to the 'all' topic
+    // 3. Subscribe to topics
     await _fcm.subscribeToTopic('all');
+
+    // Subscribe to student's standard topic if available
+    final studentStd = await _getStudentStandard();
+    if (studentStd != null && studentStd.isNotEmpty) {
+      await _fcm.subscribeToTopic('std_$studentStd');
+    }
 
     // 4. Handle Foreground Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -97,5 +104,51 @@ class NotificationService {
         print('Notification clicked! Opening app...');
       }
     });
+  }
+
+  Future<String?> _getStudentStandard() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('std');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching student standard: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Subscribe to topic based on student's standard
+  /// Call this after student logs in to subscribe to their standard topic
+  Future<void> subscribeToStudentTopic() async {
+    try {
+      final studentStd = await _getStudentStandard();
+      if (studentStd != null && studentStd.isNotEmpty) {
+        await _fcm.subscribeToTopic('std_$studentStd');
+        if (kDebugMode) {
+          print('Subscribed to topic: std_$studentStd');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error subscribing to student topic: $e');
+      }
+    }
+  }
+
+  /// Unsubscribe from old topic when student logs out
+  Future<void> unsubscribeFromStudentTopic(String? std) async {
+    try {
+      if (std != null && std.isNotEmpty) {
+        await _fcm.unsubscribeFromTopic('std_$std');
+        if (kDebugMode) {
+          print('Unsubscribed from topic: std_$std');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error unsubscribing from student topic: $e');
+      }
+    }
   }
 }

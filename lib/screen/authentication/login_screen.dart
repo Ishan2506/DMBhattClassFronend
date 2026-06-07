@@ -4,6 +4,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services for formatters
 import 'package:dm_bhatt_tutions/network/api_service.dart';
@@ -179,6 +180,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (user['stream'] != null) await prefs.setString('stream', user['stream']);
                               if (user['board'] != null) await prefs.setString('board', user['board']);
                             }
+
+                                // Subscribe to notification topic based on student's standard
+                                await NotificationService.instance.subscribeToStudentTopic();
 
                                 // Handle Multi-Account Storage
                                 final db = DatabaseHelper();
