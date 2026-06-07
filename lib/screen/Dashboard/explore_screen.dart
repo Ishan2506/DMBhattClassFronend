@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:printing/printing.dart';
 import 'dart:typed_data';
+import 'package:dm_bhatt_tutions/utils/superwall_service.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -36,12 +37,14 @@ class ExploreScreenState extends State<ExploreScreen> {
 
   bool _isLoading = true;
   List<Map<String, dynamic>> _products = [];
+  bool _hasPremiumExplore = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(viewportFraction: 0.75);
     fetchProducts(showLoader: true);
+    _checkPremiumStatus();
   }
 
   void _startAutoSlide() {
@@ -67,6 +70,47 @@ class ExploreScreenState extends State<ExploreScreen> {
     _timer?.cancel();
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkPremiumStatus() async {
+    final hasPremium = await SuperWallService().hasExplorePremium();
+    if (mounted) {
+      setState(() => _hasPremiumExplore = hasPremium);
+    }
+  }
+
+  Future<void> _showPremiumPaywall(Map<String, dynamic> product) async {
+    await SuperWallService().setUserAttributes(
+      userId: await SuperWallService().getUserId(),
+      region: 'IN',
+      exploreVisitCount: 42,
+      isNewUser: false,
+    );
+
+    await SuperWallService().showExplorePremiumPaywall(
+      userId: await SuperWallService().getUserId(),
+      customAttributes: {
+        'product_id': product['id'],
+        'product_name': product['name'],
+        'price': product['price'],
+      },
+    );
+
+    await Future.delayed(const Duration(seconds: 2));
+    await _checkPremiumStatus();
+  }
+
+  void _onProductTap(Map<String, dynamic> product) {
+    if (product['isPremium'] == true && !_hasPremiumExplore) {
+      _showPremiumPaywall(product);
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MaterialDetailScreen(product: product),
+        ),
+      );
+    }
   }
 
   Future<void> fetchProducts({bool showLoader = false}) async {

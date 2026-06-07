@@ -20,6 +20,7 @@ import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/utils/purchase_config.dart';
 import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
+import 'package:dm_bhatt_tutions/utils/superwall_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -62,6 +63,15 @@ void main() async {
   await AcademicConstants.loadFromServer();
   
   await RevenueCatService.instance.init();
+
+  // Initialize SuperWall
+  try {
+    await SuperWallService().initialize(
+      apiKey: 'pk_s7jyO9iO397j9OikgfCJQ',
+    );
+  } catch (e) {
+    if (kDebugMode) print('SuperWall init error: $e');
+  }
 
   // await _secureScreen();
   runApp(MyApp(prefs: prefs));
