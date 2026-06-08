@@ -336,12 +336,7 @@ class ExploreScreenState extends State<ExploreScreen> {
                         final product = displayedProducts[index];
                         return GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MaterialDetailScreen(product: product),
-                              ),
-                            );
+                            _onProductTap(product);
                           },
                           child: Container(
                             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
