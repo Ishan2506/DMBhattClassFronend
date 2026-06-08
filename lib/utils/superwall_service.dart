@@ -41,8 +41,8 @@ class SuperWallService {
 
     try {
       // Register event that triggers the paywall
-      await Superwall.shared.registerEvent(
-        event: 'explore_premium_requested',
+      await Superwall.shared.registerPlacement(
+        'explore_premium_requested',
         params: {
           'user_id': userId,
           'timestamp': DateTime.now().toIso8601String(),
@@ -66,7 +66,7 @@ class SuperWallService {
 
     try {
       final entitlements = await Superwall.shared.getEntitlements();
-      final hasPremium = entitlements.contains('premium_explore');
+      final hasPremium = entitlements.active.any((e) => e.id == 'premium_explore');
       if (kDebugMode) {
         print('👤 User premium status: $hasPremium');
       }
