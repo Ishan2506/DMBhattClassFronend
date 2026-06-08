@@ -78,6 +78,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.18
   flutter_launcher_icons: ^0.14.4
   package_info_plus: ^9.0.1
+  superwallkit_flutter: ^2.4.12
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,4 +1,4 @@
-import 'package:superwall/superwall.dart';
+import 'package:superwallkit_flutter/superwallkit_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 class SuperWallService {
@@ -19,9 +19,7 @@ class SuperWallService {
     if (_initialized) return;
 
     try {
-      await Superwall.instance.configure(
-        apiKey: apiKey,
-      );
+      Superwall.configure(apiKey);
       _initialized = true;
       if (kDebugMode) print('✅ SuperWall initialized successfully');
     } catch (e) {
@@ -43,8 +41,8 @@ class SuperWallService {
 
     try {
       // Register event that triggers the paywall
-      await Superwall.instance.register(
-        event: 'explore_premium_requested',
+      await Superwall.shared.registerPlacement(
+        'explore_premium_requested',
         params: {
           'user_id': userId,
           'timestamp': DateTime.now().toIso8601String(),
@@ -67,8 +65,8 @@ class SuperWallService {
     if (!_initialized) return false;
 
     try {
-      final entitlements = await Superwall.instance.getEntitlements();
-      final hasPremium = entitlements.contains('premium_explore');
+      final entitlements = await Superwall.shared.getEntitlements();
+      final hasPremium = entitlements.active.any((e) => e.id == 'premium_explore');
       if (kDebugMode) {
         print('👤 User premium status: $hasPremium');
       }
@@ -100,7 +98,7 @@ class SuperWallService {
     if (!_initialized) return;
 
     try {
-      await Superwall.instance.setUserAttributes({
+      await Superwall.shared.setUserAttributes({
         'user_id': userId,
         'region': region,
         'explore_visits': exploreVisitCount.toString(),
