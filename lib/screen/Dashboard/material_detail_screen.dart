@@ -199,7 +199,10 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
           CustomToast.showSuccess(context, "Material purchased successfully!");
           _verifyRevenueCatPurchase();
         } else {
-          if (mounted) setState(() => _isProcessing = false);
+          if (mounted) {
+            setState(() => _isProcessing = false);
+            CustomToast.showError(context, "Paywall did not load or purchase was cancelled.");
+          }
         }
       } catch (e) {
         if (mounted) {
