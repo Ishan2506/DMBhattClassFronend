@@ -6,6 +6,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
+import 'package:dm_bhatt_tutions/utils/superwall_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_payment_confirmation_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
@@ -128,6 +129,8 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
     }
   }
 
+  /*
+  // OLD RevenueCat code (commented out for future use)
   Future<void> _initiatePurchase() async {
     if (!await GuestUtils.canGuestPurchase(context)) return;
     setState(() => _isProcessing = true);
@@ -142,6 +145,67 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
         CustomToast.showSuccess(context, "Material purchased successfully!");
         // We'll call the verification/completion logic
         _verifyRevenueCatPurchase();
+      }
+    } else {
+      // Android: Use Razorpay
+      try {
+        final orderResponse = await ApiService.createProductOrder(
+          widget.product['id'],
+          (widget.product['price'] as num).toDouble(),
+        );
+
+        if (!mounted) return;
+
+        if (orderResponse.statusCode == 200) {
+          final orderData = jsonDecode(orderResponse.body);
+          final String orderId = orderData['id'];
+
+          _razorpayHelper!.openCheckout(
+            amount: (widget.product['price'] as num).toDouble(),
+            name: "D.M. Bhatt classes",
+            description: widget.product['name'],
+            contact: '',
+            email: '',
+            orderId: orderId,
+          );
+        } else {
+          setState(() => _isProcessing = false);
+          final errorMsg = ApiService.getErrorMessage(orderResponse.body);
+          CustomToast.showError(context, "Failed: $errorMsg");
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          CustomToast.showError(context, "Error: $e");
+        }
+      }
+    }
+  }
+  */
+
+  Future<void> _initiatePurchase() async {
+    if (!await GuestUtils.canGuestPurchase(context)) return;
+    setState(() => _isProcessing = true);
+
+    if (_isIOS) {
+      // iOS: Use Superwall Paywall for material purchase
+      try {
+        final userId = await SuperWallService().getUserId();
+        await SuperWallService().showExplorePremiumPaywall(userId: userId);
+        
+        // Check if they have the premium entitlement after paywall closes
+        final hasPremium = await SuperWallService().hasExplorePremium();
+        if (hasPremium && mounted) {
+          CustomToast.showSuccess(context, "Material purchased successfully!");
+          _verifyRevenueCatPurchase();
+        } else {
+          if (mounted) setState(() => _isProcessing = false);
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          CustomToast.showError(context, "Failed to show paywall");
+        }
       }
     } else {
       // Android: Use Razorpay
