@@ -1,4 +1,6 @@
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_history_screen.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart' as api;
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
@@ -688,6 +690,25 @@ class _HistoryMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    
+    const matchHistoryTranslations = {
+      'en': 'Match the Following History',
+      'gu': 'જોડકા જોડવાનો ઇતિહાસ',
+      'hi': 'सही मिलान इतिहास',
+      'mr': 'योग्य जोड्या जुळवण्याचा इतिहास',
+      'ta': 'பொருத்துக வரலாறு'
+    };
+    const tfHistoryTranslations = {
+      'en': 'True / False History',
+      'gu': 'ખરા / ખોટાનો ઇતિહાસ',
+      'hi': 'सही / गलत इतिहास',
+      'mr': 'चूक / बरोबर इतिहास',
+      'ta': 'சரி / தவறு வரலாறு'
+    };
+    final matchHistoryTitle = matchHistoryTranslations[locale] ?? 'Match the Following History';
+    final tfHistoryTitle = tfHistoryTranslations[locale] ?? 'True / False History';
+
     return Scaffold(
       appBar: CustomAppBar(
         title: l10n.history,
@@ -732,6 +753,30 @@ class _HistoryMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const OneLinerHistoryScreen()),
+                  );
+                },
+              ),
+              _MoreScreenItem(
+                title: matchHistoryTitle,
+                value: "",
+                icon: Icons.compare_arrows_rounded,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const MatchFollowingHistoryScreen()),
+                  );
+                },
+              ),
+              _MoreScreenItem(
+                title: tfHistoryTitle,
+                value: "",
+                icon: Icons.rule_folder_rounded,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const TrueFalseHistoryScreen()),
                   );
                 },
               ),

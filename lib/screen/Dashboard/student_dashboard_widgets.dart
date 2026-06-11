@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'package:dm_bhatt_tutions/screen/Dashboard/leaderboard_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_selection_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -25,18 +26,49 @@ class QuickAccessCategories extends StatelessWidget {
       "screen": MindGamesScreen(),
     },
     {
-      "title": "Mind Maps",
-      "icon": Icons.hub_rounded,
+      "title": "True / False",
+      "icon": Icons.check_circle_outline_rounded,
       "color": Color(0xFFBD10E0),
-      "screen": MindMapSelectionScreen(),
+      "screen": TrueFalseSelectionScreen(),
     },
     {
-      "title": "Leaderboard",
-      "icon": Icons.leaderboard_rounded,
+      "title": "Match the Following",
+      "icon": Icons.compare_arrows_rounded,
       "color": Color(0xFFF5A623),
-      "screen": LeaderboardScreen(),
+      "screen": MatchFollowingSelectionScreen(),
     },
   ];
+
+  String _getCategoryTitle(BuildContext context, String key) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return key;
+
+    if (key == "Material") return l10n.material;
+    if (key == "Mind Games") return l10n.mindGames;
+    if (key == "True / False") {
+      final locale = Localizations.localeOf(context).languageCode;
+      const translations = {
+        'en': 'True / False',
+        'gu': 'ખરું / ખોટું',
+        'hi': 'सही / गलत',
+        'mr': 'चूक / बरोबर',
+        'ta': 'சரி / தவறு'
+      };
+      return translations[locale] ?? 'True / False';
+    }
+    if (key == "Match the Following") {
+      final locale = Localizations.localeOf(context).languageCode;
+      const translations = {
+        'en': 'Match the Following',
+        'gu': 'જોડકા જોડો',
+        'hi': 'सही मिलान करें',
+        'mr': 'योग्य जोड्या जुळवा',
+        'ta': 'பொருத்துக'
+      };
+      return translations[locale] ?? 'Match the Following';
+    }
+    return key;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +136,7 @@ class QuickAccessCategories extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              cat['title'],
+              _getCategoryTitle(context, cat['title']),
               style: GoogleFonts.poppins(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
