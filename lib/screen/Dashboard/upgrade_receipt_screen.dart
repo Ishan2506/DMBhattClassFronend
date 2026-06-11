@@ -28,7 +28,7 @@ class UpgradeReceiptScreen extends StatelessWidget {
       final invoiceId = historyItem['invoiceId'];
       if (invoiceId == null) {
         if (context.mounted) Navigator.pop(context);
-        CustomToast.show('Invoice not found', context);
+        CustomToast.showError(context, 'Invoice not found');
         return;
       }
 
@@ -37,7 +37,7 @@ class UpgradeReceiptScreen extends StatelessWidget {
       final String? token = ApiService.userToken;
       if (token == null) {
         if (context.mounted) Navigator.pop(context);
-        CustomToast.show('Authentication failed', context);
+        CustomToast.showError(context, 'Authentication failed');
         return;
       }
 
@@ -56,7 +56,7 @@ class UpgradeReceiptScreen extends StatelessWidget {
         // Save to downloads folder
         final directory = await getDownloadsDirectory();
         if (directory == null) {
-          CustomToast.show('Cannot access downloads folder', context);
+          CustomToast.showError(context, 'Cannot access downloads folder');
           return;
         }
 
@@ -64,7 +64,7 @@ class UpgradeReceiptScreen extends StatelessWidget {
         final file = File('${directory.path}/$fileName');
         await file.writeAsBytes(response.bodyBytes);
 
-        CustomToast.show('Receipt saved successfully', context);
+        CustomToast.showSuccess(context, 'Receipt saved successfully');
 
         // Optional: Share the file
         if (context.mounted) {
@@ -74,16 +74,16 @@ class UpgradeReceiptScreen extends StatelessWidget {
           );
         }
       } else if (response.statusCode == 404) {
-        CustomToast.show('Invoice not found on server', context);
+        CustomToast.showError(context, 'Invoice not found on server');
       } else if (response.statusCode == 403) {
-        CustomToast.show('Unauthorized access', context);
+        CustomToast.showError(context, 'Unauthorized access');
       } else {
-        CustomToast.show('Error: ${response.statusCode}', context);
+        CustomToast.showError(context, 'Error: ${response.statusCode}');
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context, false);
-        CustomToast.show('Error: $e', context);
+        CustomToast.showError(context, 'Error: $e');
       }
     }
   }
