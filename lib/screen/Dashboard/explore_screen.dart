@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_detail_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -206,38 +207,70 @@ class ExploreScreenState extends State<ExploreScreen> {
             // Header & Search
             Container(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                       borderRadius: BorderRadius.circular(16),
-                       boxShadow: [
-                         BoxShadow(
-                           color: Colors.black.withOpacity(0.05),
-                           blurRadius: 10,
-                           offset: const Offset(0, 4),
-                         )
-                       ]
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (value) => setState(() => _searchQuery = value),
-                      style: GoogleFonts.poppins(color: isDark ? Colors.white : Colors.black87),
-                      decoration: InputDecoration(
-                        hintText: l10n.search,
-                        hintStyle: GoogleFonts.poppins(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
-                          fontSize: 16,
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                         borderRadius: BorderRadius.circular(16),
+                         boxShadow: [
+                           BoxShadow(
+                             color: Colors.black.withOpacity(0.05),
+                             blurRadius: 10,
+                             offset: const Offset(0, 4),
+                           )
+                         ]
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                        style: GoogleFonts.poppins(color: isDark ? Colors.white : Colors.black87),
+                        decoration: InputDecoration(
+                          hintText: l10n.search,
+                          hintStyle: GoogleFonts.poppins(
+                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                            fontSize: 16,
+                          ),
+                         border: InputBorder.none,
+                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                         prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),)
                         ),
-                       border: InputBorder.none,
-                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                       prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),)
                       ),
                     ),
                   ),
+                  if (!ApiService.isGuest) ...[
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const StudentProductHistoryScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.shopping_bag_outlined,
+                          color: theme.colorScheme.onPrimary,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
