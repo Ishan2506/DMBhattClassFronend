@@ -28,6 +28,10 @@ class SuperWallService {
       // Do NOT pass a PurchaseController here — let Superwall manage
       // purchases entirely on its own (no RevenueCat controller)
       Superwall.configure(apiKey);
+
+      // Set the delegate to handle custom actions
+      Superwall.shared.delegate = _SuperWallDelegate();
+
       _initialized = true;
       if (kDebugMode) print('✅ SuperWall initialized successfully');
     } catch (e) {
@@ -194,5 +198,67 @@ class SuperWallService {
     // TODO: Replace with your actual session manager
     // Example: return SessionManager.instance.getUserId() ?? 'anonymous';
     return 'user_default_id';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPERWALL DELEGATE — Handles custom button actions
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SuperWallDelegate extends SuperwallDelegate {
+  @override
+  void handleCustomPaywallAction(String name) {
+    if (kDebugMode) print('🎯 Custom action triggered: $name');
+
+    switch (name) {
+      case 'continue':
+        // Continue button was tapped — this is where you handle the continue action
+        if (kDebugMode) print('✅ Continue button tapped');
+        // The paywall will automatically dismiss after this action
+        break;
+
+      case 'help':
+        if (kDebugMode) print('❓ Help action tapped');
+        // Implement help center logic here if needed
+        break;
+
+      default:
+        if (kDebugMode) print('⚠️ Unknown action: $name');
+    }
+  }
+
+  @override
+  void willPresentPaywall(PaywallInfo paywallInfo) {
+    if (kDebugMode) print('👀 Paywall will present: ${paywallInfo.identifier}');
+  }
+
+  @override
+  void didPresentPaywall(PaywallInfo paywallInfo) {
+    if (kDebugMode) print('✅ Paywall did present: ${paywallInfo.identifier}');
+  }
+
+  @override
+  void willDismissPaywall(PaywallInfo paywallInfo) {
+    if (kDebugMode) print('👋 Paywall will dismiss: ${paywallInfo.identifier}');
+  }
+
+  @override
+  void didDismissPaywall(PaywallInfo paywallInfo) {
+    if (kDebugMode) print('🚪 Paywall did dismiss: ${paywallInfo.identifier}');
+  }
+
+  @override
+  void subscriptionStatusDidChange(
+    SubscriptionStatus previousStatus,
+    SubscriptionStatus currentStatus,
+  ) {
+    if (kDebugMode) {
+      print('💳 Subscription changed from $previousStatus to $currentStatus');
+    }
+  }
+
+  @override
+  void handleSuperwallEvent(SuperwallEventInfo eventInfo) {
+    if (kDebugMode) print('📊 Superwall event: ${eventInfo.event}');
   }
 }
