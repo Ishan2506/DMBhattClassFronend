@@ -1,6 +1,11 @@
 #!/bin/sh
 set -e
 
+# Ensure we're in the repository root
+if [ -n "$CI_PRIMARY_REPOSITORY_PATH" ]; then
+  cd "$CI_PRIMARY_REPOSITORY_PATH"
+fi
+
 # Install Flutter
 rm -rf "$HOME/flutter"
 echo "Cloning Flutter repository..."
@@ -22,5 +27,14 @@ echo "Getting dependencies"
 flutter pub get
 
 echo "Installing CocoaPods"
-cd ios
-pod install
+if [ -d "ios" ]; then
+  cd ios
+  pod install || {
+    echo "Pod install failed, trying with repo update..."
+    pod install --repo-update
+  }
+  cd ..
+else
+  echo "Error: ios directory not found"
+  exit 1
+fi
