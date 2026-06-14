@@ -30,7 +30,7 @@ class SuperWallService {
       Superwall.configure(apiKey);
 
       // Set the delegate to handle custom actions
-      Superwall.shared.delegate = _SuperWallDelegate();
+      Superwall.shared.setDelegate(_SuperWallDelegate());
 
       _initialized = true;
       if (kDebugMode) print('✅ SuperWall initialized successfully');
@@ -248,17 +248,34 @@ class _SuperWallDelegate extends SuperwallDelegate {
   }
 
   @override
-  void subscriptionStatusDidChange(
-    SubscriptionStatus previousStatus,
-    SubscriptionStatus currentStatus,
-  ) {
+  void subscriptionStatusDidChange(SubscriptionStatus newValue) {
     if (kDebugMode) {
-      print('💳 Subscription changed from $previousStatus to $currentStatus');
+      print('💳 Subscription changed to $newValue');
     }
   }
 
   @override
   void handleSuperwallEvent(SuperwallEventInfo eventInfo) {
     if (kDebugMode) print('📊 Superwall event: ${eventInfo.event}');
+  }
+
+  @override
+  void handleLog(String level, String scope, String? message, Map<dynamic, dynamic>? info, String? error) {
+    if (kDebugMode) print('🪵 Superwall log [$level] [$scope]: $message');
+  }
+
+  @override
+  void handleSuperwallDeepLink(Uri fullURL, List<String> pathComponents, Map<String, String> queryParameters) {
+    if (kDebugMode) print('🔗 Superwall deep link: $fullURL');
+  }
+
+  @override
+  void paywallWillOpenDeepLink(Uri url) {
+    if (kDebugMode) print('🔗 Paywall will open deep link: $url');
+  }
+
+  @override
+  void paywallWillOpenURL(Uri url) {
+    if (kDebugMode) print('🔗 Paywall will open URL: $url');
   }
 }
