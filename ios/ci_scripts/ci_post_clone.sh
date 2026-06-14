@@ -26,6 +26,9 @@ flutter --version
 echo "Getting dependencies"
 flutter pub get
 
+echo "Precaching Flutter iOS artifacts..."
+flutter precache --ios
+
 echo "Installing CocoaPods"
 if [ -d "ios" ]; then
   cd ios
