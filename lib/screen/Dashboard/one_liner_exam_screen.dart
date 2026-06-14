@@ -130,6 +130,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
                 "en": q['correctAnswer'] ?? "",
                 "gu": q['correctAnswer'] ?? "",
               },
+              "mark": q['mark'] ?? 1,
             };
           }).toList();
           _isLoading = false;
@@ -152,6 +153,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
             "en": "Matter is anything that has mass and occupies space.",
             "gu": "દ્રવ્ય એ એવી વસ્તુ છે જે દળ ધરાવે છે અને જગ્યા રોકે છે.",
           },
+          "mark": 1,
         },
         {
           "question": {
@@ -162,6 +164,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
             "en": "The three states of matter are solid, liquid and gas.",
             "gu": "દ્રવ્યની ત્રણ અવસ્થાઓ ઘન, પ્રવાહી અને વાયુ છે.",
           },
+          "mark": 1,
         },
       ];
       _isLoading = false;
@@ -256,14 +259,20 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
 
     int score = 0;
     double totalPartialScore = 0.0;
+    int totalExamMarks = 0;
+    
     for (int i = 0; i < _questions.length; i++) {
       final matchScore = MatchingUtils.getMatchScore(
         _spokenAnswers[i] ?? "",
         _getAnswer(i),
       );
       totalPartialScore += matchScore;
+      
+      final int questionMark = _questions[i]['mark'] as int? ?? 1;
+      totalExamMarks += questionMark;
+      
       if (matchScore >= 0.5) {
-        score++;
+        score += questionMark;
       }
     }
 
@@ -271,7 +280,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
     final int accuracyInt = avgAccuracy.round();
 
     // Save to local history
-    _saveToHistory(score, accuracyInt);
+    _saveToHistory(score, accuracyInt, totalExamMarks);
 
     // Sync to backend (Fire and forget or wait? Better wait for better UX)
     try {
@@ -282,7 +291,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
           examId: widget.examId,
           title: widget.title,
           obtainedMarks: score,
-          totalMarks: _questions.length,
+          totalMarks: totalExamMarks,
           accuracy: avgAccuracy,
           type: 'ONELINER',
           violationCount: _violationCount,
@@ -304,8 +313,8 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
         context,
         MaterialPageRoute(
           builder: (context) => OneLinerResultScreen(
-            totalQuestions: _questions.length,
-            correctAnswers: score,
+            totalMarks: totalExamMarks,
+            obtainedMarks: score,
             averageAccuracy: avgAccuracy,
             questions: _questions,
             spokenAnswers: _spokenAnswers,
@@ -318,7 +327,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
     }
   }
 
-  Future<void> _saveToHistory(int score, int accuracy) async {
+  Future<void> _saveToHistory(int score, int accuracy, int totalMarks) async {
     final prefs = await SharedPreferences.getInstance();
     final historyStr = prefs.getString('one_liner_history') ?? '[]';
     final List<dynamic> history = jsonDecode(historyStr);
@@ -328,7 +337,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
       'unit': widget.unit,
       'title': widget.title,
       'score': score,
-      'total': _questions.length,
+      'total': totalMarks,
       'accuracy': accuracy,
       'date': DateTime.now().toIso8601String(),
     };

@@ -15,8 +15,8 @@ import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
 
 class OneLinerResultScreen extends StatefulWidget {
-  final int totalQuestions;
-  final int correctAnswers;
+  final int totalMarks;
+  final int obtainedMarks;
   final double averageAccuracy;
   final List<Map<String, dynamic>> questions;
   final Map<int, String> spokenAnswers;
@@ -26,8 +26,8 @@ class OneLinerResultScreen extends StatefulWidget {
 
   const OneLinerResultScreen({
     super.key,
-    required this.totalQuestions,
-    required this.correctAnswers,
+    required this.totalMarks,
+    required this.obtainedMarks,
     required this.averageAccuracy,
     required this.questions,
     required this.spokenAnswers,
@@ -117,8 +117,8 @@ class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                 children: [
-                   _buildPdfStat("Total Qns", "${widget.totalQuestions}", fontBold),
-                   _buildPdfStat("Marks", "${widget.correctAnswers}/${widget.totalQuestions}", fontBold, color: PdfColors.green),
+                   _buildPdfStat("Total Qns", "${widget.questions.length}", fontBold),
+                   _buildPdfStat("Marks", "${widget.obtainedMarks}/${widget.totalMarks}", fontBold, color: PdfColors.green),
                    _buildPdfStat("Avg. Accuracy", "${widget.averageAccuracy.toStringAsFixed(1)}%", fontBold, color: PdfColors.blue),
                 ],
               ),
@@ -251,8 +251,8 @@ class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
                    Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildSummaryStat("Correct", "${widget.correctAnswers}/${widget.totalQuestions}", Colors.white),
-                      _buildSummaryStat("Marks", "${widget.correctAnswers}", Colors.white),
+                      _buildSummaryStat("Questions", "${widget.questions.length}", Colors.white),
+                      _buildSummaryStat("Marks", "${widget.obtainedMarks}/${widget.totalMarks}", Colors.white),
                       _buildSummaryStat("Accuracy", "${widget.averageAccuracy.toStringAsFixed(1)}%", Colors.white),
                     ],
                   ),
