@@ -59,6 +59,11 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     await prefs.remove('is_guest_mode');
+    
+    // Safety check: if user_role is 'guest', remove it to prevent it from reverting _isGuest to true on app restart.
+    if (prefs.getString('user_role') == 'guest') {
+      await prefs.remove('user_role');
+    }
   }
 
   static Future<void> clearAuthToken() async {

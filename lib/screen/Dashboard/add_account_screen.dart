@@ -122,6 +122,9 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           // Switch to this new account (Update root prefs)
           await prefs.setString('auth_token', token);
           await prefs.setString('user_password', _passwordController.text);
+          if (user != null && user['role'] != null) {
+            await prefs.setString('user_role', user['role']);
+          }
           if (userId.isNotEmpty) {
             await prefs.setString('userId', userId);
           } else {
