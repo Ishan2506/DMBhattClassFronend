@@ -1,11 +1,5 @@
 
 import 'package:dm_bhatt_tutions/utils/app_theme.dart';
-import 'package:dm_bhatt_tutions/utils/widget_themes/app_bar_theme.dart';
-import 'package:dm_bhatt_tutions/utils/widget_themes/bottom_navigation_bar_theme.dart';
-import 'package:dm_bhatt_tutions/utils/widget_themes/elevated_button_theme.dart';
-import 'package:dm_bhatt_tutions/utils/widget_themes/input_decoration_theme.dart';
-import 'package:dm_bhatt_tutions/utils/widget_themes/outlined_button_theme.dart';
-import 'package:dm_bhatt_tutions/utils/widget_themes/radio_theme.dart';
 import 'package:flutter/material.dart';
 
 extension AppThemeSchemes on MaterialTheme {

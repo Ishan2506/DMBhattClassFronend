@@ -18,9 +18,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/utils/purchase_config.dart';
-import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
-import 'package:dm_bhatt_tutions/utils/superwall_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -39,14 +37,8 @@ void main() async {
 
   // Initialize Firebase and Push Notifications
   try {
-    if (kIsWeb) {
-      // On web, Firebase needs explicit options
-      // For now, skip Firebase on web since it requires backend setup
-      debugPrint('Firebase initialization skipped on web platform');
-    } else {
-      await Firebase.initializeApp();
-      await NotificationService.instance.initialize();
-    }
+    await Firebase.initializeApp();
+    await NotificationService.instance.initialize();
   } catch (e) {
     if (kDebugMode) {
       print('Firebase initialization failed: $e');
@@ -58,20 +50,7 @@ void main() async {
 
   // Initialize Payment Config & RevenueCat
   await PurchaseConfig.instance.initialize();
-
-  // Load standards and subjects from the admin API for all subject dropdowns.
-  await AcademicConstants.loadFromServer();
-  
   await RevenueCatService.instance.init();
-
-  // Initialize SuperWall
-  try {
-    await SuperWallService().initialize(
-      apiKey: 'pk_s7jyO9iO397j9OikgfCJQ',
-    );
-  } catch (e) {
-    if (kDebugMode) print('SuperWall init error: $e');
-  }
 
   // await _secureScreen();
   runApp(MyApp(prefs: prefs));

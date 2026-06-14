@@ -1,5 +1,4 @@
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
-import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -8,11 +7,9 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:printing/printing.dart'; // For PDF preview
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw; // For PDF generation
-import 'dart:typed_data';
 
 class ReadyReportingCardScreen extends StatefulWidget {
   const ReadyReportingCardScreen({super.key});

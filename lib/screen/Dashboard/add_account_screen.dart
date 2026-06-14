@@ -122,9 +122,6 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           // Switch to this new account (Update root prefs)
           await prefs.setString('auth_token', token);
           await prefs.setString('user_password', _passwordController.text);
-          if (user != null && user['role'] != null) {
-            await prefs.setString('user_role', user['role']);
-          }
           if (userId.isNotEmpty) {
             await prefs.setString('userId', userId);
           } else {
@@ -341,49 +338,31 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final fillColor = isDark ? Colors.grey.shade900 : Colors.grey.shade50;
-    final borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
-
-    return TextFormField(
-      controller: controller,
-      obscureText: isPassword && !isVisible,
-      keyboardType: inputType,
-      inputFormatters: inputFormatters,
-      validator: validator,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.w600, fontSize: 16),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: fillColor,
-        hintText: hint,
-        hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey, fontWeight: FontWeight.normal),
-        prefixIcon: Icon(icon, color: isDark ? Colors.grey : Colors.black54),
-        suffixIcon: isPassword 
-            ? IconButton(
-                icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: isDark ? Colors.grey.shade400 : Colors.grey),
-                onPressed: onVisibilityChanged,
-              ) 
-            : null,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+      ),
+      child: TextFormField(
+        controller: controller,
+        obscureText: isPassword && !isVisible,
+        keyboardType: inputType,
+        inputFormatters: inputFormatters,
+        validator: validator,
+        style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.w600, fontSize: 16),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey, fontWeight: FontWeight.normal),
+          prefixIcon: Icon(icon, color: isDark ? Colors.grey : Colors.black54),
+          suffixIcon: isPassword 
+              ? IconButton(
+                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: isDark ? Colors.grey.shade400 : Colors.grey),
+                  onPressed: onVisibilityChanged,
+                ) 
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );

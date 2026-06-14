@@ -1,18 +1,15 @@
-import 'dart:typed_data';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
-import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:http/http.dart' as http;
 
 class ExamResultScreen extends StatefulWidget {
   final int totalQuestions;
@@ -43,48 +40,13 @@ class ExamResultScreen extends StatefulWidget {
 class _ExamResultScreenState extends State<ExamResultScreen> {
   bool _isLoading = false;
 
-  Future<Uint8List?> _loadImageFromUrl(String? imageUrl) async {
-    if (imageUrl == null || imageUrl.isEmpty) return null;
-    try {
-      // Convert relative paths to full URLs using ApiService.getFileUrl
-      final fullUrl = ApiService.getFileUrl(imageUrl);
-      if (fullUrl.isEmpty) return null;
-
-      final response = await http.get(Uri.parse(fullUrl));
-      if (response.statusCode == 200) {
-        return response.bodyBytes;
-      }
-    } catch (e) {
-      debugPrint('Error loading image: $e');
-    }
-    return null;
-  }
-
   Future<Uint8List> _generatePdfBytes() async {
     final pdf = pw.Document();
-
+    
+    // Load custom font if needed, or use standard fonts
+    // For simplicity using standard fonts first, can upgrade to custom if needed
     final font = await PdfGoogleFonts.poppinsRegular();
     final fontBold = await PdfGoogleFonts.poppinsBold();
-    final gujaratiFont = await PdfGoogleFonts.notoSansGujaratiRegular();
-    final devanagariFont = await PdfGoogleFonts.notoSansDevanagariRegular();
-
-    // Pre-load all question images to avoid async in build context
-    final Map<int, Uint8List?> questionImages = {};
-    for (int i = 0; i < widget.questions.length; i++) {
-      final imageUrl = widget.questions[i]['questionImage'];
-      questionImages[i] = await _loadImageFromUrl(imageUrl);
-    }
-
-    // Pre-load answer images from optionsRaw if they exist
-    final Map<String, Uint8List?> answerImages = {};
-    for (int i = 0; i < widget.questions.length; i++) {
-      final optionsRaw = widget.questions[i]['optionsRaw'] as List? ?? [];
-      for (var option in optionsRaw) {
-        if (option['image'] != null) {
-          answerImages['${i}_${option['key']}'] = await _loadImageFromUrl(option['image']);
-        }
-      }
-    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -93,32 +55,11 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
           theme: pw.ThemeData.withFont(
             base: font,
             bold: fontBold,
-            fontFallback: [
-              gujaratiFont,
-              devanagariFont,
-            ],
           ),
-          buildBackground: (pw.Context context) {
-            return pw.FullPage(
-              ignoreMargins: true,
-              child: pw.Center(
-                child: pw.Transform.rotate(
-                  angle: 0.785398, // 45 degrees in radians
-                  child: pw.Text(
-                    'Padhaku',
-                    style: pw.TextStyle(
-                      font: fontBold,
-                      fontSize: 80,
-                      color: PdfColors.grey300,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
         ),
         build: (pw.Context context) {
           return [
+            // Header
             pw.Header(
               level: 0,
               child: pw.Row(
@@ -138,7 +79,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 14)),
+                      pw.Text("DMBhatt Tuitions", style: pw.TextStyle(font: fontBold, fontSize: 14)),
                       pw.Text("Date: ${DateTime.now().toString().split(' ')[0]}", style: pw.TextStyle(font: font, fontSize: 10)),
                     ],
                   ),
@@ -148,6 +89,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
             pw.Divider(),
             pw.SizedBox(height: 20),
 
+            // Score Summary
             pw.Container(
               padding: const pw.EdgeInsets.all(10),
               decoration: pw.BoxDecoration(
@@ -169,40 +111,20 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
             // Questions
             ...List.generate(widget.questions.length, (index) {
               final question = widget.questions[index];
-              final userAnsKey = widget.selectedAnswers[index];
+              final userAns = widget.selectedAnswers[index];
               final optionsRaw = question['optionsRaw'] as List? ?? [];
-              final correctKey = (question['correctAnswerKey'] ?? question['correctAnswer'])?.toString() ?? '';
+              final correctKey = question['correctAnswerKey'] ?? question['correctAnswer'];
               
-              final isCorrect = userAnsKey?.trim().toUpperCase() == correctKey.trim().toUpperCase();
-              final isSkipped = userAnsKey == null || userAnsKey.trim().isEmpty;
-
-              String resolvedUserText = "Skipped";
-              String? userOptionKey;
-              if (!isSkipped) {
-                try {
-                  final selectedOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == userAnsKey.trim().toUpperCase());
-                  userOptionKey = selectedOption['key']?.toString();
-                  final String text = selectedOption['text']?.toString() ?? "";
-                  resolvedUserText = text.isNotEmpty ? "Option $userAnsKey ($text)" : "Option $userAnsKey";
-                } catch (e) {
-                  resolvedUserText = userAnsKey;
-                }
-              }
-
               String resolvedCorrectText = "";
-              String? correctOptionKey;
               try {
-                final correctOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == correctKey.trim().toUpperCase());
-                correctOptionKey = correctOption['key']?.toString();
-                final String text = correctOption['text']?.toString() ?? "";
-                resolvedCorrectText = text.isNotEmpty ? "Option $correctKey ($text)" : "Option $correctKey";
+                final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
+                resolvedCorrectText = correctOption['text']?.toString() ?? "";
               } catch (e) {
-                resolvedCorrectText = correctKey;
+                resolvedCorrectText = question['correctAnswer']?.toString() ?? "";
               }
 
-              final questionImageData = questionImages[index];
-              final userOptionImageData = userOptionKey != null ? answerImages['${index}_$userOptionKey'] : null;
-              final correctOptionImageData = correctOptionKey != null ? answerImages['${index}_$correctOptionKey'] : null;
+              final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
+              final isSkipped = userAns == null || userAns.trim().isEmpty;
 
               return pw.Container(
                 margin: const pw.EdgeInsets.only(bottom: 16),
@@ -213,52 +135,20 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                        "Q${index + 1}: ${question['question'] ?? ''}",
                        style: pw.TextStyle(font: fontBold, fontSize: 12),
                      ),
-                     if (questionImageData != null) ...[
-                       pw.SizedBox(height: 6),
-                       pw.Container(
-                         constraints: const pw.BoxConstraints(maxWidth: 300, maxHeight: 150),
-                         child: pw.Image(
-                           pw.MemoryImage(questionImageData),
-                           fit: pw.BoxFit.contain,
-                         ),
-                       ),
-                     ],
                      pw.SizedBox(height: 4),
                      pw.Text(
-                       "Your Answer: $resolvedUserText",
+                       "Your Answer: ${userAns ?? 'Skipped'}",
                        style: pw.TextStyle(
                          font: font, 
                          fontSize: 10,
                          color: isCorrect ? PdfColors.green : (isSkipped ? PdfColors.orange : PdfColors.red),
                        ),
                      ),
-                     if (userOptionImageData != null) ...[
-                       pw.SizedBox(height: 4),
-                       pw.Container(
-                         constraints: const pw.BoxConstraints(maxWidth: 150, maxHeight: 80),
-                         child: pw.Image(
-                           pw.MemoryImage(userOptionImageData),
-                           fit: pw.BoxFit.contain,
-                         ),
-                       ),
-                     ],
-                     if (!isCorrect) ...[
-                       pw.SizedBox(height: 2),
+                     if (!isCorrect)
                        pw.Text(
                          "Correct Answer: $resolvedCorrectText",
                          style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green),
                        ),
-                       if (correctOptionImageData != null) ...[
-                         pw.SizedBox(height: 4),
-                         pw.Container(
-                           constraints: const pw.BoxConstraints(maxWidth: 150, maxHeight: 80),
-                           child: pw.Image(
-                             pw.MemoryImage(correctOptionImageData),
-                             fit: pw.BoxFit.contain,
-                           ),
-                         ),
-                       ],
-                     ],
                      pw.Divider(color: PdfColors.grey200),
                   ],
                 ),
@@ -276,29 +166,21 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
     setState(() => _isLoading = true);
     try {
       final bytes = await _generatePdfBytes();
-      if (!mounted) {
-        if (bytes != null) {
-          // PDF generated but widget unmounted
-        }
-        return;
-      }
+      if (!mounted) return;
       setState(() => _isLoading = false);
 
-      if (bytes != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PdfPreviewScreen(
-              product: {
-                'name': '${widget.unit ?? 'Unit Test'} - ${widget.subject ?? 'Question Paper'}',
-              },
-              isFullAccess: true,
-              pdfBytes: bytes,
-              showHomeButtonOnLastPage: true,
-            ),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfPreviewScreen(
+            product: {
+              'name': '${widget.unit ?? 'Unit Test'} - ${widget.subject ?? 'Question Paper'}',
+            },
+            isFullAccess: true,
+            pdfBytes: bytes,
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -495,32 +377,20 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                 itemCount: widget.questions.length,
                 itemBuilder: (context, index) {
                   final question = widget.questions[index];
-                  final userAnsKey = widget.selectedAnswers[index];
+                  final userAns = widget.selectedAnswers[index];
                   final optionsRaw = question['optionsRaw'] as List? ?? [];
-                  final correctKey = (question['correctAnswerKey'] ?? question['correctAnswer'])?.toString() ?? '';
-
-                  final isCorrect = userAnsKey?.trim().toUpperCase() == correctKey.trim().toUpperCase();
-                  final isSkipped = userAnsKey == null || userAnsKey.trim().isEmpty;
-
-                  String resolvedUserText = "Skipped";
-                  if (!isSkipped) {
-                    try {
-                      final selectedOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == userAnsKey.trim().toUpperCase());
-                      final String text = selectedOption['text']?.toString() ?? "";
-                      resolvedUserText = text.isNotEmpty ? "Option $userAnsKey ($text)" : "Option $userAnsKey";
-                    } catch (e) {
-                      resolvedUserText = userAnsKey;
-                    }
-                  }
+                  final correctKey = question['correctAnswerKey'] ?? question['correctAnswer'];
 
                   String resolvedCorrectText = "";
                   try {
-                    final correctOption = optionsRaw.firstWhere((o) => o['key']?.toString().toUpperCase() == correctKey.trim().toUpperCase());
-                    final String text = correctOption['text']?.toString() ?? "";
-                    resolvedCorrectText = text.isNotEmpty ? "Option $correctKey ($text)" : "Option $correctKey";
+                    final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
+                    resolvedCorrectText = correctOption['text']?.toString() ?? "";
                   } catch (e) {
-                    resolvedCorrectText = correctKey;
+                    resolvedCorrectText = question['correctAnswer']?.toString() ?? "";
                   }
+
+                  final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
+                  final isSkipped = userAns == null || userAns.trim().isEmpty;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
@@ -604,7 +474,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     if (!isSkipped)
-                                      _buildAnswerRow(context, "Your Answer", resolvedUserText, isCorrect ? Colors.green : Colors.red),
+                                      _buildAnswerRow(context, "Your Answer", userAns, isCorrect ? Colors.green : Colors.red),
                                     
                                     if (!isCorrect) ...[
                                       if (!isSkipped) const SizedBox(height: 8),

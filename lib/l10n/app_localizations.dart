@@ -2131,24 +2131,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Memorize and repeat a growing sequence of colors.'**
   String get sequenceMemoryDesc;
-
-  /// No description provided for @dateOfBirth.
-  ///
-  /// In en, this message translates to:
-  /// **'Date of Birth'**
-  String get dateOfBirth;
-
-  /// No description provided for @selectDateOfBirth.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Date of Birth'**
-  String get selectDateOfBirth;
-
-  /// No description provided for @pleaseSelectDob.
-  ///
-  /// In en, this message translates to:
-  /// **'Please select Date of Birth'**
-  String get pleaseSelectDob;
 }
 
 class _AppLocalizationsDelegate

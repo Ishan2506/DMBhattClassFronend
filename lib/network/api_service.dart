@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart'; 
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,24 +10,26 @@ import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/utils/connectivity_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+
 class ApiService {
   static const String baseUrl = "http://103.212.121.139:5000/api";
-  
+
   /// Helper to get the full URL for a file (image, pdf, etc.)
   static String getFileUrl(String? url) {
     if (url == null || url.isEmpty || url == "null") return "";
     if (url.startsWith('http')) return url;
-    
+
     // Remove /api from baseUrl to get the server root
     final serverRoot = baseUrl.replaceAll('/api', '');
-    
+
     // Normalize path (ensure no leading slash and forward slashes)
     String path = url;
     if (path.startsWith('/')) path = path.substring(1);
     path = path.replaceAll('\\', '/');
-    
+
     return "$serverRoot/$path";
   }
+
   static const String guestToken = "DMBHATT_GUEST_ACCESS_TOKEN_2024";
   static String? _authToken;
   static bool _isGuest = false;
@@ -59,11 +61,6 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     await prefs.remove('is_guest_mode');
-    
-    // Safety check: if user_role is 'guest', remove it to prevent it from reverting _isGuest to true on app restart.
-    if (prefs.getString('user_role') == 'guest') {
-      await prefs.remove('user_role');
-    }
   }
 
   static Future<void> clearAuthToken() async {
@@ -88,18 +85,8 @@ class ApiService {
 
   static http.Response _handleSession(http.Response response) {
     if (response.statusCode == 401 && !_isGuest) {
-      // Avoid redirecting to LoginScreen if the request is to an authentication endpoint
-      final path = response.request?.url.path ?? '';
-      if (path.contains('/auth/login') ||
-          path.contains('/auth/register') ||
-          path.contains('/auth/forget-password') ||
-          path.contains('/auth/verify-otp') ||
-          path.contains('/auth/reset-password')) {
-        return response;
-      }
-
       debugPrint("Session expired (401). Redirecting to LoginScreen.");
-      
+
       // Clear token to prevent infinite loop or persistent bad state
       clearAuthToken();
 
@@ -135,7 +122,8 @@ class ApiService {
   }
 
   static Future<http.Response> getPaymentConfig() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/config/payment");
     return _handleSession(await http.get(uri));
   }
@@ -144,7 +132,10 @@ class ApiService {
     final isConnected = await ConnectivityService.isConnected();
     if (!isConnected) {
       if (navigatorKey.currentContext != null) {
-        CustomToast.showError(navigatorKey.currentContext!, "Internet connection is required");
+        CustomToast.showError(
+          navigatorKey.currentContext!,
+          "Internet connection is required",
+        );
       }
       return false;
     }
@@ -152,47 +143,46 @@ class ApiService {
   }
 
   static Future<http.Response> getExploreProducts() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/explore/all");
     return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> createPaymentOrder(double amount) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/create-order");
-    return _handleSession(await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'amount': amount,
-        'currency': 'INR',
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'amount': amount, 'currency': 'INR'}),
+      ),
+    );
   }
 
   static Future<http.Response> registerUser({
     required RegistrationPayload payload,
     required String dpin,
-    String? referralCode, 
+    String? referralCode,
     String? razorpayPaymentId,
     String? razorpayOrderId,
     String? razorpaySignature,
     double? amount,
-
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/register");
     final request = http.MultipartRequest("POST", uri);
-    
+
     request.headers['Accept'] = 'application/json';
     request.headers['User-Agent'] = 'Flutter-App';
-    
+
     final fields = Map<String, String>.from(payload.fields);
     fields["loginCode"] = dpin;
     fields["role"] = payload.role;
-    
+
     if (referralCode != null && referralCode.isNotEmpty) {
       fields["referralCode"] = referralCode;
     }
@@ -202,28 +192,32 @@ class ApiService {
       fields["razorpay_signature"] = razorpaySignature!;
       fields["amount"] = amount.toString();
     }
-    
+
     request.fields.addAll(fields);
 
     if (payload.files.isNotEmpty) {
       if (payload.role == "assistant") {
         for (var file in payload.files) {
           final mimeType = _getMimeType(file.path);
-          request.files.add(await http.MultipartFile.fromPath(
-            'aadharFile', 
-            file.path,
-            contentType: MediaType.parse(mimeType),
-          ));
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'aadharFile',
+              file.path,
+              contentType: MediaType.parse(mimeType),
+            ),
+          );
         }
       } else {
         final file = payload.files.first;
         if (file.existsSync()) {
-             final mimeType = _getMimeType(file.path);
-             request.files.add(await http.MultipartFile.fromPath(
+          final mimeType = _getMimeType(file.path);
+          request.files.add(
+            await http.MultipartFile.fromPath(
               'photo',
               file.path,
               contentType: MediaType.parse(mimeType),
-            ));
+            ),
+          );
         }
       }
     }
@@ -238,9 +232,10 @@ class ApiService {
     required String phoneNum,
     String? deviceId,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/login");
-    
+
     final body = {
       'loginCode': loginCode,
       'phoneNum': phoneNum,
@@ -263,7 +258,8 @@ class ApiService {
   }
 
   static Future<http.Response> logoutUser(String token) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/logout");
     return await http.post(
       uri,
@@ -275,31 +271,42 @@ class ApiService {
   }
 
   static Future<http.Response> getProfile({bool forceRefresh = false}) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     var uri = Uri.parse("$baseUrl/profile");
     if (forceRefresh) {
-      uri = uri.replace(queryParameters: {'t': DateTime.now().millisecondsSinceEpoch.toString()});
+      uri = uri.replace(
+        queryParameters: {
+          't': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+      );
     }
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
-  static Future<http.Response> updateProfile(Map<String, dynamic> data, {XFile? imageFile}) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+  static Future<http.Response> updateProfile(
+    Map<String, dynamic> data, {
+    XFile? imageFile,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/profile");
     final request = http.MultipartRequest("PUT", uri);
-    
+
     request.headers.addAll({
       if (_authToken != null) 'Authorization': 'Bearer $_authToken',
       'Accept': 'application/json',
       'User-Agent': 'Flutter-App',
     });
-    
+
     data.forEach((key, value) {
       if (value != null) {
         request.fields[key] = value.toString();
@@ -307,22 +314,26 @@ class ApiService {
     });
 
     if (imageFile != null) {
-      final mimeType = _getMimeType(imageFile.name); 
-      
+      final mimeType = _getMimeType(imageFile.name);
+
       if (kIsWeb) {
         final bytes = await imageFile.readAsBytes();
-        request.files.add(http.MultipartFile.fromBytes(
-          'photo',
-          bytes,
-          filename: imageFile.name,
-          contentType: MediaType.parse(mimeType),
-        ));
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'photo',
+            bytes,
+            filename: imageFile.name,
+            contentType: MediaType.parse(mimeType),
+          ),
+        );
       } else {
-        request.files.add(await http.MultipartFile.fromPath(
-          'photo',
-          imageFile.path,
-          contentType: MediaType.parse(mimeType),
-        ));
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'photo',
+            imageFile.path,
+            contentType: MediaType.parse(mimeType),
+          ),
+        );
       }
     }
 
@@ -331,15 +342,18 @@ class ApiService {
   }
 
   static Future<http.Response> getDashboardData() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/dashboard");
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> submitExamResult({
@@ -351,44 +365,47 @@ class ApiService {
     String? type,
     int violationCount = 0,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/exam/submit");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-      body: jsonEncode({
-        'examId': examId,
-        'title': title,
-        'obtainedMarks': obtainedMarks,
-        'totalMarks': totalMarks,
-        'isOnline': isOnline,
-        'violationCount': violationCount,
-        if (type != null) 'type': type,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+        body: jsonEncode({
+          'examId': examId,
+          'title': title,
+          'obtainedMarks': obtainedMarks,
+          'totalMarks': totalMarks,
+          'isOnline': isOnline,
+          'violationCount': violationCount,
+          if (type != null) 'type': type,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> updateViolationCount({
     required String examId,
     required String examType,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/exam/violation");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-      body: jsonEncode({
-        'examId': examId,
-        'examType': examType,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({
+          'Content-Type': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+        body: jsonEncode({'examId': examId, 'examType': examType}),
+      ),
+    );
   }
 
   static String? _normalizeStd(String? std) {
@@ -403,16 +420,21 @@ class ApiService {
     final medium = prefs.getString('medium');
     final board = prefs.getString('board');
     final stream = prefs.getString('stream');
-    
+
     final params = <String, String>{};
     if (std != null && std.isNotEmpty) {
       params['std'] = std;
-      params['standard'] = std; // Backend uses 'standard' for material filtering
+      params['standard'] =
+          std; // Backend uses 'standard' for material filtering
     }
     if (medium != null && medium.isNotEmpty) params['medium'] = medium;
     if (board != null && board.isNotEmpty) params['board'] = board;
-    if (stream != null && stream.isNotEmpty && stream != "None" && stream != "-") params['stream'] = stream;
-    
+    if (stream != null &&
+        stream.isNotEmpty &&
+        stream != "None" &&
+        stream != "-")
+      params['stream'] = stream;
+
     return params;
   }
 
@@ -423,26 +445,35 @@ class ApiService {
     required String year,
     String? subject,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
     queryParams['type'] = 'BoardPaper';
     queryParams['year'] = year;
     queryParams['standard'] = std;
     queryParams['std'] = std;
-    
+
     if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
     if (medium.isNotEmpty) queryParams['medium'] = medium;
-    if (stream != null && stream.isNotEmpty && stream != "None" && stream != "-") queryParams['stream'] = stream;
-    
-    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
-    
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    if (stream != null &&
+        stream.isNotEmpty &&
+        stream != "None" &&
+        stream != "-")
+      queryParams['stream'] = stream;
+
+    final uri = Uri.parse(
+      "$baseUrl/material/all",
+    ).replace(queryParameters: queryParams);
+
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getSchoolPapers({
@@ -453,10 +484,11 @@ class ApiService {
     String? board,
     String? stream,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
     queryParams['type'] = 'SchoolPaper';
-    
+
     if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
     if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
     if (std != null && std.isNotEmpty) {
@@ -466,36 +498,47 @@ class ApiService {
     }
     if (year != null && year.isNotEmpty) queryParams['year'] = year;
     if (board != null && board.isNotEmpty) queryParams['board'] = board;
-    if (stream != null && stream.isNotEmpty && stream != "None" && stream != "-") queryParams['stream'] = stream;
-    
-    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
-    
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    if (stream != null &&
+        stream.isNotEmpty &&
+        stream != "None" &&
+        stream != "-")
+      queryParams['stream'] = stream;
+
+    final uri = Uri.parse(
+      "$baseUrl/material/all",
+    ).replace(queryParameters: queryParams);
+
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
-  static Future<http.Response> getNotes({
-    String? subject,
-  }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+  static Future<http.Response> getNotes({String? subject}) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
     queryParams['type'] = 'Notes';
     if (subject != null) queryParams['subject'] = subject;
-    
-    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
-    
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+
+    final uri = Uri.parse(
+      "$baseUrl/material/all",
+    ).replace(queryParameters: queryParams);
+
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static String _getMimeType(String fileName) {
@@ -511,210 +554,258 @@ class ApiService {
     return mimeTypes[ext] ?? 'application/octet-stream';
   }
 
-  static Future<http.Response> forgetPassword({
-    required String email,
-  }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+  static Future<http.Response> forgetPassword({required String email}) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/forget-password");
-    
-    return _handleSession(await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'email': email,
-      }),
-    ));
+
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      ),
+    );
   }
 
   static Future<http.Response> verifyOtp({
     required String email,
     required String otp,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/verify-otp");
-    
-    return _handleSession(await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'email': email,
-        'otp': otp,
-      }),
-    ));
+
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'otp': otp}),
+      ),
+    );
   }
 
   static Future<http.Response> resetPassword({
     required String email,
     required String newPassword,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/reset-password");
-    
-    return _handleSession(await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'email': email,
-        'newPassword': newPassword,
-      }),
-    ));
+
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'newPassword': newPassword}),
+      ),
+    );
   }
 
   static Future<http.Response> updatePassword({
     required String oldPassword,
     required String newPassword,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/update-password");
-    
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-      body: jsonEncode({
-        'oldPassword': oldPassword,
-        'newPassword': newPassword,
-      }),
-    ));
+
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+        body: jsonEncode({
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getAllTopRankers() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/topRanker/all");
     return _handleSession(await http.get(uri));
   }
 
-  static Future<http.Response> getAllExams({String? std, String? medium, String? subject}) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+  static Future<http.Response> getAllExams({
+    String? std,
+    String? medium,
+    String? subject,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
     if (std != null && std.isNotEmpty) queryParams['std'] = std;
     if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
     if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
 
-    final uri = Uri.parse("$baseUrl/exam/all").replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      "$baseUrl/exam/all",
+    ).replace(queryParameters: queryParams);
     return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> getExamById(String examId) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/exam/$examId");
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getAllFiveMinTests() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
-    final uri = Uri.parse("$baseUrl/fiveMinTest/all").replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      "$baseUrl/fiveMinTest/all",
+    ).replace(queryParameters: queryParams);
     return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> getFiveMinTestById(String testId) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/fiveMinTest/$testId");
     return _handleSession(await http.get(uri));
   }
 
-  static Future<http.Response> getLeaderboard({
-    required String std,
-  }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+  static Future<http.Response> getLeaderboard({required String std}) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/leaderboard/$std");
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getReferralData() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/referral/data");
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> validateReferralCode(String referralCode) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/referral/validate");
-    return _handleSession(await http.post(
+    final body = {'referralCode': referralCode};
+    debugPrint("[Referral Validate] POST $uri");
+    debugPrint("[Referral Validate] Request: ${jsonEncode(body)}");
+    final response = await http.post(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'referralCode': referralCode,
-      }),
-    ));
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+    debugPrint("[Referral Validate] Response status: ${response.statusCode}");
+    debugPrint("[Referral Validate] Response body: ${response.body}");
+    return _handleSession(response);
   }
 
-  static Future<http.Response> validateRedeemCode(String code, {String? targetStd, String? targetBoard, String? targetMedium, String? targetStream}) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
-    final uri = Uri.parse("$baseUrl/redeem/validate");
-    return _handleSession(await http.post(
+  static Future<http.Response> applyReferralCode(String referralCode) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/referral/apply");
+    final body = {'referralCode': referralCode};
+    debugPrint("[Referral Apply] POST $uri");
+    debugPrint("[Referral Apply] Request: ${jsonEncode(body)}");
+    final response = await http.post(
       uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-      }),
-      body: jsonEncode({
-        'code': code,
-        if (targetStd != null) 'targetStd': targetStd,
-        if (targetBoard != null) 'targetBoard': targetBoard,
-        if (targetMedium != null) 'targetMedium': targetMedium,
-        if (targetStream != null) 'targetStream': targetStream,
-      }),
-    ));
+      headers: _addAuth({'Content-Type': 'application/json'}),
+      body: jsonEncode(body),
+    );
+    debugPrint("[Referral Apply] Response status: ${response.statusCode}");
+    debugPrint("[Referral Apply] Response body: ${response.body}");
+    return _handleSession(response);
+  }
+
+  static Future<http.Response> validateRedeemCode(
+    String code, {
+    String? targetStd,
+    String? targetBoard,
+    String? targetMedium,
+    String? targetStream,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/redeem/validate");
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({
+          'code': code,
+          if (targetStd != null) 'targetStd': targetStd,
+          if (targetBoard != null) 'targetBoard': targetBoard,
+          if (targetMedium != null) 'targetMedium': targetMedium,
+          if (targetStream != null) 'targetStream': targetStream,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getAllEvents() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/event/all");
     return _handleSession(await http.get(uri));
   }
 
   static Future<http.Response> getGameQuestions(String gameType) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/games/$gameType");
     return _handleSession(await http.get(uri));
   }
 
   // --- Product Purchase & History ---
 
-  static Future<http.Response> createProductOrder(String productId, double amount) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+  static Future<http.Response> createProductOrder(
+    String productId,
+    double amount,
+  ) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/product/create-order");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-      }),
-      body: jsonEncode({
-        'productId': productId,
-        'amount': amount,
-        'currency': 'INR',
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({
+          'productId': productId,
+          'amount': amount,
+          'currency': 'INR',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> verifyProductPayment({
@@ -724,32 +815,31 @@ class ApiService {
     required String razorpaySignature,
     required double amount,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/product/verify");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-      }),
-      body: jsonEncode({
-        'productId': productId,
-        'razorpay_payment_id': razorpayPaymentId,
-        'razorpay_order_id': razorpayOrderId,
-        'razorpay_signature': razorpaySignature,
-        'amount': amount,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({
+          'productId': productId,
+          'razorpay_payment_id': razorpayPaymentId,
+          'razorpay_order_id': razorpayOrderId,
+          'razorpay_signature': razorpaySignature,
+          'amount': amount,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getPurchasedProducts() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/profile/purchased-products");
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-      }),
-    ));
+    return _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
   }
 
   // --- Plan Upgrade ---
@@ -760,20 +850,21 @@ class ApiService {
     required String medium,
     String? stream,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/upgrade/create-order");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-      }),
-      body: jsonEncode({
-        'amount': amount,
-        'newStandard': newStandard,
-        'medium': medium,
-        'stream': stream,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({
+          'amount': amount,
+          'newStandard': newStandard,
+          'medium': medium,
+          'stream': stream,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> verifyUpgradePayment({
@@ -785,72 +876,86 @@ class ApiService {
     required String medium,
     String? stream,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/upgrade/verify");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-      }),
-      body: jsonEncode({
-        'razorpay_payment_id': razorpayPaymentId,
-        'razorpay_order_id': razorpayOrderId,
-        'razorpay_signature': razorpaySignature,
-        'amount': amount,
-        'newStandard': newStandard,
-        'medium': medium,
-        'stream': stream,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({
+          'razorpay_payment_id': razorpayPaymentId,
+          'razorpay_order_id': razorpayOrderId,
+          'razorpay_signature': razorpaySignature,
+          'amount': amount,
+          'newStandard': newStandard,
+          'medium': medium,
+          'stream': stream,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getUpgradeHistory() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/profile/upgrade-history");
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-      }),
-    ));
+    return _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
   }
 
   // --- Mind Map ---
   static Future<http.Response> getAllMindMaps() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
-    final uri = Uri.parse("$baseUrl/mindmap/all").replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      "$baseUrl/mindmap/all",
+    ).replace(queryParameters: queryParams);
     return _handleSession(await http.get(uri));
   }
 
   // --- One Liner Exam ---
-  static Future<http.Response> getAllOneLinerExams({String? std, String? medium, String? subject}) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+  static Future<http.Response> getAllOneLinerExams({
+    String? std,
+    String? medium,
+    String? subject,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
     if (std != null && std.isNotEmpty) queryParams['std'] = std;
     if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
     if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
 
-    final uri = Uri.parse("$baseUrl/onelinerexam/all").replace(queryParameters: queryParams);
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    final uri = Uri.parse(
+      "$baseUrl/onelinerexam/all",
+    ).replace(queryParameters: queryParams);
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getOneLinerExamById(String examId) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/onelinerexam/$examId");
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> submitOneLinerExamResult({
@@ -863,22 +968,24 @@ class ApiService {
     int violationCount = 0,
   }) async {
     final uri = Uri.parse("$baseUrl/onelinerexam/submit");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-      body: jsonEncode({
-        'examId': examId,
-        'title': title,
-        'obtainedMarks': obtainedMarks,
-        'totalMarks': totalMarks,
-        'accuracy': accuracy,
-        'violationCount': violationCount,
-        if (type != null) 'type': type,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({
+          'Content-Type': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+        body: jsonEncode({
+          'examId': examId,
+          'title': title,
+          'obtainedMarks': obtainedMarks,
+          'totalMarks': totalMarks,
+          'accuracy': accuracy,
+          'violationCount': violationCount,
+          if (type != null) 'type': type,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> submitFiveMinTestResult({
@@ -891,55 +998,65 @@ class ApiService {
     int violationCount = 0,
   }) async {
     final uri = Uri.parse("$baseUrl/fiveMinTest/submit");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-      body: jsonEncode({
-        'examId': examId,
-        'title': title,
-        'obtainedMarks': obtainedMarks,
-        'totalMarks': totalMarks,
-        'isOnline': isOnline,
-        'violationCount': violationCount,
-        if (type != null) 'type': type,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({
+          'Content-Type': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+        body: jsonEncode({
+          'examId': examId,
+          'title': title,
+          'obtainedMarks': obtainedMarks,
+          'totalMarks': totalMarks,
+          'isOnline': isOnline,
+          'violationCount': violationCount,
+          if (type != null) 'type': type,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getMaterialImages({
     required String subject,
     required String unit,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
     queryParams['type'] = 'ImageMaterial';
     queryParams['subject'] = subject;
     queryParams['unit'] = unit;
-    
-    final uri = Uri.parse("$baseUrl/material/all").replace(queryParameters: queryParams);
-    return _handleSession(await http.get(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+
+    final uri = Uri.parse(
+      "$baseUrl/material/all",
+    ).replace(queryParameters: queryParams);
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   /// Delete Account (Soft Delete)
   static Future<http.Response> deleteAccount() async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/profile");
-    return _handleSession(await http.delete(
-      uri,
-      headers: _addAuth({
-        'Accept': 'application/json',
-        'User-Agent': 'Flutter-App',
-      }),
-    ));
+    return _handleSession(
+      await http.delete(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   // --- Apple In-App Purchase Verification ---
@@ -952,22 +1069,33 @@ class ApiService {
     required String medium,
     String? stream,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/apple/verify-membership");
-    return _handleSession(await http.post(
+    final body = {
+      'receipt': receipt,
+      'productId': productId,
+      'apple_transaction_id': transactionId,
+      'standard': standard,
+      'medium': medium,
+      if (stream != null && stream.isNotEmpty) 'stream': stream,
+    };
+    final receiptPreview = receipt.length <= 24
+        ? receipt
+        : "${receipt.substring(0, 24)}...";
+    debugPrint("[Apple Membership] POST $uri");
+    debugPrint(
+      "[Apple Membership] Request: ${jsonEncode({...body, 'receipt': "$receiptPreview (${receipt.length} chars)"})}",
+    );
+    debugPrint("[Apple Membership] Full receipt: $receipt");
+    final response = await http.post(
       uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-      }),
-      body: jsonEncode({
-        'receipt': receipt,
-        'productId': productId,
-        'apple_transaction_id': transactionId,
-        'standard': standard,
-        'medium': medium,
-        if (stream != null) 'stream': stream,
-      }),
-    ));
+      headers: _addAuth({'Content-Type': 'application/json'}),
+      body: jsonEncode(body),
+    );
+    debugPrint("[Apple Membership] Response status: ${response.statusCode}");
+    debugPrint("[Apple Membership] Response body: ${response.body}");
+    return _handleSession(response);
   }
 
   static Future<http.Response> verifyAppleUpgrade({
@@ -979,23 +1107,24 @@ class ApiService {
     String? stream,
     required double amount,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/apple/verify-upgrade");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-      }),
-      body: jsonEncode({
-        'receipt': receipt,
-        'productId': productId,
-        'apple_transaction_id': transactionId,
-        'newStandard': newStandard,
-        'medium': medium,
-        if (stream != null) 'stream': stream,
-        'amount': amount,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({
+          'receipt': receipt,
+          'productId': productId,
+          'apple_transaction_id': transactionId,
+          'newStandard': newStandard,
+          'medium': medium,
+          if (stream != null) 'stream': stream,
+          'amount': amount,
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> verifyAppleProductPurchase({
@@ -1005,21 +1134,22 @@ class ApiService {
     required String materialProductId,
     required double amount,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/apple/verify-product");
-    return _handleSession(await http.post(
-      uri,
-      headers: _addAuth({
-        'Content-Type': 'application/json',
-      }),
-      body: jsonEncode({
-        'receipt': receipt,
-        'productId': productId,
-        'apple_transaction_id': transactionId,
-        'materialProductId': materialProductId,
-        'amount': amount,
-      }),
-    ));
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({
+          'receipt': receipt,
+          'productId': productId,
+          'transactionId': transactionId,
+          'materialProductId': materialProductId,
+          'amount': amount,
+        }),
+      ),
+    );
   }
 
   /// Register user with Apple IAP payment (iOS only)
@@ -1032,7 +1162,8 @@ class ApiService {
     required String appleTransactionId,
     double? amount,
   }) async {
-    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/register");
     final request = http.MultipartRequest("POST", uri);
 
@@ -1061,11 +1192,13 @@ class ApiService {
       final file = payload.files.first;
       if (file.existsSync()) {
         final mimeType = _getMimeType(file.path);
-        request.files.add(await http.MultipartFile.fromPath(
-          'photo',
-          file.path,
-          contentType: MediaType.parse(mimeType),
-        ));
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'photo',
+            file.path,
+            contentType: MediaType.parse(mimeType),
+          ),
+        );
       }
     }
 

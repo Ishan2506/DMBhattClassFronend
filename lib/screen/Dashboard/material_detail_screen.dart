@@ -1,12 +1,11 @@
 import 'dart:ui' as ui;
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform, kDebugMode;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
-import 'package:dm_bhatt_tutions/utils/superwall_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_payment_confirmation_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
@@ -129,8 +128,6 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
     }
   }
 
-  /*
-  // OLD RevenueCat code (commented out for future use)
   Future<void> _initiatePurchase() async {
     if (!await GuestUtils.canGuestPurchase(context)) return;
     setState(() => _isProcessing = true);
@@ -181,109 +178,6 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
       }
     }
   }
-  */
-
-  // ─────────────────────────────────────────────────────────────────────────────
-// PASTE THIS METHOD into your purchase screen widget (replacing the existing
-// _initiatePurchase method entirely)
-// ─────────────────────────────────────────────────────────────────────────────
-
-Future<void> _initiatePurchase() async {
-  if (!await GuestUtils.canGuestPurchase(context)) return;
-  setState(() => _isProcessing = true);
-
-  if (_isIOS) {
-    try {
-      final userId = await SuperWallService().getUserId();
-
-      await SuperWallService().showExplorePremiumPaywall(
-        userId: userId,
-
-        // ✅ Called ONLY after paywall closes AND entitlement is confirmed active
-        onPurchased: () {
-          if (!mounted) return;
-          setState(() => _isProcessing = false);
-          CustomToast.showSuccess(context, "Material purchased successfully!");
-          _verifyRevenueCatPurchase();
-        },
-
-        // 🚫 Called when user closes paywall without purchasing, OR paywall
-        //    was skipped (no campaign match) — NOT an error, just no purchase
-        onCancelled: () {
-          if (!mounted) return;
-          setState(() => _isProcessing = false);
-          // Optionally show a soft message or do nothing
-          // CustomToast.showInfo(context, "Purchase cancelled.");
-        },
-
-        // ❌ Called only on real errors (products not loading, network failure)
-        onFailed: (reason) {
-          if (!mounted) return;
-          setState(() => _isProcessing = false);
-          if (kDebugMode) print('❌ Paywall failed: $reason');
-          CustomToast.showError(context, reason);
-        },
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
-      if (kDebugMode) print('❌ Purchase error: $e');
-      CustomToast.showError(context, "Something went wrong. Please try again.");
-    }
-  } else {
-    // ── Android: Razorpay ────────────────────────────────────────────────────
-    try {
-      final orderResponse = await ApiService.createProductOrder(
-        widget.product['id'],
-        (widget.product['price'] as num).toDouble(),
-      );
-      if (!mounted) return;
-
-      if (orderResponse.statusCode == 200) {
-        final orderData = jsonDecode(orderResponse.body);
-        final String orderId = orderData['id'];
-        _razorpayHelper!.openCheckout(
-          amount: (widget.product['price'] as num).toDouble(),
-          name: "D.M. Bhatt classes",
-          description: widget.product['name'],
-          contact: '',
-          email: '',
-          orderId: orderId,
-        );
-      } else {
-        setState(() => _isProcessing = false);
-        final errorMsg = ApiService.getErrorMessage(orderResponse.body);
-        CustomToast.showError(context, "Failed: $errorMsg");
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        CustomToast.showError(context, "Error: $e");
-      }
-    }
-  }
-}
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// OPTIONAL: Add a Restore Purchases button handler in the same widget
-// ─────────────────────────────────────────────────────────────────────────────
-
-Future<void> _restorePurchases() async {
-  setState(() => _isProcessing = true);
-
-  final restored = await SuperWallService().restorePurchases();
-
-  if (!mounted) return;
-  setState(() => _isProcessing = false);
-
-  if (restored) {
-    CustomToast.showSuccess(context, "Purchases restored successfully!");
-    _verifyRevenueCatPurchase();
-  } else {
-    CustomToast.showError(context, "No previous purchases found.");
-  }
-}
 
   Future<void> _verifyRevenueCatPurchase() async {
     try {

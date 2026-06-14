@@ -1,15 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:dm_bhatt_tutions/network/api_service.dart';
 
 class AcademicConstants {
   static const List<String> boards = ["GSEB", "CBSE"];
 
-  static Map<String, List<String>> standards = Map.from(_fallbackStandards);
-  static Map<String, List<String>> subjects = Map.from(_fallbackSubjectsMap);
-
-  static const Map<String, List<String>> _fallbackStandards = {
+  static const Map<String, List<String>> standards = {
     "GSEB": [
       "6", "7", "8", "9", "10",
       "11", "12"
@@ -20,7 +13,7 @@ class AcademicConstants {
     ]
   };
 
-  static const Map<String, List<String>> _fallbackSubjectsMap = {
+  static const Map<String, List<String>> subjects = {
     "GSEB-6": ["Maths", "Science", "English", "Gujarati", "Hindi", "Social Science", "Computer"],
     "GSEB-7": ["Maths", "Science", "English", "Gujarati", "Hindi", "Social Science", "Computer"],
     "GSEB-8": ["Maths", "Science", "English", "Gujarati", "Hindi", "Social Science", "Computer"],
@@ -78,88 +71,6 @@ class AcademicConstants {
 
   static const List<String> mediums = ["English", "Gujarati"];
 
-  static String _normalizeStandard(String value) {
-    final match = RegExp(r'(\d+)').firstMatch(value);
-    return match?.group(1) ?? value.trim();
-  }
-
-  /// Load standards and subjects created in the admin app.
-  ///
-  /// The backend catalog is board-agnostic, while student screens use keys like
-  /// GSEB-10 and CBSE-11-Science, so each API subject is exposed for both boards.
-  static Future<void> loadFromServer() async {
-    standards = Map.from(_fallbackStandards);
-    subjects = Map.from(_fallbackSubjectsMap);
-
-    try {
-      final stdRes = await http.get(
-        Uri.parse("${ApiService.baseUrl}/superadmin/standards"),
-      ).timeout(const Duration(seconds: 5));
-
-      if (stdRes.statusCode == 200) {
-        final List<dynamic> fetchedStandards = jsonDecode(stdRes.body);
-        final apiStandards = fetchedStandards
-            .map((s) => s['name']?.toString() ?? '')
-            .map(_normalizeStandard)
-            .where((name) => name.isNotEmpty)
-            .toSet()
-            .toList();
-
-        if (apiStandards.isNotEmpty) {
-          standards = {
-            for (final board in boards) board: List<String>.from(apiStandards),
-          };
-        }
-      } else {
-        debugPrint("Standards API failed: ${stdRes.statusCode} ${stdRes.body}");
-      }
-
-      final subRes = await http.get(
-        Uri.parse("${ApiService.baseUrl}/superadmin/subjects"),
-      ).timeout(const Duration(seconds: 5));
-
-      if (subRes.statusCode == 200) {
-        final List<dynamic> fetchedSubjects = jsonDecode(subRes.body);
-        final Map<String, List<String>> apiSubjects = {};
-
-        for (final sub in fetchedSubjects) {
-          final standardInfo = sub['standardId'];
-          if (standardInfo == null) continue;
-
-          final rawStdName = standardInfo['name']?.toString() ?? '';
-          final stdName = _normalizeStandard(rawStdName);
-          final subName = sub['name']?.toString() ?? '';
-          if (stdName.isEmpty || subName.isEmpty) continue;
-
-          final stream = sub['stream']?.toString() ?? '';
-          final hasStream = stream.isNotEmpty && stream != 'None';
-
-          for (final board in boards) {
-            final key = hasStream ? "$board-$stdName-$stream" : "$board-$stdName";
-            apiSubjects.putIfAbsent(key, () => []);
-
-            if (!apiSubjects[key]!.contains(subName)) {
-              apiSubjects[key]!.add(subName);
-            }
-          }
-        }
-
-        if (apiSubjects.isNotEmpty) {
-          subjects = apiSubjects;
-          debugPrint("Loaded ${apiSubjects.length} subject groups from admin API");
-        } else {
-          debugPrint("Subjects API returned no usable subjects");
-        }
-      } else {
-        debugPrint("Subjects API failed: ${subRes.statusCode} ${subRes.body}");
-      }
-
-      debugPrint("Academic constants loaded from admin API");
-    } catch (e) {
-      debugPrint("Failed to load academic constants from API: $e. Using fallback data.");
-    }
-  }
-
   /// Helper to get subjects for a student based on their board, standard, and stream.
   /// [board] e.g. "GSEB", [std] e.g. "7" or "7th" (numeric part is extracted),
   /// [stream] e.g. "Science", "Commerce" (only relevant for std 11/12).
@@ -191,7 +102,7 @@ class AcademicConstants {
     if (subjects.containsKey(key)) {
       return subjects[key]!;
     }
-    return _fallbackSubjectsMap[key] ?? _fallbackSubjects;
+    return _fallbackSubjects;
   }
 
   static const List<String> _fallbackSubjects = [

@@ -10,28 +10,18 @@ import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
-
 class PdfPreviewScreen extends StatefulWidget {
   final Map<String, dynamic> product;
   final bool isFullAccess;
   final Uint8List? pdfBytes;
-  final bool showHomeButtonOnLastPage;
-
-  const PdfPreviewScreen({
-    super.key,
-    required this.product,
-    this.isFullAccess = false,
-    this.pdfBytes,
-    this.showHomeButtonOnLastPage = false,
-  });
+  const PdfPreviewScreen({super.key, required this.product, this.isFullAccess = false, this.pdfBytes});
 
   @override
   State<PdfPreviewScreen> createState() => _PdfPreviewScreenState();
 }
 
 class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
-  late PageController _pageController;
+  final PageController _pageController = PageController();
   final TransformationController _transformationController = TransformationController(); // Shared controller
   int _currentPage = 0;
   double _currentScale = 1.0;
@@ -39,12 +29,10 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   int _actualTotalPages = 1; // Actual total pages in PDF (dynamic)
   bool _isLoading = true;
   Uint8List? _pdfBytes;
-  bool _isFullScreen = false;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _currentPage);
     _loadPdfInfo();
     _markPreviewAsUsed(); // Mark as used immediately when entering
   }
@@ -60,14 +48,6 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     setState(() {
       _currentScale = 1.0;
       _transformationController.value = Matrix4.identity();
-    });
-  }
-
-  void _toggleFullScreen() {
-    setState(() {
-      _isFullScreen = !_isFullScreen;
-      _pageController.dispose();
-      _pageController = PageController(initialPage: _currentPage);
     });
   }
 
@@ -182,64 +162,57 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: _isFullScreen ? null : CustomAppBar(
+      appBar: CustomAppBar(
         title: "PDF Preview",
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(_isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen, color: Colors.white),
-            onPressed: _toggleFullScreen,
-          ),
-        ],
         centerTitle: true,
       ),
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       body: Column(
         children: [
           // Page indicator
-          if (!_isFullScreen)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.product['name'] ?? 'PDF Preview',
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.product['name'] ?? 'PDF Preview',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Page ${_currentPage + 1} / $_actualTotalPages',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
-                      ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Page ${_currentPage + 1} / $_actualTotalPages',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
           // Free preview notice
-          if (!widget.isFullAccess && _currentPage < _freePages && !_isFullScreen)
+          if (!widget.isFullAccess && _currentPage < _freePages)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -407,20 +380,17 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                             ),
                           ),
                         ),
-                      // Zoom Controls & Exit fullscreen button
+                      // Zoom Controls
                       Positioned(
                         bottom: 16,
                         right: 16,
                         child: Column(
                           children: [
-                            if (!_isFullScreen) ...[
-                              _buildZoomButton(Icons.add, () => _zoom(1.2)),
-                              const SizedBox(height: 8),
-                              _buildZoomButton(Icons.remove, () => _zoom(0.8)),
-                              const SizedBox(height: 8),
-                              _buildZoomButton(Icons.refresh, _resetZoom),
-                            ] else
-                              _buildZoomButton(Icons.fullscreen_exit, _toggleFullScreen),
+                            _buildZoomButton(Icons.add, () => _zoom(1.2)),
+                            const SizedBox(height: 8),
+                            _buildZoomButton(Icons.remove, () => _zoom(0.8)),
+                            const SizedBox(height: 8),
+                            _buildZoomButton(Icons.refresh, _resetZoom),
                           ],
                         ),
                       ),
@@ -433,88 +403,63 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
 
           // Navigation controls
-          if (!_isFullScreen)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Previous button
-                  ElevatedButton.icon(
-                    onPressed: _currentPage > 0
-                        ? () {
-                            _pageController.previousPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          }
-                        : null,
-                    icon: const Icon(Icons.arrow_back, size: 18),
-                    label: Text(
-                      'Previous',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                      foregroundColor: isDark ? Colors.white : Colors.black87,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Previous button
+                ElevatedButton.icon(
+                  onPressed: _currentPage > 0
+                      ? () {
+                          _pageController.previousPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      : null,
+                  icon: const Icon(Icons.arrow_back, size: 18),
+                  label: Text(
+                    'Previous',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                    foregroundColor: isDark ? Colors.white : Colors.black87,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                ),
 
-                  // Next button or Home button
-                  if (widget.showHomeButtonOnLastPage && _currentPage == (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LandingScreen()),
-                          (route) => false,
-                        );
-                      },
-                      icon: const Icon(Icons.home_rounded, size: 18),
-                      label: Text(
-                        'Home',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    )
-                  else
-                    ElevatedButton.icon(
-                      onPressed: _currentPage < (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1
-                          ? () {
-                              _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            }
-                          : null,
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: Text(
-                        _currentPage == _freePages - 1 && !widget.isFullAccess ? 'Unlock All' : 'Next',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                // Next button
+                ElevatedButton.icon(
+                  onPressed: _currentPage < (widget.isFullAccess ? _actualTotalPages : math.min(_actualTotalPages, _freePages + 1)) - 1
+                      ? () {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      : null,
+                  icon: const Icon(Icons.arrow_forward, size: 18),
+                  label: Text(
+                    _currentPage == _freePages - 1 && !widget.isFullAccess ? 'Unlock All' : 'Next',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
+          ),
         ],
       ),
     );

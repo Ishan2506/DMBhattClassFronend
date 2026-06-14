@@ -1,20 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
-import 'package:intl/intl.dart';
-import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -25,14 +21,12 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  DateTime? _selectedDob;
 
   // Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _parentPhoneController = TextEditingController();
-  final TextEditingController _customCityController = TextEditingController();
 
   // Selection States
   String? _selectedStandard;
@@ -55,7 +49,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final List<String> _boards = ["GSEB", "CBSE"];
   final List<String> _roles = ["Student", "Teacher"];
 
-
+  final Map<String, List<String>> _stateCityMap = {
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
+    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
+  };
 
   @override
   void initState() {
@@ -84,30 +82,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   .trim();
           _emailController.text = user['email'] ?? (profile?['email'] ?? "");
           _phoneController.text = user['phoneNum'] ?? "";
-          
-          final rawDob = user['dob'];
-          if (rawDob != null && rawDob.toString().isNotEmpty) {
-            try {
-              _selectedDob = DateTime.parse(rawDob.toString());
-            } catch (e) {
-              debugPrint("Error parsing DOB in edit profile: $e");
-            }
-          }
           final city = 
               user['city'] ??
               profile?['city'] ??
               user['address']?['city'] ??
               "";
-          // Check if city exists in the known list for the state; otherwise use "Other" + text field
-          final bool cityKnown = city.isNotEmpty &&
-              _selectedState != null &&
-              (indiaStatesCities[_selectedState]?.contains(city) ?? false);
-          if (city.isNotEmpty && !cityKnown) {
-            _selectedCity = "Other";
-            _customCityController.text = city;
-          } else {
-            _selectedCity = city.isNotEmpty ? city : null;
-          }
+          _selectedCity = city.isNotEmpty ? city : null;
 
           if (profile != null) {
             _selectedStandard = profile['std'];
@@ -141,17 +121,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 profile['state'] ??
                 user['address']?['state'] ??
                 "Gujarat";
-            if (!indiaStatesCities.keys.contains(_selectedState)) {
+            if (!_stateCityMap.keys.contains(_selectedState)) {
               _selectedState = "Gujarat";
             }
 
-            // Validate city against state (allow "Other" for custom cities)
-            if (_selectedCity != null &&
-                _selectedCity != "Other" &&
-                indiaStatesCities[_selectedState] != null &&
-                !indiaStatesCities[_selectedState]!.contains(_selectedCity)) {
-              _selectedCity = "Other";
-              _customCityController.text = _selectedCity ?? "";
+            // Validate city against state
+            if (_selectedCity != null && 
+                _stateCityMap[_selectedState] != null && 
+                !_stateCityMap[_selectedState]!.contains(_selectedCity)) {
+              _selectedCity = null;
             }
           }
           _currentPhotoPath = user['photoPath'];
@@ -194,9 +172,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'medium': _selectedMedium,
         'board': _selectedBoard,
         'loginAs': _selectedRole,
-        'city': _selectedCity == "Other"
-            ? _customCityController.text.trim()
-            : _selectedCity,
+        'city': _selectedCity,
         'state': _selectedState,
         'parentPhone': _parentPhoneController.text,
       };
@@ -452,36 +428,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Date of Birth (ReadOnly)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.cake_rounded, color: isDark ? Colors.grey : Colors.black54),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _selectedDob == null
-                                      ? "Date of Birth: Not Provided"
-                                      : DateFormat('dd/MM/yyyy').format(_selectedDob!),
-                                  style: GoogleFonts.poppins(
-                                    color: theme.textTheme.bodyLarge?.color,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
                         // Standard
                         _buildDropdown(
                           context,
@@ -543,12 +489,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           hint: "State",
                           icon: Icons.map_outlined,
                           value: _selectedState,
-                          items: indiaStatesCities.keys.toList(),
+                          items: _stateCityMap.keys.toList(),
                           onChanged: (val) {
                             setState(() {
                               _selectedState = val;
                               _selectedCity = null; // Reset city when state changes
-                              _customCityController.clear();
                             });
                           },
                         ),
@@ -560,29 +505,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           hint: "City",
                           icon: Icons.location_city,
                           value: _selectedCity,
-                          items: _selectedState != null ? (indiaStatesCities[_selectedState] ?? []) : [],
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedCity = val;
-                              if (val != "Other") _customCityController.clear();
-                            });
-                          },
+                          items: _selectedState != null ? (_stateCityMap[_selectedState] ?? []) : [],
+                          onChanged: (val) => setState(() => _selectedCity = val),
                         ),
-                        if (_selectedCity == "Other") ...[
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            context,
-                            hint: "Enter City Name",
-                            icon: Icons.location_city_outlined,
-                            controller: _customCityController,
-                            validator: (val) {
-                              if (_selectedCity == "Other" && (val == null || val.trim().isEmpty)) {
-                                return "Please enter your city name";
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
                         const SizedBox(height: 16),
 
                         const SizedBox(height: 16),
@@ -713,14 +638,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             children: [
               Icon(icon, color: isDark ? Colors.grey : Colors.black54),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  hint,
-                  style: GoogleFonts.poppins(
-                    color: isDark ? Colors.grey.shade400 : Colors.grey,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+              Text(
+                hint,
+                style: GoogleFonts.poppins(
+                  color: isDark ? Colors.grey.shade400 : Colors.grey,
                 ),
               ),
             ],
@@ -749,15 +670,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     Icon(icon, color: isDark ? Colors.grey : Colors.black54),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: GoogleFonts.poppins(
-                          color: theme.textTheme.bodyLarge?.color,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+                    Text(
+                      label,
+                      style: GoogleFonts.poppins(
+                        color: theme.textTheme.bodyLarge?.color,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -770,14 +687,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             String label = value;
             if (value == "Student") label = l10n.student;
             if (value == "Teacher") label = l10n.teacher;
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            );
+            return DropdownMenuItem<String>(value: value, child: Text(label));
           }).toList(),
           onChanged: isReadOnly ? null : onChanged, // Disable interaction
         ),

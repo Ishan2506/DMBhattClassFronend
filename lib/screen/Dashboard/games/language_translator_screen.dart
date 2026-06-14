@@ -28,7 +28,7 @@ class TranslationWord {
     return TranslationWord(
       q.questionText,
       q.correctAnswer,
-      (q.meta!['targetLanguage'] ?? q.meta!['hint'] ?? "Target Language"),
+      (q.meta['targetLanguage'] ?? q.meta['hint'] ?? "Target Language"),
       q.options ?? [],
     );
   }

@@ -67,7 +67,7 @@ class SocialMediaAdDialog extends StatelessWidget {
             screenWidth,
             l10n.followOnWhatsApp, // Using followOnWhatsApp key
             l10n.clickHere,
-            const Icon(Icons.chat_bubble_outline, color: Color(0xFF25D366), size: 24), // WhatsApp icon
+            Icons.chat_bubble_outline, // Using chat bubble as generic replacement for WhatsApp if logo unavailable
             [const Color(0xFF25D366), const Color(0xFF128C7E)], // WhatsApp Green Gradients
             "https://wa.me/9106315912",
           ),
@@ -79,7 +79,7 @@ class SocialMediaAdDialog extends StatelessWidget {
             screenWidth,
             l10n.followOnInstagram,
             l10n.clickHere,
-            const FaIcon(FontAwesomeIcons.instagram, color: Color(0xFF833AB4), size: 24), // Instagram real logo
+            FontAwesomeIcons.instagram, // Instagram real logo
             [const Color(0xFF833AB4), const Color(0xFFE1306C), const Color(0xFFF77737)], // Insta Gradients
             "https://www.instagram.com/bondbyte.in/",
           ),
@@ -91,7 +91,7 @@ class SocialMediaAdDialog extends StatelessWidget {
             screenWidth,
             l10n.followOnFacebook,
             l10n.clickHere,
-            const Icon(Icons.facebook, color: Color(0xFF1877F2), size: 24), // Facebook icon
+            Icons.facebook, // Material Icons usually has facebook, if not fallback to public
             [const Color(0xFF1877F2), const Color(0xFF0D47A1)], // FB Blue Gradients
             "https://www.instagram.com/bondbyte.in/", // As requested by user: same link as insta
           ),
@@ -105,7 +105,7 @@ class SocialMediaAdDialog extends StatelessWidget {
     double screenWidth,
     String title,
     String subtitle,
-    Widget iconWidget,
+    IconData icon,
     List<Color> gradientColors,
     String urlString,
   ) {
@@ -144,7 +144,11 @@ class SocialMediaAdDialog extends StatelessWidget {
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: iconWidget,
+                child: Icon(
+                  icon,
+                  color: gradientColors.first, // Icon takes primary color of button
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(

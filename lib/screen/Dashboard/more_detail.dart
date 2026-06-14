@@ -1,6 +1,4 @@
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_history_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_history_screen.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart' as api;
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
@@ -22,8 +20,6 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 
 class MoreScreen extends StatelessWidget {
@@ -222,32 +218,9 @@ class _StudentActivitiesScreen extends StatelessWidget {
 class _AppInfoScreen extends StatelessWidget {
   const _AppInfoScreen();
 
-  void _shareApp(BuildContext context) {
-    if (kIsWeb) {
-      launchUrl(
-        Uri.parse('https://play.google.com/store/apps/details?id=com.bondbyte.students'),
-        mode: LaunchMode.externalApplication,
-      );
-    } else if (Platform.isAndroid) {
-      Share.share(
-        'Check out D. M. Bhatt Tuition Classes App! Download now: https://play.google.com/store/apps/details?id=com.bondbyte.students',
-      );
-    } else if (Platform.isIOS) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text("Coming Soon"),
-          content: const Text("Sharing is not yet available on iOS. Coming soon!"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
-    }
+  void _shareApp() {
+    Share.share(
+        'Check out D. M. Bhatt Tuition Classes App! Download now: https://play.google.com/store/apps/details?id=com.dmbhatt.tutions');
   }
 
   void _showRateUsDialog(BuildContext context) {
@@ -298,28 +271,28 @@ class _AppInfoScreen extends StatelessWidget {
               children: [
                 _buildSocialIcon(
                   context,
-                  iconWidget: FaIcon(FontAwesomeIcons.facebook, color: const Color(0xFF1877F2), size: 30),
+                  icon: FontAwesomeIcons.facebook,
                   color: const Color(0xFF1877F2),
                   url: "https://www.facebook.com/dmbhatttutionclasses",
                   label: l10n.facebook,
                 ),
                 _buildSocialIcon(
                   context,
-                  iconWidget: FaIcon(FontAwesomeIcons.instagram, color: const Color(0xFFE4405F), size: 30),
+                  icon: FontAwesomeIcons.instagram,
                   color: const Color(0xFFE4405F),
                   url: "https://www.instagram.com/dmbhatttutions",
                   label: l10n.instagram,
                 ),
                 _buildSocialIcon(
                   context,
-                  iconWidget: FaIcon(FontAwesomeIcons.youtube, color: const Color(0xFFFF0000), size: 30),
+                  icon: FontAwesomeIcons.youtube,
                   color: const Color(0xFFFF0000),
                   url: "https://www.youtube.com/@dmbhatteducationchannel",
                   label: l10n.youtube,
                 ),
                 _buildSocialIcon(
                   context,
-                  iconWidget: FaIcon(FontAwesomeIcons.whatsapp, color: const Color(0xFF25D366), size: 30),
+                  icon: FontAwesomeIcons.whatsapp,
                   color: const Color(0xFF25D366),
                   url: "https://wa.me/919876543210",
                   label: l10n.whatsapp,
@@ -335,7 +308,7 @@ class _AppInfoScreen extends StatelessWidget {
   }
 
   Widget _buildSocialIcon(BuildContext context,
-      {required Widget iconWidget,
+      {required IconData icon,
       required Color color,
       required String url,
       required String label}) {
@@ -356,7 +329,7 @@ class _AppInfoScreen extends StatelessWidget {
               color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: iconWidget,
+            child: FaIcon(icon, color: color, size: 30),
           ),
           const SizedBox(height: 8),
           Text(
@@ -425,7 +398,7 @@ class _AppInfoScreen extends StatelessWidget {
               title: l10n.shareApp,
               value: "",
               icon: Icons.share,
-              onTap: () => _shareApp(context),
+              onTap: _shareApp,
             ),
             _MoreScreenItem(
               title: l10n.rateUs,
@@ -690,25 +663,6 @@ class _HistoryMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context).languageCode;
-    
-    const matchHistoryTranslations = {
-      'en': 'Match the Following History',
-      'gu': 'જોડકા જોડવાનો ઇતિહાસ',
-      'hi': 'सही मिलान इतिहास',
-      'mr': 'योग्य जोड्या जुळवण्याचा इतिहास',
-      'ta': 'பொருத்துக வரலாறு'
-    };
-    const tfHistoryTranslations = {
-      'en': 'True / False History',
-      'gu': 'ખરા / ખોટાનો ઇતિહાસ',
-      'hi': 'सही / गलत इतिहास',
-      'mr': 'चूक / बरोबर इतिहास',
-      'ta': 'சரி / தவறு வரலாறு'
-    };
-    final matchHistoryTitle = matchHistoryTranslations[locale] ?? 'Match the Following History';
-    final tfHistoryTitle = tfHistoryTranslations[locale] ?? 'True / False History';
-
     return Scaffold(
       appBar: CustomAppBar(
         title: l10n.history,
@@ -753,30 +707,6 @@ class _HistoryMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const OneLinerHistoryScreen()),
-                  );
-                },
-              ),
-              _MoreScreenItem(
-                title: matchHistoryTitle,
-                value: "",
-                icon: Icons.compare_arrows_rounded,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const MatchFollowingHistoryScreen()),
-                  );
-                },
-              ),
-              _MoreScreenItem(
-                title: tfHistoryTitle,
-                value: "",
-                icon: Icons.rule_folder_rounded,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const TrueFalseHistoryScreen()),
                   );
                 },
               ),
@@ -1153,7 +1083,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const FaIcon(FontAwesomeIcons.instagram, color: Colors.white, size: 16),
+                const Icon(FontAwesomeIcons.instagram, color: Colors.white, size: 16),
                 const SizedBox(width: 8),
                 Text(
                   "Connect",

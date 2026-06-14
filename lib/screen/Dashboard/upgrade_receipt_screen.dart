@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
-import 'package:share_plus/share_plus.dart';
-import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class UpgradeReceiptScreen extends StatelessWidget {
   final Map<String, dynamic> historyItem;
@@ -14,78 +11,53 @@ class UpgradeReceiptScreen extends StatelessWidget {
   const UpgradeReceiptScreen({super.key, required this.historyItem});
 
   Future<void> _downloadReceipt(BuildContext context) async {
-    try {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+    final pdf = pw.Document();
 
-      // Get the invoice ID from historyItem
-      final invoiceId = historyItem['invoiceId'];
-      if (invoiceId == null) {
-        if (context.mounted) Navigator.pop(context);
-        CustomToast.showError(context, 'Invoice not found');
-        return;
-      }
+    final date = DateTime.parse(historyItem['createdAt']);
+    final formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(date);
 
-      // Get auth token
-      await ApiService.loadToken();
-      final String? token = ApiService.userToken;
-      if (token == null) {
-        if (context.mounted) Navigator.pop(context);
-        CustomToast.showError(context, 'Authentication failed');
-        return;
-      }
-
-      // Download invoice from backend
-      final response = await http.get(
-        Uri.parse('http://103.212.121.139:5000/api/invoices/download/$invoiceId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (context.mounted) Navigator.pop(context);
-
-      if (response.statusCode == 200) {
-        // Save to downloads folder
-        final directory = await getDownloadsDirectory();
-        if (directory == null) {
-          CustomToast.showError(context, 'Cannot access downloads folder');
-          return;
-        }
-
-        final fileName = 'Receipt_${historyItem['razorpayPaymentId']}.pdf';
-        final file = File('${directory.path}/$fileName');
-        await file.writeAsBytes(response.bodyBytes);
-
-        CustomToast.showSuccess(context, 'Receipt saved successfully');
-
-        // Optional: Share the file
-        if (context.mounted) {
-          await Share.shareXFiles(
-            [XFile(file.path)],
-            subject: 'Payment Receipt',
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Header(
+                level: 0,
+                child: pw.Text('Payment Receipt', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text('Upgrade from Standard ${historyItem['oldStandard']} to ${historyItem['newStandard']}', style: pw.TextStyle(fontSize: 18)),
+              pw.SizedBox(height: 10),
+              pw.Text('Medium: ${historyItem['medium']}'),
+              if (historyItem['stream'] != null) pw.Text('Stream: ${historyItem['stream']}'),
+              pw.SizedBox(height: 10),
+              pw.Text('Date: $formattedDate'),
+              pw.SizedBox(height: 10),
+              pw.Text('Transaction ID: ${historyItem['razorpayPaymentId']}'),
+              pw.SizedBox(height: 20),
+              pw.Divider(),
+              pw.SizedBox(height: 10),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Amount Paid:', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                  pw.Text('Rs. ${historyItem['amount']}', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                ]
+              ),
+              pw.SizedBox(height: 40),
+              pw.Text('Thank you for your purchase!'),
+            ],
           );
-        }
-      } else if (response.statusCode == 404) {
-        CustomToast.showError(context, 'Invoice not found on server');
-      } else if (response.statusCode == 403) {
-        CustomToast.showError(context, 'Unauthorized access');
-      } else {
-        CustomToast.showError(context, 'Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context, false);
-        CustomToast.showError(context, 'Error: $e');
-      }
-    }
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'Receipt_${historyItem['razorpayPaymentId']}.pdf',
+    );
   }
 
   @override

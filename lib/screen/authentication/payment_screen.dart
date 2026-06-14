@@ -21,8 +21,8 @@ class PaymentScreen extends StatefulWidget {
   final String? email;
 
   const PaymentScreen({
-    super.key, 
-    this.payload, 
+    super.key,
+    this.payload,
     this.password,
     this.std,
     this.medium,
@@ -37,24 +37,25 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   final TextEditingController _promoCodeController = TextEditingController();
   final TextEditingController _referralCodeController = TextEditingController();
-  
+
   double _originalAmount = 0;
   double _finalAmount = 0;
   double _discount = 0;
-  double _referralDiscount = 0;
   bool _isDiscountApplied = false;
-  
+  bool? _isRedeemValid;
+  String _redeemMessage = '';
+
   // Platform-specific payment helpers
   RazorpayHelper? _razorpayHelper;
 
-  
   // Referral code validation states
   bool _isValidatingReferral = false;
   bool? _isReferralValid;
   String _referralMessage = '';
-  
+
   String? _std;
   String? _medium;
+  String? _stream;
   String? _phoneNum;
   String? _email;
   String? _cachedPassword;
@@ -83,6 +84,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (widget.payload != null) {
       _std = widget.payload!.fields['std']?.toString();
       _medium = widget.payload!.fields['medium']?.toString();
+      _stream = widget.payload!.fields['stream']?.toString();
       _phoneNum = widget.payload!.fields['phoneNum'];
       _email = widget.payload!.fields['email'];
       _cachedPassword = widget.password;
@@ -96,29 +98,33 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final prefs = await SharedPreferences.getInstance();
       _std = prefs.getString('std');
       _medium = prefs.getString('medium');
+      _stream = prefs.getString('stream');
       _phoneNum = prefs.getString('user_phone');
       _email = prefs.getString('user_email');
       _cachedPassword = prefs.getString('user_password');
     }
 
-    // Always ensure _cachedPassword is loaded if not already provided
+    // Always ensure values not passed by the caller are loaded from the profile.
+    final prefs = await SharedPreferences.getInstance();
     if (_cachedPassword == null) {
-      final prefs = await SharedPreferences.getInstance();
       _cachedPassword = prefs.getString('user_password');
     }
-    
+    _stream ??= prefs.getString('stream');
+
     if (_std != null) {
       _calculateInitialAmount();
     }
-    
+
     setState(() {
       _isLoading = false;
     });
   }
-  
+
   @override
   void dispose() {
     _razorpayHelper?.dispose();
+    _promoCodeController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -157,43 +163,89 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _calculateFinalAmount() {
-    _finalAmount = _originalAmount - _discount - _referralDiscount;
+    _finalAmount = _originalAmount > 0 ? _originalAmount - 1 : 0;
+    if (_hasValidCodeDiscount) {
+      _discount = 100;
+      _finalAmount -= _discount;
+    } else {
+      _discount = 0;
+    }
     if (_finalAmount < 0) _finalAmount = 0;
   }
 
-  void _applyPromoCode() {
+  bool get _hasValidCodeDiscount =>
+      _isDiscountApplied || _hasValidatedReferralCode;
+
+  bool get _hasValidatedReferralCode =>
+      _referralCodeController.text.trim().isNotEmpty &&
+      _isReferralValid == true;
+
+  void _validateRedeemCode() {
     final code = _promoCodeController.text.trim().toUpperCase();
     final expectedCode = "DMBHATT$_std";
+
+    if (code.isEmpty) {
+      _resetRedeemValidation();
+      CustomToast.showError(context, "Redeem code is required");
+      return;
+    }
 
     if (code == expectedCode) {
       setState(() {
         _isDiscountApplied = true;
-        _discount = _originalAmount * 0.50; // 50% discount
+        _isRedeemValid = true;
+        _redeemMessage = "Redeem code applied successfully.";
         _calculateFinalAmount();
       });
-      CustomToast.showSuccess(context, "Promo code applied successfully!");
+      CustomToast.showSuccess(context, "Redeem code applied successfully!");
     } else {
       setState(() {
         _isDiscountApplied = false;
-        _discount = 0;
+        _isRedeemValid = false;
+        _redeemMessage = "Invalid redeem code";
         _calculateFinalAmount();
       });
-      if (code.isNotEmpty) {
-        CustomToast.showError(context, "Invalid promo code");
-      }
+      CustomToast.showError(context, "Invalid redeem code");
     }
+  }
+
+  void _resetRedeemValidation() {
+    setState(() {
+      _isDiscountApplied = false;
+      _isRedeemValid = null;
+      _redeemMessage = '';
+      _calculateFinalAmount();
+    });
+  }
+
+  bool _hasValidRedeemCodeForSelectedStandard() {
+    final code = _promoCodeController.text.trim().toUpperCase();
+    return _isRedeemValid == true && code == "DMBHATT$_std";
+  }
+
+  bool _validateRedeemCodeForPurchase() {
+    final code = _promoCodeController.text.trim().toUpperCase();
+    if (code.isEmpty) return true;
+    if (_hasValidRedeemCodeForSelectedStandard()) return true;
+
+    CustomToast.showError(context, "Please validate redeem code first");
+    return false;
+  }
+
+  void _resetReferralValidation() {
+    setState(() {
+      _isReferralValid = null;
+      _referralMessage = '';
+      _calculateFinalAmount();
+    });
   }
 
   Future<void> _validateReferralCode() async {
     final code = _referralCodeController.text.trim();
-    
+
     if (code.isEmpty) {
-      setState(() {
-        _isReferralValid = null;
-        _referralMessage = '';
-        _referralDiscount = 0; // Reset discount if empty
-        _calculateFinalAmount();
-      });
+      _resetReferralValidation();
+      CustomToast.showError(context, "Referral code is required");
       return;
     }
 
@@ -204,58 +256,32 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     try {
-      // 1. Try student referral check first
       final refResponse = await ApiService.validateReferralCode(code);
-      
+
       if (!mounted) return;
 
       if (refResponse.statusCode == 200) {
         final refData = jsonDecode(refResponse.body);
         setState(() {
-          _isReferralValid = true;
-          final double discountAmount = (refData['discountAmount'] as num).toDouble();
+          _isReferralValid = refData['valid'] == true;
           _referralMessage = refData['message'] ?? "Referral applied!";
-          _referralDiscount = discountAmount;
           _calculateFinalAmount();
         });
         CustomToast.showSuccess(context, _referralMessage);
         return;
       }
 
-      // 2. Fallback to admin-generated redeem code check
-      final response = await ApiService.validateRedeemCode(
-        code,
-        targetStd: _std,
-        targetMedium: _medium,
-      );
-      final data = jsonDecode(response.body);
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _isReferralValid = true;
-          final double discountPercent = (data['discount'] as num).toDouble();
-          _referralMessage = "Applied! ${data['message'] ?? '$discountPercent% discount'}";
-          _referralDiscount = _originalAmount * (discountPercent / 100);
-          _calculateFinalAmount();
-        });
-        CustomToast.showSuccess(context, _referralMessage);
-      } else {
-        setState(() {
-          _isReferralValid = false;
-          _referralMessage = ApiService.getErrorMessage(response.body);
-          _referralDiscount = 0;
-          _calculateFinalAmount();
-        });
-        CustomToast.showError(context, _referralMessage);
-      }
+      setState(() {
+        _isReferralValid = false;
+        _referralMessage = ApiService.getErrorMessage(refResponse.body);
+        _calculateFinalAmount();
+      });
+      CustomToast.showError(context, _referralMessage);
     } catch (e) {
       if (mounted) {
         setState(() {
           _isReferralValid = false;
           _referralMessage = 'Error validating referral code';
-          _referralDiscount = 0;
           _calculateFinalAmount();
         });
         CustomToast.showError(context, _referralMessage);
@@ -269,7 +295,38 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
+  bool _validateReferralForPurchase() {
+    final code = _referralCodeController.text.trim();
+    if (code.isEmpty) return true;
+    if (_isReferralValid == true) return true;
+
+    CustomToast.showError(context, "Please validate referral code first");
+    return false;
+  }
+
+  Future<void> _applyReferralAfterPurchase() async {
+    final code = _referralCodeController.text.trim();
+    if (!_hasValidatedReferralCode) return;
+
+    try {
+      final response = await ApiService.applyReferralCode(code);
+      if (!mounted) return;
+      if (response.statusCode != 200) {
+        CustomToast.showError(
+          context,
+          "Referral apply failed: ${ApiService.getErrorMessage(response.body)}",
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      CustomToast.showError(context, "Referral apply failed: $e");
+    }
+  }
+
   Future<void> _initiatePayment() async {
+    if (!_validateReferralForPurchase()) return;
+    if (!_validateRedeemCodeForPurchase()) return;
+
     if (_finalAmount <= 0) {
       // If amount is 0 (e.g. 100% discount), skip payment
       _processRegistration(paymentId: "FREE_PLAN");
@@ -277,31 +334,32 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     if (_isIOS) {
-      // iOS: Use RevenueCat Paywall with the default offering.
-      final success = await RevenueCatService.instance.presentPaywall(
-        offeringId: 'default',
-      );
-      if (success && mounted) {
-        CustomToast.showSuccess(context, "Plan purchased successfully!");
-        // Note: For registration, we might need a specific handling if the user 
-        // hasn't registered on backend yet. But usually RevenueCat handles the 
-        // subscription state. 
-        // We'll call the registration logic if success.
-        _processRegistration(paymentId: "REVENUE_CAT_PURCHASE");
+      final useRedeemProduct = _hasValidRedeemCodeForSelectedStandard();
+      final useReferralProduct = !useRedeemProduct && _hasValidatedReferralCode;
+      // iOS: Show the RevenueCat package matching the selected standard.
+      final result = await RevenueCatService.instance
+          .presentStandardPaywallWithResult(
+            context: context,
+            standard: _std,
+            useRedeemProduct: useRedeemProduct,
+            useReferralProduct: useReferralProduct,
+          );
+      if (result.isSuccess && mounted) {
+        await _verifyAppleMembership(result);
       }
     } else {
       // Android: Use Razorpay
       try {
         CustomLoader.show(context);
         final orderResponse = await ApiService.createPaymentOrder(_finalAmount);
-        
+
         if (!mounted) return;
         CustomLoader.hide(context);
 
         if (orderResponse.statusCode == 200) {
           final orderData = jsonDecode(orderResponse.body);
           final String orderId = orderData['id'];
-          
+
           _razorpayHelper!.openCheckout(
             amount: _finalAmount,
             name: "Our Learning Platform",
@@ -311,27 +369,106 @@ class _PaymentScreenState extends State<PaymentScreen> {
             orderId: orderId,
           );
         } else {
-           CustomToast.showError(context, "Failed to create order: ${ApiService.getErrorMessage(orderResponse.body)}");
+          CustomToast.showError(
+            context,
+            "Failed to create order: ${ApiService.getErrorMessage(orderResponse.body)}",
+          );
         }
       } catch (e) {
-         if (mounted) {
-           CustomLoader.hide(context);
-           CustomToast.showError(context, "Error initiating payment: $e");
-         }
+        if (mounted) {
+          CustomLoader.hide(context);
+          CustomToast.showError(context, "Error initiating payment: $e");
+        }
       }
     }
   }
 
+  Future<void> _verifyAppleMembership(RevenueCatPurchaseResult result) async {
+    final receipt = result.receipt;
+    final productId = result.productId;
+    final transactionId = result.transactionId;
+    debugPrint("[Apple Membership Screen] Starting verification");
+    debugPrint("[Apple Membership Screen] receipt length: ${receipt?.length}");
+    debugPrint("[Apple Membership Screen] productId: $productId");
+    debugPrint("[Apple Membership Screen] transactionId: $transactionId");
+    debugPrint("[Apple Membership Screen] standard: $_std");
+    debugPrint("[Apple Membership Screen] medium: $_medium");
+    debugPrint("[Apple Membership Screen] stream: $_stream");
+    debugPrint(
+      "[Apple Membership Screen] amount: ${result.amountPaid ?? _finalAmount}",
+    );
+    if (receipt == null ||
+        receipt.isEmpty ||
+        productId == null ||
+        productId.isEmpty ||
+        transactionId == null ||
+        transactionId.isEmpty ||
+        _std == null ||
+        _medium == null) {
+      debugPrint(
+        "[Apple Membership Screen] Missing verification details: "
+        "receiptMissing=${receipt == null || receipt.isEmpty}, "
+        "productIdMissing=${productId == null || productId.isEmpty}, "
+        "transactionIdMissing=${transactionId == null || transactionId.isEmpty}, "
+        "standardMissing=${_std == null}, "
+        "mediumMissing=${_medium == null}",
+      );
+      CustomToast.showError(
+        context,
+        "Apple purchase completed, but verification details are missing. Please try again.",
+      );
+      return;
+    }
+
+    try {
+      CustomLoader.show(context);
+      final response = await ApiService.verifyAppleMembership(
+        receipt: receipt,
+        productId: productId,
+        transactionId: transactionId,
+        standard: _std!,
+        medium: _medium!,
+        stream: _stream,
+      );
+      if (!mounted) return;
+      CustomLoader.hide(context);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (widget.payload == null && _hasValidatedReferralCode) {
+          await _applyReferralAfterPurchase();
+          if (!mounted) return;
+        }
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool("apple_membership_verified", true);
+        await prefs.setString("apple_membership_standard", _std!);
+        await prefs.remove("skipped_payment_prompt");
+        if (!mounted) return;
+        CustomToast.showSuccess(context, "Membership Activated Successfully!");
+        Navigator.pop(context, true);
+      } else {
+        CustomToast.showError(
+          context,
+          "Verification Failed: ${ApiService.getErrorMessage(response.body)}",
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      CustomLoader.hide(context);
+      CustomToast.showError(context, "Error verifying Apple purchase: $e");
+    }
+  }
+
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    CustomToast.showSuccess(context, "Payment Successful: ${response.paymentId}");
+    CustomToast.showSuccess(
+      context,
+      "Payment Successful: ${response.paymentId}",
+    );
     _processRegistration(
       paymentId: response.paymentId,
       orderId: response.orderId,
       signature: response.signature,
     );
   }
-
-
 
   Future<void> _processRegistration({
     String? paymentId,
@@ -340,27 +477,45 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }) async {
     // Get referral code if provided and valid
     final referralCode = _referralCodeController.text.trim();
-    final shouldIncludeReferral = referralCode.isNotEmpty && _isReferralValid == true;
-    
+    final shouldIncludeReferral = _hasValidatedReferralCode;
+
     // Proceed to Registration
     try {
       CustomLoader.show(context);
-      
-      final currentPayload = widget.payload ?? RegistrationPayload(
-        role: 'student',
-        fields: {
-          "firstName": (await SharedPreferences.getInstance()).getString('firstName') ?? "",
-          "email": _email ?? "",
-          "phoneNum": _phoneNum ?? "",
-          "parentPhone": (await SharedPreferences.getInstance()).getString('parentPhone') ?? "",
-          "std": _std ?? "",
-          "medium": _medium ?? "",
-          "stream": (await SharedPreferences.getInstance()).getString('stream') ?? "",
-          "board": (await SharedPreferences.getInstance()).getString('board') ?? "",
-          "loginAs": (await SharedPreferences.getInstance()).getString('user_role') ?? "student",
-        },
-        files: [],
-      );
+
+      final currentPayload =
+          widget.payload ??
+          RegistrationPayload(
+            role: 'student',
+            fields: {
+              "firstName":
+                  (await SharedPreferences.getInstance()).getString(
+                    'firstName',
+                  ) ??
+                  "",
+              "email": _email ?? "",
+              "phoneNum": _phoneNum ?? "",
+              "parentPhone":
+                  (await SharedPreferences.getInstance()).getString(
+                    'parentPhone',
+                  ) ??
+                  "",
+              "std": _std ?? "",
+              "medium": _medium ?? "",
+              "stream":
+                  (await SharedPreferences.getInstance()).getString('stream') ??
+                  "",
+              "board":
+                  (await SharedPreferences.getInstance()).getString('board') ??
+                  "",
+              "loginAs":
+                  (await SharedPreferences.getInstance()).getString(
+                    'user_role',
+                  ) ??
+                  "student",
+            },
+            files: [],
+          );
 
       final response = await ApiService.registerUser(
         payload: currentPayload,
@@ -371,11 +526,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
         razorpaySignature: signature,
         amount: _finalAmount,
       );
-      
+
       if (!mounted) return;
       CustomLoader.hide(context);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
+        if (widget.payload == null && _hasValidatedReferralCode) {
+          await _applyReferralAfterPurchase();
+          if (!mounted) return;
+        }
         CustomToast.showSuccess(context, "Membership Activated Successfully!");
         // If from landing, pop. If from registration, push login.
         if (widget.payload != null) {
@@ -388,13 +547,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Navigator.pop(context, true); // Return success to Landing
         }
       } else {
-         CustomToast.showError(context, "Registration Failed: ${ApiService.getErrorMessage(response.body)}");
+        CustomToast.showError(
+          context,
+          "Registration Failed: ${ApiService.getErrorMessage(response.body)}",
+        );
       }
     } catch (e) {
-       if (mounted) {
-         CustomLoader.hide(context);
-         CustomToast.showError(context, "Error: $e");
-       }
+      if (mounted) {
+        CustomLoader.hide(context);
+        CustomToast.showError(context, "Error: $e");
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -407,12 +569,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return Scaffold(body: CustomLoader());
-    
+
     if (_originalAmount == 0) {
-       return Scaffold(
+      return Scaffold(
         appBar: AppBar(title: const Text("Error")),
         body: const Center(child: Text("Invalid Class/Standard selected")),
-       );
+      );
     }
 
     final colorScheme = Theme.of(context).colorScheme;
@@ -455,339 +617,410 @@ class _PaymentScreenState extends State<PaymentScreen> {
       body: Column(
         children: [
           Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Plan Details Card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withOpacity(0.2),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Standard $_std",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: colorScheme.onPrimary.withOpacity(0.8),
-                                    ),
-                                  ),
-                                  Text(
-                                    "$_medium Medium",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.onPrimary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white24,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  "ANNUAL",
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Plan Details Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withOpacity(0.2),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Standard $_std",
                                   style: GoogleFonts.poppins(
-                                    fontSize: 10,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onPrimary.withOpacity(
+                                      0.8,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  "$_medium Medium",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: colorScheme.onPrimary,
                                   ),
                                 ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          Divider(color: Colors.white24, thickness: 1),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Total Payable",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: colorScheme.onPrimary.withOpacity(0.9),
-                                ),
+                              decoration: BoxDecoration(
+                                color: Colors.white24,
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              Text(
-                                "₹${_finalAmount.toStringAsFixed(0)}",
+                              child: Text(
+                                "ANNUAL",
                                 style: GoogleFonts.poppins(
-                                  fontSize: 32,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.onPrimary,
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Membership Benefits
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        "Membership Benefits",
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        _buildBenefitChip(context, Icons.videogame_asset_rounded, "Mind Games", Colors.orange),
-                        _buildBenefitChip(context, Icons.assignment_rounded, "Unlimted Exams", Colors.blue),
-                        _buildBenefitChip(context, Icons.timer_rounded, "5 Min Test", Colors.red),
-                        _buildBenefitChip(context, Icons.notes_rounded, "One Liners", Colors.purple),
-                        _buildBenefitChip(context, Icons.description_rounded, "School Paper", Colors.green),
-                        _buildBenefitChip(context, Icons.image_rounded, "Image Material", Colors.teal),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Promo Code (hide on iOS since Apple doesn't allow external discounts on IAP)
-                    if (!_isIOS) ...[
-                      Text("Have a Redeem Code?", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: colorScheme.surfaceContainer,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
-                              ),
-                              child: TextField(
-                                controller: _promoCodeController,
-                                onChanged: (value) {
-                                  if (_isDiscountApplied) {
-                                    setState(() {
-                                      _isDiscountApplied = false;
-                                      _discount = 0;
-                                      _calculateFinalAmount();
-                                    });
-                                  }
-                                },
-                                decoration: InputDecoration(
-                                  hintText: "Enter Code (e.g. DMBHATT7)",
-                                  hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                                ),
-                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            onPressed: _applyPromoCode,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colorScheme.inverseSurface,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                            ),
-                            child: Text("Apply", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 24),
-
-                      // Referral Code
-                      Text("Have a Referral Code?", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: colorScheme.surfaceContainer,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _isReferralValid == true 
-                                    ? Colors.green 
-                                    : _isReferralValid == false 
-                                      ? Colors.red 
-                                      : colorScheme.outlineVariant.withOpacity(0.5)
-                                ),
-                              ),
-                              child: TextField(
-                                controller: _referralCodeController,
-                                onChanged: (value) {
-                                  // Reset validation state when user types
-                                  if (_isReferralValid != null || _referralDiscount > 0) {
-                                    setState(() {
-                                      _isReferralValid = null;
-                                      _referralMessage = '';
-                                      _referralDiscount = 0;
-                                      _calculateFinalAmount();
-                                    });
-                                  }
-                                },
-                                decoration: InputDecoration(
-                                  hintText: "Enter Referral Code (Optional)",
-                                  hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                                  suffixIcon: _isValidatingReferral
-                                    ? Padding(
-                                        padding: EdgeInsets.all(12.0),
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-                                          ),
-                                        ),
-                                      )
-                                    : _isReferralValid == true
-                                      ? const Icon(Icons.check_circle, color: Colors.green)
-                                      : _isReferralValid == false
-                                        ? const Icon(Icons.error, color: Colors.red)
-                                        : null,
-                                ),
-                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            onPressed: _isValidatingReferral ? null : _validateReferralCode,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colorScheme.inverseSurface,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                            ),
-                            child: Text("Validate", style: GoogleFonts.poppins(color: colorScheme.onInverseSurface, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                      if (_referralMessage.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          _referralMessage,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: _isReferralValid == true ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ],
-
-                    const SizedBox(height: 32),
-                    
-                    // Terms
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              "This membership will be expired after 1 year.",
-                              style: GoogleFonts.poppins(fontSize: 12, color: Colors.orange.shade800),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Pay Button
-                    Container(
-                      width: double.infinity,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _initiatePayment,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _isIOS 
-                                ? "Subscribe ₹${_finalAmount.toStringAsFixed(0)}"
-                                : "Pay ₹${_finalAmount.toStringAsFixed(0)}",
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Icon(
-                              _isIOS ? Icons.apple : Icons.arrow_forward_rounded,
-                              color: Colors.white,
-                              size: 24,
                             ),
                           ],
                         ),
+                        const SizedBox(height: 24),
+                        Divider(color: Colors.white24, thickness: 1),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Total Payable",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: colorScheme.onPrimary.withOpacity(0.9),
+                              ),
+                            ),
+                            Text(
+                              "₹${_finalAmount.toStringAsFixed(0)}",
+                              style: GoogleFonts.poppins(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Membership Benefits
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text(
+                      "Membership Benefits",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      _buildBenefitChip(
+                        context,
+                        Icons.videogame_asset_rounded,
+                        "Mind Games",
+                        Colors.orange,
+                      ),
+                      _buildBenefitChip(
+                        context,
+                        Icons.assignment_rounded,
+                        "Unlimted Exams",
+                        Colors.blue,
+                      ),
+                      _buildBenefitChip(
+                        context,
+                        Icons.timer_rounded,
+                        "5 Min Test",
+                        Colors.red,
+                      ),
+                      _buildBenefitChip(
+                        context,
+                        Icons.notes_rounded,
+                        "One Liners",
+                        Colors.purple,
+                      ),
+                      _buildBenefitChip(
+                        context,
+                        Icons.description_rounded,
+                        "School Paper",
+                        Colors.green,
+                      ),
+                      _buildBenefitChip(
+                        context,
+                        Icons.image_rounded,
+                        "Image Material",
+                        Colors.teal,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Text(
+                    "Have a Redeem Code?",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCodeField(
+                    colorScheme: colorScheme,
+                    controller: _promoCodeController,
+                    hintText: "Enter Redeem Code (Optional)",
+                    showValidIcon: _isRedeemValid == true,
+                    showErrorIcon: _isRedeemValid == false,
+                    onChanged: (_) => _resetRedeemValidation(),
+                    actionLabel: "Validate",
+                    onActionPressed: _validateRedeemCode,
+                  ),
+                  if (_redeemMessage.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _buildCodeMessage(_redeemMessage, _isRedeemValid == true),
                   ],
-                ),
+
+                  const SizedBox(height: 24),
+
+                  Text(
+                    "Have a Referral Code?",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCodeField(
+                    colorScheme: colorScheme,
+                    controller: _referralCodeController,
+                    hintText: "Enter Referral Code (Optional)",
+                    showValidIcon: _isReferralValid == true,
+                    showErrorIcon: _isReferralValid == false,
+                    showLoadingIcon: _isValidatingReferral,
+                    onChanged: (_) => _resetReferralValidation(),
+                    actionLabel: "Validate",
+                    onActionPressed: _isValidatingReferral
+                        ? null
+                        : _validateReferralCode,
+                  ),
+                  if (_referralMessage.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _buildCodeMessage(
+                      _referralMessage,
+                      _isReferralValid == true,
+                    ),
+                  ],
+
+                  const SizedBox(height: 32),
+
+                  // Terms
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "This membership will be expired after 1 year.",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.orange.shade800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Pay Button
+                  Container(
+                    width: double.infinity,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _initiatePayment,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _isIOS
+                                ? "Subscribe ₹${_finalAmount.toStringAsFixed(0)}"
+                                : "Pay ₹${_finalAmount.toStringAsFixed(0)}",
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Icon(
+                            _isIOS ? Icons.apple : Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildBenefitChip(BuildContext context, IconData icon, String text, Color color) {
+  Widget _buildCodeField({
+    required ColorScheme colorScheme,
+    required TextEditingController controller,
+    required String hintText,
+    required bool showValidIcon,
+    required bool showErrorIcon,
+    required ValueChanged<String> onChanged,
+    required String actionLabel,
+    required VoidCallback? onActionPressed,
+    bool showLoadingIcon = false,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainer,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: showValidIcon
+                    ? Colors.green
+                    : showErrorIcon
+                    ? Colors.red
+                    : colorScheme.outlineVariant.withOpacity(0.5),
+              ),
+            ),
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: GoogleFonts.poppins(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                suffixIcon: showLoadingIcon
+                    ? Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      )
+                    : showValidIcon
+                    ? const Icon(Icons.check_circle, color: Colors.green)
+                    : showErrorIcon
+                    ? const Icon(Icons.error, color: Colors.red)
+                    : null,
+              ),
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        ElevatedButton(
+          onPressed: onActionPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.inverseSurface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          ),
+          child: Text(
+            actionLabel,
+            style: GoogleFonts.poppins(
+              color: colorScheme.onInverseSurface,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCodeMessage(String message, bool isValid) {
+    return Text(
+      message,
+      style: GoogleFonts.poppins(
+        fontSize: 12,
+        color: isValid ? Colors.green : Colors.red,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildBenefitChip(
+    BuildContext context,
+    IconData icon,
+    String text,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(

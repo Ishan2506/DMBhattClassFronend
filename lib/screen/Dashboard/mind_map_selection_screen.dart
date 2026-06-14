@@ -264,9 +264,7 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-              ).then((_) {
-                _checkUserStatus();
-              });
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,

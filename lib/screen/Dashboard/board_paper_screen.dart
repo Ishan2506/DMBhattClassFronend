@@ -226,8 +226,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                   l10n.medium, 
                   _mediums, 
                   _selectedMedium, 
-                  (val) => setState(() => _selectedMedium = val),
-                  enabled: false,
+                  (val) => setState(() => _selectedMedium = val)
                 ),
               ),
               const SizedBox(width: 12),
@@ -256,8 +255,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               (val) => setState(() {
                 _selectedStream = val;
                 _selectedSubject = null; // Reset subject when stream changes
-              }),
-              enabled: false,
+              })
             ),
           if (_selectedStd == "12") const SizedBox(height: 12),
 
@@ -273,8 +271,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
             l10n.subject, 
             _getFilteredSubjects(), 
             _selectedSubject, 
-            (val) => setState(() => _selectedSubject = val),
-            isBold: true,
+            (val) => setState(() => _selectedSubject = val)
           ),
 
           const SizedBox(height: 20),
@@ -296,10 +293,10 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     );
   }
 
-  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?)? onChanged, {bool enabled = true, bool isBold = false}) {
+  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?)? onChanged, {bool enabled = true}) {
     return DropdownButtonFormField<String>(
-      value: value,
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.poppins(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)))).toList(),
+      initialValue: value,
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: enabled ? onChanged : null,
       decoration: InputDecoration(
         labelText: label,
@@ -309,7 +306,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
         filled: true,
         fillColor: Theme.of(context).cardColor,
       ),
-      style: GoogleFonts.poppins(color: Theme.of(context).textTheme.bodyMedium?.color, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+      style: GoogleFonts.poppins(color: Theme.of(context).textTheme.bodyMedium?.color),
       dropdownColor: Theme.of(context).cardColor,
     );
   }

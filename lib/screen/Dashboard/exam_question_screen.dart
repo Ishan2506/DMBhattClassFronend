@@ -208,14 +208,27 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
     int skipped = 0;
 
     for (int i = 0; i < _questions.length; i++) {
-      final userAns = _selectedAnswers[i]; // This is now option key, e.g., 'A'
+      final userAns = _selectedAnswers[i];
 
       final q = _questions[i];
-      final correctKey = q['correctAnswerKey']?.toString() ?? q['correctAnswer']?.toString() ?? ''; // 'A'
+      final correctKey = q['correctAnswerKey']; // 'A'
+      final optionsRaw =
+          q['optionsRaw'] as List; // [{key:'A', text:'...'}, ...]
+
+      String? correctText;
+      try {
+        final correctOption = optionsRaw.firstWhere(
+          (o) => o['key'] == correctKey,
+        );
+        correctText = correctOption['text'];
+      } catch (e) {
+        // Fallback
+        correctText = q['correctAnswer'];
+      }
 
       if (userAns == null) {
         skipped++;
-      } else if (userAns.trim().toUpperCase() == correctKey.trim().toUpperCase()) {
+      } else if (userAns == correctText) {
         correct++;
       } else {
         wrong++;
@@ -285,7 +298,6 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                     'correctAnswer': q['correctAnswer'] ?? '',
                     'correctAnswerKey': q['correctAnswerKey'],
                     'optionsRaw': q['optionsRaw'],
-                    'questionImage': q['questionImage'],
                   },
                 )
                 .toList(),
@@ -373,108 +385,102 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Question X of Y Chip
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: theme.colorScheme.primary.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                l10n.questionProgress(
-                                  _currentQuestionIndex + 1,
-                                  _questions.length,
-                                ),
-                                style: textTheme.labelLarge?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+              // Question X of Y Chip
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: theme.colorScheme.primary.withOpacity(0.3),
                         ),
                       ),
+                      child: Text(
+                        l10n.questionProgress(
+                          _currentQuestionIndex + 1,
+                          _questions.length,
+                        ),
+                        style: textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                      // Question Card with Gradient
-                      Container(
-                        margin: const EdgeInsets.all(24),
-                        padding: const EdgeInsets.all(24),
-                        constraints: const BoxConstraints(minHeight: 120),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary,
-                              theme.colorScheme.primary.withOpacity(0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty && question['questionImage'] != "null")
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 16.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    ApiService.getFileUrl(question['questionImage']),
-                                    height: 200,
-                                    width: double.infinity,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (ctx, err, stack) => Container(
-                                      height: 100,
-                                      color: Colors.white24,
-                                      child: const Icon(Icons.broken_image, color: Colors.white, size: 40),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            Text(
-                              question['question'] ?? "",
-                              style: textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                height: 1.4,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Options List
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          children: _buildAnswerOptions(question['answers']),
-                        ),
-                      ),
+              // Question Card with Gradient
+              Container(
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
+                constraints: const BoxConstraints(minHeight: 120),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withOpacity(0.8),
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty && question['questionImage'] != "null")
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            ApiService.getFileUrl(question['questionImage']),
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                            errorBuilder: (ctx, err, stack) => Container(
+                              height: 100,
+                              color: Colors.white24,
+                              child: const Icon(Icons.broken_image, color: Colors.white, size: 40),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Text(
+                      question['question'] ?? "",
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Options List
+              Expanded(
+                flex: 3,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: _buildAnswerOptions(question['answers']),
                   ),
                 ),
               ),
@@ -562,7 +568,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
       final answer = answers[index].toString();
       final optionLabel = String.fromCharCode(65 + index); // A, B, C, D
       final String? selectedAns = _selectedAnswers[_currentQuestionIndex];
-      final bool isSelected = selectedAns == optionLabel;
+      final bool isSelected = selectedAns == answer;
 
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -586,7 +592,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
         child: InkWell(
           onTap: () {
             setState(() {
-              _selectedAnswers[_currentQuestionIndex] = optionLabel;
+              _selectedAnswers[_currentQuestionIndex] = answer;
             });
           },
           borderRadius: BorderRadius.circular(16),

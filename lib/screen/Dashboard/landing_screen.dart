@@ -27,7 +27,8 @@ class _LandingScreenState extends State<LandingScreen> {
   int _selectedIndex = 0;
   bool _isLoadingMembership = true;
 
-  final GlobalKey<ExploreScreenState> _exploreKey = GlobalKey<ExploreScreenState>();
+  final GlobalKey<ExploreScreenState> _exploreKey =
+      GlobalKey<ExploreScreenState>();
 
   // 2. Define the list of bodies/screens
   // These will replace the 'body' area when the index changes
@@ -86,46 +87,68 @@ class _LandingScreenState extends State<LandingScreen> {
         final data = jsonDecode(response.body);
         final user = data['user'];
         final profile = data['profile'];
-        
-        if (user != null && user['role'] == 'student' && user['isPaid'] == false) {
-           final prefs = await SharedPreferences.getInstance();
-           
-           // Persist data for payment flow
-           if (user['firstName'] != null) await prefs.setString('firstName', user['firstName']);
-           if (profile != null) {
-             if (profile['std'] != null) await prefs.setString('std', profile['std'].toString());
-             if (profile['medium'] != null) await prefs.setString('medium', profile['medium']);
-             if (profile['stream'] != null) await prefs.setString('stream', profile['stream']);
-             if (profile['board'] != null) await prefs.setString('board', profile['board']);
-           }
 
-           bool skippedOnce = prefs.getBool('skipped_payment_prompt') ?? false;
+        if (user != null &&
+            user['role'] == 'student' &&
+            user['isPaid'] == false) {
+          final prefs = await SharedPreferences.getInstance();
+          final currentStandard = profile?['std']?.toString();
+          final verifiedStandard = prefs.getString("apple_membership_standard");
+          final hasVerifiedAppleMembership =
+              prefs.getBool("apple_membership_verified") == true &&
+              currentStandard != null &&
+              verifiedStandard == currentStandard;
+          if (hasVerifiedAppleMembership) {
+            debugPrint(
+              "[Apple Membership] Skipping paywall for verified standard $currentStandard.",
+            );
+            return;
+          }
 
-           if (skippedOnce) {
-             if (mounted) setState(() { _isLoadingMembership = false; });
-             return;
-           }
+          // Persist data for payment flow
+          if (user['firstName'] != null)
+            await prefs.setString('firstName', user['firstName']);
+          if (profile != null) {
+            if (profile['std'] != null)
+              await prefs.setString('std', profile['std'].toString());
+            if (profile['medium'] != null)
+              await prefs.setString('medium', profile['medium']);
+            if (profile['stream'] != null)
+              await prefs.setString('stream', profile['stream']);
+            if (profile['board'] != null)
+              await prefs.setString('board', profile['board']);
+          }
 
-           if (!mounted) return;
-           
-           // Redirect to Payment Screen with data directly from API
-           Navigator.push(
-             context,
-             MaterialPageRoute(
-               builder: (context) => PaymentScreen(
-                 std: profile?['std']?.toString(),
-                 medium: profile?['medium']?.toString(),
-                 phone: user['phoneNum'],
-                 email: user['email'],
-               ),
-             ),
-           ).then((success) {
-             if (success == true) {
-               // Refresh if needed
-               _checkMembershipStatus();
-             }
-           });
-           return; // Keep loading visible while redirecting
+          bool skippedOnce = prefs.getBool('skipped_payment_prompt') ?? false;
+
+          if (skippedOnce) {
+            if (mounted)
+              setState(() {
+                _isLoadingMembership = false;
+              });
+            return;
+          }
+
+          if (!mounted) return;
+
+          // Redirect to Payment Screen with data directly from API
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentScreen(
+                std: profile?['std']?.toString(),
+                medium: profile?['medium']?.toString(),
+                phone: user['phoneNum'],
+                email: user['email'],
+              ),
+            ),
+          ).then((success) {
+            if (success == true) {
+              // Refresh if needed
+              _checkMembershipStatus();
+            }
+          });
+          return; // Keep loading visible while redirecting
         }
       }
     } catch (e) {
@@ -144,10 +167,10 @@ class _LandingScreenState extends State<LandingScreen> {
     if (_selectedIndex != 0) return;
 
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Check if already shown once (ever)
     bool alreadyShown = prefs.getBool('social_ad_shown_once') ?? false;
-    
+
     if (!alreadyShown) {
       if (!mounted) return;
       // Show dialog after slight delay ensuring context is ready
@@ -163,7 +186,6 @@ class _LandingScreenState extends State<LandingScreen> {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +203,8 @@ class _LandingScreenState extends State<LandingScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface, // Dynamic Scaffold Background
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Make background transparent to show gradient
+        backgroundColor:
+            Colors.transparent, // Make background transparent to show gradient
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -203,8 +226,11 @@ class _LandingScreenState extends State<LandingScreen> {
           ),
         ),
         title: Text(
-          titles[_selectedIndex], 
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)
+          titles[_selectedIndex],
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -214,10 +240,12 @@ class _LandingScreenState extends State<LandingScreen> {
               child: Icon(Icons.person, color: Colors.white),
             ),
             onPressed: () {
-                Navigator.push(
+              Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const StudentProfileScreen()),
-                );
+                MaterialPageRoute(
+                  builder: (context) => const StudentProfileScreen(),
+                ),
+              );
             },
           ),
           const SizedBox(width: 8),
@@ -231,26 +259,26 @@ class _LandingScreenState extends State<LandingScreen> {
           // const SizedBox(width: 8),
         ],
       ),
-      body: _isLoadingMembership 
-        ? const CustomLoader()
-        : IndexedStack(
-            index: _selectedIndex,
-            children: _pages,
-          ),
+      body: _isLoadingMembership
+          ? const CustomLoader()
+          : IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed, // Ensure all labels are visible
         backgroundColor: colorScheme.surface, // Dynamic BG for BottomNav
         selectedItemColor: colorScheme.primary, // Dynamic Active Color
-        unselectedItemColor: colorScheme.onSurfaceVariant, // Dynamic Inactive Color
+        unselectedItemColor:
+            colorScheme.onSurfaceVariant, // Dynamic Inactive Color
         items: [
           BottomNavigationBarItem(
             icon: const Icon(Icons.home_rounded),
             label: l10n.home,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.grid_view_rounded), // Meaningful Icon for Explore
+            icon: const Icon(
+              Icons.grid_view_rounded,
+            ), // Meaningful Icon for Explore
             label: l10n.explore,
           ),
           BottomNavigationBarItem(

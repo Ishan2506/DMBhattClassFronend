@@ -3,24 +3,19 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/database_helper.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/mcq_Detail.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/edit_profile_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/add_account_screen.dart';
-import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
-import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
@@ -286,7 +281,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String email = "";
   String parentMobile = "";
   String profilePic = "";
-  String dob = "";
   String? _photoPath;
 
   List<dynamic> _examResults = [];
@@ -349,18 +343,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             parentMobile =
                 profile['parentPhone'] ??
                 (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
-          }
-
-          final rawDob = user['dob'];
-          if (rawDob != null && rawDob.toString().isNotEmpty) {
-            try {
-              final parsedDate = DateTime.parse(rawDob.toString());
-              dob = DateFormat('dd/MM/yyyy').format(parsedDate);
-            } catch (e) {
-              dob = rawDob.toString();
-            }
-          } else {
-            dob = "";
           }
 
           // Update saved accounts list with latest info
@@ -800,6 +782,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                         : Colors.grey,
                                     isOnline: exam['isOnline'] ?? false,
                                     l10n: l10n,
+                                    onTap: () {
+                                      if (exam['isOnline'] == true) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const McqDetailScreen(),
+                                          ),
+                                        );
+                                      }
+                                    },
                                   ),
                                 ),
                               ),
@@ -852,8 +845,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
                   const SizedBox(height: 40),
 
+                  /*
                   // 7. Manage Subscription
-                  if (!kIsWeb && Platform.isIOS)
+                  if (Platform.isIOS)
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -886,6 +880,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         ),
                       ),
                     ),
+                  */
 
                   // 8. Sign Out
                   Padding(
@@ -1202,76 +1197,81 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     required String marks,
     required Color color,
     bool isOnline = false,
+    required VoidCallback onTap,
     required AppLocalizations l10n,
   }) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              shape: BoxShape.circle,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(
-              Icons.auto_stories_rounded,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  isOnline ? l10n.onlineExam : l10n.offlineExam,
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              marks,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: color,
+          ],
+          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.auto_stories_rounded,
+                color: theme.colorScheme.primary,
+                size: 20,
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    isOnline ? l10n.onlineExam : l10n.offlineExam,
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                marks,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: color,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1289,6 +1289,7 @@ class _ManageSubscriptionScreenState extends State<_ManageSubscriptionScreen> {
   CustomerInfo? _customerInfo;
   bool _isLoading = true;
   bool _isRestoring = false;
+  bool _isChangingPlan = false;
 
   @override
   void initState() {
@@ -1630,15 +1631,201 @@ class _ManageSubscriptionScreenState extends State<_ManageSubscriptionScreen> {
   }
 
   Future<void> _openPaywall() async {
-    final result = await RevenueCatService.instance.presentPaywallWithResult(
-      offeringId: RevenueCatService.defaultOfferingId,
-      context: context,
-    );
+    if (_isChangingPlan) return;
+
+    setState(() => _isChangingPlan = true);
+    final planInfo = await _loadNextPlanInfo();
+    if (!mounted) return;
+    setState(() => _isChangingPlan = false);
+
+    if (planInfo == null) return;
+
+    final result = await RevenueCatService.instance
+        .presentStandardPaywallWithResult(
+          context: context,
+          standard: planInfo.nextStandard,
+        );
+
+    if (result.isSuccess && mounted) {
+      await _verifyAppleUpgrade(result, planInfo);
+    }
+
     final info = await RevenueCatService.instance.getCustomerInfo();
     if (!mounted) return;
     setState(() => _customerInfo = info);
     if (result.shouldShowAlert) {
       await _showStatusDialog(title: result.title, message: result.message);
+    }
+  }
+
+  Future<_ChangePlanInfo?> _loadNextPlanInfo() async {
+    String? currentStandard;
+    String? medium;
+    String? stream;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      currentStandard = _standardNumberFrom(prefs.getString("std"));
+      medium = _cleanProfileValue(prefs.getString("medium"));
+      stream = _cleanProfileValue(prefs.getString("stream"));
+
+      final response = await ApiService.getProfile(forceRefresh: true);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final profile = data['profile'];
+        if (profile != null) {
+          currentStandard =
+              _standardNumberFrom(profile['std']) ?? currentStandard;
+          medium = _cleanProfileValue(profile['medium']) ?? medium;
+          stream = _cleanProfileValue(profile['stream']) ?? stream;
+
+          if (currentStandard != null) {
+            await prefs.setString('std', currentStandard);
+          }
+          if (medium != null) {
+            await prefs.setString('medium', medium);
+          }
+          if (stream != null) {
+            await prefs.setString('stream', stream);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error loading profile for plan change: $e");
+    }
+
+    final current = int.tryParse(currentStandard ?? "");
+    if (current == null) {
+      await _showStatusDialog(
+        title: "Change Plans",
+        message:
+            "We could not identify your current standard. Please refresh your profile and try again.",
+      );
+      return null;
+    }
+
+    if (current >= 12) {
+      await _showStatusDialog(
+        title: "Change Plans",
+        message:
+            "You are already on the highest available standard. No higher plan is available.",
+      );
+      return null;
+    }
+
+    if (medium == null) {
+      await _showStatusDialog(
+        title: "Change Plans",
+        message:
+            "We could not identify your current medium. Please update your profile and try again.",
+      );
+      return null;
+    }
+
+    final nextStandard = (current + 1).toString();
+    return _ChangePlanInfo(
+      nextStandard: nextStandard,
+      medium: medium,
+      stream: stream,
+      amount: _amountForStandard(nextStandard),
+    );
+  }
+
+  Future<void> _verifyAppleUpgrade(
+    RevenueCatPurchaseResult result,
+    _ChangePlanInfo planInfo,
+  ) async {
+    final receipt = result.receipt;
+    final productId = result.productId;
+    final transactionId = result.transactionId;
+    if (receipt == null ||
+        receipt.isEmpty ||
+        productId == null ||
+        productId.isEmpty ||
+        transactionId == null ||
+        transactionId.isEmpty) {
+      await _showStatusDialog(
+        title: "Verification Failed",
+        message:
+            "Apple purchase completed, but verification details are missing. Please try again.",
+      );
+      return;
+    }
+
+    try {
+      CustomLoader.show(context);
+      final response = await ApiService.verifyAppleUpgrade(
+        receipt: receipt,
+        productId: productId,
+        transactionId: transactionId,
+        newStandard: planInfo.nextStandard,
+        medium: planInfo.medium,
+        stream: planInfo.stream,
+        amount: result.amountPaid ?? planInfo.amount,
+      );
+
+      if (!mounted) return;
+      CustomLoader.hide(context);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("std", planInfo.nextStandard);
+        await prefs.setString("medium", planInfo.medium);
+        if (planInfo.stream != null) {
+          await prefs.setString("stream", planInfo.stream!);
+        }
+        await _loadCustomerInfo();
+        await _showStatusDialog(
+          title: "Plan Changed",
+          message:
+              "Your plan has been changed to Standard ${planInfo.nextStandard}.",
+        );
+      } else {
+        await _showStatusDialog(
+          title: "Verification Failed",
+          message: ApiService.getErrorMessage(response.body),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      CustomLoader.hide(context);
+      await _showStatusDialog(
+        title: "Verification Failed",
+        message: "Error verifying Apple upgrade: $e",
+      );
+    }
+  }
+
+  String? _standardNumberFrom(dynamic value) {
+    if (value == null) return null;
+    return RegExp(r"(\d+)").firstMatch(value.toString())?.group(1);
+  }
+
+  String? _cleanProfileValue(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isEmpty || text.toLowerCase() == "none") return null;
+    return text;
+  }
+
+  double _amountForStandard(String standard) {
+    switch (standard) {
+      case "6":
+        return 300;
+      case "7":
+        return 400;
+      case "8":
+        return 500;
+      case "9":
+        return 600;
+      case "10":
+        return 700;
+      case "11":
+        return 800;
+      case "12":
+        return 900;
+      default:
+        return 0;
     }
   }
 
@@ -1699,4 +1886,18 @@ class _ManageSubscriptionScreenState extends State<_ManageSubscriptionScreen> {
     final local = parsed.toLocal();
     return "${local.day} ${months[local.month - 1]} ${local.year}";
   }
+}
+
+class _ChangePlanInfo {
+  const _ChangePlanInfo({
+    required this.nextStandard,
+    required this.medium,
+    required this.amount,
+    this.stream,
+  });
+
+  final String nextStandard;
+  final String medium;
+  final String? stream;
+  final double amount;
 }

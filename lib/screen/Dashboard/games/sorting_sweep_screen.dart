@@ -370,7 +370,7 @@ class _SortableItem {
   final int value;
   final double x;
   final double y;
-  bool tapped;
+  bool tapped = false;
 
   _SortableItem({
     required this.id,
@@ -378,6 +378,5 @@ class _SortableItem {
     required this.value,
     required this.x,
     required this.y,
-    this.tapped = false,
   });
 }

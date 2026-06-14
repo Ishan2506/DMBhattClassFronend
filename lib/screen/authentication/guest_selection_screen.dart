@@ -17,19 +17,13 @@ class _GuestSelectionScreenState extends State<GuestSelectionScreen> {
   String? _selectedStandard;
   String? _selectedMedium;
   String? _selectedBoard;
-  String? _selectedStream;
 
   final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _boards = ["GSEB", "CBSE"];
-  final List<String> _streams = ["Science", "Commerce"];
 
   Future<void> _handleContinue() async {
-    final hasStream = _selectedStandard == "11" || _selectedStandard == "12";
-    if (_selectedStandard == null || 
-        _selectedMedium == null || 
-        _selectedBoard == null ||
-        (hasStream && _selectedStream == null)) {
+    if (_selectedStandard == null || _selectedMedium == null || _selectedBoard == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select all fields")),
       );
@@ -44,7 +38,7 @@ class _GuestSelectionScreenState extends State<GuestSelectionScreen> {
     await prefs.setString('std', _selectedStandard!);
     await prefs.setString('medium', _selectedMedium!);
     await prefs.setString('board', _selectedBoard!);
-    await prefs.setString('stream', hasStream ? _selectedStream! : 'None');
+    await prefs.setString('stream', 'None');
     
     // Also set guest display name if needed
     await prefs.setString('user_name', 'Guest User');
@@ -112,26 +106,10 @@ class _GuestSelectionScreenState extends State<GuestSelectionScreen> {
               title: "Select Standard",
               items: _standards,
               value: _selectedStandard,
-              onSelected: (val) => setState(() {
-                _selectedStandard = val;
-                if (val != "11" && val != "12") {
-                  _selectedStream = null;
-                }
-              }),
+              onSelected: (val) => setState(() => _selectedStandard = val),
               icon: Icons.school_outlined,
               colorScheme: colorScheme,
             ),
-            if (_selectedStandard == "11" || _selectedStandard == "12") ...[
-              const SizedBox(height: 24),
-              _buildSelectionGroup(
-                title: "Select Stream",
-                items: _streams,
-                value: _selectedStream,
-                onSelected: (val) => setState(() => _selectedStream = val),
-                icon: Icons.science_outlined,
-                colorScheme: colorScheme,
-              ),
-            ],
             const SizedBox(height: 24),
 
             // Medium

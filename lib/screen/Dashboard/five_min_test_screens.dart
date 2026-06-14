@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
-import 'package:dm_bhatt_tutions/constant/string_constant.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
-import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
@@ -13,10 +11,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/exam_result_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
-import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'upgrade_plan_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // --- Screen 1: Selection ---
 class FiveMinTestSelectionScreen extends StatefulWidget {
@@ -145,9 +140,7 @@ class _FiveMinTestSelectionScreenState
               onPressed: () {
                 Navigator.pop(context);
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const UpgradePlanScreen())).then((_) {
-                  _fetchTests();
-                });
+                    MaterialPageRoute(builder: (_) => UpgradePlanScreen()));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
@@ -383,18 +376,14 @@ class _FiveMinTestSelectionScreenState
                   const Icon(Icons.tag,
                       size: 14, color: Colors.grey),
                   const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      "$subject  •  Unit $unit",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: isDark
-                            ? Colors.white70
-                            : Colors.grey.shade700,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                  Text(
+                    "$subject  •  Unit $unit",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? Colors.white70
+                          : Colors.grey.shade700,
                     ),
                   ),
                 ],
@@ -971,61 +960,53 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
     for (int i = 0; i < _questions.length; i++) {
       final q = _questions[i];
 
-      // Build optionsRaw and answers list
-      List<Map<String, dynamic>> optionsRaw = [];
+      // Construct options list based on type
       List<String> options = [];
-
       if (q['type']?.toString().trim().toUpperCase() == 'MCQ' ||
           q['type'] == null) {
-        if ((q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) ||
-            (q['optionAImage'] != null && q['optionAImage'].toString().trim().isNotEmpty)) {
-          optionsRaw.add({'key': 'A', 'text': q['optionA']?.toString().trim() ?? '', 'image': q['optionAImage']});
-          options.add(q['optionA']?.toString().trim() ?? '');
+        if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) {
+          options.add(q['optionA'].toString().trim());
         }
-        if ((q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) ||
-            (q['optionBImage'] != null && q['optionBImage'].toString().trim().isNotEmpty)) {
-          optionsRaw.add({'key': 'B', 'text': q['optionB']?.toString().trim() ?? '', 'image': q['optionBImage']});
-          options.add(q['optionB']?.toString().trim() ?? '');
+        if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) {
+          options.add(q['optionB'].toString().trim());
         }
-        if ((q['optionC'] != null && q['optionC'].toString().trim().isNotEmpty) ||
-            (q['optionCImage'] != null && q['optionCImage'].toString().trim().isNotEmpty)) {
-          optionsRaw.add({'key': 'C', 'text': q['optionC']?.toString().trim() ?? '', 'image': q['optionCImage']});
-          options.add(q['optionC']?.toString().trim() ?? '');
+        if (q['optionC'] != null && q['optionC'].toString().trim().isNotEmpty) {
+          options.add(q['optionC'].toString().trim());
         }
-        if ((q['optionD'] != null && q['optionD'].toString().trim().isNotEmpty) ||
-            (q['optionDImage'] != null && q['optionDImage'].toString().trim().isNotEmpty)) {
-          optionsRaw.add({'key': 'D', 'text': q['optionD']?.toString().trim() ?? '', 'image': q['optionDImage']});
-          options.add(q['optionD']?.toString().trim() ?? '');
+        if (q['optionD'] != null && q['optionD'].toString().trim().isNotEmpty) {
+          options.add(q['optionD'].toString().trim());
         }
       } else if (q['type']?.toString().trim().toUpperCase() == 'TRUE/FALSE' ||
           q['type']?.toString().trim().toUpperCase() == 'TF' ||
           q['type']?.toString().trim().toUpperCase() == 'T/F' ||
           q['type'] == 'True/False') {
-        final valA = (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) ? q['optionA'].toString().trim() : "True";
-        final valB = (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) ? q['optionB'].toString().trim() : "False";
-        optionsRaw.add({'key': 'A', 'text': valA, 'image': q['optionAImage']});
-        optionsRaw.add({'key': 'B', 'text': valB, 'image': q['optionBImage']});
-        options.add(valA);
-        options.add(valB);
+        options.add(
+          (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty)
+              ? q['optionA'].toString().trim()
+              : "True",
+        );
+        options.add(
+          (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty)
+              ? q['optionB'].toString().trim()
+              : "False",
+        );
       } else {
-        if ((q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) ||
-            (q['optionAImage'] != null && q['optionAImage'].toString().trim().isNotEmpty)) {
-          optionsRaw.add({'key': 'A', 'text': q['optionA']?.toString().trim() ?? '', 'image': q['optionAImage']});
-          options.add(q['optionA']?.toString().trim() ?? '');
+        // Fallback for other types or implicit TF
+        if (q['optionA'] != null && q['optionA'].toString().trim().isNotEmpty) {
+          options.add(q['optionA'].toString().trim());
         }
-        if ((q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) ||
-            (q['optionBImage'] != null && q['optionBImage'].toString().trim().isNotEmpty)) {
-          optionsRaw.add({'key': 'B', 'text': q['optionB']?.toString().trim() ?? '', 'image': q['optionBImage']});
-          options.add(q['optionB']?.toString().trim() ?? '');
+        if (q['optionB'] != null && q['optionB'].toString().trim().isNotEmpty) {
+          options.add(q['optionB'].toString().trim());
         }
       }
 
-      final userAnswerKey = _selectedAnswers[i]; // This is now option key, e.g., 'A'
-      final correctAnswerKey = q['correctAnswer']?.toString() ?? ''; // 'A'
+      final userAnswer = _selectedAnswers[i];
+      final correctAnswer = q['correctAnswer'];
 
-      if (userAnswerKey == null || userAnswerKey.trim().isEmpty) {
+      if (userAnswer == null || userAnswer.trim().isEmpty) {
         skipped++;
-      } else if (userAnswerKey.trim().toUpperCase() == correctAnswerKey.trim().toUpperCase()) {
+      } else if (userAnswer.trim().toLowerCase() ==
+          correctAnswer.toString().trim().toLowerCase()) {
         correct++;
       } else {
         wrong++;
@@ -1034,9 +1015,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
       mappedQuestions.add({
         'question': q['question'] ?? '',
         'answers': options,
-        'correctAnswer': correctAnswerKey,
-        'correctAnswerKey': correctAnswerKey,
-        'optionsRaw': optionsRaw,
+        'correctAnswer': correctAnswer ?? '',
       });
     }
 
@@ -1107,52 +1086,50 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
     final selectedOption = _selectedAnswers[_currentQuestionIndex];
 
     // Build options list dynamically
-    List<Map<String, dynamic>> optionsList = [];
+    List<String> options = [];
     if (question['type']?.toString().trim().toUpperCase() == 'MCQ' ||
         question['type'] == null) {
-      if ((question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty) ||
-          (question['optionAImage'] != null && question['optionAImage'].toString().trim().isNotEmpty)) {
-        optionsList.add({'key': 'A', 'text': question['optionA']?.toString().trim() ?? '', 'image': question['optionAImage']});
+      if (question['optionA'] != null &&
+          question['optionA'].toString().trim().isNotEmpty) {
+        options.add(question['optionA'].toString().trim());
       }
-      if ((question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty) ||
-          (question['optionBImage'] != null && question['optionBImage'].toString().trim().isNotEmpty)) {
-        optionsList.add({'key': 'B', 'text': question['optionB']?.toString().trim() ?? '', 'image': question['optionBImage']});
+      if (question['optionB'] != null &&
+          question['optionB'].toString().trim().isNotEmpty) {
+        options.add(question['optionB'].toString().trim());
       }
-      if ((question['optionC'] != null && question['optionC'].toString().trim().isNotEmpty) ||
-          (question['optionCImage'] != null && question['optionCImage'].toString().trim().isNotEmpty)) {
-        optionsList.add({'key': 'C', 'text': question['optionC']?.toString().trim() ?? '', 'image': question['optionCImage']});
+      if (question['optionC'] != null &&
+          question['optionC'].toString().trim().isNotEmpty) {
+        options.add(question['optionC'].toString().trim());
       }
-      if ((question['optionD'] != null && question['optionD'].toString().trim().isNotEmpty) ||
-          (question['optionDImage'] != null && question['optionDImage'].toString().trim().isNotEmpty)) {
-        optionsList.add({'key': 'D', 'text': question['optionD']?.toString().trim() ?? '', 'image': question['optionDImage']});
+      if (question['optionD'] != null &&
+          question['optionD'].toString().trim().isNotEmpty) {
+        options.add(question['optionD'].toString().trim());
       }
-    } else if (question['type']?.toString().trim().toUpperCase() == 'TRUE/FALSE' ||
+    } else if (question['type']?.toString().trim().toUpperCase() ==
+            'TRUE/FALSE' ||
         question['type']?.toString().trim().toUpperCase() == 'TF' ||
-        question['type']?.toString().trim().toUpperCase() == 'T/F' ||
-        question['type'] == 'True/False') {
-      optionsList.add({
-        'key': 'A',
-        'text': (question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty)
+        question['type']?.toString().trim().toUpperCase() == 'T/F') {
+      options.add(
+        (question['optionA'] != null &&
+                question['optionA'].toString().trim().isNotEmpty)
             ? question['optionA'].toString().trim()
             : "True",
-        'image': question['optionAImage']
-      });
-      optionsList.add({
-        'key': 'B',
-        'text': (question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty)
+      );
+      options.add(
+        (question['optionB'] != null &&
+                question['optionB'].toString().trim().isNotEmpty)
             ? question['optionB'].toString().trim()
             : "False",
-        'image': question['optionBImage']
-      });
+      );
     } else {
       // Fallback
-      if ((question['optionA'] != null && question['optionA'].toString().trim().isNotEmpty) ||
-          (question['optionAImage'] != null && question['optionAImage'].toString().trim().isNotEmpty)) {
-        optionsList.add({'key': 'A', 'text': question['optionA']?.toString().trim() ?? '', 'image': question['optionAImage']});
+      if (question['optionA'] != null &&
+          question['optionA'].toString().trim().isNotEmpty) {
+        options.add(question['optionA'].toString().trim());
       }
-      if ((question['optionB'] != null && question['optionB'].toString().trim().isNotEmpty) ||
-          (question['optionBImage'] != null && question['optionBImage'].toString().trim().isNotEmpty)) {
-        optionsList.add({'key': 'B', 'text': question['optionB']?.toString().trim() ?? '', 'image': question['optionBImage']});
+      if (question['optionB'] != null &&
+          question['optionB'].toString().trim().isNotEmpty) {
+        options.add(question['optionB'].toString().trim());
       }
     }
 
@@ -1180,251 +1157,246 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
           ),
         ),
         body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Question Count Badge
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withOpacity(
+                        0.3,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Text(
+                      "Question ${_currentQuestionIndex + 1} of ${_questions.length}",
+                      style: GoogleFonts.poppins(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Question Card
+                Container(
                   padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withOpacity(0.8),
+                      ], // Consistent with App Theme
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Question Count Badge
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer.withOpacity(
-                              0.3,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: theme.colorScheme.primary.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Text(
-                            "Question ${_currentQuestionIndex + 1} of ${_questions.length}",
-                            style: GoogleFonts.poppins(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                      if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              ApiService.getFileUrl(question['questionImage']),
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
+                      Text(
+                        question['question'] ?? "",
+                        style: GoogleFonts.poppins(
+                          fontSize: 18, // Adjusted font size
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
-
-                      // Question Card
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary,
-                              theme.colorScheme.primary.withOpacity(0.8),
-                            ], // Consistent with App Theme
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 16.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    ApiService.getFileUrl(question['questionImage']),
-                                    height: 150,
-                                    width: double.infinity,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                            Text(
-                              question['question'] ?? "",
-                              style: GoogleFonts.poppins(
-                                fontSize: 18, // Adjusted font size
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                                height: 1.4,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24), // Reduced spacing
-
-                      if (question['type'] == 'Fill in the Blanks')
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Your Answer:",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller:
-                                    _textControllers[_currentQuestionIndex],
-                                onChanged: (val) {
-                                  _selectedAnswers[_currentQuestionIndex] = val;
-                                },
-                                decoration: InputDecoration(
-                                  hintText: "Type your answer here...",
-                                  hintStyle: GoogleFonts.poppins(
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: theme.colorScheme.primary,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      else
-                        Column(
-                          children: List.generate(optionsList.length, (index) {
-                            final opt = optionsList[index];
-                            final optionKey = opt['key'] as String;
-                            final optionText = opt['text'] as String;
-                            final optionImage = opt['image'];
-                            final isSelected = selectedOption == optionKey;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0),
-                              child: InkWell(
-                                onTap: () => _selectAnswer(optionKey),
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? theme.colorScheme.primary.withOpacity(0.1)
-                                        : Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? theme.colorScheme.primary
-                                          : Colors.grey.shade300,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 28,
-                                        height: 28,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: isSelected
-                                              ? theme.colorScheme.primary
-                                              : Colors.transparent,
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? theme.colorScheme.primary
-                                                : Colors.grey.shade400,
-                                          ),
-                                        ),
-                                        child: isSelected
-                                            ? const Icon(
-                                                Icons.check,
-                                                size: 16,
-                                                color: Colors.white,
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              optionText,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 16,
-                                                color: isSelected
-                                                    ? theme.colorScheme.primary
-                                                    : Colors.black87,
-                                                fontWeight: isSelected
-                                                    ? FontWeight.w600
-                                                    : FontWeight.normal,
-                                              ),
-                                            ),
-                                            if (optionImage != null && optionImage.toString().isNotEmpty && optionImage.toString() != "null")
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 8.0),
-                                                child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  child: Image.network(
-                                                    ApiService.getFileUrl(optionImage),
-                                                    height: 100,
-                                                    fit: BoxFit.contain,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
                     ],
                   ),
                 ),
-              ),
+                const SizedBox(height: 24), // Reduced spacing
 
-              // Navigation Buttons
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
+                if (question['type'] == 'Fill in the Blanks')
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Your Answer:",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller:
+                                  _textControllers[_currentQuestionIndex],
+                              onChanged: (val) {
+                                _selectedAnswers[_currentQuestionIndex] = val;
+                              },
+                              decoration: InputDecoration(
+                                hintText: "Type your answer here...",
+                                hintStyle: GoogleFonts.poppins(
+                                  color: Colors.grey.shade400,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                              ),
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: options.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final option = options[index];
+                        final isSelected = selectedOption == option;
+
+                        return InkWell(
+                          onTap: () => _selectAnswer(option),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? theme.colorScheme.primary.withOpacity(0.1)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : Colors.grey.shade300,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isSelected
+                                        ? theme.colorScheme.primary
+                                        : Colors.transparent,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? theme.colorScheme.primary
+                                          : Colors.grey.shade400,
+                                    ),
+                                  ),
+                                  child: isSelected
+                                      ? const Icon(
+                                          Icons.check,
+                                          size: 16,
+                                          color: Colors.white,
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        option,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          color: isSelected
+                                              ? theme.colorScheme.primary
+                                              : Colors.black87,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                      if (question['option${String.fromCharCode(65 + index)}Image'] != null && question['option${String.fromCharCode(65 + index)}Image'].toString().isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Image.network(
+                                              ApiService.getFileUrl(question['option${String.fromCharCode(65 + index)}Image']),
+                                              height: 100,
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                const SizedBox(height: 16),
+
+                // Navigation Buttons
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (_currentQuestionIndex > 0)
@@ -1463,8 +1435,8 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

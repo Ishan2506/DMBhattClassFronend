@@ -9,9 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'dart:convert';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

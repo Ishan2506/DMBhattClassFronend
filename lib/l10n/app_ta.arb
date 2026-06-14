@@ -300,8 +300,5 @@
   "logicGridDeductions": "Logic Grid Deductions",
   "logicGridDeductionsDesc": "Read text clues to solve a logic puzzle.",
   "grammarSorter": "Grammar Sorter",
-  "grammarSorterDesc": "Sort falling words into the correct grammatical bucket.",
-  "dateOfBirth": "பிறந்த தேதி",
-  "selectDateOfBirth": "பிறந்த தேதியைத் தேர்ந்தெடுக்கவும்",
-  "pleaseSelectDob": "பிறந்த தேதியைத் தேர்ந்தெடுக்கவும்"
+  "grammarSorterDesc": "Sort falling words into the correct grammatical bucket."
 }
