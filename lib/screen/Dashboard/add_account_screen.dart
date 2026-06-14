@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -80,6 +81,11 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                  board = profile['board'] ?? "";
                  stream = profile['stream'] ?? "";
                  profilePic = profile['profile_pic'] ?? (user != null ? user['photoPath'] : "") ?? "";
+
+                 // Subscribe to standard-specific notification topic
+                 if (std.isNotEmpty) {
+                   NotificationService.instance.subscribeToStandardTopic(std);
+                 }
                }
              }
           } catch (e) {

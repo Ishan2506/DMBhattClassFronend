@@ -98,4 +98,19 @@ class NotificationService {
       }
     });
   }
+
+  Future<void> subscribeToStandardTopic(String standard) async {
+    if (standard.isEmpty || standard == 'N/A') {
+      if (kDebugMode) print('Standard is not available, skipping topic subscription');
+      return;
+    }
+
+    final topic = 'std_$standard';
+    try {
+      await _fcm.subscribeToTopic(topic);
+      if (kDebugMode) print('Subscribed to topic: $topic');
+    } catch (e) {
+      if (kDebugMode) print('Error subscribing to topic $topic: $e');
+    }
+  }
 }

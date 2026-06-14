@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -197,6 +198,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                   userData: jsonEncode(user),
                                   profilePic: user['photoPath'] ?? "",
                                 );
+
+                                // Subscribe to standard-specific notification topic
+                                try {
+                                  final profileResponse = await ApiService.getProfile();
+                                  if (profileResponse.statusCode == 200) {
+                                    final profileData = jsonDecode(profileResponse.body);
+                                    final profile = profileData['profile'];
+                                    if (profile != null && profile['std'] != null) {
+                                      final std = profile['std'].toString();
+                                      if (std.isNotEmpty) {
+                                        NotificationService.instance.subscribeToStandardTopic(std);
+                                      }
+                                    }
+                                  }
+                                } catch (e) {
+                                  // Log error but don't block login
+                                  debugPrint("Error subscribing to notification topic: $e");
+                                }
 
                                  CustomToast.showSuccess(context, "Login Successful");
                                 Navigator.pushAndRemoveUntil(

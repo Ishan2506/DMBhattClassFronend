@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/database_helper.dart';
+import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
@@ -343,6 +344,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             parentMobile =
                 profile['parentPhone'] ??
                 (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
+
+            // Subscribe to standard-specific notification topic
+            final std = profile['std'];
+            if (std != null && std.toString().isNotEmpty) {
+              NotificationService.instance.subscribeToStandardTopic(std.toString());
+            }
           }
 
           // Update saved accounts list with latest info
