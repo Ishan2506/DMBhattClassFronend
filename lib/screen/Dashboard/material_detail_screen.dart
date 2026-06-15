@@ -35,19 +35,17 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   bool _previewUsed = false;
 
   bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  bool get _isMobile => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
 
   @override
   void initState() {
     super.initState();
-    if (_isIOS) {
-      // RevenueCat is initialized in main.dart
-    } else {
-      _razorpayHelper = RazorpayHelper(
-        context: context,
-        onSuccess: _handlePaymentSuccess,
-        onFailure: _handlePaymentFailure,
-      );
-    }
+    // All mobile platforms (Android & iOS) use Razorpay for explore products
+    _razorpayHelper = RazorpayHelper(
+      context: context,
+      onSuccess: _handlePaymentSuccess,
+      onFailure: _handlePaymentFailure,
+    );
     _checkPreviewStatus();
   }
 
@@ -132,86 +130,31 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
     if (!await GuestUtils.canGuestPurchase(context)) return;
     setState(() => _isProcessing = true);
 
-    if (_isIOS) {
-      // iOS: Use RevenueCat Paywall for material purchase
-      // You can create a specific offering 'material_purchase' or use default
-      final success = await RevenueCatService.instance.presentPaywall(
-        offeringId: 'material_purchase',
-      );
-      if (success && mounted) {
-        CustomToast.showSuccess(context, "Material purchased successfully!");
-        // We'll call the verification/completion logic
-        _verifyRevenueCatPurchase();
-      }
-    } else {
-      // Android: Use Razorpay
-      try {
-        final orderResponse = await ApiService.createProductOrder(
-          widget.product['id'],
-          (widget.product['price'] as num).toDouble(),
-        );
-
-        if (!mounted) return;
-
-        if (orderResponse.statusCode == 200) {
-          final orderData = jsonDecode(orderResponse.body);
-          final String orderId = orderData['id'];
-
-          _razorpayHelper!.openCheckout(
-            amount: (widget.product['price'] as num).toDouble(),
-            name: "D.M. Bhatt classes",
-            description: widget.product['name'],
-            contact: '',
-            email: '',
-            orderId: orderId,
-          );
-        } else {
-          setState(() => _isProcessing = false);
-          final errorMsg = ApiService.getErrorMessage(orderResponse.body);
-          CustomToast.showError(context, "Failed: $errorMsg");
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _isProcessing = false);
-          CustomToast.showError(context, "Error: $e");
-        }
-      }
-    }
-  }
-
-  Future<void> _verifyRevenueCatPurchase() async {
+    // Android & iOS: Both use Razorpay for product purchases
     try {
-      setState(() => _isProcessing = true);
-      // For materials, we just confirm the entitlement is active
-      if (RevenueCatService.instance.isProActive) {
-        final DateTime now = DateTime.now();
-        final String formattedDate = "${now.day}/${now.month}/${now.year}";
+      final orderResponse = await ApiService.createProductOrder(
+        widget.product['id'],
+        (widget.product['price'] as num).toDouble(),
+      );
 
-        final transactionDetails = {
-          "title": widget.product['name'] ?? "Material Purchase",
-          "standard": widget.product['standard'] ?? widget.product['standardId']?['name'] ?? "N/A",
-          "medium": widget.product['medium'] ?? widget.product['mediumId']?['name'] ?? "N/A",
-          "category": widget.product['category'] ?? "N/A",
-          "subject": widget.product['subject'] ?? "N/A",
-          "date": formattedDate,
-          "transactionId": "REVENUE_CAT",
-          "amountRaw": widget.product['price'] ?? 0,
-        };
+      if (!mounted) return;
 
-        if (!mounted) return;
-        setState(() => _isProcessing = false);
+      if (orderResponse.statusCode == 200) {
+        final orderData = jsonDecode(orderResponse.body);
+        final String orderId = orderData['id'];
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => StudentPaymentConfirmationScreen(
-              transactionDetails: transactionDetails,
-            ),
-          ),
+        _razorpayHelper!.openCheckout(
+          amount: (widget.product['price'] as num).toDouble(),
+          name: "D.M. Bhatt classes",
+          description: widget.product['name'],
+          contact: '',
+          email: '',
+          orderId: orderId,
         );
       } else {
         setState(() => _isProcessing = false);
-        CustomToast.showError(context, "Purchase verification failed or not active.");
+        final errorMsg = ApiService.getErrorMessage(orderResponse.body);
+        CustomToast.showError(context, "Failed: $errorMsg");
       }
     } catch (e) {
       if (mounted) {
@@ -220,6 +163,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
