@@ -105,7 +105,7 @@ class SocialMediaAdDialog extends StatelessWidget {
     double screenWidth,
     String title,
     String subtitle,
-    IconData icon,
+    Object icon,
     List<Color> gradientColors,
     String urlString,
   ) {
@@ -144,11 +144,17 @@ class SocialMediaAdDialog extends StatelessWidget {
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: gradientColors.first, // Icon takes primary color of button
-                  size: 24,
-                ),
+                child: icon is FaIconData
+                    ? FaIcon(
+                        icon as FaIconData,
+                        color: gradientColors.first,
+                        size: 24,
+                      )
+                    : Icon(
+                        icon as IconData,
+                        color: gradientColors.first,
+                        size: 24,
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(

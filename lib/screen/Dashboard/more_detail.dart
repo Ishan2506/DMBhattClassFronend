@@ -308,7 +308,7 @@ class _AppInfoScreen extends StatelessWidget {
   }
 
   Widget _buildSocialIcon(BuildContext context,
-      {required IconData icon,
+      {required FaIconData icon,
       required Color color,
       required String url,
       required String label}) {
@@ -1083,7 +1083,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(FontAwesomeIcons.instagram, color: Colors.white, size: 16),
+                const FaIcon(FontAwesomeIcons.instagram, color: Colors.white, size: 16),
                 const SizedBox(width: 8),
                 Text(
                   "Connect",
