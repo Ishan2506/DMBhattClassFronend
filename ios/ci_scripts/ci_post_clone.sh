@@ -29,13 +29,22 @@ flutter pub get
 echo "Precaching Flutter iOS artifacts..."
 flutter precache --ios
 
+# Run a config-only iOS build. This is the step that fully generates the
+# iOS plugin set (Flutter/Generated.xcconfig, the .symlinks/plugins entries,
+# and GeneratedPluginRegistrant) that `pod install` reads from. Without it,
+# `flutter pub get` alone leaves CocoaPods with an incomplete plugin list,
+# which is why pods like connectivity_plus were never installed and the
+# archive failed with "Module 'connectivity_plus' not found".
+echo "Generating iOS build configuration..."
+flutter build ios --config-only --release --no-codesign
+
 echo "Installing CocoaPods"
 if [ -d "ios" ]; then
   cd ios
-  pod install || {
-    echo "Pod install failed, trying with repo update..."
-    pod install --repo-update
-  }
+  # Force a clean pod install so a stale Pods/Podfile.lock can never mask a
+  # newly added plugin.
+  rm -rf Pods Podfile.lock
+  pod install --repo-update
   cd ..
 else
   echo "Error: ios directory not found"
