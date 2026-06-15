@@ -1,12 +1,23 @@
-#!/bin/sh
+#!/bin/bash
+# Xcode Cloud Pre-Xcodebuild Script
+# This runs BEFORE the Xcode build starts
+
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPOSITORY_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-IOS_SCRIPT="$REPOSITORY_ROOT/ios/ci_scripts/ci_pre_xcodebuild.sh"
+echo "=========================================="
+echo "🏗️  Xcode Cloud: Pre-Xcodebuild Phase"
+echo "=========================================="
 
-if [ -f "$IOS_SCRIPT" ]; then
-  sh "$IOS_SCRIPT"
-else
-  echo "No iOS pre-xcodebuild script found at $IOS_SCRIPT"
-fi
+# Set Flutter path
+export PATH="$HOME/flutter/bin:$PATH"
+
+# Navigate to Flutter project
+cd "$CI_WORKSPACE"
+
+echo "📊 Flutter doctor:"
+flutter doctor
+
+echo ""
+echo "=========================================="
+echo "✅ Pre-Xcodebuild Phase Complete"
+echo "=========================================="
