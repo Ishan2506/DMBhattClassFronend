@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_dashboard_widgets.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_selection_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 
@@ -26,6 +27,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     'mainExam': 0,
     'fiveMinTest': 0,
     'oneLinerExam': 0,
+    'trueFalseExam': 0,
   };
   bool _isLoading = true;
 
@@ -50,6 +52,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 'mainExam': data['examCounts']['mainExam'] ?? 0,
                 'fiveMinTest': data['examCounts']['fiveMinTest'] ?? 0,
                 'oneLinerExam': data['examCounts']['oneLinerExam'] ?? 0,
+                'trueFalseExam': data['examCounts']['trueFalseExam'] ?? 0,
               };
               debugPrint("[DEBUG] Home _examCounts: $_examCounts");
             }
@@ -359,8 +362,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.orange.shade700,
-                    Colors.orange.shade400
+                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.7)
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -368,7 +371,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.orange.withOpacity(0.3),
+                    color: colorScheme.primary.withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 8),
                   ),
@@ -405,8 +408,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.orange.shade700,
+                            backgroundColor: colorScheme.surface,
+                            foregroundColor: colorScheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -421,6 +424,83 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     height: 100,
                     width: 90,
                     child: Icon(Icons.mic_external_on, size: 60, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          blankVerticalSpace24,
+
+          // True/False Exam Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.7)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "True/False Exam",
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.045, 
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Test your accuracy quickly!",
+                          style: GoogleFonts.poppins(
+                            fontSize: screenWidth * 0.032,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (!await GuestUtils.canGuestAccessExam(context, 'TRUEFALSE')) return;
+                            if (context.mounted) {
+                              _checkAndNavigate('trueFalseExam', const TrueFalseSelectionScreen());
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.surface,
+                            foregroundColor: colorScheme.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          ),
+                          child: Text("Start Now", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 100,
+                    width: 90,
+                    child: Icon(Icons.check_circle_outline, size: 60, color: Colors.white),
                   ),
                 ],
               ),

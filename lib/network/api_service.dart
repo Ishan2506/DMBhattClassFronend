@@ -988,6 +988,80 @@ class ApiService {
     );
   }
 
+  // --- True/False Exam ---
+  static Future<http.Response> getAllTrueFalseExams({
+    String? std,
+    String? medium,
+    String? subject,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final queryParams = await _getDefaultQueryParams();
+    if (std != null && std.isNotEmpty) queryParams['std'] = std;
+    if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
+    if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
+
+    final uri = Uri.parse(
+      "$baseUrl/truefalseexam/all",
+    ).replace(queryParameters: queryParams);
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
+  }
+
+  static Future<http.Response> getTrueFalseExamById(String examId) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/truefalseexam/$examId");
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
+  }
+
+  static Future<http.Response> submitTrueFalseExamResult({
+    required String examId,
+    required String title,
+    required int obtainedMarks,
+    required int totalMarks,
+    required double accuracy,
+    String? type,
+    int violationCount = 0,
+    List<Map<String, dynamic>>? answers,
+  }) async {
+    final uri = Uri.parse("$baseUrl/truefalseexam/submit");
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({
+          'Content-Type': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+        body: jsonEncode({
+          'examId': examId,
+          'title': title,
+          'obtainedMarks': obtainedMarks,
+          'totalMarks': totalMarks,
+          'accuracy': accuracy,
+          'violationCount': violationCount,
+          if (type != null) 'type': type,
+          if (answers != null) 'answers': answers,
+        }),
+      ),
+    );
+  }
+
   static Future<http.Response> submitFiveMinTestResult({
     required String examId,
     required String title,

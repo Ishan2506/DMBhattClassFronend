@@ -18,6 +18,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 // import 'package:dm_bhatt_tutions/screen/Dashboard/ready_reporting_card_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
 
@@ -707,6 +708,18 @@ class _HistoryMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const OneLinerHistoryScreen()),
+                  );
+                },
+              ),
+              _MoreScreenItem(
+                title: "True/False History",
+                value: "",
+                icon: Icons.check_circle_outline,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const TrueFalseHistoryScreen()),
                   );
                 },
               ),
