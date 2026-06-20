@@ -82,9 +82,12 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                  stream = profile['stream'] ?? "";
                  profilePic = profile['profile_pic'] ?? (user != null ? user['photoPath'] : "") ?? "";
 
-                 // Subscribe to standard-specific notification topic
+                 // Subscribe to user-specific and standard-specific notification topics
+                 if (userId.isNotEmpty) {
+                   await NotificationService.instance.subscribeToUserTopic(userId);
+                 }
                  if (std.isNotEmpty) {
-                   NotificationService.instance.subscribeToStandardTopic(std);
+                   await NotificationService.instance.subscribeToStandardTopic(std);
                  }
                }
              }

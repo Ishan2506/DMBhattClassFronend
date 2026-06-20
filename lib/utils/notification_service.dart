@@ -113,4 +113,19 @@ class NotificationService {
       if (kDebugMode) print('Error subscribing to topic $topic: $e');
     }
   }
+
+  Future<void> subscribeToUserTopic(String userId) async {
+    if (userId.isEmpty) {
+      if (kDebugMode) print('UserId is not available, skipping user topic subscription');
+      return;
+    }
+
+    final topic = 'user_$userId';
+    try {
+      await _fcm.subscribeToTopic(topic);
+      if (kDebugMode) print('Subscribed to user topic: $topic');
+    } catch (e) {
+      if (kDebugMode) print('Error subscribing to user topic $topic: $e');
+    }
+  }
 }

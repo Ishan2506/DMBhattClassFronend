@@ -345,7 +345,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 profile['parentPhone'] ??
                 (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
 
-            // Subscribe to standard-specific notification topic
+            // Subscribe to user-specific and standard-specific notification topics
+            final userId = user['_id'];
+            if (userId != null && userId.toString().isNotEmpty) {
+              NotificationService.instance.subscribeToUserTopic(userId.toString());
+            }
             final std = profile['std'];
             if (std != null && std.toString().isNotEmpty) {
               NotificationService.instance.subscribeToStandardTopic(std.toString());
