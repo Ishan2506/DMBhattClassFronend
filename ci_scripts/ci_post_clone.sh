@@ -51,6 +51,10 @@ rm -f Podfile.lock
 echo "📦 Installing iOS pods with fresh repository..."
 pod install --repo-update
 
+# Resolve Swift Package Dependencies for Xcode Cloud
+echo "📦 Resolving Swift Package dependencies..."
+xcodebuild -resolvePackageDependencies -workspace Runner.xcworkspace -scheme Runner || true
+
 echo ""
 echo "=========================================="
 echo "✅ Post Clone Phase Complete"
