@@ -420,10 +420,13 @@ class ExamPdfViewer extends StatelessWidget {
             )
           ),
           pw.SizedBox(width: 10),
-          pw.Icon(
-            isCorrect ? pw.IconData(0xe5ca) : pw.IconData(0xe5c9),
-            color: isCorrect ? PdfColors.green : PdfColors.red,
-            size: 16,
+          pw.Text(
+            isCorrect ? "CORRECT" : "WRONG",
+            style: pw.TextStyle(
+              color: isCorrect ? PdfColors.green : PdfColors.red,
+              fontSize: 12,
+              fontWeight: pw.FontWeight.bold,
+            )
           ),
         ],
       ),

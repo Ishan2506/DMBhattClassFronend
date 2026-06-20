@@ -127,6 +127,25 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
   Future<void> _startExam(dynamic exam) async {
     if (!await GuestUtils.canGuestAccessExam(context, 'TRUEFALSE')) return;
 
+    if (_isTaken(exam)) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Already Taken"),
+            content: const Text("You have already performed this exam. Students can only take each exam once."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
     if (!_isPaid && _trueFalseCount >= 1) {
       if (!mounted) return;
       final theme = Theme.of(context);
@@ -217,16 +236,6 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
           isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
       appBar: CustomAppBar(
         title: "True/False Exam",
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.white),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const TrueFalseHistoryScreen()),
-            ),
-          ),
-        ],
       ),
       body: _isLoading
           ? const CustomLoader()

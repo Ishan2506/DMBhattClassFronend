@@ -17,8 +17,10 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 // import 'package:dm_bhatt_tutions/screen/Dashboard/ready_reporting_card_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
 
@@ -720,6 +722,18 @@ class _HistoryMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const TrueFalseHistoryScreen()),
+                  );
+                },
+              ),
+              _MoreScreenItem(
+                title: "Match Following History",
+                value: "",
+                icon: Icons.compare_arrows_rounded,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const MatchFollowingHistoryScreen()),
                   );
                 },
               ),

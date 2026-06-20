@@ -1279,4 +1279,51 @@ class ApiService {
     final streamedResponse = await request.send();
     return _handleSession(await http.Response.fromStream(streamedResponse));
   }
+
+  // --- Match Following Exam APIs ---
+
+  static Future<http.Response> getAllMatchFollowingExams() async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/matchfollowingexam/all");
+    return _handleSession(await http.get(uri, headers: _addAuth({
+      'Content-Type': 'application/json',
+    })));
+  }
+
+  static Future<http.Response> getMatchFollowingExamById(String id) async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/matchfollowingexam/$id");
+    return _handleSession(await http.get(uri, headers: _addAuth({
+      'Content-Type': 'application/json',
+    })));
+  }
+
+  static Future<http.Response> submitMatchFollowingExamResult({
+    required String examId,
+    required String title,
+    required int obtainedMarks,
+    required int totalMarks,
+    required num accuracy,
+    required int violationCount,
+    required List<Map<String, dynamic>> answers,
+  }) async {
+    if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/matchfollowingexam/submit");
+
+    return _handleSession(await http.post(
+      uri,
+      headers: _addAuth({
+        'Content-Type': 'application/json',
+      }),
+      body: jsonEncode({
+        "examId": examId,
+        "title": title,
+        "obtainedMarks": obtainedMarks,
+        "totalMarks": totalMarks,
+        "accuracy": accuracy,
+        "violationCount": violationCount,
+        "answers": answers,
+      }),
+    ));
+  }
 }
