@@ -23,6 +23,9 @@ which flutter || (echo "Flutter not found in PATH" && exit 1)
 echo "Flutter version:"
 flutter --version
 
+echo "Disabling Swift Package Manager to avoid Xcode Cloud CI failures"
+flutter config --no-enable-swift-package-manager
+
 echo "Getting dependencies"
 flutter pub get
 
