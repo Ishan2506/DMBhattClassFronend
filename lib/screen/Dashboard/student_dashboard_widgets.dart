@@ -1,5 +1,4 @@
-import 'dart:async';
-import 'package:dm_bhatt_tutions/screen/Dashboard/leaderboard_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
@@ -31,10 +30,10 @@ class QuickAccessCategories extends StatelessWidget {
       "screen": MindMapSelectionScreen(),
     },
     {
-      "title": "Leaderboard",
-      "icon": Icons.leaderboard_rounded,
+      "title": "True/False",
+      "icon": Icons.check_circle_outline_rounded,
       "color": Color(0xFFF5A623),
-      "screen": LeaderboardScreen(),
+      "screen": TrueFalseSelectionScreen(),
     },
   ];
 
