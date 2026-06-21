@@ -414,7 +414,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
           _razorpayHelper!.openCheckout(
             amount: _finalAmount,
-            name: "Standard Upgrade",
+            name: "Padhaku Desk",
             description: "Upgrade to Standard $_selectedStandard",
             contact: '',
             email: '',

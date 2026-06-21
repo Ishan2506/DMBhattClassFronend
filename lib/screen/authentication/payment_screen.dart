@@ -362,7 +362,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
           _razorpayHelper!.openCheckout(
             amount: _finalAmount,
-            name: "Our Learning Platform",
+            name: "Padhaku Desk",
             description: "Standard $_std Membership",
             contact: _phoneNum ?? '',
             email: _email ?? '',
