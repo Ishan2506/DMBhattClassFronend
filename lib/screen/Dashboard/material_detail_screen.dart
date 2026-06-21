@@ -141,7 +141,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
 
         _razorpayHelper!.openCheckout(
           amount: (widget.product['price'] as num).toDouble(),
-          name: "D.M. Bhatt classes",
+          name: "Padhaku Desk",
           description: widget.product['name'],
           contact: '',
           email: '',
