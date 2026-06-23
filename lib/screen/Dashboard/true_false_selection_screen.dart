@@ -22,9 +22,13 @@ class TrueFalseSelectionScreen extends StatefulWidget {
 
 class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
   String? _selectedSubject;
+  String? _selectedUnit;
+  String? _selectedTitle;
 
   List<dynamic> _allExams = [];
   List<String> _subjects = [];
+  List<String> _units = [];
+  List<String> _titles = [];
   List<String> _takenExamIds = [];
   bool _isPaid = false;
   int _trueFalseCount = 0;
@@ -77,6 +81,7 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
                 .map((e) => e['subject'].toString())
                 .toSet()
                 .toList();
+            _updateUnitsAndTitles();
             _isLoading = false;
           });
 
@@ -114,11 +119,42 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
     );
   }
 
+  void _updateUnitsAndTitles() {
+    List<String> units = [];
+    List<String> titles = [];
+
+    final filtered = _selectedSubject == null
+        ? _allExams
+        : _allExams.where((t) => t['subject'].toString() == _selectedSubject).toList();
+
+    units = filtered.map((e) => e['unit'].toString()).toSet().toList();
+
+    final unitFiltered = _selectedUnit == null
+        ? filtered
+        : filtered.where((t) => t['unit'].toString() == _selectedUnit).toList();
+
+    titles = unitFiltered.map((e) => e['title']?.toString() ?? e['unit']?.toString() ?? '').where((t) => t.isNotEmpty).toSet().toList();
+
+    setState(() {
+      _units = units;
+      _titles = titles;
+      if (!_units.contains(_selectedUnit)) _selectedUnit = null;
+      if (!_titles.contains(_selectedTitle)) _selectedTitle = null;
+    });
+  }
+
   List<dynamic> get _filteredExams {
-    if (_selectedSubject == null) return _allExams;
-    return _allExams
-        .where((t) => t['subject'].toString() == _selectedSubject)
-        .toList();
+    var result = _allExams;
+    if (_selectedSubject != null) {
+      result = result.where((t) => t['subject'].toString() == _selectedSubject).toList();
+    }
+    if (_selectedUnit != null) {
+      result = result.where((t) => t['unit'].toString() == _selectedUnit).toList();
+    }
+    if (_selectedTitle != null) {
+      result = result.where((t) => (t['title']?.toString() ?? t['unit']?.toString() ?? '') == _selectedTitle).toList();
+    }
+    return result;
   }
 
   bool _isTaken(dynamic exam) =>
@@ -242,17 +278,54 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
           : Column(
               children: [
                 _buildSubjectFilter(primary, isDark),
-                Expanded(
-                  child: _filteredExams.isEmpty
-                      ? _buildEmpty(isDark)
-                      : ListView.builder(
-                          padding:
-                              const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                          itemCount: _filteredExams.length,
-                          itemBuilder: (_, i) => _buildExamCard(
-                              _filteredExams[i], theme, isDark),
+                const Spacer(),
+                if (_filteredExams.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Container(
+                      width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            primary,
+                            primary.withOpacity(0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primary.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () => _startExam(_filteredExams[0]),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          "START EXAM",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(child: _buildEmpty(isDark)),
               ],
             ),
     );
@@ -261,18 +334,50 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
   Widget _buildSubjectFilter(Color primary, bool isDark) {
     return Container(
       color: isDark ? const Color(0xFF1A2340) : Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      child: CustomDropdown<String>(
-        labelText: "Field (Subject)",
-        hintText: "All Subjects",
-        value: _selectedSubject,
-        items: _subjects,
-        itemLabelBuilder: (String item) => item,
-        onChanged: (val) {
-          setState(() {
-            _selectedSubject = val;
-          });
-        },
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      child: Column(
+        children: [
+          CustomDropdown<String>(
+            labelText: "Subject",
+            hintText: "All Subjects",
+            value: _selectedSubject,
+            items: _subjects,
+            itemLabelBuilder: (String item) => item,
+            onChanged: (val) {
+              setState(() {
+                _selectedSubject = val;
+                _updateUnitsAndTitles();
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          CustomDropdown<String>(
+            labelText: "Unit",
+            hintText: "All Units",
+            value: _selectedUnit,
+            items: _units,
+            itemLabelBuilder: (String item) => item,
+            onChanged: (val) {
+              setState(() {
+                _selectedUnit = val;
+                _updateUnitsAndTitles();
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          CustomDropdown<String>(
+            labelText: "Exam Title",
+            hintText: "All Titles",
+            value: _selectedTitle,
+            items: _titles,
+            itemLabelBuilder: (String item) => item,
+            onChanged: (val) {
+              setState(() {
+                _selectedTitle = val;
+              });
+            },
+          ),
+        ],
       ),
     );
   }
@@ -299,206 +404,4 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
     );
   }
 
-  Widget _buildExamCard(
-      dynamic exam, ThemeData theme, bool isDark) {
-    final taken = _isTaken(exam);
-    final primary = theme.colorScheme.primary;
-    final title = (exam['title']?.toString().trim().isNotEmpty ?? false)
-        ? exam['title'].toString()
-        : (exam['unit']?.toString() ?? 'True/False Exam');
-    final subject = exam['subject']?.toString() ?? '';
-    final unit = exam['unit']?.toString() ?? '';
-    final board = exam['board']?.toString() ?? '';
-    final std = exam['std']?.toString() ??
-        exam['standard']?.toString() ?? '';
-    final medium = exam['medium']?.toString() ?? '';
-    final qCount =
-        (exam['questions'] as List?)?.length ?? 0;
-    final marks = exam['totalMarks']?.toString() ?? '0';
-
-    return GestureDetector(
-      onTap: () => _startExam(exam),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A2340) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: taken
-                ? Colors.green.withOpacity(0.4)
-                : (isDark
-                    ? Colors.white10
-                    : Colors.grey.shade200),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title + Status badge
-            Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(16, 14, 12, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: primary,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: taken
-                          ? Colors.green.withOpacity(0.12)
-                          : primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      taken ? "DONE" : "START",
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color:
-                            taken ? Colors.green : primary,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Subject & Unit
-            Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(16, 6, 16, 0),
-              child: Row(
-                children: [
-                  const Icon(Icons.tag,
-                      size: 14, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    "$subject  •  Unit $unit",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: isDark
-                          ? Colors.white70
-                          : Colors.grey.shade700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Board / Std / Medium chips
-            Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(12, 8, 12, 0),
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  if (board.isNotEmpty) _chip(board, isDark),
-                  if (std.isNotEmpty)
-                    _chip("Std $std", isDark),
-                  if (medium.isNotEmpty)
-                    _chip(medium, isDark),
-                ],
-              ),
-            ),
-
-            // Bottom row: question count + marks + action icon
-            Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(16, 10, 16, 12),
-              child: Row(
-                children: [
-                  Icon(Icons.help_outline,
-                      size: 14,
-                      color: isDark
-                          ? Colors.white38
-                          : Colors.grey.shade400),
-                  const SizedBox(width: 4),
-                  Text(
-                    "$qCount Questions",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: isDark
-                          ? Colors.white38
-                          : Colors.grey.shade400,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(Icons.stars_outlined,
-                      size: 14,
-                      color: isDark
-                          ? Colors.white38
-                          : Colors.grey.shade400),
-                  const SizedBox(width: 4),
-                  Text(
-                    "$marks Marks",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: isDark
-                          ? Colors.white38
-                          : Colors.grey.shade400,
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    taken
-                        ? Icons.check_circle
-                        : Icons.play_circle_outline,
-                    size: 20,
-                    color: taken ? Colors.green : primary,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _chip(String label, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark
-              ? Colors.white12
-              : Colors.grey.shade300,
-        ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.poppins(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: isDark
-              ? Colors.white60
-              : Colors.grey.shade700,
-        ),
-      ),
-    );
-  }
 }

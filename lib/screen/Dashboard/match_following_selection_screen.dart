@@ -20,7 +20,11 @@ class MatchFollowingSelectionScreen extends StatefulWidget {
 class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionScreen> {
   bool _isLoading = true;
   String? _selectedSubject;
+  String? _selectedUnit;
+  String? _selectedTitle;
   List<String> _subjects = [];
+  List<String> _units = [];
+  List<String> _titles = [];
 
   String? _userStandard;
   String? _userBoard;
@@ -110,6 +114,7 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
 
       setState(() {
         _subjects = loadedSubjects;
+        _updateUnitsAndTitles();
         _isLoading = false;
       });
     } catch (e) {
@@ -128,15 +133,58 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
     return match != null ? match.group(1)! : _userStandard!;
   }
 
+  void _updateUnitsAndTitles() {
+    final currentStd = _normalizedUserStd;
+    List<String> units = [];
+    List<String> titles = [];
+
+    var filtered = _allExercises.where((ex) {
+      final String std = ex['std'].toString();
+      return std == currentStd;
+    }).toList();
+
+    if (_selectedSubject != null) {
+      filtered = filtered.where((ex) => ex['subject'] == _selectedSubject).toList();
+    }
+
+    units = filtered.map((e) => e['unit'].toString()).toSet().toList();
+
+    var unitFiltered = filtered;
+    if (_selectedUnit != null) {
+      unitFiltered = filtered.where((ex) => ex['unit'].toString() == _selectedUnit).toList();
+    }
+
+    titles = unitFiltered.map((e) => e['title']?.toString() ?? e['unit']?.toString() ?? '').where((t) => t.isNotEmpty).toSet().toList();
+
+    setState(() {
+      _units = units;
+      _titles = titles;
+      if (!_units.contains(_selectedUnit)) _selectedUnit = null;
+      if (!_titles.contains(_selectedTitle)) _selectedTitle = null;
+    });
+  }
+
   // Get matching exercises filtered by standard and subject
   List<dynamic> get _filteredExercises {
     final currentStd = _normalizedUserStd;
-    return _allExercises.where((ex) {
+    var result = _allExercises.where((ex) {
       final String std = ex['std'].toString();
-      final matchesStd = std == currentStd;
-      final matchesSub = _selectedSubject == null || ex['subject'] == _selectedSubject;
-      return matchesStd && matchesSub;
+      return std == currentStd;
     }).toList();
+
+    if (_selectedSubject != null) {
+      result = result.where((ex) => ex['subject'] == _selectedSubject).toList();
+    }
+
+    if (_selectedUnit != null) {
+      result = result.where((ex) => ex['unit'].toString() == _selectedUnit).toList();
+    }
+
+    if (_selectedTitle != null) {
+      result = result.where((ex) => (ex['title']?.toString() ?? ex['unit']?.toString() ?? '') == _selectedTitle).toList();
+    }
+
+    return result;
   }
 
   String _getTranslation(BuildContext context, String key) {
@@ -215,18 +263,50 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
                 // Dropdown Filter Area
                 Container(
                   color: isDark ? const Color(0xFF1A2340) : Colors.white,
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: CustomDropdown<String>(
-                    labelText: _getTranslation(context, 'subject'),
-                    hintText: _getTranslation(context, 'allSubjects'),
-                    value: _selectedSubject,
-                    items: _subjects,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedSubject = val;
-                      });
-                    },
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                  child: Column(
+                    children: [
+                      CustomDropdown<String>(
+                        labelText: _getTranslation(context, 'subject'),
+                        hintText: _getTranslation(context, 'allSubjects'),
+                        value: _selectedSubject,
+                        items: _subjects,
+                        itemLabelBuilder: (String item) => item,
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedSubject = val;
+                            _updateUnitsAndTitles();
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      CustomDropdown<String>(
+                        labelText: "Unit",
+                        hintText: "All Units",
+                        value: _selectedUnit,
+                        items: _units,
+                        itemLabelBuilder: (String item) => item,
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedUnit = val;
+                            _updateUnitsAndTitles();
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      CustomDropdown<String>(
+                        labelText: "Exercise Title",
+                        hintText: "All Titles",
+                        value: _selectedTitle,
+                        items: _titles,
+                        itemLabelBuilder: (String item) => item,
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedTitle = val;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 // Heading Explanation Banner
@@ -244,19 +324,78 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
                     textAlign: TextAlign.center,
                   ),
                 ),
-                // List of Exercises
-                Expanded(
-                  child: _filteredExercises.isEmpty
-                      ? _buildEmptyState(isDark)
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                          itemCount: _filteredExercises.length,
-                          itemBuilder: (context, index) {
-                            final exercise = _filteredExercises[index];
-                            return _buildExerciseCard(exercise, theme, isDark);
-                          },
+                // Spacer
+                const Spacer(),
+                // Start Button Section
+                if (_filteredExercises.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Container(
+                      width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            primary,
+                            primary.withOpacity(0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primary.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final exercise = _filteredExercises[0];
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MatchFollowingGameScreen(
+                                exerciseId: exercise['_id'] as String,
+                                title: (exercise['title']?.toString().trim().isNotEmpty ?? false)
+                                    ? exercise['title'].toString()
+                                    : (exercise['unit']?.toString() ?? 'Match the Following'),
+                                subject: exercise['subject']?.toString() ?? '',
+                                pairsData: List<Map<String, String>>.from(
+                                  (exercise['pairs'] as List).map(
+                                    (p) => {
+                                      "left": (p['left'] ?? "").toString(),
+                                      "right": (p['right'] ?? "").toString(),
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ).then((_) => _fetchHistory());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          "START EXERCISE",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(child: _buildEmptyState(isDark)),
               ],
             ),
     );
@@ -286,211 +425,4 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
     );
   }
 
-  Widget _buildExerciseCard(dynamic exercise, ThemeData theme, bool isDark) {
-    final taken = _isTaken(exercise);
-    final primary = theme.colorScheme.primary;
-    final title = (exercise['title']?.toString().trim().isNotEmpty ?? false)
-        ? exercise['title'].toString()
-        : (exercise['unit']?.toString() ?? 'Match the Following');
-    final subject = exercise['subject']?.toString() ?? '';
-    final unit = exercise['unit']?.toString() ?? '';
-    final board = exercise['board']?.toString() ?? '';
-    final std = exercise['std']?.toString() ??
-        exercise['standard']?.toString() ?? '';
-    final medium = exercise['medium']?.toString() ?? '';
-    final qCount = (exercise['pairs'] as List?)?.length ?? 0;
-    final marks = exercise['totalMarks']?.toString() ?? '0';
-
-    return GestureDetector(
-      onTap: () {
-        if (_isTaken(exercise)) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text("Already Taken"),
-              content: const Text("You have already performed this exam. Students can only take each exam once."),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("OK"),
-                ),
-              ],
-            ),
-          );
-          return;
-        }
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MatchFollowingGameScreen(
-              exerciseId: exercise['_id'] as String,
-              title: title,
-              subject: subject,
-              pairsData: List<Map<String, String>>.from(
-                (exercise['pairs'] as List).map(
-                  (p) => {
-                    "left": (p['left'] ?? "").toString(),
-                    "right": (p['right'] ?? "").toString(),
-                  },
-                ),
-              ),
-            ),
-          ),
-        ).then((_) => _fetchHistory());
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A2340) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: taken
-                ? Colors.green.withOpacity(0.4)
-                : (isDark ? Colors.white10 : Colors.grey.shade200),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title + Status badge
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 12, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: primary,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: taken
-                          ? Colors.green.withOpacity(0.12)
-                          : primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      taken ? "DONE" : "START",
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: taken ? Colors.green : primary,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Subject & Unit
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-              child: Row(
-                children: [
-                  const Icon(Icons.tag, size: 14, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    "$subject  •  Unit $unit",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white70 : Colors.grey.shade700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Board / Std / Medium chips
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  if (board.isNotEmpty) _chip(board, isDark),
-                  if (std.isNotEmpty) _chip("Std $std", isDark),
-                  if (medium.isNotEmpty) _chip(medium, isDark),
-                ],
-              ),
-            ),
-
-            // Bottom row: question count + marks + action icon
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-              child: Row(
-                children: [
-                  Icon(Icons.help_outline,
-                      size: 14,
-                      color: isDark ? Colors.white38 : Colors.grey.shade400),
-                  const SizedBox(width: 4),
-                  Text(
-                    "$qCount Pairs",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: isDark ? Colors.white38 : Colors.grey.shade400,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(Icons.stars_outlined,
-                      size: 14,
-                      color: isDark ? Colors.white38 : Colors.grey.shade400),
-                  const SizedBox(width: 4),
-                  Text(
-                    "$marks Marks",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: isDark ? Colors.white38 : Colors.grey.shade400,
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    taken ? Icons.check_circle : Icons.play_circle_outline,
-                    size: 20,
-                    color: taken ? Colors.green : primary,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _chip(String label, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white12 : Colors.grey.shade300,
-        ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.poppins(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: isDark ? Colors.white60 : Colors.grey.shade700,
-        ),
-      ),
-    );
-  }
 }
