@@ -274,28 +274,28 @@ class _AppInfoScreen extends StatelessWidget {
               children: [
                 _buildSocialIcon(
                   context,
-                  icon: FontAwesomeIcons.facebook,
+                  iconWidget: FaIcon(FontAwesomeIcons.facebook, color: const Color(0xFF1877F2), size: 30),
                   color: const Color(0xFF1877F2),
                   url: "https://www.facebook.com/dmbhatttutionclasses",
                   label: l10n.facebook,
                 ),
                 _buildSocialIcon(
                   context,
-                  icon: FontAwesomeIcons.instagram,
+                  iconWidget: FaIcon(FontAwesomeIcons.instagram, color: const Color(0xFFE4405F), size: 30),
                   color: const Color(0xFFE4405F),
                   url: "https://www.instagram.com/dmbhatttutions",
                   label: l10n.instagram,
                 ),
                 _buildSocialIcon(
                   context,
-                  icon: FontAwesomeIcons.youtube,
+                  iconWidget: FaIcon(FontAwesomeIcons.youtube, color: const Color(0xFFFF0000), size: 30),
                   color: const Color(0xFFFF0000),
                   url: "https://www.youtube.com/@dmbhatteducationchannel",
                   label: l10n.youtube,
                 ),
                 _buildSocialIcon(
                   context,
-                  icon: FontAwesomeIcons.whatsapp,
+                  iconWidget: FaIcon(FontAwesomeIcons.whatsapp, color: const Color(0xFF25D366), size: 30),
                   color: const Color(0xFF25D366),
                   url: "https://wa.me/919876543210",
                   label: l10n.whatsapp,
@@ -311,7 +311,7 @@ class _AppInfoScreen extends StatelessWidget {
   }
 
   Widget _buildSocialIcon(BuildContext context,
-      {required FaIconData icon,
+      {required Widget iconWidget,
       required Color color,
       required String url,
       required String label}) {
@@ -332,7 +332,7 @@ class _AppInfoScreen extends StatelessWidget {
               color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: FaIcon(icon, color: color, size: 30),
+            child: iconWidget,
           ),
           const SizedBox(height: 8),
           Text(
