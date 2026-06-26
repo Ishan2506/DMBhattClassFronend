@@ -6,11 +6,12 @@ import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/mcq_Detail.dart';
+
 import 'package:dm_bhatt_tutions/screen/Dashboard/edit_profile_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:intl/intl.dart';
@@ -778,7 +779,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const StudentExamHistoryScreen(),
+                                          const HistoryMenuScreen(),
                                     ),
                                   );
                                 },
@@ -819,17 +820,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                         : Colors.grey,
                                     isOnline: exam['isOnline'] ?? false,
                                     l10n: l10n,
-                                    onTap: () {
-                                      if (exam['isOnline'] == true) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const McqDetailScreen(),
-                                          ),
-                                        );
-                                      }
-                                    },
                                   ),
                                 ),
                               ),
@@ -1241,15 +1231,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     required String marks,
     required Color color,
     bool isOnline = false,
-    required VoidCallback onTap,
     required AppLocalizations l10n,
   }) {
     final theme = Theme.of(context);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
+    return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: theme.cardColor,
@@ -1316,8 +1302,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

@@ -151,7 +151,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const _HistoryMenuScreen()),
+                      builder: (context) => const HistoryMenuScreen()),
                 );
               },
             ),
@@ -660,8 +660,8 @@ class _MyAreaScreen extends StatelessWidget {
   }
 }
 
-class _HistoryMenuScreen extends StatelessWidget {
-  const _HistoryMenuScreen();
+class HistoryMenuScreen extends StatelessWidget {
+  const HistoryMenuScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
