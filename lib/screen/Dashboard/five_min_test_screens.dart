@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
 import 'upgrade_plan_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // --- Screen 1: Selection ---
 class FiveMinTestSelectionScreen extends StatefulWidget {
@@ -21,7 +22,6 @@ class FiveMinTestSelectionScreen extends StatefulWidget {
   State<FiveMinTestSelectionScreen> createState() =>
       _FiveMinTestSelectionScreenState();
 }
-
 class _FiveMinTestSelectionScreenState
     extends State<FiveMinTestSelectionScreen> {
   String? _selectedSubject;
@@ -37,6 +37,10 @@ class _FiveMinTestSelectionScreenState
   int _fiveMinTestCount = 0;
   bool _isLoading = true;
 
+  String? _userStandard;
+  String? _userMedium;
+  String? _userStream;
+
   @override
   void initState() {
     super.initState();
@@ -45,32 +49,74 @@ class _FiveMinTestSelectionScreenState
 
   Future<void> _fetchTests() async {
     try {
-      final response = await ApiService.getAllFiveMinTests();
+      final prefs = await SharedPreferences.getInstance();
+      _userStandard = prefs.getString('std');
+      _userMedium = prefs.getString('medium');
+      _userStream = prefs.getString('stream');
+
+      final profileResponse = await ApiService.getProfile(forceRefresh: true);
+      if (profileResponse.statusCode == 200) {
+        final profileData = jsonDecode(profileResponse.body);
+        final profile = profileData['profile'];
+        _isPaid = profileData['user']?['isPaid'] ?? false;
+        _fiveMinTestCount = profileData['examCounts']?['fiveMinTest'] ?? 0;
+        _userStandard = profile?['std']?.toString() ?? _userStandard;
+        _userMedium = profile?['medium']?.toString() ?? _userMedium;
+        _userStream = profile?['stream']?.toString() ?? _userStream;
+
+        // Backward compatibility: If the DB has "11 Science", split it.
+        if (_userStandard != null && _userStandard!.contains(' ')) {
+           final parts = _userStandard!.split(' ');
+           _userStandard = parts[0];
+           if (_userStream == null || _userStream == '-' || _userStream!.isEmpty) {
+               _userStream = parts.skip(1).join(' ');
+           }
+        }
+      }
+
+      final response = await ApiService.getAllFiveMinTests(
+        std: _userStandard,
+        medium: _userMedium,
+      );
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
 
-        final historyResponse = await ApiService.getProfile(forceRefresh: true);
-        if (historyResponse.statusCode == 200) {
-          final profileData = jsonDecode(historyResponse.body);
-          _isPaid = profileData['user']?['isPaid'] ?? false;
-          _fiveMinTestCount = profileData['examCounts']?['fiveMinTest'] ?? 0;
-
-          final dashResponse = await ApiService.getDashboardData();
-          if (dashResponse.statusCode == 200) {
-            final dashData = jsonDecode(dashResponse.body);
-            final List<dynamic> results = dashData['examResults'] ?? [];
-            _takenTestIds = results.map((e) => e['examId'].toString()).toList();
-          }
+        final dashResponse = await ApiService.getDashboardData();
+        if (dashResponse.statusCode == 200) {
+          final dashData = jsonDecode(dashResponse.body);
+          final List<dynamic> results = dashData['examResults'] ?? [];
+          _takenTestIds = results
+              .where((e) => e['type'] == 'FIVEMIN' && e['examId'] != null)
+              .map((e) => e['examId'].toString())
+              .toList();
         }
 
         if (mounted) {
           setState(() {
-            _allTests = data;
+            _allTests = data.where((e) {
+              final examStream = e['stream']?.toString();
+              
+              // Match Stream if Std is 11 or 12
+              if (_userStandard != null) {
+                final numMatch = RegExp(r'\d+').firstMatch(_userStandard!);
+                int stdNum = 0;
+                if (numMatch != null) {
+                   stdNum = int.tryParse(numMatch.group(0) ?? '0') ?? 0;
+                }
+                if (stdNum >= 11) {
+                   if (_userStream != null && examStream != null && examStream != _userStream && examStream.isNotEmpty && examStream != "-") return false;
+                }
+              }
+              return true;
+            }).toList();
+
             _subjects = _allTests
                 .map((e) => e['subject'].toString())
                 .toSet()
                 .toList();
-            _updateUnitsAndTitles();
+            _units = [];
+            _titles = [];
             _isLoading = false;
           });
 
@@ -108,27 +154,61 @@ class _FiveMinTestSelectionScreenState
     );
   }
 
-  void _updateUnitsAndTitles() {
-    List<String> units = [];
-    List<String> titles = [];
+  void _onSubjectChanged(String? subject) {
+    setState(() {
+      _selectedSubject = subject;
+      _selectedUnit = null;
+      _selectedTitle = null;
+      _units = [];
+      _titles = [];
 
-    final filtered = _selectedSubject == null
-        ? _allTests
-        : _allTests.where((t) => t['subject'].toString() == _selectedSubject).toList();
+      if (subject != null) {
+        _units = _allTests
+            .where((ex) => ex['subject'] == subject)
+            .map((ex) => ex['unit']?.toString() ?? '1')
+            .toSet()
+            .toList();
+      }
+    });
+  }
 
-    units = filtered.map((e) => e['unit'].toString()).toSet().toList();
+  void _onUnitChanged(String? unit) {
+    String? newTitle;
+    List<String> newTitles = [];
 
-    final unitFiltered = _selectedUnit == null
-        ? filtered
-        : filtered.where((t) => t['unit'].toString() == _selectedUnit).toList();
+    if (unit != null) {
+      newTitles = _allTests
+          .where((ex) =>
+              ex['subject'] == _selectedSubject &&
+              (ex['unit']?.toString() ?? '1') == unit)
+          .map((ex) => ex['title']?.toString() ?? ex['unit']?.toString() ?? '')
+          .where((t) => t.isNotEmpty)
+          .toSet()
+          .toList();
 
-    titles = unitFiltered.map((e) => e['title']?.toString() ?? e['unit']?.toString() ?? '').where((t) => t.isNotEmpty).toSet().toList();
+      if (newTitles.length == 1) {
+        newTitle = newTitles.first;
+      }
+    }
 
     setState(() {
-      _units = units;
-      _titles = titles;
-      if (!_units.contains(_selectedUnit)) _selectedUnit = null;
-      if (!_titles.contains(_selectedTitle)) _selectedTitle = null;
+      _selectedUnit = unit;
+      _titles = newTitles;
+      _selectedTitle = null;
+    });
+
+    if (newTitle != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _onTitleChanged(newTitle);
+        }
+      });
+    }
+  }
+
+  void _onTitleChanged(String? title) {
+    setState(() {
+      _selectedTitle = title;
     });
   }
 
@@ -151,6 +231,26 @@ class _FiveMinTestSelectionScreenState
 
   Future<void> _startTest(dynamic test) async {
     if (!await GuestUtils.canGuestAccessExam(context, 'FIVEMIN')) return;
+
+    if (_isTaken(test)) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Already Taken"),
+          content: const Text(
+            "You have already performed this test. "
+            "Students can only take each test once.",
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK")),
+          ],
+        ),
+      );
+      return;
+    }
 
     if (!_isPaid && _fiveMinTestCount >= 1) {
       if (!mounted) return;
@@ -193,26 +293,6 @@ class _FiveMinTestSelectionScreenState
       return;
     }
 
-    if (_isTaken(test)) {
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Already Taken"),
-          content: const Text(
-            "You have already performed this test. "
-            "Students can only take each test once.",
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK")),
-          ],
-        ),
-      );
-      return;
-    }
-
     if (!mounted) return;
     CustomLoader.show(context);
     await Future.delayed(const Duration(milliseconds: 400));
@@ -241,6 +321,8 @@ class _FiveMinTestSelectionScreenState
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
 
+    final testSelected = _selectedTitle != null && _filteredTests.isNotEmpty;
+
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
@@ -259,113 +341,90 @@ class _FiveMinTestSelectionScreenState
       ),
       body: _isLoading
           ? const CustomLoader()
-          : Column(
-              children: [
-                // ── Subject filter section ──
-                _buildSubjectFilter(primary, isDark),
-                // ── Spacer ──
-                const Spacer(),
-                // ── Start button at bottom ──
-                if (_filteredTests.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Container(
-                      width: double.infinity,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            primary,
-                            primary.withOpacity(0.8),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+          : Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CustomDropdown<String>(
+                    labelText: "Subject",
+                    hintText: "Select Subject",
+                    value: _selectedSubject,
+                    items: _subjects,
+                    itemLabelBuilder: (String item) => item,
+                    onChanged: _onSubjectChanged,
+                  ),
+                  const SizedBox(height: 16),
+                  CustomDropdown<String>(
+                    labelText: "Unit",
+                    hintText: "Select Unit",
+                    value: _selectedUnit,
+                    items: _units,
+                    itemLabelBuilder: (String item) => item,
+                    onChanged: _onUnitChanged,
+                  ),
+                  const SizedBox(height: 16),
+                  CustomDropdown<String>(
+                    labelText: "Test Title",
+                    hintText: "Select Title",
+                    value: _selectedTitle,
+                    items: _titles,
+                    itemLabelBuilder: (String item) => item,
+                    onChanged: _onTitleChanged,
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: !testSelected
+                          ? null
+                          : LinearGradient(
+                              colors: [
+                                primary,
+                                primary.withOpacity(0.8),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: !testSelected
+                          ? []
+                          : [
+                              BoxShadow(
+                                color: primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: !testSelected
+                          ? null
+                          : () => _startTest(_filteredTests[0]),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        disabledBackgroundColor: Colors.grey.shade400,
+                        disabledForegroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primary.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
                       ),
-                      child: ElevatedButton(
-                        onPressed: () => _startTest(_filteredTests[0]),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          "START TEST",
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
+                      child: Text(
+                        "START TEST",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
-                  )
-                else
-                  Expanded(child: _buildEmpty(isDark)),
-              ],
+                  ),
+                ],
+              ),
             ),
-    );
-  }
-
-  Widget _buildSubjectFilter(Color primary, bool isDark) {
-    return Container(
-      color: isDark ? const Color(0xFF1A2340) : Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-      child: Column(
-        children: [
-          CustomDropdown<String>(
-            labelText: "Subject",
-            hintText: "All Subjects",
-            value: _selectedSubject,
-            items: _subjects,
-            itemLabelBuilder: (String item) => item,
-            onChanged: (val) {
-              setState(() {
-                _selectedSubject = val;
-                _updateUnitsAndTitles();
-              });
-            },
-          ),
-          const SizedBox(height: 12),
-          CustomDropdown<String>(
-            labelText: "Unit",
-            hintText: "All Units",
-            value: _selectedUnit,
-            items: _units,
-            itemLabelBuilder: (String item) => item,
-            onChanged: (val) {
-              setState(() {
-                _selectedUnit = val;
-                _updateUnitsAndTitles();
-              });
-            },
-          ),
-          const SizedBox(height: 12),
-          CustomDropdown<String>(
-            labelText: "Test Title",
-            hintText: "All Titles",
-            value: _selectedTitle,
-            items: _titles,
-            itemLabelBuilder: (String item) => item,
-            onChanged: (val) {
-              setState(() {
-                _selectedTitle = val;
-              });
-            },
-          ),
-        ],
-      ),
     );
   }
 

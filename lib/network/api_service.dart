@@ -666,10 +666,18 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> getAllFiveMinTests() async {
+  static Future<http.Response> getAllFiveMinTests({
+    String? std,
+    String? medium,
+    String? subject,
+  }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
+    if (std != null && std.isNotEmpty) queryParams['std'] = std;
+    if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
+    if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
+
     final uri = Uri.parse(
       "$baseUrl/fiveMinTest/all",
     ).replace(queryParameters: queryParams);
