@@ -225,6 +225,7 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
   }
 
   String _getTranslation(BuildContext context, String key) {
+    // only english language currenyly we are working on
     final locale = Localizations.localeOf(context).languageCode;
     const translations = {
       'en': {
