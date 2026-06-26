@@ -303,5 +303,8 @@
   "logicGridDeductions": "Logic Grid Deductions",
   "logicGridDeductionsDesc": "Read text clues to solve a logic puzzle.",
   "grammarSorter": "Grammar Sorter",
-  "grammarSorterDesc": "Sort falling words into the correct grammatical bucket."
+  "grammarSorterDesc": "Sort falling words into the correct grammatical bucket.",
+  "dateOfBirth": "जन्म तिथि",
+  "selectDateOfBirth": "जन्म तिथि चुनें",
+  "pleaseSelectDob": "कृपया जन्म तिथि चुनें"
 }

@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
+import 'package:intl/intl.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:flutter/cupertino.dart';
@@ -282,6 +283,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String email = "";
   String parentMobile = "";
   String profilePic = "";
+  String dob = "";
   String? _photoPath;
 
   List<dynamic> _examResults = [];
@@ -334,6 +336,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               user['email'] ??
               (profile?['email'] ?? ""); // Check both locations
           _photoPath = user['photoPath'];
+
+          final rawDob = user['dob'];
+          if (rawDob != null && rawDob.toString().isNotEmpty) {
+            try {
+              final parsedDate = DateTime.parse(rawDob.toString());
+              dob = DateFormat('dd/MM/yyyy').format(parsedDate);
+            } catch (e) {
+              dob = rawDob.toString();
+            }
+          } else {
+            dob = "";
+          }
 
           if (profile != null) {
             studentStandard =
@@ -576,6 +590,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                               _photoPath = user['photoPath'];
                                               profilePic =
                                                   user['photoPath'] ?? "";
+                                              
+                                              final rawDob = user['dob'];
+                                              if (rawDob != null && rawDob.toString().isNotEmpty) {
+                                                try {
+                                                  final parsedDate = DateTime.parse(rawDob.toString());
+                                                  dob = DateFormat('dd/MM/yyyy').format(parsedDate);
+                                                } catch (e) {
+                                                  dob = rawDob.toString();
+                                                }
+                                              } else {
+                                                dob = "";
+                                              }
                                             }
                                             if (profile != null) {
                                               studentStandard =
@@ -849,6 +875,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           parentMobile.isEmpty
                               ? l10n.notApplicable
                               : parentMobile,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailItem(
+                          context,
+                          Icons.cake_rounded,
+                          l10n.dateOfBirth,
+                          dob.isEmpty ? l10n.notProvided : dob,
                         ),
                       ],
                     ),

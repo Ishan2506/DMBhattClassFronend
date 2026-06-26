@@ -337,5 +337,8 @@
   "gkQuiz": "General Knowledge",
   "gkQuizDesc": "Test your general knowledge with a quick quiz.",
   "sequenceMemory": "Sequence Memory",
-  "sequenceMemoryDesc": "Memorize and repeat a growing sequence of colors."
+  "sequenceMemoryDesc": "Memorize and repeat a growing sequence of colors.",
+  "dateOfBirth": "Date of Birth",
+  "selectDateOfBirth": "Select Date of Birth",
+  "pleaseSelectDob": "Please select Date of Birth"
 }

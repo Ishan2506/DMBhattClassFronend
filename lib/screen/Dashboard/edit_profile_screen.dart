@@ -12,6 +12,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
+import 'package:intl/intl.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -22,6 +23,7 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  DateTime? _selectedDob;
 
   // Controllers
   final TextEditingController _nameController = TextEditingController();
@@ -78,6 +80,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   .trim();
           _emailController.text = user['email'] ?? (profile?['email'] ?? "");
           _phoneController.text = user['phoneNum'] ?? "";
+          
+          final rawDob = user['dob'];
+          if (rawDob != null && rawDob.toString().isNotEmpty) {
+            try {
+              _selectedDob = DateTime.parse(rawDob.toString());
+            } catch (e) {
+              debugPrint("Error parsing DOB in edit profile: $e");
+            }
+          }
+          
           final city =
               user['city'] ??
               profile?['city'] ??
@@ -434,6 +446,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             LengthLimitingTextInputFormatter(10),
                           ],
                           validator: ValidationUtils.validateIndianPhoneNumber,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Date of Birth (ReadOnly)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.cake_rounded, color: isDark ? Colors.grey : Colors.black54),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _selectedDob == null
+                                      ? "Date of Birth: Not Provided"
+                                      : "Date of Birth: ${DateFormat('dd/MM/yyyy').format(_selectedDob!)}",
+                                  style: GoogleFonts.poppins(
+                                    color: theme.textTheme.bodyLarge?.color,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16),
 
