@@ -130,6 +130,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
                 "en": q['correctAnswer'] ?? "",
                 "gu": q['correctAnswer'] ?? "",
               },
+              "mark": int.tryParse(q['mark']?.toString() ?? '1') ?? 1,
             };
           }).toList();
           _isLoading = false;
@@ -152,6 +153,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
             "en": "Matter is anything that has mass and occupies space.",
             "gu": "દ્રવ્ય એ એવી વસ્તુ છે જે દળ ધરાવે છે અને જગ્યા રોકે છે.",
           },
+          "mark": 1,
         },
         {
           "question": {
@@ -162,6 +164,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
             "en": "The three states of matter are solid, liquid and gas.",
             "gu": "દ્રવ્યની ત્રણ અવસ્થાઓ ઘન, પ્રવાહી અને વાયુ છે.",
           },
+          "mark": 1,
         },
       ];
       _isLoading = false;
@@ -254,24 +257,32 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
     if (_isSubmitting) return;
     _isSubmitting = true;
 
-    int score = 0;
-    double totalPartialScore = 0.0;
+    int correctAnswersCount = 0;
+    double totalObtained = 0.0;
+    int totalMarks = 0;
+
     for (int i = 0; i < _questions.length; i++) {
+      final questionMark = _questions[i]['mark'] as int? ?? 1;
+      totalMarks += questionMark;
+
       final matchScore = MatchingUtils.getMatchScore(
         _spokenAnswers[i] ?? "",
         _getAnswer(i),
       );
-      totalPartialScore += matchScore;
+      
+      totalObtained += matchScore * questionMark;
+      
       if (matchScore >= 0.5) {
-        score++;
+        correctAnswersCount++;
       }
     }
 
-    final double avgAccuracy = totalPartialScore / _questions.length * 100;
+    final int obtainedMarks = totalObtained.round();
+    final double avgAccuracy = totalMarks > 0 ? (totalObtained / totalMarks * 100) : 0.0;
     final int accuracyInt = avgAccuracy.round();
 
     // Save to local history
-    _saveToHistory(score, accuracyInt);
+    _saveToHistory(obtainedMarks, totalMarks, accuracyInt);
 
     // Sync to backend (Fire and forget or wait? Better wait for better UX)
     try {
@@ -281,8 +292,8 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
         await ApiService.submitOneLinerExamResult(
           examId: widget.examId,
           title: widget.title,
-          obtainedMarks: score,
-          totalMarks: _questions.length,
+          obtainedMarks: obtainedMarks,
+          totalMarks: totalMarks,
           accuracy: avgAccuracy,
           type: 'ONELINER',
           violationCount: _violationCount,
@@ -305,20 +316,22 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
         MaterialPageRoute(
           builder: (context) => OneLinerResultScreen(
             totalQuestions: _questions.length,
-            correctAnswers: score,
+            correctAnswers: correctAnswersCount,
             averageAccuracy: avgAccuracy,
             questions: _questions,
             spokenAnswers: _spokenAnswers,
             subject: widget.subject,
             title: widget.title,
             unit: widget.unit,
+            totalMarks: totalMarks,
+            obtainedMarks: obtainedMarks,
           ),
         ),
       );
     }
   }
 
-  Future<void> _saveToHistory(int score, int accuracy) async {
+  Future<void> _saveToHistory(int obtainedMarks, int totalMarks, int accuracy) async {
     final prefs = await SharedPreferences.getInstance();
     final historyStr = prefs.getString('one_liner_history') ?? '[]';
     final List<dynamic> history = jsonDecode(historyStr);
@@ -327,8 +340,8 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
       'subject': widget.subject,
       'unit': widget.unit,
       'title': widget.title,
-      'score': score,
-      'total': _questions.length,
+      'score': obtainedMarks,
+      'total': totalMarks,
       'accuracy': accuracy,
       'date': DateTime.now().toIso8601String(),
     };

@@ -20,6 +20,8 @@ class OneLinerResultScreen extends StatefulWidget {
   final String subject;
   final String title;
   final String unit;
+  final int totalMarks;
+  final int obtainedMarks;
 
   const OneLinerResultScreen({
     super.key,
@@ -31,6 +33,8 @@ class OneLinerResultScreen extends StatefulWidget {
     required this.subject,
     required this.title,
     required this.unit,
+    required this.totalMarks,
+    required this.obtainedMarks,
   });
 
   @override
@@ -90,8 +94,8 @@ class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                 children: [
-                   _buildPdfStat("Total Qns", "${widget.totalQuestions}", fontBold),
-                   _buildPdfStat("Marks", "${widget.correctAnswers}/${widget.totalQuestions}", fontBold, color: PdfColors.green),
+                   _buildPdfStat("Correct Qns", "${widget.correctAnswers}/${widget.totalQuestions}", fontBold),
+                   _buildPdfStat("Marks", "${widget.obtainedMarks}/${widget.totalMarks}", fontBold, color: PdfColors.green),
                    _buildPdfStat("Avg. Accuracy", "${widget.averageAccuracy.toStringAsFixed(1)}%", fontBold, color: PdfColors.blue),
                 ],
               ),
@@ -214,7 +218,7 @@ class _OneLinerResultScreenState extends State<OneLinerResultScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildSummaryStat("Correct", "${widget.correctAnswers}/${widget.totalQuestions}", Colors.white),
-                      _buildSummaryStat("Marks", "${widget.correctAnswers}", Colors.white),
+                      _buildSummaryStat("Marks", "${widget.obtainedMarks}/${widget.totalMarks}", Colors.white),
                       _buildSummaryStat("Accuracy", "${widget.averageAccuracy.toStringAsFixed(1)}%", Colors.white),
                     ],
                   ),
