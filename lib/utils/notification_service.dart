@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -6,7 +7,15 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  FirebaseMessaging? get _fcm {
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        return FirebaseMessaging.instance;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   static const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -17,8 +26,16 @@ class NotificationService {
   );
 
   Future<void> initialize() async {
+    final fcm = _fcm;
+    if (fcm == null) {
+      if (kDebugMode) {
+        print('Firebase is not initialized, skipping notification initialization.');
+      }
+      return;
+    }
+
     // 1. Request Permission
-    NotificationSettings settings = await _fcm.requestPermission(
+    NotificationSettings settings = await fcm.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -60,7 +77,7 @@ class NotificationService {
         ?.createNotificationChannel(channel);
 
     // 3. Subscribe to the 'all' topic
-    await _fcm.subscribeToTopic('all');
+    await fcm.subscribeToTopic('all');
 
     // 4. Handle Foreground Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -105,9 +122,15 @@ class NotificationService {
       return;
     }
 
+    final fcm = _fcm;
+    if (fcm == null) {
+      if (kDebugMode) print('Firebase not initialized, skipping std topic subscription');
+      return;
+    }
+
     final topic = 'std_$standard';
     try {
-      await _fcm.subscribeToTopic(topic);
+      await fcm.subscribeToTopic(topic);
       if (kDebugMode) print('Subscribed to topic: $topic');
     } catch (e) {
       if (kDebugMode) print('Error subscribing to topic $topic: $e');
@@ -120,9 +143,15 @@ class NotificationService {
       return;
     }
 
+    final fcm = _fcm;
+    if (fcm == null) {
+      if (kDebugMode) print('Firebase not initialized, skipping user topic subscription');
+      return;
+    }
+
     final topic = 'user_$userId';
     try {
-      await _fcm.subscribeToTopic(topic);
+      await fcm.subscribeToTopic(topic);
       if (kDebugMode) print('Subscribed to user topic: $topic');
     } catch (e) {
       if (kDebugMode) print('Error subscribing to user topic $topic: $e');

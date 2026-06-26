@@ -1282,9 +1282,20 @@ class ApiService {
 
   // --- Match Following Exam APIs ---
 
-  static Future<http.Response> getAllMatchFollowingExams() async {
+  static Future<http.Response> getAllMatchFollowingExams({
+    String? std,
+    String? medium,
+    String? subject,
+  }) async {
     if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
-    final uri = Uri.parse("$baseUrl/matchfollowingexam/all");
+    final queryParams = await _getDefaultQueryParams();
+    if (std != null && std.isNotEmpty) queryParams['std'] = std;
+    if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
+    if (subject != null && subject.isNotEmpty) queryParams['subject'] = subject;
+
+    final uri = Uri.parse(
+      "$baseUrl/matchfollowingexam/all",
+    ).replace(queryParameters: queryParams);
     return _handleSession(await http.get(uri, headers: _addAuth({
       'Content-Type': 'application/json',
     })));
