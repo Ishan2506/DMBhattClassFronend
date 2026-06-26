@@ -196,16 +196,16 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
     List<Map<String, dynamic>> answersList = [];
 
     for (int i = 0; i < _questions.length; i++) {
-      final selected = _selectedAnswers[i] ?? false; // Default if somehow skipped
+      final selected = _selectedAnswers[i];
       final actual = _questions[i]['isTrue'] as bool;
       final qText = _questions[i]['question']['en'];
       
-      final isCorrect = selected == actual;
+      final isCorrect = selected != null && selected == actual;
       if (isCorrect) score++;
 
       answersList.add({
         'questionIndex': i,
-        'studentAnswer': selected,
+        'studentAnswer': selected ?? false,
         'correctAnswer': actual,
         'isCorrect': isCorrect,
         'questionText': qText,

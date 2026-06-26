@@ -102,7 +102,7 @@ class _TrueFalseResultScreenState extends State<TrueFalseResultScreen> {
               final bool? selected = widget.selectedAnswers[index];
               final bool target = q['isTrue'] ?? false;
               
-              bool isCorrect = selected == target;
+              bool isCorrect = selected != null && selected == target;
               String selectedText = selected == null ? "N/A" : (selected ? "True" : "False");
               String targetText = target ? "True" : "False";
 
@@ -243,7 +243,7 @@ class _TrueFalseResultScreenState extends State<TrueFalseResultScreen> {
                 final bool? selected = widget.selectedAnswers[index];
                 final bool target = q['isTrue'] ?? false;
                 
-                bool isCorrect = selected == target;
+                bool isCorrect = selected != null && selected == target;
                 String selectedText = selected == null ? "N/A" : (selected ? "True" : "False");
                 String targetText = target ? "True" : "False";
 
