@@ -294,6 +294,16 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
       appBar: CustomAppBar(
         title: _getTranslation(context, 'title'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const MatchFollowingHistoryScreen()),
+            ),
+          ),
+        ],
       ),
       body: _isLoading
           ? const CustomLoader()

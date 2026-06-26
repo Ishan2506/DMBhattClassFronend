@@ -315,6 +315,16 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
     return Scaffold(
       appBar: CustomAppBar(
         title: "One-Liner Exam",
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const OneLinerHistoryScreen()),
+            ),
+          ),
+        ],
       ),
       body: _isLoading
           ? const CustomLoader()

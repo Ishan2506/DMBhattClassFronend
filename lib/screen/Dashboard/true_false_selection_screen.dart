@@ -340,6 +340,16 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
           isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
       appBar: CustomAppBar(
         title: "True/False Exam",
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const TrueFalseHistoryScreen()),
+            ),
+          ),
+        ],
       ),
       body: _isLoading
           ? const CustomLoader()
