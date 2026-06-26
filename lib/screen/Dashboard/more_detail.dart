@@ -726,7 +726,7 @@ class HistoryMenuScreen extends StatelessWidget {
                 },
               ),
               _MoreScreenItem(
-                title: "Match Following History",
+                title: "Match Following history",
                 value: "",
                 icon: Icons.compare_arrows_rounded,
                 onTap: () {
