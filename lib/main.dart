@@ -92,6 +92,7 @@ class MyApp extends StatelessWidget {
             theme: theme.getThemeForStyle(styleName, false), // Light
             darkTheme: theme.getThemeForStyle(styleName, true), // Dark
             themeMode: state.themeMode,
+            // only english language currenyly we are working on
             locale: state.locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

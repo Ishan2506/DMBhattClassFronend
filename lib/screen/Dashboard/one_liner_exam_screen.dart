@@ -193,6 +193,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
       );
       if (available) {
         setState(() => _isListening = true);
+        // only english language currenyly we are working on
         final locale = context.read<ThemeCubit>().state.locale.languageCode;
         _speech.listen(
           localeId: locale == 'gu' ? 'gu_IN' : 'en_US',
@@ -242,12 +243,14 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
   }
 
   String _getQuestion() {
+    // only english language currenyly we are working on
     final lang = context.read<ThemeCubit>().state.locale.languageCode;
     return _questions[_currentQuestionIndex]['question'][lang] ??
         _questions[_currentQuestionIndex]['question']['en'];
   }
 
   String _getAnswer(int index) {
+    // only english language currenyly we are working on
     final lang = context.read<ThemeCubit>().state.locale.languageCode;
     return _questions[index]['answer'][lang] ??
         _questions[index]['answer']['en'];
@@ -355,6 +358,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+    // only english language currenyly we are working on
     final lang = context.select((ThemeCubit c) => c.state.locale.languageCode);
 
     return PopScope(

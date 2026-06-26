@@ -173,6 +173,7 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
   }
 
   String _getQuestion() {
+    // only english language currenyly we are working on
     final lang = context.read<ThemeCubit>().state.locale.languageCode;
     return _questions[_currentQuestionIndex]['question'][lang] ??
         _questions[_currentQuestionIndex]['question']['en'];
@@ -287,6 +288,7 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+    // only english language currenyly we are working on
     final lang = context.select((ThemeCubit c) => c.state.locale.languageCode);
 
     return PopScope(

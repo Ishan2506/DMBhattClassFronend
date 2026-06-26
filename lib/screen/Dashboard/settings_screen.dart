@@ -65,6 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 themeText = l10n.system;
               }
 
+              // only english language currenyly we are working on
               String langText;
               if (state.locale.languageCode == 'gu') {
                 langText = l10n.gujarati;
@@ -404,6 +405,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildLangOption(BuildContext context, String label, Locale locale) {
+    // only english language currenyly we are working on
     final currentLocale = context.read<ThemeCubit>().state.locale;
     return RadioListTile<Locale>(
       title: Text(label, style: GoogleFonts.poppins()),
@@ -412,8 +414,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       activeColor: Colors.blue.shade700,
       onChanged: (val) {
         if (val != null) {
-          context.read<ThemeCubit>().changeLocale(val);
-          Navigator.pop(context);
+          if (val.languageCode != 'en') {
+            Navigator.pop(context);
+            CustomToast.showInfo(context, '$label coming soon');
+          } else {
+            context.read<ThemeCubit>().changeLocale(val);
+            Navigator.pop(context);
+          }
         }
       },
     );
