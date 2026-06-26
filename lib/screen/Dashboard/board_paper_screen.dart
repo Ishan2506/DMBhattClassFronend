@@ -226,7 +226,8 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                   l10n.medium, 
                   _mediums, 
                   _selectedMedium, 
-                  (val) => setState(() => _selectedMedium = val)
+                  (val) => setState(() => _selectedMedium = val),
+                  enabled: false,
                 ),
               ),
               const SizedBox(width: 12),
@@ -255,7 +256,8 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               (val) => setState(() {
                 _selectedStream = val;
                 _selectedSubject = null; // Reset subject when stream changes
-              })
+              }),
+              enabled: false,
             ),
           if (_selectedStd == "12") const SizedBox(height: 12),
 
