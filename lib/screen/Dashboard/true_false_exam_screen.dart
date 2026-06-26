@@ -182,10 +182,6 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
     setState(() {
       _selectedAnswers[_currentQuestionIndex] = isTrue;
     });
-    // Auto advance
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _nextQuestion();
-    });
   }
 
   void _showResult() async {
@@ -353,20 +349,20 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
                       const SizedBox(height: 40),
 
                       // True/False Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      Column(
                         children: [
                           _buildOptionButton(
                             context: context,
                             label: "True",
                             isTrueValue: true,
-                            color: Colors.green,
+                            optionLabel: "A",
                           ),
+                          const SizedBox(height: 16),
                           _buildOptionButton(
                             context: context,
                             label: "False",
                             isTrueValue: false,
-                            color: Colors.red,
+                            optionLabel: "B",
                           ),
                         ],
                       ),
@@ -424,37 +420,68 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
     required BuildContext context,
     required String label,
     required bool isTrueValue,
-    required Color color,
+    required String optionLabel,
   }) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
     bool isSelected = _selectedAnswers[_currentQuestionIndex] == isTrueValue;
-    return GestureDetector(
-      onTap: () => _selectAnswer(isTrueValue),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-        decoration: BoxDecoration(
-          color: isSelected ? color : color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: color,
-            width: 2,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  )
-                ]
-              : [],
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected
+              ? theme.colorScheme.primary.withOpacity(0.5)
+              : Colors.grey[200]!,
+          width: isSelected ? 2 : 1,
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : color,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => _selectAnswer(isTrueValue),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  optionLabel,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  label,
+                  style: textTheme.titleMedium?.copyWith(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
