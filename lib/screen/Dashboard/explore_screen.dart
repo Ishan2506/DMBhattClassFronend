@@ -92,6 +92,7 @@ class ExploreScreenState extends State<ExploreScreen> {
               "reviews": 0,
               "image": item['image'] ?? "",
               "subject": item['subject'] ?? "",
+              "isPurchased": item['isPurchased'] ?? false,
             }).toList().cast<Map<String, dynamic>>();
             _isLoading = false;
           });

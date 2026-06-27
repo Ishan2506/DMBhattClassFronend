@@ -163,7 +163,15 @@ class ApiService {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/explore/all");
-    return _handleSession(await http.get(uri));
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> createPaymentOrder(double amount) async {

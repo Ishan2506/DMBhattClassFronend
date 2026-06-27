@@ -371,36 +371,58 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
                         ),
                         const SizedBox(height: 16),
                         
-                        // 1. Buy Now (Prominent)
-                        _buildActionButton(
-                          context: context,
-                          label: "Buy Now ₹${widget.product['price']}",
-                          icon: Icons.shopping_cart_outlined,
-                          color: theme.colorScheme.primary, // Use theme color
-                          isPrimary: true,
-                          onPressed: _initiatePurchase,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // 2. Free Preview (Secondary)
-                        if (!_previewUsed && widget.product['image'] != null && widget.product['image'].toString().toLowerCase().contains('.pdf'))
+                        if (widget.product['isPurchased'] == true) ...[
+                          // Read Material (Full Access)
                           _buildActionButton(
                             context: context,
-                            label: "Free Preview (30 Sec)",
-                            icon: Icons.visibility_outlined,
-                            color: theme.colorScheme.secondary,
-                            isOutlined: true,
+                            label: "Read Material",
+                            icon: Icons.auto_stories_rounded,
+                            color: Colors.green,
+                            isPrimary: true,
                             onPressed: () async {
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => PdfPreviewScreen(product: widget.product),
+                                  builder: (context) => PdfPreviewScreen(
+                                    product: widget.product,
+                                    isFullAccess: true,
+                                  ),
                                 ),
                               );
-                              _checkPreviewStatus(); // Refresh status after returning
                             },
                           ),
+                        ] else ...[
+                          // 1. Buy Now (Prominent)
+                          _buildActionButton(
+                            context: context,
+                            label: "Buy Now ₹${widget.product['price']}",
+                            icon: Icons.shopping_cart_outlined,
+                            color: theme.colorScheme.primary, // Use theme color
+                            isPrimary: true,
+                            onPressed: _initiatePurchase,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // 2. Free Preview (Secondary)
+                          if (!_previewUsed && widget.product['image'] != null && widget.product['image'].toString().toLowerCase().contains('.pdf'))
+                            _buildActionButton(
+                              context: context,
+                              label: "Free Preview (30 Sec)",
+                              icon: Icons.visibility_outlined,
+                              color: theme.colorScheme.secondary,
+                              isOutlined: true,
+                              onPressed: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PdfPreviewScreen(product: widget.product),
+                                  ),
+                                );
+                                _checkPreviewStatus(); // Refresh status after returning
+                              },
+                            ),
+                        ],
 
                         const SizedBox(height: 40), // Bottom padding
                     ],
