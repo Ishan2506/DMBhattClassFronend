@@ -92,7 +92,26 @@ class _LandingScreenState extends State<LandingScreen> {
             user['role'] == 'student' &&
             user['isPaid'] == false) {
           final prefs = await SharedPreferences.getInstance();
-          final currentStandard = profile?['std']?.toString();
+          final currentStandard =
+              _standardNumberFrom(
+                _profileValue(profile, const [
+                  'std',
+                  'standard',
+                  'standardId',
+                  'class',
+                  'className',
+                ]),
+              ) ??
+              prefs.getString('std');
+          final currentMedium =
+              _cleanProfileValue(_profileValue(profile, const ['medium'])) ??
+              prefs.getString('medium');
+          final currentStream =
+              _cleanProfileValue(_profileValue(profile, const ['stream'])) ??
+              prefs.getString('stream');
+          final currentBoard =
+              _cleanProfileValue(_profileValue(profile, const ['board'])) ??
+              prefs.getString('board');
           final verifiedStandard = prefs.getString("apple_membership_standard");
           final hasVerifiedAppleMembership =
               prefs.getBool("apple_membership_verified") == true &&
@@ -108,15 +127,17 @@ class _LandingScreenState extends State<LandingScreen> {
           // Persist data for payment flow
           if (user['firstName'] != null)
             await prefs.setString('firstName', user['firstName']);
-          if (profile != null) {
-            if (profile['std'] != null)
-              await prefs.setString('std', profile['std'].toString());
-            if (profile['medium'] != null)
-              await prefs.setString('medium', profile['medium']);
-            if (profile['stream'] != null)
-              await prefs.setString('stream', profile['stream']);
-            if (profile['board'] != null)
-              await prefs.setString('board', profile['board']);
+          if (currentStandard != null) {
+            await prefs.setString('std', currentStandard);
+          }
+          if (currentMedium != null) {
+            await prefs.setString('medium', currentMedium);
+          }
+          if (currentStream != null) {
+            await prefs.setString('stream', currentStream);
+          }
+          if (currentBoard != null) {
+            await prefs.setString('board', currentBoard);
           }
 
           bool skippedOnce = prefs.getBool('skipped_payment_prompt') ?? false;
@@ -136,8 +157,8 @@ class _LandingScreenState extends State<LandingScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => PaymentScreen(
-                std: profile?['std']?.toString(),
-                medium: profile?['medium']?.toString(),
+                std: currentStandard,
+                medium: currentMedium,
                 phone: user['phoneNum'],
                 email: user['email'],
               ),
@@ -160,6 +181,35 @@ class _LandingScreenState extends State<LandingScreen> {
         });
       }
     }
+  }
+
+  dynamic _profileValue(dynamic profile, List<String> keys) {
+    if (profile is! Map) return null;
+    for (final key in keys) {
+      final value = profile[key];
+      if (value == null) continue;
+      if (value is Map) {
+        return value['std'] ??
+            value['standard'] ??
+            value['name'] ??
+            value['title'] ??
+            value['value'];
+      }
+      return value;
+    }
+    return null;
+  }
+
+  String? _standardNumberFrom(dynamic value) {
+    if (value == null) return null;
+    return RegExp(r"(\d+)").firstMatch(value.toString())?.group(1);
+  }
+
+  String? _cleanProfileValue(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isEmpty || text.toLowerCase() == "none") return null;
+    return text;
   }
 
   Future<void> _checkAndShowAd() async {

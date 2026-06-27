@@ -244,6 +244,10 @@ class StudentProfileScreen extends StatefulWidget {
 
       // Update prefs with stored data
       await ApiService.setAuthToken(token);
+      final revenueCatUserId = account['userId']?.toString();
+      if (revenueCatUserId != null && revenueCatUserId.isNotEmpty) {
+        await RevenueCatService.instance.login(revenueCatUserId);
+      }
       if (account['phone'] != null)
         await prefs.setString('user_phone', account['phone']);
       if (account['userId'] != null)
@@ -367,7 +371,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             }
             final std = profile['std'];
             if (std != null && std.toString().isNotEmpty) {
-              NotificationService.instance.subscribeToStandardTopic(std.toString());
+              NotificationService.instance.subscribeToStandardTopic(
+                std.toString(),
+              );
             }
           }
 
@@ -1676,7 +1682,7 @@ class _ManageSubscriptionScreenState extends State<_ManageSubscriptionScreen> {
         );
 
     if (result.isSuccess && mounted) {
-      await _verifyAppleUpgrade(result, planInfo);
+      await _completeAppleUpgradeFromRevenueCat(result, planInfo);
     }
 
     final info = await RevenueCatService.instance.getCustomerInfo();
@@ -1760,69 +1766,169 @@ class _ManageSubscriptionScreenState extends State<_ManageSubscriptionScreen> {
     );
   }
 
-  Future<void> _verifyAppleUpgrade(
+  Future<void> _completeAppleUpgradeFromRevenueCat(
     RevenueCatPurchaseResult result,
     _ChangePlanInfo planInfo,
   ) async {
-    final receipt = result.receipt;
     final productId = result.productId;
+    final expectedProductId =
+        result.requestedProductId ??
+        RevenueCatService.productIdForStandard(planInfo.nextStandard);
     final transactionId = result.transactionId;
-    if (receipt == null ||
-        receipt.isEmpty ||
+    debugPrint("[Apple Profile Upgrade] Completing via RevenueCat");
+    debugPrint("[Apple Profile Upgrade] productId: $productId");
+    debugPrint("[Apple Profile Upgrade] expectedProductId: $expectedProductId");
+    debugPrint("[Apple Profile Upgrade] transactionId: $transactionId");
+    debugPrint(
+      "[Apple Profile Upgrade] nextStandard: ${planInfo.nextStandard}",
+    );
+    debugPrint("[Apple Profile Upgrade] medium: ${planInfo.medium}");
+    debugPrint("[Apple Profile Upgrade] stream: ${planInfo.stream}");
+    debugPrint(
+      "[Apple Profile Upgrade] amount: ${result.amountPaid ?? planInfo.amount}",
+    );
+    final active = await RevenueCatService.instance.refreshIsProActive();
+    if (!active ||
         productId == null ||
         productId.isEmpty ||
         transactionId == null ||
         transactionId.isEmpty) {
+      debugPrint(
+        "[Apple Profile Upgrade] Missing verification details: "
+        "entitlementActive=$active, "
+        "productIdMissing=${productId == null || productId.isEmpty}, "
+        "transactionIdMissing=${transactionId == null || transactionId.isEmpty}",
+      );
       await _showStatusDialog(
-        title: "Verification Failed",
+        title: "Purchase Failed",
         message:
-            "Apple purchase completed, but verification details are missing. Please try again.",
+            "Apple purchase finished, but active subscription access was not found. Please restore purchases or try again.",
       );
       return;
     }
 
-    try {
-      CustomLoader.show(context);
-      final response = await ApiService.verifyAppleUpgrade(
-        receipt: receipt,
-        productId: productId,
-        transactionId: transactionId,
-        newStandard: planInfo.nextStandard,
-        medium: planInfo.medium,
-        stream: planInfo.stream,
-        amount: result.amountPaid ?? planInfo.amount,
+    if (expectedProductId != null && productId != expectedProductId) {
+      debugPrint(
+        "[Apple Profile Upgrade] Product mismatch: "
+        "expected=$expectedProductId actual=$productId",
       );
+      await _showStatusDialog(
+        title: "Purchase Failed",
+        message:
+            "Apple returned a different product ($productId) than the selected plan ($expectedProductId). Please try again or restore the correct subscription.",
+      );
+      return;
+    }
 
-      if (!mounted) return;
-      CustomLoader.hide(context);
+    final refreshedReceipt = await RevenueCatService.instance
+        .getAppleReceiptAfterPurchase(
+          maxAttempts: 8,
+          delay: const Duration(milliseconds: 1500),
+          forceRefresh: true,
+        );
+    final receipt =
+        (refreshedReceipt != null &&
+            refreshedReceipt.length > (result.receipt?.length ?? 0))
+        ? refreshedReceipt
+        : result.receipt;
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("std", planInfo.nextStandard);
-        await prefs.setString("medium", planInfo.medium);
-        if (planInfo.stream != null) {
-          await prefs.setString("stream", planInfo.stream!);
-        }
-        await _loadCustomerInfo();
-        await _showStatusDialog(
-          title: "Plan Changed",
-          message:
-              "Your plan has been changed to Standard ${planInfo.nextStandard}.",
-        );
-      } else {
-        await _showStatusDialog(
-          title: "Verification Failed",
-          message: ApiService.getErrorMessage(response.body),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      CustomLoader.hide(context);
+    if (receipt == null || receipt.isEmpty) {
+      debugPrint("[Apple Profile Upgrade] Missing Apple receipt");
       await _showStatusDialog(
         title: "Verification Failed",
-        message: "Error verifying Apple upgrade: $e",
+        message:
+            "Apple purchase completed, but the receipt was not available. Please try restore purchases.",
       );
+      return;
     }
+
+    final response = await _verifyAppleUpgradeWithReceiptRetry(
+      receipt: receipt,
+      productId: productId,
+      expectedProductId: expectedProductId,
+      transactionId: transactionId,
+      planInfo: planInfo,
+      amount: result.amountPaid ?? planInfo.amount,
+    );
+
+    if (!mounted) return;
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      await _showStatusDialog(
+        title: "Verification Failed",
+        message: ApiService.getErrorMessage(response.body),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("std", planInfo.nextStandard);
+    await prefs.setString("medium", planInfo.medium);
+    if (planInfo.stream != null) {
+      await prefs.setString("stream", planInfo.stream!);
+    }
+    await _loadCustomerInfo();
+    if (!mounted) return;
+    await _showStatusDialog(
+      title: "Purchase Successful",
+      message: "Your subscription is active.",
+    );
+  }
+
+  Future<dynamic> _verifyAppleUpgradeWithReceiptRetry({
+    required String receipt,
+    required String productId,
+    required String? expectedProductId,
+    required String transactionId,
+    required _ChangePlanInfo planInfo,
+    required double amount,
+  }) async {
+    var response = await ApiService.verifyAppleUpgrade(
+      receipt: receipt,
+      productId: productId,
+      expectedProductId: expectedProductId,
+      transactionId: transactionId,
+      newStandard: planInfo.nextStandard,
+      medium: planInfo.medium,
+      stream: planInfo.stream,
+      amount: amount,
+    );
+
+    if (!_isReceiptMissingProductError(response.body)) {
+      return response;
+    }
+
+    debugPrint(
+      "[Apple Profile Upgrade] Receipt missing purchased product. Refreshing receipt and retrying verification.",
+    );
+    await Future.delayed(const Duration(seconds: 4));
+    final refreshedReceipt = await RevenueCatService.instance
+        .getAppleReceiptAfterPurchase(
+          maxAttempts: 8,
+          delay: const Duration(milliseconds: 1500),
+          forceRefresh: true,
+        );
+
+    if (refreshedReceipt == null || refreshedReceipt.isEmpty) {
+      return response;
+    }
+
+    return ApiService.verifyAppleUpgrade(
+      receipt: refreshedReceipt,
+      productId: productId,
+      expectedProductId: expectedProductId,
+      transactionId: transactionId,
+      newStandard: planInfo.nextStandard,
+      medium: planInfo.medium,
+      stream: planInfo.stream,
+      amount: amount,
+    );
+  }
+
+  bool _isReceiptMissingProductError(String body) {
+    final lower = body.toLowerCase();
+    return lower.contains("purchased product was missing") ||
+        lower.contains("missing in the receipt") ||
+        lower.contains("receipt is not valid");
   }
 
   String? _standardNumberFrom(dynamic value) {

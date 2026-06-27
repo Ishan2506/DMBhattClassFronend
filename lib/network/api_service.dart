@@ -37,6 +37,23 @@ class ApiService {
   static String? get userToken => _authToken;
   static bool get isGuest => _isGuest;
 
+  static void _debugPrintFullJson(String label, Map<String, dynamic> body) {
+    if (!kDebugMode) return;
+
+    const chunkSize = 900;
+    final jsonBody = const JsonEncoder.withIndent('  ').convert(body);
+    debugPrint("$label full JSON length: ${jsonBody.length}");
+    for (var i = 0; i < jsonBody.length; i += chunkSize) {
+      final end = (i + chunkSize < jsonBody.length)
+          ? i + chunkSize
+          : jsonBody.length;
+      final chunkNumber = (i ~/ chunkSize) + 1;
+      debugPrint(
+        "$label full JSON chunk $chunkNumber: ${jsonBody.substring(i, end)}",
+      );
+    }
+  }
+
   static Future<void> loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     _authToken = prefs.getString('auth_token');
@@ -281,7 +298,7 @@ class ApiService {
         },
       );
     }
-    return _handleSession(
+    final response = _handleSession(
       await http.get(
         uri,
         headers: _addAuth({
@@ -290,6 +307,48 @@ class ApiService {
         }),
       ),
     );
+    return _applyLocalAppleMembership(response);
+  }
+
+  static Future<http.Response> _applyLocalAppleMembership(
+    http.Response response,
+  ) async {
+    if (response.statusCode != 200) return response;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final verified = prefs.getBool("apple_membership_verified") == true;
+      final verifiedStandard = prefs.getString("apple_membership_standard");
+      if (!verified || verifiedStandard == null) return response;
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) return response;
+
+      final profile = decoded['profile'];
+      final user = decoded['user'];
+      final profileStandard = profile is Map
+          ? profile['std']?.toString()
+          : null;
+
+      if (user is Map<String, dynamic> &&
+          profileStandard != null &&
+          profileStandard == verifiedStandard) {
+        user['isPaid'] = true;
+        return http.Response(
+          jsonEncode(decoded),
+          response.statusCode,
+          headers: response.headers,
+          request: response.request,
+          isRedirect: response.isRedirect,
+          persistentConnection: response.persistentConnection,
+          reasonPhrase: response.reasonPhrase,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error applying local Apple membership: $e");
+    }
+
+    return response;
   }
 
   static Future<http.Response> updateProfile(
@@ -1146,21 +1205,31 @@ class ApiService {
   static Future<http.Response> verifyAppleMembership({
     required String receipt,
     required String productId,
+    String? expectedProductId,
     required String transactionId,
     required String standard,
     required String medium,
     String? stream,
+    double? amount,
   }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/apple/verify-membership");
     final body = {
       'receipt': receipt,
+      'apple_receipt': receipt,
       'productId': productId,
+      'apple_product_id': productId,
+      if (expectedProductId != null) 'expectedProductId': expectedProductId,
+      if (expectedProductId != null)
+        'expected_apple_product_id': expectedProductId,
       'apple_transaction_id': transactionId,
+      'transactionId': transactionId,
       'standard': standard,
+      'newStandard': standard,
       'medium': medium,
       if (stream != null && stream.isNotEmpty) 'stream': stream,
+      if (amount != null) 'amount': amount,
     };
     final receiptPreview = receipt.length <= 24
         ? receipt
@@ -1169,7 +1238,6 @@ class ApiService {
     debugPrint(
       "[Apple Membership] Request: ${jsonEncode({...body, 'receipt': "$receiptPreview (${receipt.length} chars)"})}",
     );
-    debugPrint("[Apple Membership] Full receipt: $receipt");
     final response = await http.post(
       uri,
       headers: _addAuth({'Content-Type': 'application/json'}),
@@ -1183,6 +1251,7 @@ class ApiService {
   static Future<http.Response> verifyAppleUpgrade({
     required String receipt,
     required String productId,
+    String? expectedProductId,
     required String transactionId,
     required String newStandard,
     required String medium,
@@ -1192,19 +1261,32 @@ class ApiService {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/apple/verify-upgrade");
+    final body = {
+      'receipt': receipt,
+      'productId': productId,
+      'apple_product_id': productId,
+      if (expectedProductId != null) 'expectedProductId': expectedProductId,
+      if (expectedProductId != null)
+        'expected_apple_product_id': expectedProductId,
+      'apple_transaction_id': transactionId,
+      'transactionId': transactionId,
+      'newStandard': newStandard,
+      'medium': medium,
+      if (stream != null) 'stream': stream,
+      'amount': amount,
+    };
+    final receiptPreview = receipt.length <= 24
+        ? receipt
+        : "${receipt.substring(0, 24)}...";
+    debugPrint("[Apple Upgrade] POST $uri");
+    debugPrint(
+      "[Apple Upgrade] Request: ${jsonEncode({...body, 'receipt': "$receiptPreview (${receipt.length} chars)"})}",
+    );
     return _handleSession(
       await http.post(
         uri,
         headers: _addAuth({'Content-Type': 'application/json'}),
-        body: jsonEncode({
-          'receipt': receipt,
-          'productId': productId,
-          'apple_transaction_id': transactionId,
-          'newStandard': newStandard,
-          'medium': medium,
-          if (stream != null) 'stream': stream,
-          'amount': amount,
-        }),
+        body: jsonEncode(body),
       ),
     );
   }
@@ -1219,17 +1301,26 @@ class ApiService {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/apple/verify-product");
+    final body = {
+      'receipt': receipt,
+      'productId': productId,
+      'transactionId': transactionId,
+      'materialProductId': materialProductId,
+      'amount': amount,
+    };
+    final receiptPreview = receipt.length <= 24
+        ? receipt
+        : "${receipt.substring(0, 24)}...";
+    debugPrint("[Apple Product] POST $uri");
+    debugPrint(
+      "[Apple Product] Request: ${jsonEncode({...body, 'receipt': "$receiptPreview (${receipt.length} chars)"})}",
+    );
+    _debugPrintFullJson("[Apple Product] Request", body);
     return _handleSession(
       await http.post(
         uri,
         headers: _addAuth({'Content-Type': 'application/json'}),
-        body: jsonEncode({
-          'receipt': receipt,
-          'productId': productId,
-          'transactionId': transactionId,
-          'materialProductId': materialProductId,
-          'amount': amount,
-        }),
+        body: jsonEncode(body),
       ),
     );
   }
@@ -1263,7 +1354,9 @@ class ApiService {
     // Apple IAP fields instead of Razorpay fields
     fields["apple_receipt"] = appleReceipt;
     fields["apple_product_id"] = appleProductId;
+    fields["productId"] = appleProductId;
     fields["apple_transaction_id"] = appleTransactionId;
+    fields["transactionId"] = appleTransactionId;
     if (amount != null) {
       fields["amount"] = amount.toString();
     }

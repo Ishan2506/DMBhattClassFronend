@@ -344,8 +344,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
             useRedeemProduct: useRedeemProduct,
             useReferralProduct: useReferralProduct,
           );
-      if (result.isSuccess && mounted) {
-        await _verifyAppleMembership(result);
+      if (!mounted) return;
+      if (result.isSuccess) {
+        await _completeAppleMembershipFromRevenueCat(result);
+      } else {
+        await _showApplePurchaseDialog(result.title, result.message);
       }
     } else {
       // Android: Use Razorpay
@@ -383,79 +386,155 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
-  Future<void> _verifyAppleMembership(RevenueCatPurchaseResult result) async {
-    final receipt = result.receipt;
-    final productId = result.productId;
-    final transactionId = result.transactionId;
-    debugPrint("[Apple Membership Screen] Starting verification");
-    debugPrint("[Apple Membership Screen] receipt length: ${receipt?.length}");
-    debugPrint("[Apple Membership Screen] productId: $productId");
-    debugPrint("[Apple Membership Screen] transactionId: $transactionId");
-    debugPrint("[Apple Membership Screen] standard: $_std");
-    debugPrint("[Apple Membership Screen] medium: $_medium");
-    debugPrint("[Apple Membership Screen] stream: $_stream");
-    debugPrint(
-      "[Apple Membership Screen] amount: ${result.amountPaid ?? _finalAmount}",
-    );
-    if (receipt == null ||
-        receipt.isEmpty ||
-        productId == null ||
-        productId.isEmpty ||
-        transactionId == null ||
-        transactionId.isEmpty ||
-        _std == null ||
-        _medium == null) {
-      debugPrint(
-        "[Apple Membership Screen] Missing verification details: "
-        "receiptMissing=${receipt == null || receipt.isEmpty}, "
-        "productIdMissing=${productId == null || productId.isEmpty}, "
-        "transactionIdMissing=${transactionId == null || transactionId.isEmpty}, "
-        "standardMissing=${_std == null}, "
-        "mediumMissing=${_medium == null}",
-      );
-      CustomToast.showError(
-        context,
-        "Apple purchase completed, but verification details are missing. Please try again.",
-      );
-      return;
-    }
-
+  Future<void> _completeAppleMembershipFromRevenueCat(
+    RevenueCatPurchaseResult result,
+  ) async {
     try {
       CustomLoader.show(context);
+      final active = await RevenueCatService.instance.refreshIsProActive();
+      if (!mounted) return;
+
+      final productId = result.productId;
+      final expectedProductId =
+          result.requestedProductId ??
+          RevenueCatService.productIdForStandard(
+            _std,
+            useRedeemProduct: _hasValidRedeemCodeForSelectedStandard(),
+            useReferralProduct:
+                !_hasValidRedeemCodeForSelectedStandard() &&
+                _hasValidatedReferralCode,
+          );
+      final transactionId = result.transactionId;
+      debugPrint("[Apple Membership Screen] Completing via RevenueCat");
+      debugPrint("[Apple Membership Screen] productId: $productId");
+      debugPrint(
+        "[Apple Membership Screen] expectedProductId: $expectedProductId",
+      );
+      debugPrint("[Apple Membership Screen] transactionId: $transactionId");
+      debugPrint("[Apple Membership Screen] standard: $_std");
+      debugPrint("[Apple Membership Screen] medium: $_medium");
+      debugPrint("[Apple Membership Screen] stream: $_stream");
+      debugPrint(
+        "[Apple Membership Screen] amount: ${result.amountPaid ?? _finalAmount}",
+      );
+      if (!active ||
+          productId == null ||
+          productId.isEmpty ||
+          transactionId == null ||
+          transactionId.isEmpty ||
+          _std == null ||
+          _medium == null) {
+        CustomLoader.hide(context);
+        debugPrint(
+          "[Apple Membership Screen] Missing verification details: "
+          "entitlementActive=$active, "
+          "productIdMissing=${productId == null || productId.isEmpty}, "
+          "transactionIdMissing=${transactionId == null || transactionId.isEmpty}, "
+          "standardMissing=${_std == null}, "
+          "mediumMissing=${_medium == null}",
+        );
+        await _showApplePurchaseDialog(
+          "Purchase Failed",
+          "Apple purchase finished, but active subscription access was not found. Please restore purchases or try again.",
+        );
+        return;
+      }
+
+      if (expectedProductId != null && productId != expectedProductId) {
+        CustomLoader.hide(context);
+        debugPrint(
+          "[Apple Membership Screen] Product mismatch: "
+          "expected=$expectedProductId actual=$productId",
+        );
+        await _showApplePurchaseDialog(
+          "Purchase Failed",
+          "Apple returned a different product ($productId) than the selected plan ($expectedProductId). Please try again or restore the correct subscription.",
+        );
+        return;
+      }
+
+      final refreshedReceipt = await RevenueCatService.instance
+          .getAppleReceiptAfterPurchase();
+      if (!mounted) return;
+
+      final receipt =
+          (refreshedReceipt != null &&
+              refreshedReceipt.length > (result.receipt?.length ?? 0))
+          ? refreshedReceipt
+          : result.receipt;
+
+      if (receipt == null || receipt.isEmpty) {
+        CustomLoader.hide(context);
+        debugPrint("[Apple Membership Screen] Missing Apple receipt");
+        await _showApplePurchaseDialog(
+          "Verification Failed",
+          "Apple purchase completed, but the receipt was not available. Please try restore purchases.",
+        );
+        return;
+      }
+
       final response = await ApiService.verifyAppleMembership(
         receipt: receipt,
         productId: productId,
+        expectedProductId: expectedProductId,
         transactionId: transactionId,
         standard: _std!,
         medium: _medium!,
         stream: _stream,
+        amount: result.amountPaid ?? _finalAmount,
       );
       if (!mounted) return;
-      CustomLoader.hide(context);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (widget.payload == null && _hasValidatedReferralCode) {
-          await _applyReferralAfterPurchase();
-          if (!mounted) return;
-        }
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool("apple_membership_verified", true);
-        await prefs.setString("apple_membership_standard", _std!);
-        await prefs.remove("skipped_payment_prompt");
-        if (!mounted) return;
-        CustomToast.showSuccess(context, "Membership Activated Successfully!");
-        Navigator.pop(context, true);
-      } else {
-        CustomToast.showError(
-          context,
-          "Verification Failed: ${ApiService.getErrorMessage(response.body)}",
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        CustomLoader.hide(context);
+        await _showApplePurchaseDialog(
+          "Verification Failed",
+          ApiService.getErrorMessage(response.body),
         );
+        return;
       }
+
+      if (widget.payload == null && _hasValidatedReferralCode) {
+        await _applyReferralAfterPurchase();
+        if (!mounted) return;
+      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool("apple_membership_verified", true);
+      await prefs.setString("apple_membership_standard", _std!);
+      await prefs.remove("skipped_payment_prompt");
+      if (!mounted) return;
+      CustomLoader.hide(context);
+      await _showApplePurchaseDialog(
+        "Purchase Successful",
+        "Your subscription is active.",
+      );
+      if (!mounted) return;
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       CustomLoader.hide(context);
-      CustomToast.showError(context, "Error verifying Apple purchase: $e");
+      await _showApplePurchaseDialog(
+        "Purchase Failed",
+        "We could not activate your subscription. Please try again.",
+      );
     }
+  }
+
+  Future<void> _showApplePurchaseDialog(String title, String message) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {

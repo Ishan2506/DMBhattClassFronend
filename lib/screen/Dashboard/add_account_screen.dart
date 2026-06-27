@@ -11,6 +11,7 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
+import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 
 class AddAccountScreen extends StatefulWidget {
   const AddAccountScreen({super.key});
@@ -41,18 +42,25 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           final data = jsonDecode(response.body);
           final user = data['user'];
 
-           // Check Valid Role
-           if (user['role'] != 'student' && user['role'] != 'guest') {
-             CustomToast.showError(context, "Access Denied: Only Students and Guests can login.");
-             return;
-           }
+          // Check Valid Role
+          if (user['role'] != 'student' && user['role'] != 'guest') {
+            CustomToast.showError(
+              context,
+              "Access Denied: Only Students and Guests can login.",
+            );
+            return;
+          }
 
           final token = data['token'];
-          
+
           // IMPORTANT: Set this new token as active BEFORE fetching profile
           // Otherwise getProfile() will use the OLD token and return the OLD user's data!
           await ApiService.setAuthToken(token);
-          
+          final loginUserId = user['_id']?.toString() ?? user['id']?.toString();
+          if (loginUserId != null && loginUserId.isNotEmpty) {
+            await RevenueCatService.instance.login(loginUserId);
+          }
+
           // Fetch profile to get name and details
           String name = "User";
           String std = "";
@@ -63,46 +71,53 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           String profilePic = "";
 
           try {
-             final profileResponse = await ApiService.getProfile();
-             if (profileResponse.statusCode == 200) {
-               final profileData = jsonDecode(profileResponse.body);
-               final user = profileData['user'];
-               final profile = profileData['profile'];
-               
-               if (user != null) {
-                 // Prioritize firstName as seen in StudentProfileScreen, fallback to fname
-                 name = "${user['firstName'] ?? user['fname'] ?? 'User'} ${user['lastName'] ?? ''}".trim();
-                 if (name.isEmpty) name = "User";
-                 userId = user['_id'] ?? "";
-               }
-               if (profile != null) {
-                 std = profile['std'] ?? "";
-                 medium = profile['medium'] ?? "";
-                 board = profile['board'] ?? "";
-                 stream = profile['stream'] ?? "";
-                 profilePic = profile['profile_pic'] ?? (user != null ? user['photoPath'] : "") ?? "";
+            final profileResponse = await ApiService.getProfile();
+            if (profileResponse.statusCode == 200) {
+              final profileData = jsonDecode(profileResponse.body);
+              final user = profileData['user'];
+              final profile = profileData['profile'];
 
-                 // Subscribe to user-specific and standard-specific notification topics
-                 if (userId.isNotEmpty) {
-                   await NotificationService.instance.subscribeToUserTopic(userId);
-                 }
-                 if (std.isNotEmpty) {
-                   await NotificationService.instance.subscribeToStandardTopic(std);
-                 }
-               }
-             }
+              if (user != null) {
+                // Prioritize firstName as seen in StudentProfileScreen, fallback to fname
+                name =
+                    "${user['firstName'] ?? user['fname'] ?? 'User'} ${user['lastName'] ?? ''}"
+                        .trim();
+                if (name.isEmpty) name = "User";
+                userId = user['_id'] ?? "";
+              }
+              if (profile != null) {
+                std = profile['std'] ?? "";
+                medium = profile['medium'] ?? "";
+                board = profile['board'] ?? "";
+                stream = profile['stream'] ?? "";
+                profilePic =
+                    profile['profile_pic'] ??
+                    (user != null ? user['photoPath'] : "") ??
+                    "";
+
+                // Subscribe to standard-specific notification topic
+                if (std.isNotEmpty) {
+                  NotificationService.instance.subscribeToStandardTopic(std);
+                }
+              }
+            }
           } catch (e) {
             print("Error fetching profile: $e");
           }
 
           // Save to saved_accounts
           final prefs = await SharedPreferences.getInstance();
-          List<String> savedAccountsStr = prefs.getStringList('saved_accounts') ?? [];
-          List<Map<String, dynamic>> accounts = savedAccountsStr.map((e) => jsonDecode(e) as Map<String, dynamic>).toList();
+          List<String> savedAccountsStr =
+              prefs.getStringList('saved_accounts') ?? [];
+          List<Map<String, dynamic>> accounts = savedAccountsStr
+              .map((e) => jsonDecode(e) as Map<String, dynamic>)
+              .toList();
 
           // Check if already exists
-          final existingIndex = accounts.indexWhere((acc) => acc['phone'] == _phoneController.text);
-          
+          final existingIndex = accounts.indexWhere(
+            (acc) => acc['phone'] == _phoneController.text,
+          );
+
           final newAccount = {
             'token': token,
             'password': _passwordController.text,
@@ -119,14 +134,17 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           if (existingIndex != -1) {
             accounts[existingIndex] = newAccount; // Update
           } else {
-             if (accounts.length >= 3) {
-               CustomToast.showError(context, "Maximum 3 accounts allowed.");
-               return;
-             }
-             accounts.add(newAccount);
+            if (accounts.length >= 3) {
+              CustomToast.showError(context, "Maximum 3 accounts allowed.");
+              return;
+            }
+            accounts.add(newAccount);
           }
 
-          await prefs.setStringList('saved_accounts', accounts.map((e) => jsonEncode(e)).toList());
+          await prefs.setStringList(
+            'saved_accounts',
+            accounts.map((e) => jsonEncode(e)).toList(),
+          );
 
           // Switch to this new account (Update root prefs)
           await prefs.setString('auth_token', token);
@@ -165,15 +183,17 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               (route) => false,
             );
           }
-
         } else {
-           // Parse error message
-           try {
-             final errData = jsonDecode(response.body);
-             CustomToast.showError(context, errData['message'] ?? "Login Failed");
-           } catch (_) {
-             CustomToast.showError(context, "Login Failed");
-           }
+          // Parse error message
+          try {
+            final errData = jsonDecode(response.body);
+            CustomToast.showError(
+              context,
+              errData['message'] ?? "Login Failed",
+            );
+          } catch (_) {
+            CustomToast.showError(context, "Login Failed");
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -190,7 +210,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = theme.colorScheme;
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -212,7 +232,13 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           ),
         ),
         elevation: 0,
-        title: Text(l10n.addAccount, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          l10n.addAccount,
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -226,41 +252,58 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? theme.colorScheme.primary.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.05),
-                  shape: BoxShape.circle
+                  color: isDark
+                      ? theme.colorScheme.primary.withOpacity(0.1)
+                      : theme.colorScheme.primary.withOpacity(0.05),
+                  shape: BoxShape.circle,
                 ),
-                child: Image.asset(imgDmBhattClassesLogo, height: 80, width: 80),
+                child: Image.asset(
+                  imgDmBhattClassesLogo,
+                  height: 80,
+                  width: 80,
+                ),
               ),
               const SizedBox(height: 32),
 
               // Title Header (Matching Login/Register style)
               Text(
                 l10n.heyThere,
-                style: GoogleFonts.poppins(fontSize: 16, color: colorScheme.onSurfaceVariant),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
               Text(
                 l10n.addAnotherAccount,
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color),
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.enterDetailsToAdd,
-                style: GoogleFonts.poppins(fontSize: 14, color: isDark ? Colors.grey.shade400 : Colors.black54),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey.shade400 : Colors.black54,
+                ),
               ),
               const SizedBox(height: 40),
 
-               _buildTextField(
+              _buildTextField(
                 context: context,
                 controller: _phoneController,
-                hint: l10n.phoneNumber, 
-                icon: Icons.phone_outlined, 
+                hint: l10n.phoneNumber,
+                icon: Icons.phone_outlined,
                 inputType: TextInputType.phone,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
                 ],
                 validator: (value) {
-                  if (value == null || value.isEmpty) return l10n.pleaseEnterPhone;
+                  if (value == null || value.isEmpty)
+                    return l10n.pleaseEnterPhone;
                   if (value.length != 10) return l10n.phoneMustBeTenDigits;
                   return null;
                 },
@@ -274,11 +317,14 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 icon: Icons.lock_outline,
                 isPassword: true,
                 isVisible: _isPasswordVisible,
-                onVisibilityChanged: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.pleaseEnterPassword : null,
+                onVisibilityChanged: () =>
+                    setState(() => _isPasswordVisible = !_isPasswordVisible),
+                validator: (value) => (value == null || value.isEmpty)
+                    ? l10n.pleaseEnterPassword
+                    : null,
                 colorScheme: colorScheme,
               ),
-               
+
               const SizedBox(height: 40),
 
               // Action Button
@@ -289,28 +335,41 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                   onPressed: _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                     elevation: 2,
                   ),
                   child: Text(
                     l10n.loginAndAdd,
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onPrimary,
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 24),
-              
+
               // Register Link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("${l10n.dontHaveAccount} ", style: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.black54)),
+                  Text(
+                    "${l10n.dontHaveAccount} ",
+                    style: GoogleFonts.poppins(
+                      color: isDark ? Colors.grey.shade400 : Colors.black54,
+                    ),
+                  ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
                       );
                     },
                     child: Text(
@@ -331,13 +390,13 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       ),
     );
   }
-  
+
   Widget _buildTextField({
     required BuildContext context,
-    required String hint, 
-    required IconData icon, 
+    required String hint,
+    required IconData icon,
     TextEditingController? controller,
-    bool isPassword = false, 
+    bool isPassword = false,
     bool isVisible = false,
     VoidCallback? onVisibilityChanged,
     TextInputType inputType = TextInputType.text,
@@ -351,7 +410,9 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       decoration: BoxDecoration(
         color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+        ),
       ),
       child: TextFormField(
         controller: controller,
@@ -359,19 +420,32 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
-        style: GoogleFonts.poppins(color: theme.textTheme.bodyLarge?.color, fontWeight: FontWeight.w600, fontSize: 16),
+        style: GoogleFonts.poppins(
+          color: theme.textTheme.bodyLarge?.color,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: isDark ? Colors.grey.shade400 : Colors.grey, fontWeight: FontWeight.normal),
+          hintStyle: GoogleFonts.poppins(
+            color: isDark ? Colors.grey.shade400 : Colors.grey,
+            fontWeight: FontWeight.normal,
+          ),
           prefixIcon: Icon(icon, color: isDark ? Colors.grey : Colors.black54),
-          suffixIcon: isPassword 
+          suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: isDark ? Colors.grey.shade400 : Colors.grey),
+                  icon: Icon(
+                    isVisible ? Icons.visibility : Icons.visibility_off,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey,
+                  ),
                   onPressed: onVisibilityChanged,
-                ) 
+                )
               : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
       ),
     );

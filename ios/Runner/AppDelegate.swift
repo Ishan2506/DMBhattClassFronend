@@ -1,9 +1,12 @@
 import Flutter
+import StoreKit
 import UIKit
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, SKRequestDelegate {
   private var appleReceiptChannel: FlutterMethodChannel?
+  private var pendingReceiptResult: FlutterResult?
+  private var receiptRefreshRequest: SKReceiptRefreshRequest?
 
   override func application(
     _ application: UIApplication,
@@ -26,21 +29,71 @@ import UIKit
       binaryMessenger: registrar.messenger()
     )
     appleReceiptChannel?.setMethodCallHandler { call, result in
+      if call.method == "refreshReceipt" {
+        self.refreshReceipt(result)
+        return
+      }
+
       guard call.method == "getReceipt" else {
         result(FlutterMethodNotImplemented)
         return
       }
 
-      guard
-        let receiptURL = Bundle.main.appStoreReceiptURL,
-        let receiptData = try? Data(contentsOf: receiptURL),
-        !receiptData.isEmpty
-      else {
-        result(nil)
+      if let receipt = self.readReceipt() {
+        result(receipt)
         return
       }
 
-      result(receiptData.base64EncodedString())
+      self.refreshReceipt(result)
     }
+  }
+
+  private func readReceipt() -> String? {
+    guard
+      let receiptURL = Bundle.main.appStoreReceiptURL,
+      let receiptData = try? Data(contentsOf: receiptURL),
+      !receiptData.isEmpty
+    else {
+      return nil
+    }
+
+    return receiptData.base64EncodedString()
+  }
+
+  private func refreshReceipt(_ result: @escaping FlutterResult) {
+    guard pendingReceiptResult == nil else {
+      result(
+        FlutterError(
+          code: "RECEIPT_REFRESH_IN_PROGRESS",
+          message: "Apple receipt refresh is already in progress.",
+          details: nil
+        )
+      )
+      return
+    }
+
+    pendingReceiptResult = result
+    receiptRefreshRequest = SKReceiptRefreshRequest()
+    receiptRefreshRequest?.delegate = self
+    receiptRefreshRequest?.start()
+  }
+
+  func requestDidFinish(_ request: SKRequest) {
+    let receipt = readReceipt()
+    pendingReceiptResult?(receipt)
+    pendingReceiptResult = nil
+    receiptRefreshRequest = nil
+  }
+
+  func request(_ request: SKRequest, didFailWithError error: Error) {
+    pendingReceiptResult?(
+      FlutterError(
+        code: "RECEIPT_REFRESH_FAILED",
+        message: error.localizedDescription,
+        details: nil
+      )
+    )
+    pendingReceiptResult = nil
+    receiptRefreshRequest = nil
   }
 }

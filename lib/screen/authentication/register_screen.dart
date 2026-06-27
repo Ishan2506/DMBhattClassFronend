@@ -12,6 +12,7 @@ import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/payment_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
 import 'package:intl/intl.dart';
 
@@ -25,10 +26,9 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPasswordVisible = false;
   bool _agreedToTerms = false;
-  DateTime? _selectedDob;
-  
+
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final TextEditingController _nameController = TextEditingController();
 
@@ -58,32 +58,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> _boards = ["GSEB", "CBSE"];
   final List<String> _roles = ["Student", "Teacher"];
 
-  Future<void> _selectDob(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Theme.of(context).colorScheme.primary,
-              onPrimary: Theme.of(context).colorScheme.onPrimary,
-              onSurface: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _selectedDob) {
-      setState(() {
-        _selectedDob = picked;
-      });
-    }
-  }
+  final Map<String, List<String>> _stateCityMap = {
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
+    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
+  };
 
   void _showTermsDialog() {
     final colorScheme = Theme.of(context).colorScheme;
@@ -91,7 +70,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: colorScheme.surface,
-        title: Text("Terms and Conditions", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+        title: Text(
+          "Terms and Conditions",
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
         content: SingleChildScrollView(
           child: Text(
             "1. By registering, you agree to abide by the rules and regulations of our Learning Academy.\n\n"
@@ -101,13 +86,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             "5. Respectful behavior towards staff and fellow students is mandatory.\n\n"
             "6. Unauthorized sharing of study material is strictly prohibited.\n\n"
             "7. Regular attendance and participation in assessments are expected for optimal performance.",
-            style: GoogleFonts.poppins(fontSize: 14, color: colorScheme.onSurface),
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: colorScheme.onSurface,
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Close", style: GoogleFonts.poppins(color: colorScheme.primary)),
+            child: Text(
+              "Close",
+              style: GoogleFonts.poppins(color: colorScheme.primary),
+            ),
           ),
         ],
       ),
@@ -116,14 +107,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<List<String>> _fetchSchools(String query) async {
     if (_selectedCity == null || query.isEmpty) return [];
-    
+
     final url = Uri.parse(
-        'https://nominatim.openstreetmap.org/search?q=$query+school+in+$_selectedCity&format=json&limit=5');
-    
+      'https://nominatim.openstreetmap.org/search?q=$query+school+in+$_selectedCity&format=json&limit=5',
+    );
+
     try {
-      final response = await http.get(url, headers: {
-        'User-Agent': 'LearningApp/1.0', 
-      });
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'LearningApp/1.0'},
+      );
 
       if (response.statusCode == 200) {
         final List data = json.decode(response.body);
@@ -155,528 +148,547 @@ class _RegisterScreenState extends State<RegisterScreen> {
           key: _formKey,
           child: Column(
             children: [
-            // Logo
-             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-               child: Image.asset(
-                imgDmBhattClassesLogo,
-                height: MediaQuery.of(context).size.height * 0.1,
-                width: MediaQuery.of(context).size.height * 0.1,
-              ),
-             ),
-            const SizedBox(height: 24),
-            
-            Text(
-              l10n.heyThere,
-              style: GoogleFonts.poppins(fontSize: 16, color: colorScheme.onSurfaceVariant),
-            ),
-            Text(
-              l10n.register,
-              style: GoogleFonts.poppins(
-                fontSize: 24, 
-                fontWeight: FontWeight.bold, 
-                color: colorScheme.onSurface
-              ),
-            ),
-            const SizedBox(height: 32),
-
-          
-            const SizedBox(height: 16),
-
-            // Name
-            _buildTextField(
-              controller: _nameController,
-              hint: l10n.name, 
-              icon: Icons.person_outline,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterName;
-                }
-                return null;
-              },
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
-
-
-
-             // Email
-            _buildTextField(
-              controller: _emailController,
-              hint: l10n.email, 
-              icon: Icons.email_outlined,
-              inputType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterEmail;
-                }
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                  return l10n.pleaseEnterValidEmail;
-                }
-                return null;
-              },
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
-
-            // Phone
-             _buildTextField(
-              controller: _phoneController,
-              hint: l10n.phoneNumber, 
-              icon: Icons.phone_outlined, 
-              inputType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
-              ],
-              validator: ValidationUtils.validateIndianPhoneNumber,
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
-
-            // Password
-            _buildTextField(
-              controller: _passwordController,
-              hint: l10n.password,
-              icon: Icons.lock_outline,
-              isPassword: true,
-              isVisible: _isPasswordVisible,
-              onVisibilityChanged: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
-              validator: (value) => ValidationUtils.noFieldError(value, l10n),
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
-
-            // Parent's Mobile
-            _buildTextField(
-              controller: _parentPhoneController,
-              hint: l10n.parentPhone, 
-              icon: Icons.family_restroom_outlined, 
-              inputType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
-              ],
-              validator: ValidationUtils.validateIndianPhoneNumber,
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
-            
-            // Date of Birth
-            GestureDetector(
-              onTap: () => _selectDob(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              // Logo
+              Container(
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.outlineVariant),
+                  color: colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today_outlined, color: colorScheme.onSurfaceVariant),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _selectedDob == null
-                            ? l10n.selectDateOfBirth
-                            : DateFormat('dd/MM/yyyy').format(_selectedDob!),
-                        style: GoogleFonts.poppins(
-                          color: _selectedDob == null
-                              ? colorScheme.onSurfaceVariant.withOpacity(0.6)
-                              : colorScheme.onSurface,
-                          fontWeight: _selectedDob == null ? FontWeight.normal : FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Image.asset(
+                  imgDmBhattClassesLogo,
+                  height: MediaQuery.of(context).size.height * 0.1,
+                  width: MediaQuery.of(context).size.height * 0.1,
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-  // Standard Dropdown
-            _buildDropdown(
-              context,
-              hint: l10n.standard,
-              icon: Icons.school_outlined,
-              value: _selectedStandard,
-              items: _standards,
-              onChanged: (val) {
-                setState(() {
-                  _selectedStandard = val;
-                  // Reset stream if standard changes to < 11
-                  if (val != "11" && val != "12") {
-                    _selectedStream = null;
+              Text(
+                l10n.heyThere,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                l10n.register,
+                style: GoogleFonts.poppins(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              const SizedBox(height: 16),
+
+              // Name
+              _buildTextField(
+                controller: _nameController,
+                hint: l10n.name,
+                icon: Icons.person_outline,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return l10n.pleaseEnterName;
                   }
-                });
-              },
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
+                  return null;
+                },
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(height: 16),
 
-            // Stream Dropdown (Conditional)
-            if (_selectedStandard == "11" || _selectedStandard == "12") ...[
-               _buildDropdown(
+              // Email
+              _buildTextField(
+                controller: _emailController,
+                hint: l10n.email,
+                icon: Icons.email_outlined,
+                inputType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return l10n.pleaseEnterEmail;
+                  }
+                  if (!RegExp(
+                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                  ).hasMatch(value)) {
+                    return l10n.pleaseEnterValidEmail;
+                  }
+                  return null;
+                },
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(height: 16),
+
+              // Phone
+              _buildTextField(
+                controller: _phoneController,
+                hint: l10n.phoneNumber,
+                icon: Icons.phone_outlined,
+                inputType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                validator: ValidationUtils.validateIndianPhoneNumber,
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(height: 16),
+
+              // Password
+              _buildTextField(
+                controller: _passwordController,
+                hint: l10n.password,
+                icon: Icons.lock_outline,
+                isPassword: true,
+                isVisible: _isPasswordVisible,
+                onVisibilityChanged: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+                validator: (value) => ValidationUtils.noFieldError(value, l10n),
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(height: 16),
+
+              // Parent's Mobile
+              _buildTextField(
+                controller: _parentPhoneController,
+                hint: l10n.parentPhone,
+                icon: Icons.family_restroom_outlined,
+                inputType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                validator: ValidationUtils.validateIndianPhoneNumber,
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(height: 16),
+
+              // Standard Dropdown
+              _buildDropdown(
                 context,
-                hint: l10n.stream,
-                icon: Icons.science_outlined,
-                value: _selectedStream,
-                items: _streams,
+                hint: l10n.standard,
+                icon: Icons.school_outlined,
+                value: _selectedStandard,
+                items: _standards,
                 onChanged: (val) {
                   setState(() {
-                    _selectedStream = val;
+                    _selectedStandard = val;
+                    // Reset stream if standard changes to < 11
+                    if (val != "11" && val != "12") {
+                      _selectedStream = null;
+                    }
                   });
                 },
                 colorScheme: colorScheme,
               ),
               const SizedBox(height: 16),
-            ],
 
-            // Medium Dropdown
-            _buildDropdown(
-              context,
-              hint: l10n.medium,
-              icon: Icons.language,
-              value: _selectedMedium,
-              items: _mediums,
-              onChanged: (val) {
-                setState(() {
-                  _selectedMedium = val;
-                });
-              },
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
-
-            // Board Dropdown
-            _buildDropdown(
-              context,
-              hint: l10n.board,
-              icon: Icons.dashboard_outlined,
-              value: _selectedBoard,
-              items: _boards,
-              onChanged: (val) {
-                setState(() {
-                  _selectedBoard = val;
-                });
-              },
-              colorScheme: colorScheme,
-            ),
-
-            const SizedBox(height: 16),
-
-            // State Dropdown
-            _buildDropdown(
-              context,
-              hint: l10n.state,
-              icon: Icons.map_outlined,
-              value: _selectedState,
-              items: indiaStatesCities.keys.toList(),
-              onChanged: (val) {
-                setState(() {
-                  _selectedState = val;
-                  _selectedCity = null; // Reset city when state changes
-                  _customCityController.clear();
-                });
-              },
-              colorScheme: colorScheme,
-            ),
-             const SizedBox(height: 16),
-
-            // City Dropdown (Conditional)
-             _buildDropdown(
-              context,
-              hint: l10n.city,
-              icon: Icons.location_city,
-              value: _selectedCity,
-              items: _selectedState != null ? indiaStatesCities[_selectedState]! : [],
-              onChanged: (val) {
-                setState(() {
-                  _selectedCity = val;
-                  if (val != "Other") {
-                    _customCityController.clear();
-                  }
-                });
-              },
-              colorScheme: colorScheme,
-            ),
-            if (_selectedCity == "Other") ...[
-              const SizedBox(height: 16),
-              _buildTextField(
-                hint: "Enter City Name",
-                icon: Icons.location_city_outlined,
-                controller: _customCityController,
-                colorScheme: colorScheme,
-                validator: (val) {
-                  if (_selectedCity == "Other" && (val == null || val.trim().isEmpty)) {
-                    return "Please enter your city name";
-                  }
-                  return null;
-                },
-              ),
-            ],
-            const SizedBox(height: 16),
-
-
-             // School Name Autocomplete (Visible only if Other is selected)
-             if (_selectedInstitute == "Other") 
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Autocomplete<String>(
-                    optionsBuilder: (TextEditingValue textEditingValue) {
-                      if (textEditingValue.text == '') {
-                        return const Iterable<String>.empty();
-                      }
-                      return _fetchSchools(textEditingValue.text);
-                    },
-                    onSelected: (String selection) {
-                      _schoolNameController.text = selection;
-                    },
-                    fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                      textEditingController.addListener(() {
-                         _schoolNameController.text = textEditingController.text;
-                      });
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainer,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: colorScheme.outlineVariant),
-                        ),
-                        child: TextFormField(
-                          controller: textEditingController,
-                          focusNode: focusNode,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter school name';
-                            }
-                            return null;
-                          },
-                          style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
-                          decoration: InputDecoration(
-                            hintText: l10n.schoolName,
-                            hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
-                            prefixIcon: Icon(Icons.school_outlined, color: colorScheme.onSurfaceVariant),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                          ),
-                        ),
-                      );
-                    },
-                    optionsViewBuilder: (context, onSelected, options) {
-                      return Align(
-                        alignment: Alignment.topLeft,
-                        child: Material(
-                          elevation: 4.0,
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            width: constraints.maxWidth,
-                            constraints: const BoxConstraints(maxHeight: 200),
-                            decoration: BoxDecoration(
-                               color: colorScheme.surface,
-                                borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: ListView.builder(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: options.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final String option = options.elementAt(index);
-                                final displayName = option.split(',')[0]; 
-                                return InkWell(
-                                  onTap: () {
-                                    onSelected(option);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Text(displayName, style: GoogleFonts.poppins(color: colorScheme.onSurface)),
-                                  ),
-                                );
-                               },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }
-              ),
-            const SizedBox(height: 10),
-
-            // Terms Checkbox
-            Row(
-              children: [
-                Checkbox(
-                  value: _agreedToTerms, 
-                  activeColor: colorScheme.primary,
+              // Stream Dropdown (Conditional)
+              if (_selectedStandard == "11" || _selectedStandard == "12") ...[
+                _buildDropdown(
+                  context,
+                  hint: l10n.stream,
+                  icon: Icons.science_outlined,
+                  value: _selectedStream,
+                  items: _streams,
                   onChanged: (val) {
                     setState(() {
-                      _agreedToTerms = val!;
+                      _selectedStream = val;
                     });
-                  }
+                  },
+                  colorScheme: colorScheme,
                 ),
-                Text(
-                  l10n.agreeTerms,
-                  style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                const SizedBox(height: 16),
+              ],
+
+              // Medium Dropdown
+              _buildDropdown(
+                context,
+                hint: l10n.medium,
+                icon: Icons.language,
+                value: _selectedMedium,
+                items: _mediums,
+                onChanged: (val) {
+                  setState(() {
+                    _selectedMedium = val;
+                  });
+                },
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(height: 16),
+
+              // Board Dropdown
+              _buildDropdown(
+                context,
+                hint: l10n.board,
+                icon: Icons.dashboard_outlined,
+                value: _selectedBoard,
+                items: _boards,
+                onChanged: (val) {
+                  setState(() {
+                    _selectedBoard = val;
+                  });
+                },
+                colorScheme: colorScheme,
+              ),
+
+              const SizedBox(height: 16),
+
+              // State Dropdown
+              _buildDropdown(
+                context,
+                hint: l10n.state,
+                icon: Icons.map_outlined,
+                value: _selectedState,
+                items: _stateCityMap.keys.toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedState = val;
+                    _selectedCity = null; // Reset city when state changes
+                  });
+                },
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(height: 16),
+
+              // City Dropdown (Conditional)
+              _buildDropdown(
+                context,
+                hint: l10n.city,
+                icon: Icons.location_city,
+                value: _selectedCity,
+                items: _selectedState != null
+                    ? _stateCityMap[_selectedState]!
+                    : [],
+                onChanged: (val) {
+                  setState(() {
+                    _selectedCity = val;
+                  });
+                },
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(height: 16),
+
+              // School Name Autocomplete (Visible only if Other is selected)
+              if (_selectedInstitute == "Other")
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Autocomplete<String>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text == '') {
+                          return const Iterable<String>.empty();
+                        }
+                        return _fetchSchools(textEditingValue.text);
+                      },
+                      onSelected: (String selection) {
+                        _schoolNameController.text = selection;
+                      },
+                      fieldViewBuilder:
+                          (
+                            context,
+                            textEditingController,
+                            focusNode,
+                            onFieldSubmitted,
+                          ) {
+                            textEditingController.addListener(() {
+                              _schoolNameController.text =
+                                  textEditingController.text;
+                            });
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainer,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: colorScheme.outlineVariant,
+                                ),
+                              ),
+                              child: TextFormField(
+                                controller: textEditingController,
+                                focusNode: focusNode,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter school name';
+                                  }
+                                  return null;
+                                },
+                                style: GoogleFonts.poppins(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: l10n.schoolName,
+                                  hintStyle: GoogleFonts.poppins(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.school_outlined,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 4.0,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              width: constraints.maxWidth,
+                              constraints: const BoxConstraints(maxHeight: 200),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surface,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount: options.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  final String option = options.elementAt(
+                                    index,
+                                  );
+                                  final displayName = option.split(',')[0];
+                                  return InkWell(
+                                    onTap: () {
+                                      onSelected(option);
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Text(
+                                        displayName,
+                                        style: GoogleFonts.poppins(
+                                          color: colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
-                GestureDetector(
-                  onTap: _showTermsDialog,
-                  child: Text(
-                    l10n.termsConditions,
+              const SizedBox(height: 10),
+
+              // Terms Checkbox
+              Row(
+                children: [
+                  Checkbox(
+                    value: _agreedToTerms,
+                    activeColor: colorScheme.primary,
+                    onChanged: (val) {
+                      setState(() {
+                        _agreedToTerms = val!;
+                      });
+                    },
+                  ),
+                  Text(
+                    l10n.agreeTerms,
                     style: GoogleFonts.poppins(
-                      fontSize: 12, 
-                      color: colorScheme.primary, 
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.underline,
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _showTermsDialog,
+                    child: Text(
+                      l10n.termsConditions,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Register Button
+              SizedBox(
+                width: double.infinity,
+                height: MediaQuery.of(context).size.height * 0.07,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      // Password Complexity Validation (Toast)
+                      final passwordError =
+                          ValidationUtils.validatePasswordForToast(
+                            _passwordController.text,
+                            l10n,
+                          );
+                      if (passwordError != null) {
+                        CustomToast.showError(context, passwordError);
+                        return;
+                      }
+
+                      if (!_agreedToTerms) {
+                        CustomToast.showError(context, l10n.pleaseAgreeTerms);
+                        return;
+                      }
+                      if (_selectedStandard == null ||
+                          _selectedMedium == null ||
+                          _selectedState == null ||
+                          _selectedCity == null ||
+                          _selectedBoard == null) {
+                        CustomToast.showError(
+                          context,
+                          l10n.pleaseSelectAllFields,
+                        );
+                        return;
+                      }
+                      if ((_selectedStandard == "11" ||
+                              _selectedStandard == "12") &&
+                          _selectedStream == null) {
+                        CustomToast.showError(context, l10n.pleaseSelectStream);
+                        return;
+                      }
+
+                      // Validate Phone != Parent Phone
+                      if (_phoneController.text ==
+                          _parentPhoneController.text) {
+                        CustomToast.showError(
+                          context,
+                          "Student and Parent mobile numbers cannot be the same.",
+                        );
+                        return;
+                      }
+
+                      if (_phoneController.text.trim() ==
+                          _parentPhoneController.text.trim()) {
+                        CustomToast.showError(
+                          context,
+                          l10n.phoneNumbersCannotBeSame,
+                        );
+                        return;
+                      }
+
+                      if (_phoneController.text.trim() ==
+                          _parentPhoneController.text.trim()) {
+                        CustomToast.showError(
+                          context,
+                          l10n.phoneNumbersCannotBeSame,
+                        );
+                        return;
+                      }
+
+                      // Split Name
+                      final nameParts = _nameController.text.trim().split(' ');
+                      final firstName = nameParts.isNotEmpty
+                          ? nameParts[0]
+                          : '';
+
+                      final payload = RegistrationPayload(
+                        role: 'student',
+                        fields: {
+                          "firstName": firstName,
+
+                          "email": _emailController.text,
+                          "phoneNum": _phoneController.text,
+                          "parentPhone": _parentPhoneController.text,
+                          "std": _selectedStandard!,
+                          "medium": _selectedMedium!,
+                          "stream": _selectedStream ?? "",
+                          "board": _selectedBoard!,
+                          "loginAs": _selectedRole,
+                          "city": _selectedCity!,
+                          "state": _selectedState!,
+                        },
+                        files: [],
+                      );
+
+                      // Register Directly
+                      try {
+                        CustomLoader.show(context);
+                        final response = await ApiService.registerUser(
+                          payload: payload,
+                          dpin: _passwordController.text,
+                        );
+
+                        if (!mounted) return;
+                        CustomLoader.hide(context);
+
+                        if (response.statusCode == 201 ||
+                            response.statusCode == 200) {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('std', _selectedStandard!);
+                          await prefs.setString('medium', _selectedMedium!);
+                          await prefs.setString('board', _selectedBoard!);
+                          if (_selectedStream != null &&
+                              _selectedStream!.isNotEmpty) {
+                            await prefs.setString('stream', _selectedStream!);
+                          } else {
+                            await prefs.remove('stream');
+                          }
+                          CustomToast.showSuccess(
+                            context,
+                            "Registration Successful! Please Login.",
+                          );
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        } else {
+                          final errorMsg = ApiService.getErrorMessage(
+                            response.body,
+                          );
+                          CustomToast.showError(
+                            context,
+                            "Registration Failed: $errorMsg",
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          CustomLoader.hide(context);
+                          CustomToast.showError(context, "Error: $e");
+                        }
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: Text(
+                    l10n.register,
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onPrimary,
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Register Button
-            SizedBox(
-              width: double.infinity,
-              height: MediaQuery.of(context).size.height * 0.07,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    // Password Complexity Validation (Toast)
-                    final passwordError = ValidationUtils.validatePasswordForToast(_passwordController.text, l10n);
-                    if (passwordError != null) {
-                      CustomToast.showError(context, passwordError);
-                      return;
-                    }
-
-                    if (!_agreedToTerms) {
-                      CustomToast.showError(context, l10n.pleaseAgreeTerms);
-                      return;
-                    }
-                    if (_selectedDob == null) {
-                      CustomToast.showError(context, l10n.pleaseSelectDob);
-                      return;
-                    }
-                    if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedBoard == null) {
-                        CustomToast.showError(context, l10n.pleaseSelectAllFields);
-                      return;
-                    }
-                    if (_selectedCity == "Other" && _customCityController.text.trim().isEmpty) {
-                      CustomToast.showError(context, "Please enter your city name");
-                      return;
-                    }
-                    if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
-                          CustomToast.showError(context, l10n.pleaseSelectStream);
-                      return;
-                    }
-                    
-                    // Validate Phone != Parent Phone
-                    if (_phoneController.text == _parentPhoneController.text) {
-                      CustomToast.showError(context, "Student and Parent mobile numbers cannot be the same.");
-                      return;
-                    }
-
-                    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
-                      CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
-                      return;
-                    }
-
-                    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
-                      CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
-                      return;
-                    }
-
-                    // Split Name
-                    final nameParts = _nameController.text.trim().split(' ');
-                    final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
-
-
-                    final payload = RegistrationPayload(
-                      role: 'student',
-                      fields: {
-                        "firstName": firstName,
-
-                        "email": _emailController.text,
-                        "phoneNum": _phoneController.text,
-                        "parentPhone": _parentPhoneController.text,
-                        "dob": DateFormat('yyyy-MM-dd').format(_selectedDob!),
-                        "std": _selectedStandard!,
-                        "medium": _selectedMedium!,
-                        "stream": _selectedStream ?? "",
-                        "board": _selectedBoard!,
-                        "loginAs": _selectedRole,
-                        "city": _selectedCity == "Other" ? _customCityController.text.trim() : _selectedCity!,
-                        "state": _selectedState!,
-                      },
-                      files: [], 
-                    );
-
-                    // Register Directly
-                    try {
-                      CustomLoader.show(context);
-                      final response = await ApiService.registerUser(
-                        payload: payload,
-                        dpin: _passwordController.text,
-                      );
-
-                      if (!mounted) return;
-                      CustomLoader.hide(context);
-
-                      if (response.statusCode == 201 || response.statusCode == 200) {
-                        CustomToast.showSuccess(context, "Registration Successful! Please Login.");
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        );
-                      } else {
-                        final errorMsg = ApiService.getErrorMessage(response.body);
-                        CustomToast.showError(context, "Registration Failed: $errorMsg");
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        CustomLoader.hide(context);
-                        CustomToast.showError(context, "Error: $e");
-                      }
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  elevation: 2,
-                ),
-                child: Text(
-                  l10n.register,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onPrimary,
-                  ),
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildTextField({
-    required String hint, 
-    required IconData icon, 
+    required String hint,
+    required IconData icon,
     TextEditingController? controller,
-    bool isPassword = false, 
+    bool isPassword = false,
     bool isVisible = false,
     VoidCallback? onVisibilityChanged,
     TextInputType inputType = TextInputType.text,
@@ -696,25 +708,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
-        style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold), // Black Bold Input
+        style: GoogleFonts.poppins(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.bold,
+        ), // Black Bold Input
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
+          hintStyle: GoogleFonts.poppins(
+            color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+          ),
           prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant),
-          suffixIcon: isPassword 
+          suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: colorScheme.onSurfaceVariant),
+                  icon: Icon(
+                    isVisible ? Icons.visibility : Icons.visibility_off,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   onPressed: onVisibilityChanged,
-                ) 
+                )
               : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDropdown(BuildContext context, {
+  Widget _buildDropdown(
+    BuildContext context, {
     required String hint,
     required IconData icon,
     required String? value,
@@ -736,18 +760,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               Icon(icon, color: colorScheme.onSurfaceVariant),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  hint,
-                  style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
+              Text(
+                hint,
+                style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant),
               ),
             ],
           ),
           value: value,
-          icon: Icon(Icons.keyboard_arrow_down, color: colorScheme.onSurfaceVariant),
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            color: colorScheme.onSurfaceVariant,
+          ),
           dropdownColor: colorScheme.surface, // Cleaner White Background
           selectedItemBuilder: (BuildContext context) {
             return items.map<Widget>((String item) {
@@ -756,21 +779,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               if (item == "Student") label = l10n.student;
               if (item == "Teacher") label = l10n.teacher;
               return Align(
-                 alignment: Alignment.centerLeft,
-                 child: Row(
-                   children: [
-                     Icon(icon, color: colorScheme.onSurfaceVariant),
-                     const SizedBox(width: 12),
-                     Expanded(
-                       child: Text(
-                         label,
-                         style: GoogleFonts.poppins(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
-                         overflow: TextOverflow.ellipsis,
-                         maxLines: 1,
-                       ),
-                     ),
-                   ],
-                 ),
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    Icon(icon, color: colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 12),
+                    Text(
+                      label,
+                      style: GoogleFonts.poppins(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               );
             }).toList();
           },
@@ -783,9 +805,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               value: value,
               child: Text(
                 label,
-                style: GoogleFonts.poppins(color: colorScheme.onSurface), // Black text for readability
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+                style: GoogleFonts.poppins(
+                  color: colorScheme.onSurface,
+                ), // Black text for readability
               ),
             );
           }).toList(),

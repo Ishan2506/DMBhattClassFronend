@@ -23,6 +23,7 @@ class RevenueCatPurchaseResult {
     this.didShowStatusAlert = false,
     this.receipt,
     this.productId,
+    this.requestedProductId,
     this.transactionId,
     this.amountPaid,
   });
@@ -32,6 +33,7 @@ class RevenueCatPurchaseResult {
   final bool didShowStatusAlert;
   final String? receipt;
   final String? productId;
+  final String? requestedProductId;
   final String? transactionId;
   final double? amountPaid;
 
@@ -103,6 +105,18 @@ class RevenueCatService {
     "12": "com.standard.twelve.redeem",
   };
 
+  static String? productIdForStandard(
+    String? standard, {
+    bool useRedeemProduct = false,
+    bool useReferralProduct = false,
+  }) {
+    final normalizedStandard = _normalizeStandard(standard);
+    final productIds = (useRedeemProduct || useReferralProduct)
+        ? standardRedeemProductIds
+        : standardProductIds;
+    return productIds[normalizedStandard];
+  }
+
   bool _isInitialized = false;
   CustomerInfo? _customerInfo;
 
@@ -160,14 +174,45 @@ class RevenueCatService {
     }
   }
 
-  Future<String?> getAppleReceipt() async {
-    if (kIsWeb || !Platform.isIOS) return null;
+  Future<String?> getAppleReceipt({bool forceRefresh = false}) async {
+    if (!Platform.isIOS) return null;
     try {
-      return await _appleReceiptChannel.invokeMethod<String>("getReceipt");
+      return await _appleReceiptChannel.invokeMethod<String>(
+        forceRefresh ? "refreshReceipt" : "getReceipt",
+      );
     } on PlatformException catch (e) {
       debugPrint("Error fetching Apple receipt: ${e.message}");
       return null;
     }
+  }
+
+  Future<String?> getAppleReceiptAfterPurchase({
+    int maxAttempts = 6,
+    Duration delay = const Duration(milliseconds: 900),
+    bool forceRefresh = false,
+  }) async {
+    if (!Platform.isIOS) return null;
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      final receipt = await getAppleReceipt(
+        forceRefresh: forceRefresh || attempt > 1,
+      );
+      debugPrint(
+        "Apple receipt fetch attempt $attempt/$maxAttempts chars: ${receipt?.length ?? 0}",
+      );
+
+      if (receipt != null && receipt.isNotEmpty) {
+        debugPrint("Apple receipt generated as one string.");
+        return receipt;
+      }
+
+      if (attempt < maxAttempts) {
+        await Future.delayed(delay);
+      }
+    }
+
+    debugPrint("Apple receipt was not available.");
+    return null;
   }
 
   /// Present the RevenueCat Paywall
@@ -263,10 +308,10 @@ class RevenueCatService {
   }) async {
     final normalizedStandard = _normalizeStandard(standard);
     final shouldUseRedeemProduct = useRedeemProduct || useReferralProduct;
-    final productIds = shouldUseRedeemProduct
-        ? standardRedeemProductIds
-        : standardProductIds;
-    final productId = productIds[normalizedStandard];
+    final productId = productIdForStandard(
+      normalizedStandard,
+      useRedeemProduct: shouldUseRedeemProduct,
+    );
     if (productId == null) {
       final productType = shouldUseRedeemProduct ? "redeem " : "";
       debugPrint(
@@ -329,6 +374,7 @@ class RevenueCatService {
                 standard: normalizedStandard!,
                 package: selectedPackage,
                 product: selectedProduct!,
+                requestedProductId: productId,
                 onCustomerInfoChanged: (customerInfo) {
                   _customerInfo = customerInfo;
                 },
@@ -497,6 +543,7 @@ class _StandardRevenueCatPaywallRoute extends StatefulWidget {
   const _StandardRevenueCatPaywallRoute({
     required this.standard,
     required this.product,
+    required this.requestedProductId,
     required this.onCustomerInfoChanged,
     this.package,
   });
@@ -504,6 +551,7 @@ class _StandardRevenueCatPaywallRoute extends StatefulWidget {
   final String standard;
   final Package? package;
   final StoreProduct product;
+  final String requestedProductId;
   final ValueChanged<CustomerInfo> onCustomerInfoChanged;
 
   @override
@@ -529,7 +577,8 @@ class _StandardRevenueCatPaywallRouteState
       );
       widget.onCustomerInfoChanged(result.customerInfo);
       final active = _isPadhakuProActive(result.customerInfo);
-      final receipt = await RevenueCatService.instance.getAppleReceipt();
+      final receipt = await RevenueCatService.instance
+          .getAppleReceiptAfterPurchase();
       if (!mounted) return;
       Navigator.pop(
         context,
@@ -540,6 +589,7 @@ class _StandardRevenueCatPaywallRouteState
           isEntitlementActive: active,
           receipt: receipt,
           productId: result.storeTransaction.productIdentifier,
+          requestedProductId: widget.requestedProductId,
           transactionId: result.storeTransaction.transactionIdentifier,
           amountPaid: _product.price,
         ),
@@ -550,9 +600,15 @@ class _StandardRevenueCatPaywallRouteState
         if (mounted) setState(() => _isPurchasing = false);
         return;
       }
+      if (_isInvalidReceiptStoreKitBug(e)) {
+        final recovered = await _recoverAfterInvalidReceipt();
+        if (recovered) return;
+      }
       await _showAlert(
         title: "Purchase Failed",
-        message: e.message ?? "We could not complete your purchase.",
+        message: _isInvalidReceiptStoreKitBug(e)
+            ? "Apple is still updating your subscription receipt. Please wait a moment, then tap Restore Purchases."
+            : e.message ?? "We could not complete your purchase.",
       );
       if (mounted) setState(() => _isPurchasing = false);
     } catch (e) {
@@ -561,6 +617,59 @@ class _StandardRevenueCatPaywallRouteState
         message: "We could not complete your purchase. Please try again.",
       );
       if (mounted) setState(() => _isPurchasing = false);
+    }
+  }
+
+  bool _isInvalidReceiptStoreKitBug(PlatformException e) {
+    final errorCode = PurchasesErrorHelper.getErrorCode(e);
+    final details = "${e.code} ${e.message} ${e.details}".toLowerCase();
+    return errorCode == PurchasesErrorCode.invalidReceiptError ||
+        details.contains("invalid_receipt") ||
+        details.contains("receipt is not valid") ||
+        details.contains("purchased product was missing") ||
+        details.contains("missing in the receipt") ||
+        details.contains("7712");
+  }
+
+  Future<bool> _recoverAfterInvalidReceipt() async {
+    try {
+      await RevenueCatService.instance.getAppleReceiptAfterPurchase(
+        maxAttempts: 8,
+        delay: const Duration(milliseconds: 1500),
+        forceRefresh: true,
+      );
+      await Future.delayed(const Duration(seconds: 2));
+      await Purchases.syncPurchases();
+      await Purchases.invalidateCustomerInfoCache();
+      final customerInfo = await Purchases.getCustomerInfo();
+      widget.onCustomerInfoChanged(customerInfo);
+      final active = _isPadhakuProActive(customerInfo);
+      if (!active) return false;
+
+      final receipt = await RevenueCatService.instance
+          .getAppleReceiptAfterPurchase(
+            maxAttempts: 8,
+            delay: const Duration(milliseconds: 1500),
+            forceRefresh: true,
+          );
+      if (!mounted) return true;
+      Navigator.pop(
+        context,
+        RevenueCatPurchaseResult(
+          status: RevenueCatPurchaseStatus.purchased,
+          isEntitlementActive: true,
+          receipt: receipt,
+          productId: widget.requestedProductId,
+          requestedProductId: widget.requestedProductId,
+          transactionId:
+              "revenuecat_sync_${DateTime.now().millisecondsSinceEpoch}",
+          amountPaid: _product.price,
+        ),
+      );
+      return true;
+    } catch (e) {
+      debugPrint("RevenueCat invalid receipt recovery failed: $e");
+      return false;
     }
   }
 

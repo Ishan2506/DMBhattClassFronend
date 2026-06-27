@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart'
-    show kIsWeb, defaultTargetPlatform, TargetPlatform;
+    show debugPrint, kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -13,6 +13,7 @@ import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_receipt_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UpgradePlanScreen extends StatefulWidget {
   const UpgradePlanScreen({super.key});
@@ -391,8 +392,11 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
             standard: _selectedStandard,
             useRedeemProduct: useRedeemProduct,
           );
-      if (result.isSuccess && mounted) {
-        await _verifyAppleUpgrade(result);
+      if (!mounted) return;
+      if (result.isSuccess) {
+        await _completeAppleUpgradeFromRevenueCat(result);
+      } else {
+        await _showApplePurchaseDialog(result.title, result.message);
       }
     } else {
       // Android: Use Razorpay
@@ -433,54 +437,188 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     }
   }
 
-  Future<void> _verifyAppleUpgrade(RevenueCatPurchaseResult result) async {
-    final receipt = result.receipt;
+  Future<void> _completeAppleUpgradeFromRevenueCat(
+    RevenueCatPurchaseResult result,
+  ) async {
     final productId = result.productId;
+    final expectedProductId =
+        result.requestedProductId ??
+        RevenueCatService.productIdForStandard(
+          _selectedStandard,
+          useRedeemProduct:
+              _hasValidRedeemCodeForSelectedStandard() ||
+              _isRewardPointsApplied,
+        );
     final transactionId = result.transactionId;
-    if (receipt == null ||
-        receipt.isEmpty ||
+    debugPrint("[Apple Upgrade Screen] Completing via RevenueCat");
+    debugPrint("[Apple Upgrade Screen] productId: $productId");
+    debugPrint("[Apple Upgrade Screen] expectedProductId: $expectedProductId");
+    debugPrint("[Apple Upgrade Screen] transactionId: $transactionId");
+    debugPrint("[Apple Upgrade Screen] selectedStandard: $_selectedStandard");
+    debugPrint("[Apple Upgrade Screen] selectedMedium: $_selectedMedium");
+    debugPrint("[Apple Upgrade Screen] selectedStream: $_selectedStream");
+    debugPrint(
+      "[Apple Upgrade Screen] amount: ${result.amountPaid ?? _finalAmount}",
+    );
+    final active = await RevenueCatService.instance.refreshIsProActive();
+    if (!active ||
         productId == null ||
         productId.isEmpty ||
         transactionId == null ||
         transactionId.isEmpty ||
         _selectedStandard == null ||
         _selectedMedium == null) {
-      CustomToast.showError(
-        context,
-        "Apple purchase completed, but verification details are missing. Please try again.",
+      debugPrint(
+        "[Apple Upgrade Screen] Missing verification details: "
+        "entitlementActive=$active, "
+        "productIdMissing=${productId == null || productId.isEmpty}, "
+        "transactionIdMissing=${transactionId == null || transactionId.isEmpty}, "
+        "standardMissing=${_selectedStandard == null}, "
+        "mediumMissing=${_selectedMedium == null}",
+      );
+      await _showApplePurchaseDialog(
+        "Purchase Failed",
+        "Apple purchase finished, but active subscription access was not found. Please restore purchases or try again.",
       );
       return;
     }
 
-    try {
-      CustomLoader.show(context);
-      final response = await ApiService.verifyAppleUpgrade(
-        receipt: receipt,
-        productId: productId,
-        transactionId: transactionId,
-        newStandard: _selectedStandard!,
-        medium: _selectedMedium!,
-        stream: _selectedStream,
-        amount: result.amountPaid ?? _finalAmount,
+    if (expectedProductId != null && productId != expectedProductId) {
+      debugPrint(
+        "[Apple Upgrade Screen] Product mismatch: "
+        "expected=$expectedProductId actual=$productId",
       );
-
-      if (!mounted) return;
-      CustomLoader.hide(context);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        CustomToast.showSuccess(context, "Plan upgraded successfully!");
-        Navigator.pop(context, true);
-      } else {
-        CustomToast.showError(
-          context,
-          "Verification Failed: ${ApiService.getErrorMessage(response.body)}",
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      CustomLoader.hide(context);
-      CustomToast.showError(context, "Error verifying Apple upgrade: $e");
+      await _showApplePurchaseDialog(
+        "Purchase Failed",
+        "Apple returned a different product ($productId) than the selected plan ($expectedProductId). Please try again or restore the correct subscription.",
+      );
+      return;
     }
+
+    final refreshedReceipt = await RevenueCatService.instance
+        .getAppleReceiptAfterPurchase(
+          maxAttempts: 8,
+          delay: const Duration(milliseconds: 1500),
+          forceRefresh: true,
+        );
+    final receipt =
+        (refreshedReceipt != null &&
+            refreshedReceipt.length > (result.receipt?.length ?? 0))
+        ? refreshedReceipt
+        : result.receipt;
+
+    if (receipt == null || receipt.isEmpty) {
+      debugPrint("[Apple Upgrade Screen] Missing Apple receipt");
+      await _showApplePurchaseDialog(
+        "Verification Failed",
+        "Apple purchase completed, but the receipt was not available. Please try restore purchases.",
+      );
+      return;
+    }
+
+    final response = await _verifyAppleUpgradeWithReceiptRetry(
+      receipt: receipt,
+      productId: productId,
+      expectedProductId: expectedProductId,
+      transactionId: transactionId,
+      amount: result.amountPaid ?? _finalAmount,
+    );
+
+    if (!mounted) return;
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      await _showApplePurchaseDialog(
+        "Verification Failed",
+        ApiService.getErrorMessage(response.body),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("std", _selectedStandard!);
+    await prefs.setString("medium", _selectedMedium!);
+    if (_selectedStream != null) {
+      await prefs.setString("stream", _selectedStream!);
+    }
+    if (!mounted) return;
+    await _showApplePurchaseDialog(
+      "Purchase Successful",
+      "Your subscription is active.",
+    );
+    if (!mounted) return;
+    Navigator.pop(context, true);
+  }
+
+  Future<dynamic> _verifyAppleUpgradeWithReceiptRetry({
+    required String receipt,
+    required String productId,
+    required String? expectedProductId,
+    required String transactionId,
+    required double amount,
+  }) async {
+    var response = await ApiService.verifyAppleUpgrade(
+      receipt: receipt,
+      productId: productId,
+      expectedProductId: expectedProductId,
+      transactionId: transactionId,
+      newStandard: _selectedStandard!,
+      medium: _selectedMedium!,
+      stream: _selectedStream,
+      amount: amount,
+    );
+
+    if (!_isReceiptMissingProductError(response.body)) {
+      return response;
+    }
+
+    debugPrint(
+      "[Apple Upgrade Screen] Receipt missing purchased product. Refreshing receipt and retrying verification.",
+    );
+    await Future.delayed(const Duration(seconds: 4));
+    final refreshedReceipt = await RevenueCatService.instance
+        .getAppleReceiptAfterPurchase(
+          maxAttempts: 8,
+          delay: const Duration(milliseconds: 1500),
+          forceRefresh: true,
+        );
+
+    if (refreshedReceipt == null || refreshedReceipt.isEmpty) {
+      return response;
+    }
+
+    return ApiService.verifyAppleUpgrade(
+      receipt: refreshedReceipt,
+      productId: productId,
+      expectedProductId: expectedProductId,
+      transactionId: transactionId,
+      newStandard: _selectedStandard!,
+      medium: _selectedMedium!,
+      stream: _selectedStream,
+      amount: amount,
+    );
+  }
+
+  bool _isReceiptMissingProductError(String body) {
+    final lower = body.toLowerCase();
+    return lower.contains("purchased product was missing") ||
+        lower.contains("missing in the receipt") ||
+        lower.contains("receipt is not valid");
+  }
+
+  Future<void> _showApplePurchaseDialog(String title, String message) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showUpgradeHistory() async {

@@ -13,6 +13,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_phone_screen.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
+import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool isAddAccount;
@@ -50,213 +51,276 @@ class _LoginScreenState extends State<LoginScreen> {
               key: _formKey,
               child: Column(
                 children: [
-            const SizedBox(height: 20),
-            // Logo
-             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-               child: Image.asset(
-                imgDmBhattClassesLogo,
-                height: MediaQuery.of(context).size.height * 0.12,
-                width: MediaQuery.of(context).size.height * 0.12,
-              ),
-             ),
-            const SizedBox(height: 32),
+                  const SizedBox(height: 20),
+                  // Logo
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Image.asset(
+                      imgDmBhattClassesLogo,
+                      height: MediaQuery.of(context).size.height * 0.12,
+                      width: MediaQuery.of(context).size.height * 0.12,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
 
-            Text(
-              l10n.heyThere,
-              style: GoogleFonts.poppins(fontSize: 16, color: colorScheme.onSurfaceVariant),
-            ),
-            Text(
-              l10n.welcomeBack,
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface
-              ),
-            ),
-            const SizedBox(height: 24),
+                  Text(
+                    l10n.heyThere,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    l10n.welcomeBack,
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
-            // Phone Number Field
-             _buildTextField(
-              controller: _phoneController,
-              hint: l10n.phoneNumber,
-              icon: Icons.phone_outlined,
-              inputType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
-              ],
-              validator: ValidationUtils.validateIndianPhoneNumber,
-               errorMaxLines: 2,
-               colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
+                  // Phone Number Field
+                  _buildTextField(
+                    controller: _phoneController,
+                    hint: l10n.phoneNumber,
+                    icon: Icons.phone_outlined,
+                    inputType: TextInputType.phone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    validator: ValidationUtils.validateIndianPhoneNumber,
+                    errorMaxLines: 2,
+                    colorScheme: colorScheme,
+                  ),
+                  const SizedBox(height: 16),
 
-            // Password Field
-            _buildTextField(
-              controller: _passwordController,
-              hint: l10n.password,
-              icon: Icons.lock_outline,
-              isPassword: true,
-              isVisible: _isPasswordVisible,
-              onVisibilityChanged: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
-               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterPassword;
-                }
-                return null;
-              },
-               errorMaxLines: 2,
-               colorScheme: colorScheme,
-            ),
-            const SizedBox(height: 16),
+                  // Password Field
+                  _buildTextField(
+                    controller: _passwordController,
+                    hint: l10n.password,
+                    icon: Icons.lock_outline,
+                    isPassword: true,
+                    isVisible: _isPasswordVisible,
+                    onVisibilityChanged: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.pleaseEnterPassword;
+                      }
+                      return null;
+                    },
+                    errorMaxLines: 2,
+                    colorScheme: colorScheme,
+                  ),
+                  const SizedBox(height: 16),
 
-             TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ForgotPasswordPhoneScreen())
-                );
-              },
-              child: Text(
-                l10n.forgotPasswordQuestion,
-                style: GoogleFonts.poppins(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const ForgotPasswordPhoneScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      l10n.forgotPasswordQuestion,
+                      style: GoogleFonts.poppins(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
 
-            const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-            // Login Button
-            SizedBox(
-              width: double.infinity,
-              height: 56.0, // Fixed height for the button
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    CustomLoader.show(context); // Show Loader
-                    try {
-                        final response = await ApiService.loginUser(
-                          loginCode: _passwordController.text,
-                          phoneNum: _phoneController.text,
-                        );
+                  // Login Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56.0, // Fixed height for the button
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          CustomLoader.show(context); // Show Loader
+                          try {
+                            final response = await ApiService.loginUser(
+                              loginCode: _passwordController.text,
+                              phoneNum: _phoneController.text,
+                            );
 
-                        if (!mounted) return;
-                        CustomLoader.hide(context); // Hide Loader
+                            if (!mounted) return;
+                            CustomLoader.hide(context); // Hide Loader
 
-                        if (response.statusCode == 200) {
-                            final data = jsonDecode(response.body);
-                            final token = data['token'];
-                            final user = data['user'];
+                            if (response.statusCode == 200) {
+                              final data = jsonDecode(response.body);
+                              final token = data['token'];
+                              final user = data['user'];
 
-                            // Check Valid Role
-                            if (user['role'] != 'student' && user['role'] != 'guest') {
-                              CustomToast.showError(context, "Access Denied: Only Students and Guests can login.");
-                              return;
-                            }
-
-                            // Save token
-                            final prefs = await SharedPreferences.getInstance();
-                            await ApiService.setAuthToken(token);
-                            //await prefs.setString('auth_token', token);
-                            await prefs.setString('user_password', _passwordController.text); // Saving password for PDF encryption
-                            if (user != null) {
-                              if (user['phoneNum'] != null) await prefs.setString('user_phone', user['phoneNum']);
-                              if (user['email'] != null) await prefs.setString('user_email', user['email']);
-                              if (user['firstName'] != null) await prefs.setString('firstName', user['firstName']);
-                              if (user['std'] != null) await prefs.setString('std', user['std'].toString());
-                              if (user['medium'] != null) await prefs.setString('medium', user['medium']);
-                              if (user['stream'] != null) await prefs.setString('stream', user['stream']);
-                              if (user['board'] != null) await prefs.setString('board', user['board']);
-                            }
-
-                                // Handle Multi-Account Storage
-                                final db = DatabaseHelper();
-                                if (!widget.isAddAccount) {
-                                  // Normal Login: Clear other accounts
-                                  await db.clearAllExcept(user['_id'] ?? user['id']);
-                                }
-
-                                // Save/Update Current Account in DB
-                                await db.saveAccount(
-                                  userId: user['_id'] ?? user['id'] ?? 'unknown',
-                                  name: "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim(),
-                                  token: token,
-                                  role: user['role'] ?? 'student',
-                                  phone: _phoneController.text,
-                                  userData: jsonEncode(user),
-                                  profilePic: user['photoPath'] ?? "",
+                              // Check Valid Role
+                              if (user['role'] != 'student' &&
+                                  user['role'] != 'guest') {
+                                CustomToast.showError(
+                                  context,
+                                  "Access Denied: Only Students and Guests can login.",
                                 );
+                                return;
+                              }
 
-                                // Subscribe to user-specific and standard-specific notification topics
-                                try {
-                                  final userId = user['_id'] ?? user['id'];
-                                  if (userId != null && userId.isNotEmpty) {
-                                    await NotificationService.instance.subscribeToUserTopic(userId);
-                                  }
+                              // Save token
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await ApiService.setAuthToken(token);
+                              final revenueCatUserId =
+                                  user['_id']?.toString() ??
+                                  user['id']?.toString();
+                              if (revenueCatUserId != null &&
+                                  revenueCatUserId.isNotEmpty) {
+                                await RevenueCatService.instance.login(
+                                  revenueCatUserId,
+                                );
+                              }
+                              //await prefs.setString('auth_token', token);
+                              await prefs.setString(
+                                'user_password',
+                                _passwordController.text,
+                              ); // Saving password for PDF encryption
+                              if (user != null) {
+                                if (user['phoneNum'] != null)
+                                  await prefs.setString(
+                                    'user_phone',
+                                    user['phoneNum'],
+                                  );
+                                if (user['email'] != null)
+                                  await prefs.setString(
+                                    'user_email',
+                                    user['email'],
+                                  );
+                                if (user['firstName'] != null)
+                                  await prefs.setString(
+                                    'firstName',
+                                    user['firstName'],
+                                  );
+                                if (user['std'] != null)
+                                  await prefs.setString(
+                                    'std',
+                                    user['std'].toString(),
+                                  );
+                                if (user['medium'] != null)
+                                  await prefs.setString(
+                                    'medium',
+                                    user['medium'],
+                                  );
+                                if (user['stream'] != null)
+                                  await prefs.setString(
+                                    'stream',
+                                    user['stream'],
+                                  );
+                                if (user['board'] != null)
+                                  await prefs.setString('board', user['board']);
+                              }
 
-                                  final profileResponse = await ApiService.getProfile();
-                                  if (profileResponse.statusCode == 200) {
-                                    final profileData = jsonDecode(profileResponse.body);
-                                    final profile = profileData['profile'];
-                                    if (profile != null && profile['std'] != null) {
-                                      final std = profile['std'].toString();
-                                      if (std.isNotEmpty) {
-                                        await NotificationService.instance.subscribeToStandardTopic(std);
-                                      }
+                              // Handle Multi-Account Storage
+                              final db = DatabaseHelper();
+                              if (!widget.isAddAccount) {
+                                // Normal Login: Clear other accounts
+                                await db.clearAllExcept(
+                                  user['_id'] ?? user['id'],
+                                );
+                              }
+
+                              // Save/Update Current Account in DB
+                              await db.saveAccount(
+                                userId: user['_id'] ?? user['id'] ?? 'unknown',
+                                name:
+                                    "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}"
+                                        .trim(),
+                                token: token,
+                                role: user['role'] ?? 'student',
+                                phone: _phoneController.text,
+                                userData: jsonEncode(user),
+                                profilePic: user['photoPath'] ?? "",
+                              );
+
+                              // Subscribe to standard-specific notification topic
+                              try {
+                                final profileResponse =
+                                    await ApiService.getProfile();
+                                if (profileResponse.statusCode == 200) {
+                                  final profileData = jsonDecode(
+                                    profileResponse.body,
+                                  );
+                                  final profile = profileData['profile'];
+                                  if (profile != null &&
+                                      profile['std'] != null) {
+                                    final std = profile['std'].toString();
+                                    if (std.isNotEmpty) {
+                                      NotificationService.instance
+                                          .subscribeToStandardTopic(std);
                                     }
                                   }
-                                } catch (e) {
-                                  // Log error but don't block login
-                                  debugPrint("Error subscribing to notification topics: $e");
                                 }
-
-                                 CustomToast.showSuccess(context, "Login Successful");
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const LandingScreen()),
-                                  (route) => false,
+                              } catch (e) {
+                                // Log error but don't block login
+                                debugPrint(
+                                  "Error subscribing to notification topic: $e",
                                 );
-                        } else {
-                           CustomToast.showError(context, "Login Failed: ${ApiService.getErrorMessage(response.body)}");
+                              }
+
+                              CustomToast.showSuccess(
+                                context,
+                                "Login Successful",
+                              );
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LandingScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            } else {
+                              CustomToast.showError(
+                                context,
+                                "Login Failed: ${ApiService.getErrorMessage(response.body)}",
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              CustomLoader.hide(
+                                context,
+                              ); // Hide Loader on Error
+                              CustomToast.showError(context, "Error: $e");
+                            }
+                          }
                         }
-                    } catch (e) {
-                      if (mounted) {
-                        CustomLoader.hide(context); // Hide Loader on Error
-                        CustomToast.showError(context, "Error: $e");
-                      }
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary, // Blue Theme
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary, // Blue Theme
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: Text(
+                        l10n.login,
+                        style: GoogleFonts.poppins(
+                          fontSize: 18.0, // Fixed font size
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
                   ),
-                  elevation: 2,
-                ),
-                child: Text(
-                  l10n.login,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18.0, // Fixed font size
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onPrimary,
-                  ),
-                ),
-              ),
-            ),
                 ],
               ),
             ),
@@ -291,24 +355,33 @@ class _LoginScreenState extends State<LoginScreen> {
         keyboardType: inputType,
         inputFormatters: inputFormatters,
         validator: validator,
-        
+
         style: GoogleFonts.poppins(
-          color: colorScheme.onSurface, 
+          color: colorScheme.onSurface,
           fontWeight: FontWeight.w600, // Bold
           fontSize: 16,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant.withOpacity(0.6), fontWeight: FontWeight.normal),
+          hintStyle: GoogleFonts.poppins(
+            color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+            fontWeight: FontWeight.normal,
+          ),
           prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: colorScheme.onSurfaceVariant),
+                  icon: Icon(
+                    isVisible ? Icons.visibility : Icons.visibility_off,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   onPressed: onVisibilityChanged,
                 )
               : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
           errorMaxLines: errorMaxLines,
         ),
       ),
