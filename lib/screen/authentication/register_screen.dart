@@ -47,6 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _selectedCity;
   String? _selectedInstitute;
   String? _selectedBoard;
+  DateTime? _selectedDob;
   final String _selectedRole = "Student";
 
   // Data Lists
@@ -58,11 +59,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> _boards = ["GSEB", "CBSE"];
   final List<String> _roles = ["Student", "Teacher"];
 
-  final Map<String, List<String>> _stateCityMap = {
-    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
-    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
-    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur", "Kota"],
-  };
+  Future<void> _selectDob(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: Theme.of(context).colorScheme.primary,
+              onPrimary: Theme.of(context).colorScheme.onPrimary,
+              onSurface: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDob) {
+      setState(() {
+        _selectedDob = picked;
+      });
+    }
+  }
 
   void _showTermsDialog() {
     final colorScheme = Theme.of(context).colorScheme;
@@ -265,6 +287,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
+              // Date of Birth
+              GestureDetector(
+                onTap: () => _selectDob(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: colorScheme.outlineVariant),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined, color: colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _selectedDob == null
+                              ? l10n.selectDateOfBirth
+                              : DateFormat('dd/MM/yyyy').format(_selectedDob!),
+                          style: GoogleFonts.poppins(
+                            color: _selectedDob == null
+                                ? colorScheme.onSurfaceVariant.withOpacity(0.6)
+                                : colorScheme.onSurface,
+                            fontWeight: _selectedDob == null ? FontWeight.normal : FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Standard Dropdown
               _buildDropdown(
                 context,
@@ -342,11 +397,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hint: l10n.state,
                 icon: Icons.map_outlined,
                 value: _selectedState,
-                items: _stateCityMap.keys.toList(),
+                items: indiaStatesCities.keys.toList(),
                 onChanged: (val) {
                   setState(() {
                     _selectedState = val;
                     _selectedCity = null; // Reset city when state changes
+                    _customCityController.clear();
                   });
                 },
                 colorScheme: colorScheme,
@@ -359,16 +415,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hint: l10n.city,
                 icon: Icons.location_city,
                 value: _selectedCity,
-                items: _selectedState != null
-                    ? _stateCityMap[_selectedState]!
-                    : [],
+                items: _selectedState != null ? indiaStatesCities[_selectedState]! : [],
                 onChanged: (val) {
                   setState(() {
                     _selectedCity = val;
+                    if (val != "Other") {
+                      _customCityController.clear();
+                    }
                   });
                 },
                 colorScheme: colorScheme,
               ),
+              if (_selectedCity == "Other") ...[
+                const SizedBox(height: 16),
+                _buildTextField(
+                  hint: "Enter City Name",
+                  icon: Icons.location_city_outlined,
+                  controller: _customCityController,
+                  colorScheme: colorScheme,
+                  validator: (val) {
+                    if (_selectedCity == "Other" && (val == null || val.trim().isEmpty)) {
+                      return "Please enter your city name";
+                    }
+                    return null;
+                  },
+                ),
+              ],
               const SizedBox(height: 16),
 
               // School Name Autocomplete (Visible only if Other is selected)
@@ -539,6 +611,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         CustomToast.showError(context, l10n.pleaseAgreeTerms);
                         return;
                       }
+                      if (_selectedDob == null) {
+                        CustomToast.showError(context, l10n.pleaseSelectDob);
+                        return;
+                      }
                       if (_selectedStandard == null ||
                           _selectedMedium == null ||
                           _selectedState == null ||
@@ -548,6 +624,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           context,
                           l10n.pleaseSelectAllFields,
                         );
+                        return;
+                      }
+                      if (_selectedCity == "Other" && _customCityController.text.trim().isEmpty) {
+                        CustomToast.showError(context, "Please enter your city name");
                         return;
                       }
                       if ((_selectedStandard == "11" ||
@@ -599,12 +679,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           "email": _emailController.text,
                           "phoneNum": _phoneController.text,
                           "parentPhone": _parentPhoneController.text,
+                          "dob": DateFormat('yyyy-MM-dd').format(_selectedDob!),
                           "std": _selectedStandard!,
                           "medium": _selectedMedium!,
                           "stream": _selectedStream ?? "",
                           "board": _selectedBoard!,
                           "loginAs": _selectedRole,
-                          "city": _selectedCity!,
+                          "city": _selectedCity == "Other" ? _customCityController.text.trim() : _selectedCity!,
                           "state": _selectedState!,
                         },
                         files: [],
