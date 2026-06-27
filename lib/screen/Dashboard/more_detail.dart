@@ -46,19 +46,8 @@ class MoreScreen extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Main Navigation Grid
-            Text(
-              "Explore Features",
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
             Row(
               children: [
                 if (!api.ApiService.isGuest) ...[
