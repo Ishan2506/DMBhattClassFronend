@@ -26,11 +26,29 @@ class MatchFollowingHistoryScreen extends StatefulWidget {
 class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _historyItems = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, dynamic>> _filteredHistoryItems() {
+    if (_searchQuery.isEmpty) {
+      return _historyItems;
+    }
+    return _historyItems.where((item) {
+      final title = (item['title'] ?? '').toString().toLowerCase();
+      return title.contains(_searchQuery.toLowerCase());
+    }).toList();
   }
 
   Future<void> _loadHistory() async {
@@ -130,13 +148,17 @@ class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScree
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _historyItems.isEmpty
-              ? _buildEmptyState(isDark)
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  itemCount: _historyItems.length,
-                  itemBuilder: (context, index) {
-                    final item = _historyItems[index];
+          : Column(
+              children: [
+                _buildSearchBar(context),
+                Expanded(
+                  child: _filteredHistoryItems().isEmpty
+                      ? _buildEmptyState(isDark)
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          itemCount: _filteredHistoryItems().length,
+                          itemBuilder: (context, index) {
+                            final item = _filteredHistoryItems()[index];
                     final title = item['title'] ?? 'Matching Game';
                     final subject = item['subject'] ?? 'General';
                     final score = item['obtainedMarks'] ?? 0;
@@ -250,8 +272,56 @@ class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScree
                       ),
                     ),
                   );
-                },
-              ),
+                  },
+                ),
+        ),
+      ],
+    ),
+    );
+  }
+
+  Widget _buildSearchBar(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: "Search by title...",
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = "";
+                    });
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: colorScheme.surfaceContainer,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.primary),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
     );
   }
 

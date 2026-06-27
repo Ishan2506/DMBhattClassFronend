@@ -373,36 +373,36 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                 );
             },
           ),
-          IconButton(
-            icon: _isDownloading 
-                 ? const SizedBox(width: 24, height: 24, child: CustomLoader())
-                 : Icon(Icons.download_rounded, color: colorScheme.secondary),
-            onPressed: _isDownloading ? null : () async {
-              final rawUrl = paper['file'] ?? paper['url'] ?? "";
-              if (rawUrl.isEmpty) return;
+          // IconButton(
+          //   icon: _isDownloading 
+          //        ? const SizedBox(width: 24, height: 24, child: CustomLoader())
+          //        : Icon(Icons.download_rounded, color: colorScheme.secondary),
+          //   onPressed: _isDownloading ? null : () async {
+          //     final rawUrl = paper['file'] ?? paper['url'] ?? "";
+          //     if (rawUrl.isEmpty) return;
 
-              setState(() => _isDownloading = true);
-              try {
-                final fileName = "${paper['title'] ?? 'paper'}_${_selectedYear ?? ''}.pdf"
-                    .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_'); // Sanitize filename
+          //     setState(() => _isDownloading = true);
+          //     try {
+          //       final fileName = "${paper['title'] ?? 'paper'}_${_selectedYear ?? ''}.pdf"
+          //           .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_'); // Sanitize filename
                 
-                final success = await DownloadService.downloadAndSave(
-                  url: rawUrl, 
-                  fileName: fileName,
-                );
+          //       final success = await DownloadService.downloadAndSave(
+          //         url: rawUrl, 
+          //         fileName: fileName,
+          //       );
 
-                if (success) {
-                  if (mounted) CustomToast.showSuccess(context, "File saved successfully!");
-                } else {
-                  if (mounted) CustomToast.showError(context, "Failed to save file");
-                }
-              } catch (e) {
-                if (mounted) CustomToast.showError(context, "Download error: $e");
-              } finally {
-                if (mounted) setState(() => _isDownloading = false);
-              }
-            }, 
-          ),
+          //       if (success) {
+          //         if (mounted) CustomToast.showSuccess(context, "File saved successfully!");
+          //       } else {
+          //         if (mounted) CustomToast.showError(context, "Failed to save file");
+          //       }
+          //     } catch (e) {
+          //       if (mounted) CustomToast.showError(context, "Download error: $e");
+          //     } finally {
+          //       if (mounted) setState(() => _isDownloading = false);
+          //     }
+          //   }, 
+          // ),
         ],
       ),
     );

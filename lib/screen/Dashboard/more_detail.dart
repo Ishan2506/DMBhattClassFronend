@@ -21,6 +21,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
 
@@ -666,7 +667,7 @@ class HistoryMenuScreen extends StatelessWidget {
           child: Column(
             children: [
               _MoreScreenItem(
-                title: l10n.examHistory,
+                title: "Regular Exam History",
                 value: "",
                 icon: Icons.history_edu,
                 onTap: () {
@@ -674,6 +675,18 @@ class HistoryMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const StudentExamHistoryScreen()),
+                  );
+                },
+              ),
+              _MoreScreenItem(
+                title: "5 Min Test History",
+                value: "",
+                icon: Icons.timer,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const StudentFiveMinHistoryScreen()),
                   );
                 },
               ),
