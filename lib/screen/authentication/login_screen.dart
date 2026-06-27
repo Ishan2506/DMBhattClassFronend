@@ -254,8 +254,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 profilePic: user['photoPath'] ?? "",
                               );
 
-                              // Subscribe to standard-specific notification topic
+                              // Subscribe to user-specific and standard-specific notification topics
                               try {
+                                final userId = user['_id'] ?? user['id'];
+                                if (userId != null && userId.isNotEmpty) {
+                                  await NotificationService.instance.subscribeToUserTopic(userId);
+                                }
+
                                 final profileResponse =
                                     await ApiService.getProfile();
                                 if (profileResponse.statusCode == 200) {
@@ -267,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       profile['std'] != null) {
                                     final std = profile['std'].toString();
                                     if (std.isNotEmpty) {
-                                      NotificationService.instance
+                                      await NotificationService.instance
                                           .subscribeToStandardTopic(std);
                                     }
                                   }
@@ -275,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               } catch (e) {
                                 // Log error but don't block login
                                 debugPrint(
-                                  "Error subscribing to notification topic: $e",
+                                  "Error subscribing to notification topics: $e",
                                 );
                               }
 
