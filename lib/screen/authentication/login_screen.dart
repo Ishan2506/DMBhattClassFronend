@@ -12,6 +12,7 @@ import 'package:dm_bhatt_tutions/utils/database_helper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_phone_screen.dart';
+import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 
@@ -38,7 +39,21 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios, color: colorScheme.onSurfaceVariant),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              // LoginScreen is the only route on the stack (e.g. opened via
+              // pushAndRemoveUntil). Popping would leave a black screen, so
+              // send the user back to the welcome screen instead.
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const WelcomeScreen(),
+                ),
+              );
+            }
+          },
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
