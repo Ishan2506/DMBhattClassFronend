@@ -175,7 +175,7 @@ class RevenueCatService {
   }
 
   Future<String?> getAppleReceipt({bool forceRefresh = false}) async {
-    if (!Platform.isIOS) return null;
+    if (kIsWeb || !Platform.isIOS) return null;
     try {
       return await _appleReceiptChannel.invokeMethod<String>(
         forceRefresh ? "refreshReceipt" : "getReceipt",
@@ -191,7 +191,7 @@ class RevenueCatService {
     Duration delay = const Duration(milliseconds: 900),
     bool forceRefresh = false,
   }) async {
-    if (!Platform.isIOS) return null;
+    if (kIsWeb || !Platform.isIOS) return null;
 
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
       final receipt = await getAppleReceipt(
