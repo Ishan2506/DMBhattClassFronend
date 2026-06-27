@@ -72,7 +72,7 @@ class _TrueFalseResultScreenState extends State<TrueFalseResultScreen> {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text("DMBhatt Tuitions", style: pw.TextStyle(font: fontBold, fontSize: 14)),
+                      pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 14)),
                       pw.Text("Date: ${DateTime.now().toString().split(' ')[0]}", style: pw.TextStyle(font: font, fontSize: 10)),
                     ],
                   ),
