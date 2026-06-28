@@ -210,18 +210,6 @@ class ExamPdfViewer extends StatelessWidget {
     return Scaffold(
       appBar: CustomAppBar(
         title: exam['title'],
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download, color: Colors.white),
-            onPressed: () => _downloadPdf(context),
-            tooltip: "Download",
-          ),
-          IconButton(
-            icon: const Icon(Icons.share, color: Colors.white),
-            onPressed: () => _sharePdf(context),
-             tooltip: "Share (Protected)",
-          ),
-        ],
       ),
       body: PdfPreview(
         build: (format) => _generateExamPdf(format, exam),
