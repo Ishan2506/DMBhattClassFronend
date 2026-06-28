@@ -60,9 +60,7 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
   }
 
   bool _isTaken(dynamic exam) {
-    if (_history.isEmpty) return false;
-    final examId = exam['_id'].toString();
-    return _history.any((h) => h['examId'].toString() == examId);
+    return false;
   }
 
   Future<void> _fetchExams() async {

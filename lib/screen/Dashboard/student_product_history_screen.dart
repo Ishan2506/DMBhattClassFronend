@@ -187,23 +187,7 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Download Receipt Button
-                  IconButton(
-                    icon: Icon(Icons.download, color: colorScheme.primary),
-                    tooltip: "Download Receipt",
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StudentPaymentConfirmationScreen(
-                            transactionDetails: item,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
                   // Read Button (Show for all)
-                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () {
                       _openMaterialViewer(context, item);

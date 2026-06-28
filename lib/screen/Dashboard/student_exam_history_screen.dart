@@ -12,7 +12,6 @@ import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/exam_history_data.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -27,7 +26,8 @@ class StudentExamHistoryScreen extends StatefulWidget {
 class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
   bool _isLoading = true;
   List<dynamic> _regularExams = [];
-  List<dynamic> _fiveMinQuizzes = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -35,21 +35,22 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
     _fetchHistory();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchHistory() async {
     setState(() => _isLoading = true);
     try {
-      // Token managed internally
       final response = await ApiService.getDashboardData();
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> results = data['examResults'] ?? [];
         
         setState(() {
-          // Filter to only include appropriate types for each tab
           _regularExams = results.where((e) => e['type'] == 'REGULAR').toList();
-          
-          _fiveMinQuizzes = results.where((e) => e['type'] == 'QUIZ').toList(); 
-          
           _isLoading = false;
         });
       }
@@ -59,48 +60,86 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
     }
   }
 
+  List<dynamic> _filteredExams() {
+    if (_searchQuery.isEmpty) {
+      return _regularExams;
+    }
+    return _regularExams.where((exam) {
+      final title = (exam['title'] ?? "").toString().toLowerCase();
+      return title.contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Fetch Data from Singleton
-    final regularExams = ExamHistoryData().regularExams;
-    final quizExams = ExamHistoryData().quizExams;
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: const CustomAppBar(
+        title: "Regular Exam History",
+        centerTitle: true,
+      ),
+      body: _isLoading 
+          ? const Center(child: CustomLoader())
+          : Column(
+              children: [
+                _buildSearchBar(context),
+                Expanded(child: _buildExamList(context, _filteredExams())),
+              ],
+            ),
+    );
+  }
 
-    final l10n = AppLocalizations.of(context)!;
-
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: CustomAppBar(
-          title: l10n.examHistory,
-          bottom: TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            tabs: [
-              Tab(child: Text(l10n.regularExams, style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
-              Tab(child: Text(l10n.fiveMinQuiz, style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
-            ],
+  Widget _buildSearchBar(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: "Search by title...",
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = "";
+                    });
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: colorScheme.surfaceContainer,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
           ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.primary),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
-        body: _isLoading 
-            ? const Center(child: CustomLoader())
-            : TabBarView(
-                children: [
-                  _buildExamList(context, _regularExams),
-                  _buildExamList(context, _fiveMinQuizzes),
-                ],
-              ),
       ),
     );
   }
 
   Widget _buildExamList(BuildContext context, List<dynamic> exams) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (exams.isEmpty) {
       final l10n = AppLocalizations.of(context)!;
@@ -117,15 +156,21 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
       itemCount: exams.length,
       itemBuilder: (context, index) {
         final exam = exams[index];
-        final DateTime date = exam['date'] != null ? DateTime.parse(exam['date']) : DateTime.now();
-        final String formattedDate = DateFormat('MMM dd, yyyy').format(date);
+        final DateTime date = exam['date'] != null ? DateTime.parse(exam['date']).toLocal() : DateTime.now();
+        final String formattedDate = DateFormat('MMM dd, yyyy - hh:mm a').format(date);
         final String marks = "${exam['obtainedMarks']}/${exam['totalMarks']}";
 
         return Card(
           elevation: 0,
-          color: colorScheme.surfaceContainer,
+          color: isDark ? const Color(0xFF1E284A) : Colors.white,
           margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: isDark ? Colors.white10 : Colors.grey.shade200,
+              width: 1.5,
+            ),
+          ),
           child: ListTile(
             onTap: () => _generateAndOpenPdf(context, exam),
             contentPadding: const EdgeInsets.all(16),

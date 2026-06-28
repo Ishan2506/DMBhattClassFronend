@@ -25,11 +25,19 @@ class TrueFalseHistoryScreen extends StatefulWidget {
 class _TrueFalseHistoryScreenState extends State<TrueFalseHistoryScreen> {
   List<dynamic> _history = [];
   bool _isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadHistory() async {
@@ -55,6 +63,16 @@ class _TrueFalseHistoryScreenState extends State<TrueFalseHistoryScreen> {
     }
   }
 
+  List<dynamic> _filteredHistory() {
+    if (_searchQuery.isEmpty) {
+      return _history;
+    }
+    return _history.where((exam) {
+      final title = (exam['title'] ?? "").toString().toLowerCase();
+      return title.contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -67,16 +85,68 @@ class _TrueFalseHistoryScreenState extends State<TrueFalseHistoryScreen> {
       ),
       body: _isLoading
           ? const Center(child: CustomLoader())
-          : _history.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _history.length,
-                  itemBuilder: (context, index) {
-                    final item = _history[index];
-                    return _buildHistoryCard(item);
-                  },
+          : Column(
+              children: [
+                _buildSearchBar(context),
+                Expanded(
+                  child: _filteredHistory().isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filteredHistory().length,
+                          itemBuilder: (context, index) {
+                            final item = _filteredHistory()[index];
+                            return _buildHistoryCard(item);
+                          },
+                        ),
                 ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildSearchBar(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: "Search by title...",
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = "";
+                    });
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: colorScheme.surfaceContainer,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: colorScheme.primary),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
     );
   }
 
@@ -98,16 +168,23 @@ class _TrueFalseHistoryScreenState extends State<TrueFalseHistoryScreen> {
 
   Widget _buildHistoryCard(dynamic item) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final dateStr = item['date'] ?? item['createdAt'];
-    final date = dateStr != null ? DateTime.parse(dateStr) : DateTime.now();
-    final formattedDate = DateFormat('MMM dd, yyyy').format(date);
+    final date = dateStr != null ? DateTime.parse(dateStr).toLocal() : DateTime.now();
+    final formattedDate = DateFormat('MMM dd, yyyy - hh:mm a').format(date);
     final double accuracy = (item['accuracy'] ?? 0).toDouble();
 
     return Card(
       elevation: 0,
-      color: colorScheme.surfaceContainer,
+      color: isDark ? const Color(0xFF1E284A) : Colors.white,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isDark ? Colors.white10 : Colors.grey.shade200,
+          width: 1.5,
+        ),
+      ),
       child: ListTile(
         onTap: () => _generateAndOpenPdf(context, item),
         contentPadding: const EdgeInsets.all(16),
@@ -300,7 +377,7 @@ class ExamPdfViewer extends StatelessWidget {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text("D. M. Bhatt Tuition Classes", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Padhaku", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                   pw.Text("Date: $formattedDate"),
                 ]
               )

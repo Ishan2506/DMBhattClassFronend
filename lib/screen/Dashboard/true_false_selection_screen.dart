@@ -223,8 +223,7 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
     return result;
   }
 
-  bool _isTaken(dynamic exam) =>
-      _takenExamIds.contains(exam['_id'].toString());
+  bool _isTaken(dynamic exam) => false;
 
   Future<void> _startExam(dynamic exam) async {
     if (!await GuestUtils.canGuestAccessExam(context, 'TRUEFALSE')) return;
