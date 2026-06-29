@@ -516,8 +516,8 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                        pw.Column(
                          crossAxisAlignment: pw.CrossAxisAlignment.start,
                          children: [
-                           pw.Text("Padhku", style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
-                           pw.Text("D. M. Bhatt Tuition Classes", style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                           pw.Text("Padhaku", style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+                           pw.Text("Padhaku", style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
                          ]
                        ),
                        pw.Column(

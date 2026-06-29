@@ -5,6 +5,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -56,63 +57,54 @@ class _MatchFollowingResultScreenState extends State<MatchFollowingResultScreen>
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         build: (pw.Context context) {
+          final String formattedDate = DateFormat('MMM dd, yyyy').format(DateTime.now());
+          final double accuracy = widget.averageAccuracy.toDouble();
+
           return [
             pw.Header(
               level: 0,
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text("D.M. Bhatt Classes", style: pw.TextStyle(font: fontBold, fontSize: 24, color: PdfColors.blue900)),
-                      pw.Text("Match the Following Exam Result", style: pw.TextStyle(font: font, fontSize: 14, color: PdfColors.grey700)),
-                    ],
+                  pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 18)),
+                  pw.Text("Date: $formattedDate", style: pw.TextStyle(font: font)),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Center(
+              child: pw.Text(widget.title, style: pw.TextStyle(font: fontBold, fontSize: 24)),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Center(
+              child: pw.Column(
+                children: [
+                  pw.Text(
+                    "Marks Obtained: ${widget.correctMatches}/${widget.totalPairs}",
+                    style: pw.TextStyle(font: font, fontSize: 16),
+                  ),
+                  pw.Text(
+                    "Accuracy: ${accuracy.toStringAsFixed(1)}%",
+                    style: pw.TextStyle(font: font, fontSize: 14, color: accuracy >= 70 ? PdfColors.green : PdfColors.orange),
                   ),
                 ],
               ),
             ),
-            pw.SizedBox(height: 20),
-            pw.Container(
-              padding: const pw.EdgeInsets.all(16),
-              decoration: pw.BoxDecoration(
-                color: PdfColors.blue50,
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
-              ),
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildPdfStat("Subject", widget.subject, fontBold),
-                  _buildPdfStat("Unit", widget.unit, fontBold),
-                  _buildPdfStat("Score", "${widget.correctMatches}/${widget.totalPairs}", fontBold, color: PdfColors.blue900),
-                  _buildPdfStat("Accuracy", "${widget.averageAccuracy.toStringAsFixed(1)}%", fontBold),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 20),
-            pw.Text("Exam Details: ${widget.title}", style: pw.TextStyle(font: fontBold, fontSize: 16)),
             pw.Divider(),
+            pw.SizedBox(height: 20),
+            pw.Text("Questions:", style: pw.TextStyle(font: fontBold, fontSize: 18)),
             pw.SizedBox(height: 10),
             ...List.generate(widget.answers.length, (index) {
               final answer = widget.answers[index];
               final bool isCorrect = answer['isCorrect'] ?? false;
               final String leftVal = answer['left'] ?? '';
               final String correctRightVal = answer['correctMatch'] ?? answer['correctRight'] ?? '';
-              final String studentMatch = answer['studentMatch'] ?? answer['right'];
-              final String rightVal = (studentMatch == null || studentMatch.toString().isEmpty) ? 'Unanswered' : studentMatch;
+              final dynamic studentMatch = answer['studentMatch'] ?? answer['right'];
+              final String rightVal = (studentMatch == null || studentMatch.toString().isEmpty) ? 'Unanswered' : studentMatch.toString();
 
-              return pw.Container(
-                margin: const pw.EdgeInsets.only(bottom: 16),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text("Pair ${index + 1}: $leftVal", style: pw.TextStyle(font: fontBold, fontSize: 12)),
-                    pw.SizedBox(height: 4),
-                    pw.Text("Correct Answer: $correctRightVal", style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green)),
-                    pw.Text("Your Answer: $rightVal", style: pw.TextStyle(font: font, fontSize: 10, color: isCorrect ? PdfColors.green : PdfColors.red)),
-                    pw.Divider(color: PdfColors.grey200),
-                  ],
-                ),
+              return pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 8),
+                child: _buildResultItem(index + 1, leftVal, rightVal, correctRightVal, isCorrect, font, fontBold),
               );
             }),
           ];
@@ -152,12 +144,36 @@ class _MatchFollowingResultScreenState extends State<MatchFollowingResultScreen>
     }
   }
 
-  pw.Widget _buildPdfStat(String label, String value, pw.Font font, {PdfColor color = PdfColors.black}) {
-    return pw.Column(
-      children: [
-        pw.Text(value, style: pw.TextStyle(font: font, fontSize: 18, color: color)),
-        pw.Text(label, style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey600)),
-      ],
+  pw.Widget _buildResultItem(int number, String question, String yourAnswer, String correctAnswer, bool isCorrect, pw.Font font, pw.Font fontBold) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 10),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text("$number. ", style: pw.TextStyle(font: fontBold)),
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(question, style: pw.TextStyle(font: font)),
+                pw.SizedBox(height: 4),
+                pw.Row(
+                  children: [
+                    pw.Text("Your Answer: $yourAnswer ", style: pw.TextStyle(font: font, fontSize: 10, color: isCorrect ? PdfColors.green : PdfColors.red)),
+                    if (!isCorrect)
+                      pw.Text("(Correct: $correctAnswer)", style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(width: 10),
+          pw.Text(
+            isCorrect ? "CORRECT" : "WRONG",
+            style: pw.TextStyle(font: fontBold, color: isCorrect ? PdfColors.green : PdfColors.red, fontSize: 12),
+          ),
+        ],
+      ),
     );
   }
 

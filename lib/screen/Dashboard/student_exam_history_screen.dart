@@ -350,7 +350,7 @@ class _ExamPdfViewerState extends State<ExamPdfViewer> {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text("D. M. Bhatt Tuition Classes", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Padhaku", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                   pw.Text("Date: ${exam['date']}"),
                 ]
               )

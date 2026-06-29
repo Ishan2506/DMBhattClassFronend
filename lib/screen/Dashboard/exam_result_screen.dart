@@ -7,6 +7,7 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -58,6 +59,9 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
           ),
         ),
         build: (pw.Context context) {
+          final String formattedDate = DateFormat('MMM dd, yyyy').format(DateTime.now());
+          final double accuracy = widget.totalQuestions > 0 ? (widget.correctAnswers / widget.totalQuestions) * 100 : 0;
+
           return [
             // Header
             pw.Header(
@@ -65,56 +69,40 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text("Result Summary", style: pw.TextStyle(font: fontBold, fontSize: 24)),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        "${widget.unit ?? 'Unit Test'} , ${widget.subject ?? 'Subject'}",
-                        style: pw.TextStyle(font: font, fontSize: 16, color: PdfColors.grey700),
-                      ),
-                    ],
+                  pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 18)),
+                  pw.Text("Date: $formattedDate", style: pw.TextStyle(font: font)),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Center(
+              child: pw.Text(widget.unit ?? 'Unit Test', style: pw.TextStyle(font: fontBold, fontSize: 24)),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Center(
+              child: pw.Column(
+                children: [
+                  pw.Text(
+                    "Marks Obtained: ${widget.correctAnswers}/${widget.totalQuestions}",
+                    style: pw.TextStyle(font: font, fontSize: 16),
                   ),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    children: [
-                      pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 14)),
-                      pw.Text("Date: ${DateTime.now().toString().split(' ')[0]}", style: pw.TextStyle(font: font, fontSize: 10)),
-                    ],
+                  pw.Text(
+                    "Accuracy: ${accuracy.toStringAsFixed(1)}%",
+                    style: pw.TextStyle(font: font, fontSize: 14, color: accuracy >= 70 ? PdfColors.green : PdfColors.orange),
                   ),
                 ],
               ),
             ),
             pw.Divider(),
             pw.SizedBox(height: 20),
-
-            // Score Summary
-            pw.Container(
-              padding: const pw.EdgeInsets.all(10),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey400),
-                borderRadius: pw.BorderRadius.circular(8),
-              ),
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
-                children: [
-                  _buildPdfStat("Total", "${widget.totalQuestions}", fontBold),
-                  _buildPdfStat("Correct", "${widget.correctAnswers}", fontBold, color: PdfColors.green),
-                  _buildPdfStat("Wrong", "${widget.wrongAnswers}", fontBold, color: PdfColors.red),
-                  _buildPdfStat("Skipped", "${widget.skippedAnswers}", fontBold, color: PdfColors.orange),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 20),
-
-            // Questions
+            pw.Text("Questions:", style: pw.TextStyle(font: fontBold, fontSize: 18)),
+            pw.SizedBox(height: 10),
             ...List.generate(widget.questions.length, (index) {
               final question = widget.questions[index];
               final userAns = widget.selectedAnswers[index];
               final optionsRaw = question['optionsRaw'] as List? ?? [];
               final correctKey = question['correctAnswerKey'] ?? question['correctAnswer'];
-              
+
               String resolvedCorrectText = "";
               try {
                 final correctOption = optionsRaw.firstWhere((o) => o['key'] == correctKey);
@@ -125,33 +113,11 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
 
               final isCorrect = userAns?.trim().toLowerCase() == resolvedCorrectText.trim().toLowerCase();
               final isSkipped = userAns == null || userAns.trim().isEmpty;
+              final yourAnswer = isSkipped ? 'Skipped' : userAns;
 
-              return pw.Container(
-                margin: const pw.EdgeInsets.only(bottom: 16),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                     pw.Text(
-                       "Q${index + 1}: ${question['question'] ?? ''}",
-                       style: pw.TextStyle(font: fontBold, fontSize: 12),
-                     ),
-                     pw.SizedBox(height: 4),
-                     pw.Text(
-                       "Your Answer: ${userAns ?? 'Skipped'}",
-                       style: pw.TextStyle(
-                         font: font, 
-                         fontSize: 10,
-                         color: isCorrect ? PdfColors.green : (isSkipped ? PdfColors.orange : PdfColors.red),
-                       ),
-                     ),
-                     if (!isCorrect)
-                       pw.Text(
-                         "Correct Answer: $resolvedCorrectText",
-                         style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green),
-                       ),
-                     pw.Divider(color: PdfColors.grey200),
-                  ],
-                ),
+              return pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 8),
+                child: _buildResultItem(index + 1, question['question']?.toString() ?? '', yourAnswer, resolvedCorrectText, isCorrect, isSkipped, font, fontBold),
               );
             }),
           ];
@@ -191,12 +157,38 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
     }
   }
   
-  pw.Widget _buildPdfStat(String label, String value, pw.Font font, {PdfColor color = PdfColors.black}) {
-    return pw.Column(
-      children: [
-        pw.Text(value, style: pw.TextStyle(font: font, fontSize: 18, color: color)),
-        pw.Text(label, style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey600)),
-      ],
+  pw.Widget _buildResultItem(int number, String question, String yourAnswer, String correctAnswer, bool isCorrect, bool isSkipped, pw.Font font, pw.Font fontBold) {
+    final PdfColor statusColor = isCorrect ? PdfColors.green : (isSkipped ? PdfColors.orange : PdfColors.red);
+    final String statusText = isCorrect ? "CORRECT" : (isSkipped ? "SKIPPED" : "WRONG");
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 10),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text("$number. ", style: pw.TextStyle(font: fontBold)),
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(question, style: pw.TextStyle(font: font)),
+                pw.SizedBox(height: 4),
+                pw.Row(
+                  children: [
+                    pw.Text("Your Answer: $yourAnswer ", style: pw.TextStyle(font: font, fontSize: 10, color: statusColor)),
+                    if (!isCorrect)
+                      pw.Text("(Correct: $correctAnswer)", style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(width: 10),
+          pw.Text(
+            statusText,
+            style: pw.TextStyle(font: fontBold, color: statusColor, fontSize: 12),
+          ),
+        ],
+      ),
     );
   }
 
