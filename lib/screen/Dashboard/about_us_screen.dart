@@ -102,46 +102,46 @@ class AboutUsScreen extends StatelessWidget {
                   const SizedBox(height: 40),
 
                   // Unique Staggered Team Section
-                  Text(
-                    "Our Educational Leaders",
-                    style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  // Text(
+                  //   "Our Educational Leaders",
+                  //   style: GoogleFonts.poppins(
+                  //     fontSize: 20,
+                  //     fontWeight: FontWeight.bold,
+                  //     color: colorScheme.onSurface,
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 24),
 
-                  _buildModernLeaderCard(
-                    context,
-                    name: l10n.influencerName,
-                    role: "Visionary & Lead Educator",
-                    description: "Pioneering interactive learning concepts for over a decade.",
-                    image: imgInfluencerDmBhattNew,
-                    isRightAligned: false,
-                  ),
+                  // _buildModernLeaderCard(
+                  //   context,
+                  //   name: l10n.influencerName,
+                  //   role: "Visionary & Lead Educator",
+                  //   description: "Pioneering interactive learning concepts for over a decade.",
+                  //   image: imgInfluencerDmBhattNew,
+                  //   isRightAligned: false,
+                  // ),
                   
-                  const SizedBox(height: 16),
+                  // const SizedBox(height: 16),
                   
-                  _buildModernLeaderCard(
-                    context,
-                    name: "Hetvi Bhatt",
-                    role: "Foundation Specialist",
-                    description: "Specializing in building strong academic fundamentals for students.",
-                    image: imgInfluencerHetvi, 
-                    isRightAligned: true,
-                  ),
+                  // _buildModernLeaderCard(
+                  //   context,
+                  //   name: "Hetvi Bhatt",
+                  //   role: "Foundation Specialist",
+                  //   description: "Specializing in building strong academic fundamentals for students.",
+                  //   image: imgInfluencerHetvi, 
+                  //   isRightAligned: true,
+                  // ),
                   
-                  const SizedBox(height: 16),
+                  // const SizedBox(height: 16),
                   
-                  _buildModernLeaderCard(
-                    context,
-                    name: "Ravi Shah",
-                    role: "Modern Tech Educator",
-                    description: "Integrating modern technology with traditional teaching methods.",
-                    image: imgInfluencerRavi, 
-                    isRightAligned: false,
-                  ),
+                  // _buildModernLeaderCard(
+                  //   context,
+                  //   name: "Ravi Shah",
+                  //   role: "Modern Tech Educator",
+                  //   description: "Integrating modern technology with traditional teaching methods.",
+                  //   image: imgInfluencerRavi, 
+                  //   isRightAligned: false,
+                  // ),
 
                   const SizedBox(height: 40),
                 ],

@@ -34,40 +34,53 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   };
   bool _isLoading = true;
 
-  late PageController _pageController;
+  PageController? _pageController;
   int _currentSlide = 0;
-  Timer? _sliderTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchProfile();
-    _pageController = PageController(viewportFraction: 0.85, initialPage: 0);
+    _pageController = PageController(viewportFraction: 1.0, initialPage: 0);
     _startAutoSlider();
   }
 
   @override
   void dispose() {
-    _sliderTimer?.cancel();
-    _pageController.dispose();
+    _pageController?.dispose();
     super.dispose();
   }
 
-  void _startAutoSlider() {
-    _sliderTimer?.cancel();
-    _sliderTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_pageController.hasClients) {
-        int nextPage = _pageController.page!.round() + 1;
+  void _startAutoSlider() async {
+    while (mounted) {
+      await Future.delayed(const Duration(seconds: 4));
+      if (mounted) {
+        int nextPage = _currentSlide + 1;
         if (nextPage >= 4) {
           nextPage = 0;
+          if (_pageController != null && _pageController!.hasClients) {
+            _pageController!.animateToPage(
+              nextPage,
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeIn,
+            );
+          }
+        } else {
+          if (_pageController != null && _pageController!.hasClients) {
+            _pageController!.animateToPage(
+              nextPage,
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeInOut,
+            );
+          }
         }
-        _pageController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeInOutCubic,
-        );
+        if (mounted) {
+          setState(() {
+            _currentSlide = nextPage;
+          });
+        }
       }
-    });
+    }
   }
 
   Future<void> _fetchProfile() async {
@@ -218,21 +231,20 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           const QuickAccessCategories(),
           const YouTubeChannelAd(),
           blankVerticalSpace24,
 
           // Auto-Playing Exam Cards Slider
           SizedBox(
-            height: 195,
+            height: 155,
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
                 setState(() {
                   _currentSlide = index;
                 });
-                _startAutoSlider(); // Reset timer on manual swipe
               },
               itemCount: 4,
               itemBuilder: (context, index) {
@@ -245,8 +257,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     title: "Main Board Exam",
                     subtitle: "Your next exam is waiting for you.",
                     buttonText: "Start Exam",
-                    imageAsset: 'assets/images/robot_logo.png',
-                    fallbackIcon: Icons.quiz_outlined,
+                    icon: Icons.assignment_turned_in_rounded,
                     isActive: isActive,
                     onTap: () async {
                       if (!await GuestUtils.canGuestAccessExam(context, 'REGULAR')) return;
@@ -261,8 +272,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     title: l10n.fiveMinRapidTest,
                     subtitle: l10n.studyForFiveMins,
                     buttonText: l10n.startNow,
-                    imageAsset: 'assets/images/app_logo.png',
-                    fallbackIcon: Icons.timer_outlined,
+                    icon: Icons.timer_rounded,
                     isActive: isActive,
                     onTap: () async {
                       if (!await GuestUtils.canGuestAccessExam(context, 'FIVEMIN')) return;
@@ -277,8 +287,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     title: "One-Liner Exam",
                     subtitle: "Speak your answer and test your knowledge!",
                     buttonText: "Start Speaking",
-                    imageAsset: 'assets/images/student_boy.png',
-                    fallbackIcon: Icons.mic_external_on,
+                    icon: Icons.mic_rounded,
                     isActive: isActive,
                     onTap: () async {
                       if (!await GuestUtils.canGuestAccessExam(context, 'ONELINER')) return;
@@ -293,8 +302,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     title: "Match the Following",
                     subtitle: "Connect the correct pairs!",
                     buttonText: "Start Now",
-                    imageAsset: 'assets/images/student_girl.png',
-                    fallbackIcon: Icons.drag_indicator,
+                    icon: Icons.compare_arrows_rounded,
                     isActive: isActive,
                     onTap: () async {
                       if (!await GuestUtils.canGuestAccessExam(context, 'MATCHFOLLOWING')) return;
@@ -305,15 +313,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   );
                 }
 
-                return AnimatedScale(
-                  scale: isActive ? 1.0 : 0.92,
-                  duration: const Duration(milliseconds: 350),
-                  child: AnimatedOpacity(
-                    opacity: isActive ? 1.0 : 0.75,
-                    duration: const Duration(milliseconds: 350),
-                    child: card,
-                  ),
-                );
+                return card;
               },
             ),
           ),
@@ -347,8 +347,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     required String title,
     required String subtitle,
     required String buttonText,
-    required String imageAsset,
-    required IconData fallbackIcon,
+    required IconData icon,
     required bool isActive,
     required VoidCallback onTap,
   }) {
@@ -356,9 +355,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
-      width: screenWidth * 0.82,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 8),
+      padding: EdgeInsets.all(screenWidth * 0.05),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -368,12 +366,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(isActive ? 0.35 : 0.15),
-            blurRadius: isActive ? 14 : 6,
-            offset: Offset(0, isActive ? 8 : 3),
+            color: colorScheme.primary.withOpacity(isActive ? 0.3 : 0.1),
+            blurRadius: isActive ? 12 : 6,
+            offset: Offset(0, isActive ? 6 : 3),
           ),
         ],
       ),
@@ -387,39 +385,44 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 Text(
                   title,
                   style: GoogleFonts.poppins(
-                    fontSize: 16, 
+                    fontSize: 15, 
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.85),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: onTap,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: colorScheme.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  ),
+                const SizedBox(height: 2),
+                Expanded(
                   child: Text(
-                    buttonText,
+                    subtitle,
                     style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      fontSize: 10.5,
+                      color: Colors.white.withOpacity(0.85),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  height: 32,
+                  child: ElevatedButton(
+                    onPressed: onTap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                    ),
+                    child: Text(
+                      buttonText,
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ),
@@ -428,16 +431,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ),
           const SizedBox(width: 12),
           Container(
-            height: 90,
-            width: 75,
-            clipBehavior: Clip.hardEdge,
-            decoration: const BoxDecoration(), 
-            child: Image.asset(
-              imageAsset, 
-              fit: BoxFit.contain,
-              alignment: Alignment.bottomCenter,
-              errorBuilder: (context, error, stackTrace) => 
-                Icon(fallbackIcon, size: 50, color: Colors.white.withOpacity(0.8)),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 32,
+              color: Colors.white,
             ),
           ),
         ],
