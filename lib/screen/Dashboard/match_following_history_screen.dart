@@ -9,11 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:dm_bhatt_tutions/constant/app_images.dart';
-import 'dart:io';
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 
 class MatchFollowingHistoryScreen extends StatefulWidget {
   final bool hideAppBar;
@@ -395,63 +392,60 @@ class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScree
   }
 }
 
-class MatchFollowingPdfViewer extends StatelessWidget {
+class MatchFollowingPdfViewer extends StatefulWidget {
   final Map<String, dynamic> exam;
   final Map<String, dynamic>? fullExam;
   const MatchFollowingPdfViewer({super.key, required this.exam, this.fullExam});
 
   @override
+  State<MatchFollowingPdfViewer> createState() => _MatchFollowingPdfViewerState();
+}
+
+class _MatchFollowingPdfViewerState extends State<MatchFollowingPdfViewer> {
+  Uint8List? _pdfBytes;
+  bool _isLoading = true;
+
+  Map<String, dynamic> get exam => widget.exam;
+  Map<String, dynamic>? get fullExam => widget.fullExam;
+
+  @override
+  void initState() {
+    super.initState();
+    _buildPdf();
+  }
+
+  Future<void> _buildPdf() async {
+    try {
+      final bytes = await _generateExamPdf(PdfPageFormat.a4, exam);
+      if (mounted) {
+        setState(() {
+          _pdfBytes = bytes;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error generating exam PDF: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: exam['title'] ?? "Match Following",
-      ),
-      body: PdfPreview(
-        build: (format) => _generateExamPdf(format, exam),
-        canChangeOrientation: false,
-        canChangePageFormat: false,
-        allowSharing: false,
-        allowPrinting: false,
-        useActions: false, 
-      ),
+    if (_isLoading || _pdfBytes == null) {
+      return Scaffold(
+        appBar: CustomAppBar(title: exam['title'] ?? "Match Following"),
+        body: const Center(child: CustomLoader()),
+      );
+    }
+
+    return PdfPreviewScreen(
+      product: {
+        'name': exam['title'] ?? "Match Following",
+        'id': exam['examId'] is Map ? exam['examId']['_id'] : exam['examId'],
+      },
+      pdfBytes: _pdfBytes,
+      isFullAccess: true,
     );
-  }
-
-  Future<void> _downloadPdf(BuildContext context) async {
-    try {
-      final bytes = await _generateExamPdf(PdfPageFormat.a4, exam);
-      
-      if (kIsWeb) {
-        await Printing.sharePdf(bytes: bytes, filename: '${exam['title']}.pdf');
-      } else {
-        final directory = Platform.isAndroid 
-            ? await getExternalStorageDirectory() 
-            : await getApplicationDocumentsDirectory();
-        
-        final path = directory?.path ?? (await getApplicationDocumentsDirectory()).path;
-        final file = File('$path/${exam['title'].replaceAll(' ', '_')}.pdf');
-        await file.writeAsBytes(bytes);
-
-        if (context.mounted) {
-          CustomToast.showSuccess(context, "Downloaded to: ${file.path}");
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        CustomToast.showError(context, "Download failed: $e");
-      }
-    }
-  }
-
-  Future<void> _sharePdf(BuildContext context) async {
-    try {
-      final bytes = await _generateExamPdf(PdfPageFormat.a4, exam);
-      await Printing.sharePdf(bytes: bytes, filename: '${exam['title']}.pdf');
-    } catch (e) {
-      if (context.mounted) {
-        CustomToast.showError(context, "Share failed: $e");
-      }
-    }
   }
 
   Future<Uint8List> _generateExamPdf(PdfPageFormat format, Map<String, dynamic> exam) async {
