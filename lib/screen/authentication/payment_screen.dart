@@ -54,6 +54,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String _referralMessage = '';
   double _referralDiscount = 0;
 
+  String? _board;
+  bool _isRedeemPercentage = false;
+  double _redeemDiscountPercent = 0;
+
   String? _std;
   String? _medium;
   String? _stream;
@@ -107,6 +111,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     // Always ensure values not passed by the caller are loaded from the profile.
     final prefs = await SharedPreferences.getInstance();
+    _board = widget.payload?.fields['board']?.toString() ?? prefs.getString('board');
     if (_cachedPassword == null) {
       _cachedPassword = prefs.getString('user_password');
     }
@@ -177,7 +182,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
       // Android / non-iOS logic: Apply redeem code and/or referral code dynamically
       double totalDiscount = 0;
       if (_isDiscountApplied) {
-        totalDiscount += 100; // Redeem code discount
+        if (_isRedeemPercentage) {
+          totalDiscount += (_originalAmount * _redeemDiscountPercent / 100.0);
+        } else {
+          totalDiscount += 100; // Redeem code discount (static)
+        }
       }
       if (_hasValidatedReferralCode) {
         totalDiscount += _referralDiscount; // Referral discount
@@ -196,7 +205,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _referralCodeController.text.trim().isNotEmpty &&
       _isReferralValid == true;
 
-  void _validateRedeemCode() {
+  Future<void> _validateRedeemCode() async {
     if (_hasValidatedReferralCode) {
       CustomToast.showError(
         context,
@@ -217,18 +226,62 @@ class _PaymentScreenState extends State<PaymentScreen> {
       setState(() {
         _isDiscountApplied = true;
         _isRedeemValid = true;
+        _isRedeemPercentage = false;
+        _redeemDiscountPercent = 0;
         _redeemMessage = "Redeem code applied successfully.";
         _calculateFinalAmount();
       });
       CustomToast.showSuccess(context, "Redeem code applied successfully!");
     } else {
-      setState(() {
-        _isDiscountApplied = false;
-        _isRedeemValid = false;
-        _redeemMessage = "Invalid redeem code";
-        _calculateFinalAmount();
-      });
-      CustomToast.showError(context, "Invalid redeem code");
+      try {
+        CustomLoader.show(context);
+        final response = await ApiService.validateRedeemCode(
+          code,
+          targetStd: _std,
+          targetBoard: _board,
+          targetMedium: _medium,
+          targetStream: _stream,
+        );
+        if (!mounted) return;
+        CustomLoader.hide(context);
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          setState(() {
+            _isDiscountApplied = true;
+            _isRedeemValid = true;
+            _isRedeemPercentage = true;
+            _redeemDiscountPercent = (data['discount'] ?? 0).toDouble();
+            _redeemMessage = data['message'] ?? "Redeem code applied successfully.";
+            _calculateFinalAmount();
+          });
+          CustomToast.showSuccess(context, _redeemMessage);
+        } else {
+          final errorMsg = ApiService.getErrorMessage(response.body);
+          setState(() {
+            _isDiscountApplied = false;
+            _isRedeemValid = false;
+            _isRedeemPercentage = false;
+            _redeemDiscountPercent = 0;
+            _redeemMessage = errorMsg;
+            _calculateFinalAmount();
+          });
+          CustomToast.showError(context, errorMsg);
+        }
+      } catch (e) {
+        if (mounted) {
+          CustomLoader.hide(context);
+          setState(() {
+            _isDiscountApplied = false;
+            _isRedeemValid = false;
+            _isRedeemPercentage = false;
+            _redeemDiscountPercent = 0;
+            _redeemMessage = "Error validating code: $e";
+            _calculateFinalAmount();
+          });
+          CustomToast.showError(context, _redeemMessage);
+        }
+      }
     }
   }
 
@@ -236,6 +289,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() {
       _isDiscountApplied = false;
       _isRedeemValid = null;
+      _isRedeemPercentage = false;
+      _redeemDiscountPercent = 0;
       _redeemMessage = '';
       _calculateFinalAmount();
     });
