@@ -52,6 +52,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   bool _isValidatingReferral = false;
   bool? _isReferralValid;
   String _referralMessage = '';
+  double _referralDiscount = 0;
 
   String? _std;
   String? _medium;
@@ -164,11 +165,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _calculateFinalAmount() {
     _finalAmount = _originalAmount > 0 ? _originalAmount - 1 : 0;
-    if (_hasValidCodeDiscount) {
-      _discount = 100;
-      _finalAmount -= _discount;
+    if (_isIOS) {
+      // Keep iOS logic completely untouched
+      if (_hasValidCodeDiscount) {
+        _discount = 100;
+        _finalAmount -= _discount;
+      } else {
+        _discount = 0;
+      }
     } else {
-      _discount = 0;
+      // Android / non-iOS logic: Apply redeem code and/or referral code dynamically
+      double totalDiscount = 0;
+      if (_isDiscountApplied) {
+        totalDiscount += 100; // Redeem code discount
+      }
+      if (_hasValidatedReferralCode) {
+        totalDiscount += _referralDiscount; // Referral discount
+      }
+      _discount = totalDiscount;
+      _finalAmount -= _discount;
+      debugPrint("[_calculateFinalAmount] _originalAmount: $_originalAmount, _discount: $_discount, _finalAmount: $_finalAmount, _referralDiscount: $_referralDiscount, _hasValidatedReferralCode: $_hasValidatedReferralCode");
     }
     if (_finalAmount < 0) _finalAmount = 0;
   }
@@ -181,6 +197,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _isReferralValid == true;
 
   void _validateRedeemCode() {
+    if (_hasValidatedReferralCode) {
+      CustomToast.showError(
+        context,
+        "Cannot apply redeem code when a referral code is already applied.",
+      );
+      return;
+    }
     final code = _promoCodeController.text.trim().toUpperCase();
     final expectedCode = "DMBHATT$_std";
 
@@ -236,11 +259,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() {
       _isReferralValid = null;
       _referralMessage = '';
+      _referralDiscount = 0;
       _calculateFinalAmount();
     });
   }
 
   Future<void> _validateReferralCode() async {
+    if (_isDiscountApplied) {
+      CustomToast.showError(
+        context,
+        "Cannot apply referral code when a redeem code is already applied.",
+      );
+      return;
+    }
     final code = _referralCodeController.text.trim();
 
     if (code.isEmpty) {
@@ -265,6 +296,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         setState(() {
           _isReferralValid = refData['valid'] == true;
           _referralMessage = refData['message'] ?? "Referral applied!";
+          _referralDiscount = (refData['discountAmount'] ?? 0).toDouble();
           _calculateFinalAmount();
         });
         CustomToast.showSuccess(context, _referralMessage);
