@@ -7,6 +7,7 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_result_screen.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 
 
 class MatchFollowingGameScreen extends StatefulWidget {
@@ -86,13 +87,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
     if (_isSubmitted) return;
     if (_selectedLeftIndex == null) {
       // Prompt user to select left item first
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_getTranslation(context, 'selectLeftFirst')),
-          duration: const Duration(seconds: 1),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-        ),
-      );
+      CustomToast.showInfo(context, _getTranslation(context, 'selectLeftFirst'));
       return;
     }
 
@@ -118,12 +113,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
 
   void _submitMatches() {
     if (_matches.length < _leftItems.length) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_getTranslation(context, 'matchAllPrompt')),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      CustomToast.showInfo(context, _getTranslation(context, 'matchAllPrompt'));
       return;
     }
 

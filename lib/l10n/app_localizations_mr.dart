@@ -1109,4 +1109,30 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get pleaseSelectDob => 'कृपया जन्म तारीख निवडा';
+
+  @override
+  String get helpSupport => 'मदत आणि समर्थन';
+
+  @override
+  String get selectMenuFacing =>
+      'तुम्हाला ज्या मेनूमध्ये अडचण येत आहे तो निवडा';
+
+  @override
+  String get writeDescription => 'तुमच्या समस्येचे वर्णन करा';
+
+  @override
+  String get attachScreenshot => 'स्क्रीनशॉट जोडा';
+
+  @override
+  String get submitIssue => 'समस्या सबमिट करा';
+
+  @override
+  String get emailCopied => 'ईमेल क्लिपबोर्डवर कॉपी झाला!';
+
+  @override
+  String get issueSubmitted => 'समस्या यशस्वीरित्या सबमिट केली!';
+
+  @override
+  String get issueSubmitSuccessText =>
+      'समस्या सबमिट केल्याबद्दल धन्यवाद. आम्ही लवकरच तुमच्याशी संपर्क साधू.';
 }

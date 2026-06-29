@@ -340,5 +340,13 @@
   "sequenceMemoryDesc": "Memorize and repeat a growing sequence of colors.",
   "dateOfBirth": "Date of Birth",
   "selectDateOfBirth": "Select Date of Birth",
-  "pleaseSelectDob": "Please select Date of Birth"
+  "pleaseSelectDob": "Please select Date of Birth",
+  "helpSupport": "Help & Support",
+  "selectMenuFacing": "Select Menu you are facing issues in",
+  "writeDescription": "Describe your issue",
+  "attachScreenshot": "Attach Screenshot",
+  "submitIssue": "Submit Issue",
+  "emailCopied": "Email copied to clipboard!",
+  "issueSubmitted": "Issue Submitted Successfully!",
+  "issueSubmitSuccessText": "Thank you for submitting the issue. We will get in touch with you very soon."
 }

@@ -1121,4 +1121,30 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get pleaseSelectDob => 'பிறந்த தேதியைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get helpSupport => 'உதவி & ஆதரவு';
+
+  @override
+  String get selectMenuFacing =>
+      'நீங்கள் எதிர்கொள்ளும் மெனுவை தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get writeDescription => 'உங்கள் சிக்கலை விவரிக்கவும்';
+
+  @override
+  String get attachScreenshot => 'ஸ்கிரீன்ஷாட்டை இணைக்கவும்';
+
+  @override
+  String get submitIssue => 'சிக்கலை சமர்ப்பிக்கவும்';
+
+  @override
+  String get emailCopied => 'மின்னஞ்சல் நகலெடுக்கப்பட்டது!';
+
+  @override
+  String get issueSubmitted => 'சிக்கல் வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது!';
+
+  @override
+  String get issueSubmitSuccessText =>
+      'சிக்கலைச் சமர்ப்பித்ததற்கு நன்றி. நாங்கள் மிக விரைவில் உங்களைத் தொடர்புகொள்வோம்.';
 }

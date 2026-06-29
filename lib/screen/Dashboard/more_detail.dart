@@ -3,6 +3,7 @@ import 'package:dm_bhatt_tutions/network/api_service.dart' as api;
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/settings_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/help_support_screen.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,7 +18,6 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 // import 'package:dm_bhatt_tutions/screen/Dashboard/ready_reporting_card_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_history_screen.dart';
@@ -29,16 +29,8 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
 
-  Future<void> _launchUrl(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      debugPrint('Could not launch $url');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
@@ -405,7 +397,19 @@ class _AppInfoScreen extends StatelessWidget {
               icon: Icons.rss_feed_rounded,
               onTap: () => _showFollowUsSheet(context),
             ),
-              _MoreScreenItem(
+            _MoreScreenItem(
+              title: l10n.helpSupport,
+              value: "",
+              icon: Icons.help_outline_rounded,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const HelpSupportScreen()),
+                );
+              },
+            ),
+            _MoreScreenItem(
               title: l10n.settings,
               value: "",
               icon: Icons.settings,

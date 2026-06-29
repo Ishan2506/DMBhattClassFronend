@@ -306,5 +306,13 @@
   "grammarSorterDesc": "Sort falling words into the correct grammatical bucket.",
   "dateOfBirth": "जन्म तिथि",
   "selectDateOfBirth": "जन्म तिथि चुनें",
-  "pleaseSelectDob": "कृपया जन्म तिथि चुनें"
+  "pleaseSelectDob": "कृपया जन्म तिथि चुनें",
+  "helpSupport": "सहायता और समर्थन",
+  "selectMenuFacing": "वह मेनू चुनें जिसमें आपको समस्या आ रही है",
+  "writeDescription": "अपनी समस्या का वर्णन करें",
+  "attachScreenshot": "स्क्रीनशॉट संलग्न करें",
+  "submitIssue": "समस्या सबमिट करें",
+  "emailCopied": "ईमेल क्लिपबोर्ड पर कॉपी हो गया!",
+  "issueSubmitted": "समस्या सफलतापूर्वक सबमिट की गई!",
+  "issueSubmitSuccessText": "समस्या सबमिट करने के लिए धन्यवाद। हम बहुत जल्द आपसे संपर्क करेंगे।"
 }

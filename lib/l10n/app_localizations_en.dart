@@ -1103,4 +1103,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseSelectDob => 'Please select Date of Birth';
+
+  @override
+  String get helpSupport => 'Help & Support';
+
+  @override
+  String get selectMenuFacing => 'Select Menu you are facing issues in';
+
+  @override
+  String get writeDescription => 'Describe your issue';
+
+  @override
+  String get attachScreenshot => 'Attach Screenshot';
+
+  @override
+  String get submitIssue => 'Submit Issue';
+
+  @override
+  String get emailCopied => 'Email copied to clipboard!';
+
+  @override
+  String get issueSubmitted => 'Issue Submitted Successfully!';
+
+  @override
+  String get issueSubmitSuccessText =>
+      'Thank you for submitting the issue. We will get in touch with you very soon.';
 }

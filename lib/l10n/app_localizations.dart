@@ -2149,6 +2149,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please select Date of Birth'**
   String get pleaseSelectDob;
+
+  /// No description provided for @helpSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get helpSupport;
+
+  /// No description provided for @selectMenuFacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Menu you are facing issues in'**
+  String get selectMenuFacing;
+
+  /// No description provided for @writeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your issue'**
+  String get writeDescription;
+
+  /// No description provided for @attachScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach Screenshot'**
+  String get attachScreenshot;
+
+  /// No description provided for @submitIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Issue'**
+  String get submitIssue;
+
+  /// No description provided for @emailCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Email copied to clipboard!'**
+  String get emailCopied;
+
+  /// No description provided for @issueSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue Submitted Successfully!'**
+  String get issueSubmitted;
+
+  /// No description provided for @issueSubmitSuccessText.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for submitting the issue. We will get in touch with you very soon.'**
+  String get issueSubmitSuccessText;
 }
 
 class _AppLocalizationsDelegate

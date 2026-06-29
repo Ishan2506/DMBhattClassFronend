@@ -310,5 +310,13 @@
   "grammarSorterDesc": "Sort falling words into the correct grammatical bucket.",
   "dateOfBirth": "જન્મ તારીખ",
   "selectDateOfBirth": "જન્મ તારીખ પસંદ કરો",
-  "pleaseSelectDob": "કૃપા કરીને જન્મ તારીખ પસંદ કરો"
+  "pleaseSelectDob": "કૃપા કરીને જન્મ તારીખ પસંદ કરો",
+  "helpSupport": "મદદ અને સપોર્ટ",
+  "selectMenuFacing": "કયા મેનુમાં સમસ્યા આવી રહી છે તે પસંદ કરો",
+  "writeDescription": "તમારી સમસ્યાનું વર્ણન કરો",
+  "attachScreenshot": "સ્ક્રીનશોટ જોડો",
+  "submitIssue": "સમસ્યા સબમિટ કરો",
+  "emailCopied": "ઇમેઇલ ક્લિપબોર્ડ પર કોપી થયો!",
+  "issueSubmitted": "સમસ્યા સફળતાપૂર્વક સબમિટ થઈ!",
+  "issueSubmitSuccessText": "સમસ્યા સબમિટ કરવા બદલ આભાર. અમે ટૂંક સમયમાં તમારો સંપર્ક કરીશું."
 }

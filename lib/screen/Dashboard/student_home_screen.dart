@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -33,10 +34,40 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   };
   bool _isLoading = true;
 
+  late PageController _pageController;
+  int _currentSlide = 0;
+  Timer? _sliderTimer;
+
   @override
   void initState() {
     super.initState();
     _fetchProfile();
+    _pageController = PageController(viewportFraction: 0.85, initialPage: 0);
+    _startAutoSlider();
+  }
+
+  @override
+  void dispose() {
+    _sliderTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startAutoSlider() {
+    _sliderTimer?.cancel();
+    _sliderTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_pageController.hasClients) {
+        int nextPage = _pageController.page!.round() + 1;
+        if (nextPage >= 4) {
+          nextPage = 0;
+        }
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    });
   }
 
   Future<void> _fetchProfile() async {
@@ -192,323 +223,223 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           const YouTubeChannelAd(),
           blankVerticalSpace24,
 
-          // Start Exam Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.quiz_outlined,
-                      size: 32,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  blankVerticalSpace16,
-                  Text(
-                    l10n.nextExamWaiting,
-                    style: GoogleFonts.poppins(
-                      fontSize: screenWidth * 0.04,
-                      color: colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  blankVerticalSpace24,
-                  SizedBox(
-                    width: double.infinity,
-                    height: screenHeight * 0.06,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (!await GuestUtils.canGuestAccessExam(context, 'REGULAR')) return;
-                        if (context.mounted) {
-                          _checkAndNavigate('mainExam', const StudentStartExamForm());
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          l10n.startExam.toUpperCase(),
-                          style: GoogleFonts.poppins(
-                            fontSize: screenWidth * 0.035,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          blankVerticalSpace24,
+          // Auto-Playing Exam Cards Slider
+          SizedBox(
+            height: 195,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentSlide = index;
+                });
+                _startAutoSlider(); // Reset timer on manual swipe
+              },
+              itemCount: 4,
+              itemBuilder: (context, index) {
+                final isActive = index == _currentSlide;
+                
+                Widget card;
+                if (index == 0) {
+                  card = _buildHorizontalCard(
+                    context,
+                    title: "Main Board Exam",
+                    subtitle: "Your next exam is waiting for you.",
+                    buttonText: "Start Exam",
+                    imageAsset: 'assets/images/robot_logo.png',
+                    fallbackIcon: Icons.quiz_outlined,
+                    isActive: isActive,
+                    onTap: () async {
+                      if (!await GuestUtils.canGuestAccessExam(context, 'REGULAR')) return;
+                      if (context.mounted) {
+                        _checkAndNavigate('mainExam', const StudentStartExamForm());
+                      }
+                    },
+                  );
+                } else if (index == 1) {
+                  card = _buildHorizontalCard(
+                    context,
+                    title: l10n.fiveMinRapidTest,
+                    subtitle: l10n.studyForFiveMins,
+                    buttonText: l10n.startNow,
+                    imageAsset: 'assets/images/app_logo.png',
+                    fallbackIcon: Icons.timer_outlined,
+                    isActive: isActive,
+                    onTap: () async {
+                      if (!await GuestUtils.canGuestAccessExam(context, 'FIVEMIN')) return;
+                      if (context.mounted) {
+                        _checkAndNavigate('fiveMinTest', const FiveMinTestSelectionScreen());
+                      }
+                    },
+                  );
+                } else if (index == 2) {
+                  card = _buildHorizontalCard(
+                    context,
+                    title: "One-Liner Exam",
+                    subtitle: "Speak your answer and test your knowledge!",
+                    buttonText: "Start Speaking",
+                    imageAsset: 'assets/images/student_boy.png',
+                    fallbackIcon: Icons.mic_external_on,
+                    isActive: isActive,
+                    onTap: () async {
+                      if (!await GuestUtils.canGuestAccessExam(context, 'ONELINER')) return;
+                      if (context.mounted) {
+                        _checkAndNavigate('oneLinerExam', const OneLinerSelectionScreen());
+                      }
+                    },
+                  );
+                } else {
+                  card = _buildHorizontalCard(
+                    context,
+                    title: "Match the Following",
+                    subtitle: "Connect the correct pairs!",
+                    buttonText: "Start Now",
+                    imageAsset: 'assets/images/student_girl.png',
+                    fallbackIcon: Icons.drag_indicator,
+                    isActive: isActive,
+                    onTap: () async {
+                      if (!await GuestUtils.canGuestAccessExam(context, 'MATCHFOLLOWING')) return;
+                      if (context.mounted) {
+                        _checkAndNavigate('matchFollowingExam', const MatchFollowingSelectionScreen());
+                      }
+                    },
+                  );
+                }
 
-          // 5 Min Test Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primary,
-                    colorScheme.primary.withOpacity(0.7)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 8),
+                return AnimatedScale(
+                  scale: isActive ? 1.0 : 0.92,
+                  duration: const Duration(milliseconds: 350),
+                  child: AnimatedOpacity(
+                    opacity: isActive ? 1.0 : 0.75,
+                    duration: const Duration(milliseconds: 350),
+                    child: card,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.fiveMinRapidTest,
-                          style: GoogleFonts.poppins(
-                            fontSize: screenWidth * 0.045, 
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.studyForFiveMins,
-                          style: GoogleFonts.poppins(
-                            fontSize: screenWidth * 0.032,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () async {
-                            if (!await GuestUtils.canGuestAccessExam(context, 'FIVEMIN')) return;
-                            if (context.mounted) {
-                              _checkAndNavigate('fiveMinTest', const FiveMinTestSelectionScreen());
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.surface,
-                            foregroundColor: colorScheme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          ),
-                          child: Text(l10n.startNow, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    height: 100,
-                    width: 90,
-                    clipBehavior: Clip.hardEdge,
-                    decoration: const BoxDecoration(), 
-                    child: Image.asset(
-                      'assets/images/app_logo.png', 
-                      fit: BoxFit.fitWidth,
-                      alignment: Alignment.topCenter,
-                      errorBuilder: (context, error, stackTrace) => 
-                        Icon(Icons.timer_outlined, size: 60, color: Colors.white.withOpacity(0.8)),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
-          blankVerticalSpace24,
-
-          // One-Liner Exam Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primary,
-                    colorScheme.primary.withOpacity(0.7)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          const SizedBox(height: 12),
+          // Page Indicator Dots
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(4, (index) {
+              final isActive = index == _currentSlide;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                height: 8,
+                width: isActive ? 20 : 8,
+                decoration: BoxDecoration(
+                  color: isActive ? colorScheme.primary : colorScheme.primary.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "One-Liner Exam",
-                          style: GoogleFonts.poppins(
-                            fontSize: screenWidth * 0.045, 
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Speak your answer and test your knowledge!",
-                          style: GoogleFonts.poppins(
-                            fontSize: screenWidth * 0.032,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () async {
-                            if (!await GuestUtils.canGuestAccessExam(context, 'ONELINER')) return;
-                            if (context.mounted) {
-                              _checkAndNavigate('oneLinerExam', const OneLinerSelectionScreen());
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.surface,
-                            foregroundColor: colorScheme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          ),
-                          child: Text("Start Speaking", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 100,
-                    width: 90,
-                    child: Icon(Icons.mic_external_on, size: 60, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          blankVerticalSpace24,
-          // Match the Following Exam Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primary,
-                    colorScheme.primary.withOpacity(0.7)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Match the Following",
-                          style: GoogleFonts.poppins(
-                            fontSize: screenWidth * 0.045, 
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Connect the correct pairs!",
-                          style: GoogleFonts.poppins(
-                            fontSize: screenWidth * 0.032,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () async {
-                            if (!await GuestUtils.canGuestAccessExam(context, 'MATCHFOLLOWING')) return;
-                            if (context.mounted) {
-                              _checkAndNavigate('matchFollowingExam', const MatchFollowingSelectionScreen());
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.surface,
-                            foregroundColor: colorScheme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          ),
-                          child: Text("Start Now", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 100,
-                    width: 90,
-                    child: Icon(Icons.drag_indicator, size: 60, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
+              );
+            }),
           ),
           blankVerticalSpace24,
           SizedBox(height: screenHeight * 0.05),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHorizontalCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String buttonText,
+    required String imageAsset,
+    required IconData fallbackIcon,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Container(
+      width: screenWidth * 0.82,
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primary,
+            colorScheme.primary.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(isActive ? 0.35 : 0.15),
+            blurRadius: isActive ? 14 : 6,
+            offset: Offset(0, isActive ? 8 : 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.85),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: onTap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  child: Text(
+                    buttonText,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            height: 90,
+            width: 75,
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(), 
+            child: Image.asset(
+              imageAsset, 
+              fit: BoxFit.contain,
+              alignment: Alignment.bottomCenter,
+              errorBuilder: (context, error, stackTrace) => 
+                Icon(fallbackIcon, size: 50, color: Colors.white.withOpacity(0.8)),
+            ),
+          ),
         ],
       ),
     );

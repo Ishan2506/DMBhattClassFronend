@@ -1107,4 +1107,29 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get pleaseSelectDob => 'કૃપા કરીને જન્મ તારીખ પસંદ કરો';
+
+  @override
+  String get helpSupport => 'મદદ અને સપોર્ટ';
+
+  @override
+  String get selectMenuFacing => 'કયા મેનુમાં સમસ્યા આવી રહી છે તે પસંદ કરો';
+
+  @override
+  String get writeDescription => 'તમારી સમસ્યાનું વર્ણન કરો';
+
+  @override
+  String get attachScreenshot => 'સ્ક્રીનશોટ જોડો';
+
+  @override
+  String get submitIssue => 'સમસ્યા સબમિટ કરો';
+
+  @override
+  String get emailCopied => 'ઇમેઇલ ક્લિપબોર્ડ પર કોપી થયો!';
+
+  @override
+  String get issueSubmitted => 'સમસ્યા સફળતાપૂર્વક સબમિટ થઈ!';
+
+  @override
+  String get issueSubmitSuccessText =>
+      'સમસ્યા સબમિટ કરવા બદલ આભાર. અમે ટૂંક સમયમાં તમારો સંપર્ક કરીશું.';
 }
