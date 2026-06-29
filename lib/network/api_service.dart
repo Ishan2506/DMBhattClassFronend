@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -12,7 +13,7 @@ import 'package:dm_bhatt_tutions/utils/connectivity_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 
 class ApiService {
-  static const String baseUrl = "http://103.212.121.139:5000/api";
+  static const String baseUrl = "http://localhost:9657/api";
 
   /// Helper to get the full URL for a file (image, pdf, etc.)
   static String getFileUrl(String? url) {
@@ -820,6 +821,47 @@ class ApiService {
     debugPrint("[Referral Apply] Response status: ${response.statusCode}");
     debugPrint("[Referral Apply] Response body: ${response.body}");
     return _handleSession(response);
+  }
+
+  static Future<http.Response> submitSupportTicket({
+    required String category,
+    required String description,
+    XFile? screenshot,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/support/submit");
+    final request = http.MultipartRequest("POST", uri);
+
+    request.headers.addAll(_addAuth({}));
+    request.fields["category"] = category;
+    request.fields["description"] = description;
+
+    if (screenshot != null) {
+      final mimeType = _getMimeType(screenshot.name);
+      if (kIsWeb) {
+        final bytes = await screenshot.readAsBytes();
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'screenshot',
+            bytes,
+            filename: screenshot.name,
+            contentType: MediaType.parse(mimeType),
+          ),
+        );
+      } else {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'screenshot',
+            screenshot.path,
+            contentType: MediaType.parse(mimeType),
+          ),
+        );
+      }
+    }
+
+    final streamedResponse = await request.send();
+    return _handleSession(await http.Response.fromStream(streamedResponse));
   }
 
   static Future<http.Response> validateRedeemCode(

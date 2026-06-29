@@ -20,21 +20,43 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 
-    // Fix for plugins not specifying namespace (AGP 8.0+)
-    val configureNamespace = {
+    // Fix for plugins not specifying namespace (AGP 8.0+) and mismatching Java targets
+    val configureAndroidExtension = {
         if (project.extensions.findByName("android") != null) {
             val android = project.extensions.findByName("android") as? com.android.build.gradle.BaseExtension
-            if (android != null && android.namespace == null) {
-                android.namespace = project.group.toString()
+            if (android != null) {
+                if (android.namespace == null) {
+                    android.namespace = project.group.toString()
+                }
             }
         }
     }
 
     if (project.state.executed) {
-        configureNamespace()
+        configureAndroidExtension()
     } else {
         project.afterEvaluate {
-            configureNamespace()
+            configureAndroidExtension()
+        }
+    }
+
+    val configureTasks = {
+        tasks.withType<JavaCompile>().configureEach {
+            sourceCompatibility = "17"
+            targetCompatibility = "17"
+        }
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            compilerOptions {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            }
+        }
+    }
+
+    if (project.state.executed) {
+        configureTasks()
+    } else {
+        project.afterEvaluate {
+            configureTasks()
         }
     }
 }

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -189,8 +190,24 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     final emailUri = Uri.parse("mailto:support@padhakudesk.in?subject=$subject&body=$body");
 
     try {
-      // Launch mail app
-      await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+      // First, submit to the backend API database store
+      final response = await ApiService.submitSupportTicket(
+        category: _selectedCategory!,
+        description: _descriptionController.text.trim(),
+        screenshot: _screenshotFile,
+      );
+
+      if (response.statusCode != 201) {
+        final errorMsg = ApiService.getErrorMessage(response.body);
+        throw Exception(errorMsg);
+      }
+
+      // Next, launch mail app as a convenient copy/fallback
+      try {
+        await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        // Suppress email launch failure since database submission succeeded
+      }
       
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -294,10 +311,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        // Clipboard Fallback
-        Clipboard.setData(ClipboardData(text: "support@padhakudesk.in\n\nSubject: Padhaku Desk Support: Issue in $_selectedCategory\n\n$bodyText"));
-        
-        CustomToast.showInfo(context, "Could not open mail app automatically. Copied details to clipboard!");
+        CustomToast.showError(context, "Failed to submit support request: $e");
       }
     }
   }

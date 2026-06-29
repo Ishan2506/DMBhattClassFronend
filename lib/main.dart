@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:screen_protector/screen_protector.dart';
 import 'constant/app_constant.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -52,12 +52,24 @@ void main() async {
   await PurchaseConfig.instance.initialize();
   await RevenueCatService.instance.init();
 
-  // await _secureScreen();
+  await _secureScreen();
   runApp(MyApp(prefs: prefs));
 }
 
 Future<void> _requestPermissions() async {
   await Permission.microphone.request();
+}
+
+Future<void> _secureScreen() async {
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    try {
+      await ScreenProtector.preventScreenshotOn();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error setting screen protection: $e');
+      }
+    }
+  }
 }
 
 class MyApp extends StatelessWidget {
