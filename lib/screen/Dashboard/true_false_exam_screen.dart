@@ -115,6 +115,7 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
                 "en": q['question'] ?? q['questionText'] ?? "",
                 "gu": q['question'] ?? q['questionText'] ?? "",
               },
+              "questionImage": q['questionImage'],
               "isTrue": q['isTrue'] ?? false,
             };
           }).toList();
@@ -338,14 +339,39 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
                             color: colorScheme.primary.withOpacity(0.2),
                           ),
                         ),
-                        child: Text(
-                          _getQuestion(),
-                          style: GoogleFonts.poppins(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                          textAlign: TextAlign.center,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_questions[_currentQuestionIndex]['questionImage'] != null &&
+                                _questions[_currentQuestionIndex]['questionImage'].toString().isNotEmpty &&
+                                _questions[_currentQuestionIndex]['questionImage'] != "null")
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    ApiService.getFileUrl(_questions[_currentQuestionIndex]['questionImage']),
+                                    height: 200,
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (ctx, err, stack) => Container(
+                                      height: 100,
+                                      color: Colors.white24,
+                                      child: const Icon(Icons.broken_image, color: Colors.grey, size: 40),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Text(
+                              _getQuestion(),
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 40),
