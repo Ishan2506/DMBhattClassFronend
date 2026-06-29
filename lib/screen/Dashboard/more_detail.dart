@@ -213,7 +213,7 @@ class _AppInfoScreen extends StatelessWidget {
 
   void _shareApp() {
     Share.share(
-        'Check out D. M. Bhatt Tuition Classes App! Download now: https://play.google.com/store/apps/details?id=com.dmbhatt.tutions');
+        'Check out Padhaku App! Download now: https://play.google.com/store/apps/details?id=com.dmbhatt.tutions');
   }
 
   void _showRateUsDialog(BuildContext context) {
