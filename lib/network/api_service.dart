@@ -13,7 +13,8 @@ import 'package:dm_bhatt_tutions/utils/connectivity_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:9657/api";
+  // static const String baseUrl = "http://localhost:9657/api";
+  static const String baseUrl = "http://103.212.121.139:5000/api";
 
   /// Helper to get the full URL for a file (image, pdf, etc.)
   static String getFileUrl(String? url) {
