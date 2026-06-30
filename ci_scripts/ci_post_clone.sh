@@ -4,6 +4,18 @@
 
 set -e  # Exit on error
 
+# Unset any proxy settings and URL rewrites to ensure direct git connections
+git config --global --unset http.proxy || true
+git config --global --unset https.proxy || true
+git config --global --remove-section url."http://github.com" || true
+git config --global --remove-section url."https://github.com" || true
+git config --global --remove-section url."git@github.com:" || true
+
+unset http_proxy
+unset https_proxy
+unset HTTP_PROXY
+unset HTTPS_PROXY
+
 echo "=========================================="
 echo "🔄 Xcode Cloud: Post Clone Phase"
 echo "=========================================="

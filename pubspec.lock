@@ -965,6 +965,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  screen_protector:
+    dependency: "direct main"
+    description:
+      name: screen_protector
+      sha256: "0b526fd945c2e9e405288a124bdca3012589d31c30f19bc15247e8826d6ff094"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.2"
   share_plus:
     dependency: "direct main"
     description:
@@ -1130,14 +1138,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.0"
-  sqlite3_flutter_libs:
-    dependency: "direct main"
-    description:
-      name: sqlite3_flutter_libs
-      sha256: eeb9e3a45207649076b808f8a5a74d68770d0b7f26ccef6d5f43106eee5375ad
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.42"
   stack_trace:
     dependency: transitive
     description:
