@@ -1,3 +1,16 @@
+# Disable git proxy and url rewrites for this CocoaPods run
+ENV['http_proxy'] = nil
+ENV['https_proxy'] = nil
+ENV['HTTP_PROXY'] = nil
+ENV['HTTPS_PROXY'] = nil
+ENV['no_proxy'] = '*'
+ENV['NO_PROXY'] = '*'
+
+system("git config --local http.proxy ''")
+system("git config --local https.proxy ''")
+system("git config --local --remove-section url.'http://github.com' >/dev/null 2>&1")
+system("git config --local --remove-section url.'https://github.com' >/dev/null 2>&1")
+
 platform :ios, '13.0'
 
 # connectivity_plus v6.x requires static frameworks but NOT global use_modular_headers.
