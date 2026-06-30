@@ -757,9 +757,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   const SizedBox(height: 32),
 
                   // 4. Switch Account Section (Clearly Visible)
-                  _buildSwitchAccountSection(context, theme),
+                  // _buildSwitchAccountSection(context, theme),
 
-                  const SizedBox(height: 32),
+                  // const SizedBox(height: 32),
 
                   // 5. Academic Performance Section
                   Padding(
@@ -1056,6 +1056,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildSwitchAccountSection(BuildContext context, ThemeData theme) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseHelper().getAccounts(),

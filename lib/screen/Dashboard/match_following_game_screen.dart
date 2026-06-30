@@ -414,6 +414,155 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
     return langMap[key] ?? key;
   }
 
+  Widget _buildLeftCard(BuildContext context, ThemeData theme, bool isDark,
+      Color primary, int index) {
+    final text = _leftItems[index];
+    final isSelected = _selectedLeftIndex == index;
+    final isMatched = _matches.containsKey(index);
+    final matchedRightIdx = _matches[index];
+
+    Color cardColor = theme.cardColor;
+    Color borderCol = isDark ? Colors.white10 : Colors.grey.shade200;
+    double borderW = 1.5;
+
+    if (isSelected) {
+      borderCol = primary;
+      borderW = 2.5;
+    } else if (isMatched) {
+      if (_isSubmitted) {
+        final correct = _isCorrectMatch(index, matchedRightIdx!);
+        borderCol = correct ? Colors.green : Colors.red;
+        cardColor = correct
+            ? Colors.green.withOpacity(0.08)
+            : Colors.red.withOpacity(0.08);
+        borderW = 2.0;
+      } else {
+        borderCol = primary.withOpacity(0.5);
+      }
+    }
+
+    return GestureDetector(
+      key: _leftKeys[index],
+      onTap: () => _onLeftCardTap(index),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(16),
+        constraints: const BoxConstraints(minHeight: 56),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderCol, width: borderW),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                text,
+                style: GoogleFonts.poppins(
+                  fontWeight: isSelected || isMatched
+                      ? FontWeight.bold
+                      : FontWeight.w500,
+                  fontSize: 13,
+                  color: isSelected
+                      ? primary
+                      : theme.textTheme.bodyMedium?.color,
+                ),
+              ),
+            ),
+            if (isMatched && !_isSubmitted)
+              IconButton(
+                icon: const Icon(Icons.close, size: 16, color: Colors.grey),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () => _clearMatch(index),
+              )
+            else if (_isSubmitted && isMatched)
+              Icon(
+                _isCorrectMatch(index, matchedRightIdx!)
+                    ? Icons.check_circle
+                    : Icons.error,
+                color: _isCorrectMatch(index, matchedRightIdx)
+                    ? Colors.green
+                    : Colors.red,
+                size: 18,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRightCard(BuildContext context, ThemeData theme, bool isDark,
+      Color primary, int index) {
+    final text = _rightItems[index];
+    final isMatched = _matches.containsValue(index);
+
+    // Find which left index matches this right index (if any)
+    int? leftIndexMatch;
+    _matches.forEach((key, val) {
+      if (val == index) leftIndexMatch = key;
+    });
+
+    Color cardColor = theme.cardColor;
+    Color borderCol = isDark ? Colors.white10 : Colors.grey.shade200;
+    double borderW = 1.5;
+
+    if (isMatched) {
+      if (_isSubmitted && leftIndexMatch != null) {
+        final correct = _isCorrectMatch(leftIndexMatch!, index);
+        borderCol = correct ? Colors.green : Colors.red;
+        cardColor = correct
+            ? Colors.green.withOpacity(0.08)
+            : Colors.red.withOpacity(0.08);
+        borderW = 2.0;
+      } else {
+        borderCol = primary.withOpacity(0.5);
+      }
+    }
+
+    return GestureDetector(
+      key: _rightKeys[index],
+      onTap: () => _onRightCardTap(index),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(16),
+        constraints: const BoxConstraints(minHeight: 56),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderCol, width: borderW),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                text,
+                style: GoogleFonts.poppins(
+                  fontWeight: isMatched ? FontWeight.bold : FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -465,195 +614,69 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
                 ],
               ),
             ),
-            // Matching Area inside Stack
+            // Matching Area inside Stack (scrollable so all pairs are reachable)
             Expanded(
-              child: Stack(
-                key: _stackKey,
-                fit: StackFit.expand,
-                children: [
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Stack(
+                  key: _stackKey,
+                  children: [
                   // Custom Paint overlay for connection lines
-                  CustomPaint(
-                    painter: ConnectionPainter(
-                      connections: _matches,
-                      leftKeys: _leftKeys,
-                      rightKeys: _rightKeys,
-                      ancestorBox: stackRenderBox,
-                      isSubmitted: _isSubmitted,
-                      pairsData: widget.pairsData,
-                      leftItems: _leftItems,
-                      rightItems: _rightItems,
-                      context: context,
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: ConnectionPainter(
+                        connections: _matches,
+                        leftKeys: _leftKeys,
+                        rightKeys: _rightKeys,
+                        ancestorBox: stackRenderBox,
+                        isSubmitted: _isSubmitted,
+                        pairsData: widget.pairsData,
+                        leftItems: _leftItems,
+                        rightItems: _rightItems,
+                        context: context,
+                      ),
                     ),
                   ),
                   // Lists of items side by side
-                  Row(
-                    children: [
-                      // Column A (Left)
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _leftItems.length,
-                          itemBuilder: (context, index) {
-                            final text = _leftItems[index];
-                            final isSelected = _selectedLeftIndex == index;
-                            final isMatched = _matches.containsKey(index);
-                            final matchedRightIdx = _matches[index];
-
-                            Color cardColor = theme.cardColor;
-                            Color borderCol = isDark ? Colors.white10 : Colors.grey.shade200;
-                            double borderW = 1.5;
-
-                            if (isSelected) {
-                              borderCol = primary;
-                              borderW = 2.5;
-                            } else if (isMatched) {
-                              if (_isSubmitted) {
-                                final correct = _isCorrectMatch(index, matchedRightIdx!);
-                                borderCol = correct ? Colors.green : Colors.red;
-                                cardColor = correct
-                                    ? Colors.green.withOpacity(0.08)
-                                    : Colors.red.withOpacity(0.08);
-                                borderW = 2.0;
-                              } else {
-                                borderCol = primary.withOpacity(0.5);
-                              }
-                            }
-
-                            return GestureDetector(
-                              key: _leftKeys[index],
-                              onTap: () => _onLeftCardTap(index),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                padding: const EdgeInsets.all(16),
-                                constraints: const BoxConstraints(minHeight: 56),
-                                decoration: BoxDecoration(
-                                  color: cardColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: borderCol, width: borderW),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        text,
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: isSelected || isMatched
-                                              ? FontWeight.bold
-                                              : FontWeight.w500,
-                                          fontSize: 13,
-                                          color: isSelected
-                                              ? primary
-                                              : theme.textTheme.bodyMedium?.color,
-                                        ),
-                                      ),
-                                    ),
-                                    if (isMatched && !_isSubmitted)
-                                      IconButton(
-                                        icon: const Icon(Icons.close, size: 16, color: Colors.grey),
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                        onPressed: () => _clearMatch(index),
-                                      )
-                                    else if (_isSubmitted && isMatched)
-                                      Icon(
-                                        _isCorrectMatch(index, matchedRightIdx!)
-                                            ? Icons.check_circle
-                                            : Icons.error,
-                                        color: _isCorrectMatch(index, matchedRightIdx)
-                                            ? Colors.green
-                                            : Colors.red,
-                                        size: 18,
-                                      ),
-                                  ],
-                                ),
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Column A (Left)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: List.generate(
+                                _leftItems.length,
+                                (index) => _buildLeftCard(
+                                    context, theme, isDark, primary, index),
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ),
-                      ),
-                      // Visual Spacer for lines
-                      const SizedBox(width: 60),
-                      // Column B (Right)
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _rightItems.length,
-                          itemBuilder: (context, index) {
-                            final text = _rightItems[index];
-                            final isMatched = _matches.containsValue(index);
-
-                            // Find which left index matches this right index (if any)
-                            int? leftIndexMatch;
-                            _matches.forEach((key, val) {
-                              if (val == index) leftIndexMatch = key;
-                            });
-
-                            Color cardColor = theme.cardColor;
-                            Color borderCol = isDark ? Colors.white10 : Colors.grey.shade200;
-                            double borderW = 1.5;
-
-                            if (isMatched) {
-                              if (_isSubmitted && leftIndexMatch != null) {
-                                final correct = _isCorrectMatch(leftIndexMatch!, index);
-                                borderCol = correct ? Colors.green : Colors.red;
-                                cardColor = correct
-                                    ? Colors.green.withOpacity(0.08)
-                                    : Colors.red.withOpacity(0.08);
-                                borderW = 2.0;
-                              } else {
-                                borderCol = primary.withOpacity(0.5);
-                              }
-                            }
-
-                            return GestureDetector(
-                              key: _rightKeys[index],
-                              onTap: () => _onRightCardTap(index),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                padding: const EdgeInsets.all(16),
-                                constraints: const BoxConstraints(minHeight: 56),
-                                decoration: BoxDecoration(
-                                  color: cardColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: borderCol, width: borderW),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        text,
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: isMatched ? FontWeight.bold : FontWeight.w500,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                        // Visual Spacer for lines
+                        const SizedBox(width: 60),
+                        // Column B (Right)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: List.generate(
+                                _rightItems.length,
+                                (index) => _buildRightCard(
+                                    context, theme, isDark, primary, index),
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
+                ),
               ),
             ),
             // Submission Button Area

@@ -419,12 +419,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Phone
+                        // Phone (ReadOnly)
                         _buildTextField(
                           context,
                           controller: _phoneController,
                           hint: "Phone Number",
                           icon: Icons.phone_outlined,
+                          readOnly: true,
                           inputType: TextInputType.phone,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -434,12 +435,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Parent's Mobile
+                        // Parent's Mobile (ReadOnly)
                         _buildTextField(
                           context,
                           controller: _parentPhoneController,
                           hint: "Parent's Mobile Number",
                           icon: Icons.family_restroom_outlined,
+                          readOnly: true,
                           inputType: TextInputType.phone,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -466,8 +468,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               Expanded(
                                 child: Text(
                                   _selectedDob == null
-                                      ? "Date of Birth: Not Provided"
-                                      : "Date of Birth: ${DateFormat('dd/MM/yyyy').format(_selectedDob!)}",
+                                      ? "Not Provided"
+                                      : "${DateFormat('dd/MM/yyyy').format(_selectedDob!)}",
                                   style: GoogleFonts.poppins(
                                     color: theme.textTheme.bodyLarge?.color,
                                     fontWeight: FontWeight.bold,
@@ -639,6 +641,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     TextEditingController? controller,
     bool isPassword = false,
     bool isVisible = false,
+    bool readOnly = false,
     TextInputType inputType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
@@ -648,7 +651,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+        color: readOnly
+            ? (isDark ? Colors.grey.shade800 : Colors.grey.shade200)
+            : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
@@ -656,10 +661,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       child: TextFormField(
         controller: controller,
+        readOnly: readOnly,
+        enableInteractiveSelection: !readOnly,
         obscureText: isPassword && !isVisible,
         keyboardType: inputType,
         inputFormatters: inputFormatters,
-        validator: validator,
+        validator: readOnly ? null : validator,
         style: GoogleFonts.poppins(
           color: theme.textTheme.bodyLarge?.color,
           fontWeight: FontWeight.bold,
