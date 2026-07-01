@@ -55,8 +55,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   double _referralDiscount = 0;
 
   String? _board;
-  bool _isRedeemPercentage = false;
-  double _redeemDiscountPercent = 0;
+  String _redeemDiscountType = 'percentage'; // 'percentage' | 'flat'
+  double _redeemDiscountValue = 0;
+  String? _validatedRedeemCode;
 
   String? _std;
   String? _medium;
@@ -188,10 +189,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       // Android / non-iOS logic: Apply redeem code and/or referral code dynamically
       double totalDiscount = 0;
       if (_isDiscountApplied) {
-        if (_isRedeemPercentage) {
-          totalDiscount += (_originalAmount * _redeemDiscountPercent / 100.0);
+        if (_redeemDiscountType == 'flat') {
+          totalDiscount += _redeemDiscountValue;
         } else {
-          totalDiscount += 100; // Redeem code discount (static)
+          totalDiscount += (_originalAmount * _redeemDiscountValue / 100.0);
         }
       }
       if (_hasValidatedReferralCode) {
@@ -220,7 +221,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
     final code = _promoCodeController.text.trim().toUpperCase();
-    final expectedCode = "DMBHATT$_std";
 
     if (code.isEmpty) {
       _resetRedeemValidation();
@@ -228,65 +228,56 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
 
-    if (code == expectedCode) {
-      setState(() {
-        _isDiscountApplied = true;
-        _isRedeemValid = true;
-        _isRedeemPercentage = false;
-        _redeemDiscountPercent = 0;
-        _redeemMessage = "Redeem code applied successfully.";
-        _calculateFinalAmount();
-      });
-      CustomToast.showSuccess(context, "Redeem code applied successfully!");
-    } else {
-      try {
-        CustomLoader.show(context);
-        final response = await ApiService.validateRedeemCode(
-          code,
-          targetStd: _std,
-          targetBoard: _board,
-          targetMedium: _medium,
-          targetStream: _stream,
-        );
-        if (!mounted) return;
-        CustomLoader.hide(context);
+    try {
+      CustomLoader.show(context);
+      final response = await ApiService.validateRedeemCode(
+        code,
+        targetStd: _std,
+        targetBoard: _board,
+        targetMedium: _medium,
+        targetStream: _stream,
+      );
+      if (!mounted) return;
+      CustomLoader.hide(context);
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          setState(() {
-            _isDiscountApplied = true;
-            _isRedeemValid = true;
-            _isRedeemPercentage = true;
-            _redeemDiscountPercent = (data['discount'] ?? 0).toDouble();
-            _redeemMessage = data['message'] ?? "Redeem code applied successfully.";
-            _calculateFinalAmount();
-          });
-          CustomToast.showSuccess(context, _redeemMessage);
-        } else {
-          final errorMsg = ApiService.getErrorMessage(response.body);
-          setState(() {
-            _isDiscountApplied = false;
-            _isRedeemValid = false;
-            _isRedeemPercentage = false;
-            _redeemDiscountPercent = 0;
-            _redeemMessage = errorMsg;
-            _calculateFinalAmount();
-          });
-          CustomToast.showError(context, errorMsg);
-        }
-      } catch (e) {
-        if (mounted) {
-          CustomLoader.hide(context);
-          setState(() {
-            _isDiscountApplied = false;
-            _isRedeemValid = false;
-            _isRedeemPercentage = false;
-            _redeemDiscountPercent = 0;
-            _redeemMessage = "Error validating code: $e";
-            _calculateFinalAmount();
-          });
-          CustomToast.showError(context, _redeemMessage);
-        }
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _isDiscountApplied = true;
+          _isRedeemValid = true;
+          _redeemDiscountType = data['discountType'] == 'flat'
+              ? 'flat'
+              : 'percentage';
+          _redeemDiscountValue = (data['discount'] ?? 0).toDouble();
+          _validatedRedeemCode = code;
+          _redeemMessage = data['message'] ?? "Redeem code applied successfully.";
+          _calculateFinalAmount();
+        });
+        CustomToast.showSuccess(context, _redeemMessage);
+      } else {
+        final errorMsg = ApiService.getErrorMessage(response.body);
+        setState(() {
+          _isDiscountApplied = false;
+          _isRedeemValid = false;
+          _redeemDiscountValue = 0;
+          _validatedRedeemCode = null;
+          _redeemMessage = errorMsg;
+          _calculateFinalAmount();
+        });
+        CustomToast.showError(context, errorMsg);
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomLoader.hide(context);
+        setState(() {
+          _isDiscountApplied = false;
+          _isRedeemValid = false;
+          _redeemDiscountValue = 0;
+          _validatedRedeemCode = null;
+          _redeemMessage = "Error validating code: $e";
+          _calculateFinalAmount();
+        });
+        CustomToast.showError(context, _redeemMessage);
       }
     }
   }
@@ -295,8 +286,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() {
       _isDiscountApplied = false;
       _isRedeemValid = null;
-      _isRedeemPercentage = false;
-      _redeemDiscountPercent = 0;
+      _redeemDiscountValue = 0;
+      _validatedRedeemCode = null;
       _redeemMessage = '';
       _calculateFinalAmount();
     });
@@ -304,7 +295,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   bool _hasValidRedeemCodeForSelectedStandard() {
     final code = _promoCodeController.text.trim().toUpperCase();
-    return _isRedeemValid == true && code == "DMBHATT$_std";
+    return _isRedeemValid == true &&
+        _validatedRedeemCode != null &&
+        code == _validatedRedeemCode;
   }
 
   bool _validateRedeemCodeForPurchase() {
@@ -670,6 +663,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Get referral code if provided and valid
     final referralCode = _referralCodeController.text.trim();
     final shouldIncludeReferral = _hasValidatedReferralCode;
+    // Redeem codes and referral codes are mutually exclusive in this flow;
+    // the backend's registerUser accepts either through the same field.
+    final hasValidRedeemCode = _hasValidRedeemCodeForSelectedStandard();
 
     // Proceed to Registration
     try {
@@ -712,7 +708,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final response = await ApiService.registerUser(
         payload: currentPayload,
         dpin: _cachedPassword ?? "",
-        referralCode: shouldIncludeReferral ? referralCode : null,
+        referralCode: shouldIncludeReferral
+            ? referralCode
+            : (hasValidRedeemCode ? _validatedRedeemCode : null),
         razorpayPaymentId: paymentId,
         razorpayOrderId: orderId,
         razorpaySignature: signature,
