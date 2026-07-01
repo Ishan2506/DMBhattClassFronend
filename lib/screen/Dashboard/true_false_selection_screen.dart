@@ -352,88 +352,102 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
       ),
       body: _isLoading
           ? const CustomLoader()
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  CustomDropdown<String>(
-                    labelText: "Subject",
-                    hintText: "Select Subject",
-                    value: _selectedSubject,
-                    items: _subjects,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onSubjectChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomDropdown<String>(
-                    labelText: "Unit",
-                    hintText: "Select Unit",
-                    value: _selectedUnit,
-                    items: _units,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onUnitChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomDropdown<String>(
-                    labelText: "Exam Title",
-                    hintText: "Select Title",
-                    value: _selectedTitle,
-                    items: _titles,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onTitleChanged,
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: !examSelected
-                          ? null
-                          : LinearGradient(
-                              colors: [
-                                primary,
-                                primary.withOpacity(0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+          : SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(24.0),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight - 48,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CustomDropdown<String>(
+                              labelText: "Subject",
+                              hintText: "Select Subject",
+                              value: _selectedSubject,
+                              items: _subjects,
+                              itemLabelBuilder: (String item) => item,
+                              onChanged: _onSubjectChanged,
                             ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: !examSelected
-                          ? []
-                          : [
-                              BoxShadow(
-                                color: primary.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+                            const SizedBox(height: 16),
+                            CustomDropdown<String>(
+                              labelText: "Unit",
+                              hintText: "Select Unit",
+                              value: _selectedUnit,
+                              items: _units,
+                              itemLabelBuilder: (String item) => item,
+                              onChanged: _onUnitChanged,
+                            ),
+                            const SizedBox(height: 16),
+                            CustomDropdown<String>(
+                              labelText: "Exam Title",
+                              hintText: "Select Title",
+                              value: _selectedTitle,
+                              items: _titles,
+                              itemLabelBuilder: (String item) => item,
+                              onChanged: _onTitleChanged,
+                            ),
+                            const SizedBox(height: 32),
+                            const Spacer(),
+                            Container(
+                              width: double.infinity,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                gradient: !examSelected
+                                    ? null
+                                    : LinearGradient(
+                                        colors: [
+                                          primary,
+                                          primary.withOpacity(0.8),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: !examSelected
+                                    ? []
+                                    : [
+                                        BoxShadow(
+                                          color: primary.withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
                               ),
-                            ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: !examSelected
-                          ? null
-                          : () => _startExam(_filteredExams[0]),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        disabledBackgroundColor: Colors.grey.shade400,
-                        disabledForegroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                              child: ElevatedButton(
+                                onPressed: !examSelected
+                                    ? null
+                                    : () => _startExam(_filteredExams[0]),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  disabledBackgroundColor: Colors.grey.shade400,
+                                  disabledForegroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Text(
+                                  "START EXAM",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Text(
-                        "START EXAM",
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
     );
