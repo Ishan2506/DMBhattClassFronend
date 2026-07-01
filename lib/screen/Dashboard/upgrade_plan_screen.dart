@@ -14,6 +14,7 @@ import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_receipt_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 
 class UpgradePlanScreen extends StatefulWidget {
   const UpgradePlanScreen({super.key});
@@ -32,7 +33,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   String? _selectedMedium;
   String? _selectedStream;
 
-  final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  String? _currentBoard;
+  List<String> get _standards => AcademicConstants.standards[_currentBoard ?? "GSEB"] ?? ["6", "7", "8", "9", "10", "11", "12"];
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
 
@@ -64,9 +66,19 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
   bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
+  Future<void> _loadBoardFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _currentBoard = prefs.getString('board');
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadBoardFromPrefs();
     _fetchUserProfile();
     _fetchSubscriptionPlans();
 
@@ -156,6 +168,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
           final rewardPoints = profile['totalRewardPoints'];
           setState(() {
             _currentStandard = profile['std']?.toString();
+            _currentBoard = profile['board']?.toString() ?? _currentBoard;
             _availablePoints = rewardPoints is num
                 ? rewardPoints.toInt()
                 : int.tryParse(rewardPoints?.toString() ?? '') ?? 0;

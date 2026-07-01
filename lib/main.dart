@@ -19,6 +19,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/utils/purchase_config.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -26,6 +27,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   debugPaintBaselinesEnabled = false;
   debugPaintSizeEnabled = false;
+
+  // Load academic constants from server
+  await AcademicConstants.loadFromServer();
 
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
     // Initialize sqflite for desktop

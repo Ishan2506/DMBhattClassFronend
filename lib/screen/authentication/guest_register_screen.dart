@@ -12,6 +12,7 @@ import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 
 class GuestRegisterScreen extends StatefulWidget {
   const GuestRegisterScreen({super.key});
@@ -46,7 +47,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   final String _selectedRole = "Student";
 
   // Data Lists
-  final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  List<String> get _standards => AcademicConstants.standards[_selectedBoard ?? "GSEB"] ?? ["6", "7", "8", "9", "10", "11", "12"];
   final List<String> _institutes = ["The Learning Institute", "Other"];
 
   final List<String> _mediums = ["English", "Gujarati"];

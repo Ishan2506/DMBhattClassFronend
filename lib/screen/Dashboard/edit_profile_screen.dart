@@ -14,6 +14,8 @@ import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
 import 'package:intl/intl.dart';
 
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
+
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -46,7 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final ImagePicker _picker = ImagePicker();
 
   // Data Lists
-  final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  List<String> get _standards => AcademicConstants.standards[_selectedBoard ?? "GSEB"] ?? ["6", "7", "8", "9", "10", "11", "12"];
 
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];

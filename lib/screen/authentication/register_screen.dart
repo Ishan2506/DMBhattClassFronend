@@ -15,6 +15,7 @@ import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
 import 'package:intl/intl.dart';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -51,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final String _selectedRole = "Student";
 
   // Data Lists
-  final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  List<String> get _standards => AcademicConstants.standards[_selectedBoard ?? "GSEB"] ?? ["6", "7", "8", "9", "10", "11", "12"];
   final List<String> _institutes = ["The Learning Institute"];
 
   final List<String> _mediums = ["English", "Gujarati"];
