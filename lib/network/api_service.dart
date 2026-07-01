@@ -1035,6 +1035,97 @@ class ApiService {
     );
   }
 
+  // --- Subscription Plans ---
+  static Future<http.Response> getActivePlans() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/active");
+    return _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
+  }
+
+  static Future<http.Response> getAllPlans() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans");
+    return _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
+  }
+
+  static Future<http.Response> getPlanByStandard(String standard) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/$standard");
+    return _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
+  }
+
+  static Future<http.Response> createOrUpdatePlan({
+    required String standard,
+    required double amount,
+    String? description,
+    bool? isActive,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans");
+    final body = {
+      'standard': standard,
+      'amount': amount,
+      if (description != null) 'description': description,
+      if (isActive != null) 'isActive': isActive,
+    };
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode(body),
+      ),
+    );
+  }
+
+  static Future<http.Response> bulkUpdatePlans(
+    List<Map<String, dynamic>> plans,
+  ) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/bulk-update");
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({'plans': plans}),
+      ),
+    );
+  }
+
+  static Future<http.Response> deletePlan(String standard) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/$standard");
+    return _handleSession(
+      await http.delete(
+        uri,
+        headers: _addAuth({'Accept': 'application/json'}),
+      ),
+    );
+  }
+
+  static Future<http.Response> initializeDefaultPlans() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/initialize-default");
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+      ),
+    );
+  }
+
   // --- Mind Map ---
   static Future<http.Response> getAllMindMaps() async {
     if (!await _checkConnectivity())
