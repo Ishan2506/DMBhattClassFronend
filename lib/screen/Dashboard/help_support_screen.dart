@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
@@ -176,21 +175,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
     setState(() => _isSubmitting = true);
 
-    final l10n = AppLocalizations.of(context)!;
-    final subject = Uri.encodeComponent("Padhaku Desk Support: Issue in $_selectedCategory");
-    
-    final bodyText = "Dear Padhaku Desk Support,\n\n"
-        "I am facing an issue in: $_selectedCategory\n\n"
-        "Description:\n${_descriptionController.text.trim()}\n\n"
-        "${_screenshotFile != null ? 'Note: I have attached a screenshot of the issue to this report. (Please review the attached screenshot below)\n' : ''}"
-        "Regards,\n"
-        "Padhaku Desk App User";
-        
-    final body = Uri.encodeComponent(bodyText);
-    final emailUri = Uri.parse("mailto:support@padhakudesk.in?subject=$subject&body=$body");
-
     try {
-      // First, submit to the backend API database store
+      // Submit to the backend API database store
       final response = await ApiService.submitSupportTicket(
         category: _selectedCategory!,
         description: _descriptionController.text.trim(),
@@ -202,111 +188,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         throw Exception(errorMsg);
       }
 
-      // Next, launch mail app as a convenient copy/fallback
-      try {
-        await launchUrl(emailUri, mode: LaunchMode.externalApplication);
-      } catch (_) {
-        // Suppress email launch failure since database submission succeeded
-      }
-      
       if (mounted) {
         setState(() => _isSubmitting = false);
-        
-        // Show success confirmation dialog
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.check_circle_rounded, color: Theme.of(context).colorScheme.primary, size: 50),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    l10n.issueSubmitted,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.issueSubmitSuccessText,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                  if (_screenshotFile != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.1)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.attachment_rounded, color: Theme.of(context).colorScheme.primary, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              "Please attach the screenshot from your gallery to the email app manually if not automatically attached.",
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context); // Close dialog
-                        Navigator.pop(context); // Go back from Help screen
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: Text(
-                        l10n.ok,
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-        );
+        CustomToast.showSuccess(context, "Your request has been submitted");
+        Navigator.pop(context); // Go back from Help screen
       }
     } catch (e) {
       if (mounted) {
