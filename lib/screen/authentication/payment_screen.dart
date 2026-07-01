@@ -75,8 +75,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   void initState() {
     super.initState();
-    _initData();
-    _fetchSubscriptionPlans();
+    _initializeAllData();
 
     if (_isIOS) {
       // RevenueCat is initialized in main.dart
@@ -87,6 +86,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
         onSuccess: _handlePaymentSuccess,
         onFailure: _handlePaymentFailure,
       );
+    }
+  }
+
+  Future<void> _initializeAllData() async {
+    await Future.wait([
+      _initData(),
+      _fetchSubscriptionPlans(),
+    ]);
+    
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -125,10 +137,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (_std != null) {
       _calculateInitialAmount();
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   Future<void> _fetchSubscriptionPlans() async {
