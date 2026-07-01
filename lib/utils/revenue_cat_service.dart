@@ -104,17 +104,78 @@ class RevenueCatService {
     "11": "com.standard.eleven.redeem",
     "12": "com.standard.twelve.redeem",
   };
+  static const Map<String, String> standardRedeem200ProductIds = {
+    "6": "com.standard.six.redeem.200",
+    "7": "com.standard.seven.redeem.200",
+    "8": "com.standard.eigth.redeem.200",
+    "9": "com.standard.ninth.redeem.200",
+    "10": "com.standard.ten.redeem.200",
+    "11": "com.standard.eleven.redeem.200",
+    "12": "com.standard.twelve.redeem.200",
+  };
+
+  static String? numericRedeem200ProductIdForStandard(String? standard) {
+    final normalizedStandard = _normalizeStandard(standard);
+    if (normalizedStandard == null) return null;
+    return "com.standard.$normalizedStandard.redeem.200";
+  }
 
   static String? productIdForStandard(
     String? standard, {
     bool useRedeemProduct = false,
     bool useReferralProduct = false,
+    int? rewardPoints,
   }) {
     final normalizedStandard = _normalizeStandard(standard);
-    final productIds = (useRedeemProduct || useReferralProduct)
-        ? standardRedeemProductIds
-        : standardProductIds;
+    final Map<String, String> productIds;
+    if (rewardPoints == 400) {
+      productIds = standardRedeem200ProductIds;
+    } else if (useRedeemProduct || useReferralProduct) {
+      productIds = standardRedeemProductIds;
+    } else {
+      productIds = standardProductIds;
+    }
     return productIds[normalizedStandard];
+  }
+
+  static List<String> productIdsForStandard(
+    String? standard, {
+    bool useRedeemProduct = false,
+    bool useReferralProduct = false,
+    int? rewardPoints,
+  }) {
+    final productIds = <String>[];
+    if (rewardPoints == 400) {
+      final numericProductId = numericRedeem200ProductIdForStandard(standard);
+      if (numericProductId != null) productIds.add(numericProductId);
+    }
+
+    final mappedProductId = productIdForStandard(
+      standard,
+      useRedeemProduct: useRedeemProduct,
+      useReferralProduct: useReferralProduct,
+      rewardPoints: rewardPoints,
+    );
+    if (mappedProductId != null && !productIds.contains(mappedProductId)) {
+      productIds.add(mappedProductId);
+    }
+
+    return productIds;
+  }
+
+  static String? primaryProductIdForStandard(
+    String? standard, {
+    bool useRedeemProduct = false,
+    bool useReferralProduct = false,
+    int? rewardPoints,
+  }) {
+    final productIds = productIdsForStandard(
+      standard,
+      useRedeemProduct: useRedeemProduct,
+      useReferralProduct: useReferralProduct,
+      rewardPoints: rewardPoints,
+    );
+    return productIds.isEmpty ? null : productIds.first;
   }
 
   bool _isInitialized = false;
@@ -305,14 +366,16 @@ class RevenueCatService {
     required String? standard,
     bool useRedeemProduct = false,
     bool useReferralProduct = false,
+    int? rewardPoints,
   }) async {
     final normalizedStandard = _normalizeStandard(standard);
     final shouldUseRedeemProduct = useRedeemProduct || useReferralProduct;
-    final productId = productIdForStandard(
+    final productIds = productIdsForStandard(
       normalizedStandard,
       useRedeemProduct: shouldUseRedeemProduct,
+      rewardPoints: rewardPoints,
     );
-    if (productId == null) {
+    if (productIds.isEmpty) {
       final productType = shouldUseRedeemProduct ? "redeem " : "";
       debugPrint(
         "No RevenueCat ${productType}product configured for standard: $standard",
@@ -326,32 +389,46 @@ class RevenueCatService {
     try {
       Package? selectedPackage;
       StoreProduct? selectedProduct;
+      String? selectedProductId;
 
       final offerings = await Purchases.getOfferings();
       final offering = offerings.all[defaultOfferingId];
       if (offering != null) {
-        for (final package in offering.availablePackages) {
-          if (package.storeProduct.identifier == productId) {
-            selectedPackage = package;
-            selectedProduct = package.storeProduct;
-            break;
+        for (final productId in productIds) {
+          for (final package in offering.availablePackages) {
+            if (package.storeProduct.identifier == productId) {
+              selectedPackage = package;
+              selectedProduct = package.storeProduct;
+              selectedProductId = productId;
+              break;
+            }
+          }
+          if (selectedProduct != null) break;
+        }
+      }
+
+      if (selectedProduct == null) {
+        debugPrint(
+          "RevenueCat products ${productIds.join(', ')} were not found in $defaultOfferingId. Fetching directly.",
+        );
+        final products = await Purchases.getProducts(productIds);
+        if (products.isNotEmpty) {
+          for (final productId in productIds) {
+            for (final product in products) {
+              if (product.identifier == productId) {
+                selectedProduct = product;
+                selectedProductId = productId;
+                break;
+              }
+            }
+            if (selectedProduct != null) break;
           }
         }
       }
 
       if (selectedProduct == null) {
         debugPrint(
-          "RevenueCat product $productId was not found in $defaultOfferingId. Fetching directly.",
-        );
-        final products = await Purchases.getProducts([productId]);
-        if (products.isNotEmpty) {
-          selectedProduct = products.first;
-        }
-      }
-
-      if (selectedProduct == null) {
-        debugPrint(
-          "RevenueCat product $productId could not be fetched from offerings or products.",
+          "RevenueCat products ${productIds.join(', ')} could not be fetched from offerings or products.",
         );
         return const RevenueCatPurchaseResult(
           status: RevenueCatPurchaseStatus.error,
@@ -374,7 +451,8 @@ class RevenueCatService {
                 standard: normalizedStandard!,
                 package: selectedPackage,
                 product: selectedProduct!,
-                requestedProductId: productId,
+                requestedProductId:
+                    selectedProductId ?? selectedProduct.identifier,
                 onCustomerInfoChanged: (customerInfo) {
                   _customerInfo = customerInfo;
                 },

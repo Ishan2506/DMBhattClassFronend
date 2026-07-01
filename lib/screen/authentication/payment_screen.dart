@@ -320,7 +320,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _validateReferralCode() async {
+    debugPrint("[XCODE][Referral Validate Screen] Validate button tapped");
     if (_isDiscountApplied) {
+      debugPrint(
+        "[XCODE][Referral Validate Screen] Blocked: redeem code already applied",
+      );
       CustomToast.showError(
         context,
         "Cannot apply referral code when a redeem code is already applied.",
@@ -328,8 +332,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
     final code = _referralCodeController.text.trim();
+    debugPrint("[XCODE][Referral Validate Screen] Entered code: $code");
 
     if (code.isEmpty) {
+      debugPrint("[XCODE][Referral Validate Screen] Blocked: empty code");
       _resetReferralValidation();
       CustomToast.showError(context, "Referral code is required");
       return;
@@ -342,12 +348,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     try {
+      debugPrint("[XCODE][Referral Validate Screen] Calling API");
       final refResponse = await ApiService.validateReferralCode(code);
+      debugPrint(
+        "[XCODE][Referral Validate Screen] API status: ${refResponse.statusCode}",
+      );
+      debugPrint(
+        "[XCODE][Referral Validate Screen] API body: ${refResponse.body}",
+      );
 
       if (!mounted) return;
 
       if (refResponse.statusCode == 200) {
         final refData = jsonDecode(refResponse.body);
+        debugPrint(
+          "[XCODE][Referral Validate Screen] Parsed valid=${refData['valid']} discount=${refData['discountAmount']} message=${refData['message']}",
+        );
         setState(() {
           _isReferralValid = refData['valid'] == true;
           _referralMessage = refData['message'] ?? "Referral applied!";
@@ -363,8 +379,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
         _referralMessage = ApiService.getErrorMessage(refResponse.body);
         _calculateFinalAmount();
       });
+      debugPrint(
+        "[XCODE][Referral Validate Screen] Validation failed: $_referralMessage",
+      );
       CustomToast.showError(context, _referralMessage);
     } catch (e) {
+      debugPrint("[XCODE][Referral Validate Screen] Exception: $e");
       if (mounted) {
         setState(() {
           _isReferralValid = false;

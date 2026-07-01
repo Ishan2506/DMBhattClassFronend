@@ -795,15 +795,27 @@ class ApiService {
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/referral/validate");
     final body = {'referralCode': referralCode};
-    debugPrint("[Referral Validate] POST $uri");
-    debugPrint("[Referral Validate] Request: ${jsonEncode(body)}");
+    final stopwatch = Stopwatch()..start();
+    debugPrint("[XCODE][Referral Validate API] START");
+    debugPrint("[XCODE][Referral Validate API] POST $uri");
+    debugPrint(
+      "[XCODE][Referral Validate API] Request body: ${jsonEncode(body)}",
+    );
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(body),
     );
-    debugPrint("[Referral Validate] Response status: ${response.statusCode}");
-    debugPrint("[Referral Validate] Response body: ${response.body}");
+    stopwatch.stop();
+    debugPrint(
+      "[XCODE][Referral Validate API] Response status: ${response.statusCode}",
+    );
+    debugPrint(
+      "[XCODE][Referral Validate API] Response body: ${response.body}",
+    );
+    debugPrint(
+      "[XCODE][Referral Validate API] END ${stopwatch.elapsedMilliseconds}ms",
+    );
     return _handleSession(response);
   }
 

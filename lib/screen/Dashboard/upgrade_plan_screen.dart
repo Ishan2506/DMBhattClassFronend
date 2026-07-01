@@ -23,6 +23,8 @@ class UpgradePlanScreen extends StatefulWidget {
 }
 
 class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
+  static const Set<int> _allowedRewardPointOptions = {200, 400};
+
   final TextEditingController _promoCodeController = TextEditingController();
   final TextEditingController _rewardPointsController = TextEditingController();
 
@@ -41,6 +43,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   bool _isRewardPointsApplied = false;
   bool? _isRedeemValid;
   String _redeemMessage = '';
+  bool? _areRewardPointsValid;
+  String _rewardPointsMessage = '';
 
   // Simulated available points
   int _availablePoints = 0;
@@ -233,8 +237,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   void _recalculateFinal() {
     setState(() {
       _finalAmount = _originalAmount > 0 ? _originalAmount - 1 : 0;
-      if (_hasValidCodeDiscount) {
-        _promoDiscount = 100;
+      final discountAmount = _activeDiscountAmount;
+      if (discountAmount > 0) {
+        _promoDiscount = discountAmount;
         _finalAmount -= _promoDiscount;
       } else {
         _promoDiscount = 0;
@@ -245,6 +250,17 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   }
 
   bool get _hasValidCodeDiscount => _isPromoApplied || _isRewardPointsApplied;
+
+  double get _activeDiscountAmount {
+    if (_isRewardPointsApplied && _appliedRewardPoints == 400) return 200;
+    if (_hasValidCodeDiscount) return 100;
+    return 0;
+  }
+
+  int? get _appliedRewardPoints {
+    if (!_isRewardPointsApplied) return null;
+    return int.tryParse(_rewardPointsController.text.trim());
+  }
 
   void _validateRedeemCode() {
     if (_selectedStandard == null) {
@@ -309,54 +325,82 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   void _resetRewardPoints({bool recalculate = true}) {
     setState(() {
       _isRewardPointsApplied = false;
+      _areRewardPointsValid = null;
+      _rewardPointsMessage = '';
     });
     if (recalculate) _recalculateFinal();
   }
 
   void _applyRewardPoints() {
-    if (_rewardPointsController.text.isEmpty) {
+    final input = _rewardPointsController.text.trim();
+
+    if (input.isEmpty) {
       setState(() {
         _isRewardPointsApplied = false;
+        _areRewardPointsValid = null;
+        _rewardPointsMessage = '';
       });
       _recalculateFinal();
       return;
     }
 
-    int points = int.tryParse(_rewardPointsController.text) ?? 0;
+    final points = int.tryParse(input);
 
-    if (points > 200) {
-      points = 200;
-      _rewardPointsController.text = points.toString();
-      CustomToast.showSuccess(
-        context,
-        "Only 200 reward points can be used at a time.",
-      );
+    if (points == null || !_allowedRewardPointOptions.contains(points)) {
+      const message = "Enter either 200 or 400 points";
+      CustomToast.showError(context, message);
+      setState(() {
+        _isRewardPointsApplied = false;
+        _areRewardPointsValid = false;
+        _rewardPointsMessage = message;
+      });
+      _recalculateFinal();
+      return;
     }
 
     if (points > _availablePoints) {
       final l10n = AppLocalizations.of(context)!;
-      CustomToast.showError(context, l10n.insufficientPoints(_availablePoints));
+      final message = l10n.insufficientPoints(_availablePoints);
+      CustomToast.showError(context, message);
       setState(() {
         _isRewardPointsApplied = false;
+        _areRewardPointsValid = false;
+        _rewardPointsMessage = message;
       });
       _recalculateFinal();
       return;
     }
 
-    if (points != 200) {
-      CustomToast.showError(context, "Please use 200 reward points at a time.");
-      setState(() {
-        _isRewardPointsApplied = false;
-      });
-      _recalculateFinal();
-      return;
-    }
-
+    final message = "$points reward points applied successfully.";
     setState(() {
       _isRewardPointsApplied = true;
+      _areRewardPointsValid = true;
+      _rewardPointsMessage = message;
     });
     _recalculateFinal();
-    CustomToast.showSuccess(context, "200 reward points applied successfully.");
+    CustomToast.showSuccess(context, message);
+  }
+
+  bool _validateRewardPointsForPurchase() {
+    if (_rewardPointsController.text.trim().isEmpty || _isRewardPointsApplied) {
+      return true;
+    }
+
+    final points = int.tryParse(_rewardPointsController.text.trim());
+    if (points == null || !_allowedRewardPointOptions.contains(points)) {
+      const message = "Enter either 200 or 400 points";
+      CustomToast.showError(context, message);
+      setState(() {
+        _isRewardPointsApplied = false;
+        _areRewardPointsValid = false;
+        _rewardPointsMessage = message;
+      });
+      _recalculateFinal();
+      return false;
+    }
+
+    CustomToast.showError(context, "Please apply reward points first");
+    return false;
   }
 
   Future<void> _processUpgrade() async {
@@ -373,6 +417,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       CustomToast.showError(context, l10n.selectStandardMediumError);
       return;
     }
+    if (!_validateRewardPointsForPurchase()) return;
     if ((_selectedStandard == "11" || _selectedStandard == "12") &&
         _selectedStream == null) {
       final l10n = AppLocalizations.of(context)!;
@@ -385,12 +430,14 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
       final useRedeemProduct =
           _hasValidRedeemCodeForSelectedStandard() || _isRewardPointsApplied;
+      final rewardPoints = _appliedRewardPoints;
       // iOS: Show the RevenueCat package matching the selected standard.
       final result = await RevenueCatService.instance
           .presentStandardPaywallWithResult(
             context: context,
             standard: _selectedStandard,
             useRedeemProduct: useRedeemProduct,
+            rewardPoints: rewardPoints,
           );
       if (!mounted) return;
       if (result.isSuccess) {
@@ -443,11 +490,12 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     final productId = result.productId;
     final expectedProductId =
         result.requestedProductId ??
-        RevenueCatService.productIdForStandard(
+        RevenueCatService.primaryProductIdForStandard(
           _selectedStandard,
           useRedeemProduct:
               _hasValidRedeemCodeForSelectedStandard() ||
               _isRewardPointsApplied,
+          rewardPoints: _appliedRewardPoints,
         );
     final transactionId = result.transactionId;
     debugPrint("[Apple Upgrade Screen] Completing via RevenueCat");
@@ -1112,6 +1160,19 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   ),
                 ],
               ),
+              if (_rewardPointsMessage.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _rewardPointsMessage,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: _areRewardPointsValid == true
+                        ? Colors.green
+                        : Colors.red,
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 32),
               // Terms/Info Section
