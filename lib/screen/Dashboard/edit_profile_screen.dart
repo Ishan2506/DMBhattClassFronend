@@ -419,13 +419,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Phone (ReadOnly)
+                        // Phone
                         _buildTextField(
                           context,
                           controller: _phoneController,
                           hint: "Phone Number",
                           icon: Icons.phone_outlined,
-                          readOnly: true,
+                          readOnly: false,
                           inputType: TextInputType.phone,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
