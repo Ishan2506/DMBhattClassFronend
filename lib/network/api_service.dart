@@ -1005,6 +1005,7 @@ class ApiService {
     required String newStandard,
     required String medium,
     String? stream,
+    String? redeemCode,
   }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
@@ -1021,6 +1022,7 @@ class ApiService {
           'newStandard': newStandard,
           'medium': medium,
           'stream': stream,
+          if (redeemCode != null) 'redeemCode': redeemCode,
         }),
       ),
     );

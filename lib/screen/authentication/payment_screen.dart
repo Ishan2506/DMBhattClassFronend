@@ -66,12 +66,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String? _cachedPassword;
   bool _isLoading = true;
 
+  // Dynamic plans storage
+  Map<String, double> _planPrices = {};
+
   bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {
     super.initState();
     _initData();
+    _fetchSubscriptionPlans();
 
     if (_isIOS) {
       // RevenueCat is initialized in main.dart
@@ -126,6 +130,33 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
   }
 
+  Future<void> _fetchSubscriptionPlans() async {
+    try {
+      final response = await ApiService.getActivePlans();
+
+      if (response.statusCode == 200) {
+        final plans = jsonDecode(response.body) as List;
+        final Map<String, double> prices = {};
+
+        for (var plan in plans) {
+          prices[plan['standard']] = (plan['amount'] as num).toDouble();
+        }
+
+        if (!mounted) return;
+        setState(() {
+          _planPrices = prices;
+          if (_std != null) {
+            _calculateInitialAmount();
+          }
+        });
+      } else {
+        debugPrint('Failed to fetch plans: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching subscription plans: $e');
+    }
+  }
+
   @override
   void dispose() {
     _razorpayHelper?.dispose();
@@ -139,32 +170,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _calculateInitialAmount() {
-    // Base amounts from the excel requirement
-    switch (_std) {
-      case "6":
-        _originalAmount = 300;
-        break;
-      case "7":
-        _originalAmount = 400;
-        break;
-      case "8":
-        _originalAmount = 500;
-        break;
-      case "9":
-        _originalAmount = 600;
-        break;
-      case "10":
-        _originalAmount = 700;
-        break;
-      case "11":
-        _originalAmount = 800;
-        break;
-      case "12":
-        _originalAmount = 900;
-        break;
-      default:
-        _originalAmount = 0;
-    }
+    _originalAmount = _planPrices[_std] ?? 0;
     _calculateFinalAmount();
   }
 

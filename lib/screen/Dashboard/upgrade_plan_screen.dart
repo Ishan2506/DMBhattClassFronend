@@ -43,6 +43,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   bool _isRewardPointsApplied = false;
   bool? _isRedeemValid;
   String _redeemMessage = '';
+  bool _isValidatingRedeemCode = false;
+  double _redeemDiscountPercent = 0;
+  String? _validatedRedeemCode;
   bool? _areRewardPointsValid;
   String _rewardPointsMessage = '';
 
@@ -113,6 +116,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         newStandard: _selectedStandard!,
         medium: _selectedMedium!,
         stream: _selectedStream,
+        redeemCode: _hasValidRedeemCodeForSelectedStandard()
+            ? _validatedRedeemCode
+            : null,
       );
 
       if (!mounted) return;
@@ -256,7 +262,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
   double get _activeDiscountAmount {
     if (_isRewardPointsApplied && _appliedRewardPoints == 400) return 200;
-    if (_hasValidCodeDiscount) return 100;
+    if (_isPromoApplied) return _originalAmount * (_redeemDiscountPercent / 100);
+    if (_isRewardPointsApplied) return 100;
     return 0;
   }
 
@@ -265,7 +272,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     return int.tryParse(_rewardPointsController.text.trim());
   }
 
-  void _validateRedeemCode() {
+  Future<void> _validateRedeemCode() async {
     if (_selectedStandard == null) {
       final l10n = AppLocalizations.of(context)!;
       CustomToast.showError(context, l10n.selectStandardFirst);
@@ -278,33 +285,73 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       return;
     }
 
-    final expectedCode = "DMBHATT$_selectedStandard";
+    setState(() {
+      _isValidatingRedeemCode = true;
+    });
 
-    if (code == expectedCode) {
-      setState(() {
-        _isPromoApplied = true;
-        _isRedeemValid = true;
-        _redeemMessage = "Redeem code applied successfully.";
-      });
-      _recalculateFinal();
-      final l10n = AppLocalizations.of(context)!;
-      CustomToast.showSuccess(context, l10n.promoAppliedSuccess);
-    } else {
-      setState(() {
-        _isPromoApplied = false;
-        _isRedeemValid = false;
-        _redeemMessage = AppLocalizations.of(context)!.invalidPromoCode;
-      });
-      _recalculateFinal();
-      final l10n = AppLocalizations.of(context)!;
-      CustomToast.showError(context, l10n.invalidPromoCode);
+    try {
+      final response = await ApiService.validateRedeemCode(
+        code,
+        targetStd: _selectedStandard,
+        targetMedium: _selectedMedium,
+        targetStream: _selectedStream,
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final discount = (data['discount'] as num).toDouble();
+        setState(() {
+          _isPromoApplied = true;
+          _isRedeemValid = true;
+          _redeemDiscountPercent = discount;
+          _validatedRedeemCode = code;
+          _redeemMessage =
+              data['message']?.toString() ??
+              "Redeem code applied successfully.";
+        });
+        _recalculateFinal();
+        final l10n = AppLocalizations.of(context)!;
+        CustomToast.showSuccess(context, l10n.promoAppliedSuccess);
+      } else {
+        final errorMsg = ApiService.getErrorMessage(response.body);
+        setState(() {
+          _isPromoApplied = false;
+          _isRedeemValid = false;
+          _redeemDiscountPercent = 0;
+          _validatedRedeemCode = null;
+          _redeemMessage = errorMsg;
+        });
+        _recalculateFinal();
+        CustomToast.showError(context, errorMsg);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isPromoApplied = false;
+          _isRedeemValid = false;
+          _redeemDiscountPercent = 0;
+          _validatedRedeemCode = null;
+          _redeemMessage = "Error validating code: $e";
+        });
+        _recalculateFinal();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isValidatingRedeemCode = false;
+        });
+      }
     }
   }
 
   bool _hasValidRedeemCodeForSelectedStandard() {
     if (_selectedStandard == null) return false;
     final code = _promoCodeController.text.trim().toUpperCase();
-    return _isRedeemValid == true && code == "DMBHATT$_selectedStandard";
+    return _isRedeemValid == true &&
+        _validatedRedeemCode != null &&
+        code == _validatedRedeemCode;
   }
 
   void _resetRedeemValidation({bool recalculate = true}) {
@@ -312,6 +359,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       _isPromoApplied = false;
       _isRedeemValid = null;
       _redeemMessage = '';
+      _redeemDiscountPercent = 0;
+      _validatedRedeemCode = null;
     });
     if (recalculate) _recalculateFinal();
   }
@@ -1079,9 +1128,12 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                 colorScheme: colorScheme,
                 showValidIcon: _hasValidRedeemCodeForSelectedStandard(),
                 showErrorIcon: _isRedeemValid == false,
+                showLoadingIcon: _isValidatingRedeemCode,
                 onChanged: (_) => _resetRedeemValidation(),
                 actionLabel: "Validate",
-                onActionPressed: _validateRedeemCode,
+                onActionPressed: _isValidatingRedeemCode
+                    ? null
+                    : _validateRedeemCode,
               ),
               if (_redeemMessage.isNotEmpty) ...[
                 const SizedBox(height: 8),
