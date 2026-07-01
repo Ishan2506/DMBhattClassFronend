@@ -134,6 +134,8 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
         _titles = [];
         _isLoading = false;
       });
+
+      if (_subjects.isEmpty) _showNoExercisesDialog();
     } catch (e) {
       debugPrint("Error loading profile or subjects: $e");
       setState(() {
@@ -143,6 +145,29 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
         _isLoading = false;
       });
     }
+  }
+
+  void _showNoExercisesDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text("No Match the Following Available"),
+        content: const Text(
+          "No matching exercises available for your standard. Please try again later.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onSubjectChanged(String? subject) {
