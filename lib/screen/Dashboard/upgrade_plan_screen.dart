@@ -46,7 +46,8 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   bool? _isRedeemValid;
   String _redeemMessage = '';
   bool _isValidatingRedeemCode = false;
-  double _redeemDiscountPercent = 0;
+  String _redeemDiscountType = 'percentage'; // 'percentage' | 'flat'
+  double _redeemDiscountValue = 0;
   String? _validatedRedeemCode;
   bool? _areRewardPointsValid;
   String _rewardPointsMessage = '';
@@ -275,7 +276,11 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
   double get _activeDiscountAmount {
     if (_isRewardPointsApplied && _appliedRewardPoints == 400) return 200;
-    if (_isPromoApplied) return _originalAmount * (_redeemDiscountPercent / 100);
+    if (_isPromoApplied) {
+      return _redeemDiscountType == 'flat'
+          ? _redeemDiscountValue
+          : _originalAmount * (_redeemDiscountValue / 100);
+    }
     if (_isRewardPointsApplied) return 100;
     return 0;
   }
@@ -318,7 +323,10 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         setState(() {
           _isPromoApplied = true;
           _isRedeemValid = true;
-          _redeemDiscountPercent = discount;
+          _redeemDiscountType = data['discountType'] == 'flat'
+              ? 'flat'
+              : 'percentage';
+          _redeemDiscountValue = discount;
           _validatedRedeemCode = code;
           _redeemMessage =
               data['message']?.toString() ??
@@ -332,7 +340,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         setState(() {
           _isPromoApplied = false;
           _isRedeemValid = false;
-          _redeemDiscountPercent = 0;
+          _redeemDiscountValue = 0;
           _validatedRedeemCode = null;
           _redeemMessage = errorMsg;
         });
@@ -344,7 +352,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         setState(() {
           _isPromoApplied = false;
           _isRedeemValid = false;
-          _redeemDiscountPercent = 0;
+          _redeemDiscountValue = 0;
           _validatedRedeemCode = null;
           _redeemMessage = "Error validating code: $e";
         });
@@ -372,7 +380,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       _isPromoApplied = false;
       _isRedeemValid = null;
       _redeemMessage = '';
-      _redeemDiscountPercent = 0;
+      _redeemDiscountValue = 0;
       _validatedRedeemCode = null;
     });
     if (recalculate) _recalculateFinal();
