@@ -147,6 +147,15 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
+  static Future<http.Response> getReferralSystemConfig() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/config/referral");
+    return _handleSession(await http.get(uri, headers: _addAuth({
+      'Accept': 'application/json',
+    })));
+  }
+
   static Future<bool> _checkConnectivity() async {
     final isConnected = await ConnectivityService.isConnected();
     if (!isConnected) {
@@ -180,13 +189,22 @@ class ApiService {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/create-order");
-    return _handleSession(
-      await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'amount': amount, 'currency': 'INR'}),
-      ),
+    debugPrint("[SUBSCRIPTION][Create Order API] POST $uri");
+    debugPrint(
+      "[SUBSCRIPTION][Create Order API] Request: ${jsonEncode({'amount': amount, 'currency': 'INR'})}",
     );
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'amount': amount, 'currency': 'INR'}),
+    );
+    debugPrint(
+      "[SUBSCRIPTION][Create Order API] Response status: ${response.statusCode}",
+    );
+    debugPrint(
+      "[SUBSCRIPTION][Create Order API] Response body: ${response.body}",
+    );
+    return _handleSession(response);
   }
 
   static Future<http.Response> registerUser({
@@ -222,6 +240,18 @@ class ApiService {
 
     request.fields.addAll(fields);
 
+    debugPrint("[SUBSCRIPTION][Register API] POST $uri");
+    debugPrint(
+      "[SUBSCRIPTION][Register API] Request fields: "
+      "${jsonEncode({...fields, if (fields.containsKey('loginCode')) 'loginCode': '***'})}",
+    );
+    debugPrint(
+      "[SUBSCRIPTION][Register API] referralCode: $referralCode, "
+      "razorpayPaymentId: $razorpayPaymentId, razorpayOrderId: $razorpayOrderId, "
+      "hasSignature: ${razorpaySignature != null}, amount: $amount, "
+      "files: ${payload.files.length}",
+    );
+
     if (payload.files.isNotEmpty) {
       if (payload.role == "assistant") {
         for (var file in payload.files) {
@@ -250,7 +280,12 @@ class ApiService {
     }
 
     final streamedResponse = await request.send();
-    return _handleSession(await http.Response.fromStream(streamedResponse));
+    final response = await http.Response.fromStream(streamedResponse);
+    debugPrint(
+      "[SUBSCRIPTION][Register API] Response status: ${response.statusCode}",
+    );
+    debugPrint("[SUBSCRIPTION][Register API] Response body: ${response.body}");
+    return _handleSession(response);
   }
 
   static Future<http.Response> loginUser({
@@ -796,10 +831,10 @@ class ApiService {
     final uri = Uri.parse("$baseUrl/referral/validate");
     final body = {'referralCode': referralCode};
     final stopwatch = Stopwatch()..start();
-    debugPrint("[XCODE][Referral Validate API] START");
-    debugPrint("[XCODE][Referral Validate API] POST $uri");
+    debugPrint("[SUBSCRIPTION][Referral Validate API] START");
+    debugPrint("[SUBSCRIPTION][Referral Validate API] POST $uri");
     debugPrint(
-      "[XCODE][Referral Validate API] Request body: ${jsonEncode(body)}",
+      "[SUBSCRIPTION][Referral Validate API] Request body: ${jsonEncode(body)}",
     );
     final response = await http.post(
       uri,
@@ -808,13 +843,13 @@ class ApiService {
     );
     stopwatch.stop();
     debugPrint(
-      "[XCODE][Referral Validate API] Response status: ${response.statusCode}",
+      "[SUBSCRIPTION][Referral Validate API] Response status: ${response.statusCode}",
     );
     debugPrint(
-      "[XCODE][Referral Validate API] Response body: ${response.body}",
+      "[SUBSCRIPTION][Referral Validate API] Response body: ${response.body}",
     );
     debugPrint(
-      "[XCODE][Referral Validate API] END ${stopwatch.elapsedMilliseconds}ms",
+      "[SUBSCRIPTION][Referral Validate API] END ${stopwatch.elapsedMilliseconds}ms",
     );
     return _handleSession(response);
   }
@@ -824,15 +859,23 @@ class ApiService {
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/referral/apply");
     final body = {'referralCode': referralCode};
-    debugPrint("[Referral Apply] POST $uri");
-    debugPrint("[Referral Apply] Request: ${jsonEncode(body)}");
+    final stopwatch = Stopwatch()..start();
+    debugPrint("[SUBSCRIPTION][Referral Apply API] START");
+    debugPrint("[SUBSCRIPTION][Referral Apply API] POST $uri");
+    debugPrint("[SUBSCRIPTION][Referral Apply API] Request: ${jsonEncode(body)}");
     final response = await http.post(
       uri,
       headers: _addAuth({'Content-Type': 'application/json'}),
       body: jsonEncode(body),
     );
-    debugPrint("[Referral Apply] Response status: ${response.statusCode}");
-    debugPrint("[Referral Apply] Response body: ${response.body}");
+    stopwatch.stop();
+    debugPrint(
+      "[SUBSCRIPTION][Referral Apply API] Response status: ${response.statusCode}",
+    );
+    debugPrint("[SUBSCRIPTION][Referral Apply API] Response body: ${response.body}");
+    debugPrint(
+      "[SUBSCRIPTION][Referral Apply API] END ${stopwatch.elapsedMilliseconds}ms",
+    );
     return _handleSession(response);
   }
 

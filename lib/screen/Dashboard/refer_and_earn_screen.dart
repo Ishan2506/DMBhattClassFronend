@@ -27,7 +27,8 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
   String _referralCode = "";
   int _bonusPoints = 0;
   List<dynamic> _invitedFriends = [];
-  final int _maxReferrals = 5;
+  int _maxReferrals = 5;
+  int _pointsPerReferral = 500;
   String _studentName = "Student";
   final GlobalKey _globalKey = GlobalKey();
 
@@ -54,9 +55,20 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
 
 
       final response = await ApiService.getReferralData();
+      final configResponse = await ApiService.getReferralSystemConfig();
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        
+        if (configResponse.statusCode == 200) {
+          final configData = jsonDecode(configResponse.body);
+          if (configData['maxReferralsAllowed'] != null) {
+            _maxReferrals = int.parse(configData['maxReferralsAllowed'].toString());
+          }
+          if (configData['pointsPerReferral'] != null) {
+            _pointsPerReferral = int.parse(configData['pointsPerReferral'].toString());
+          }
+        }
         
         // Also fetch profile to get name
         String name = "Student";
@@ -314,10 +326,12 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                      ),
                      child: Column(
                        children: [
-                         Row(
-                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                           children: List.generate(5, (index) {
-                             final milestoneNum = index + 1;
+                          Wrap(
+                            spacing: 16.0,
+                            runSpacing: 16.0,
+                            alignment: WrapAlignment.center,
+                            children: List.generate(_maxReferrals, (index) {
+                                final milestoneNum = index + 1;
                              final isCompleted = _invitedFriends.length >= milestoneNum;
                              final isCurrent = _invitedFriends.length == index;
                              
@@ -352,7 +366,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                                  ),
                                  const SizedBox(height: 8),
                                  Text(
-                                   "${milestoneNum * 500} pts",
+                                   "${milestoneNum * _pointsPerReferral} pts",
                                    style: GoogleFonts.poppins(
                                      fontSize: 10,
                                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
@@ -376,7 +390,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                                const SizedBox(width: 12),
                                Expanded(
                                  child: Text(
-                                   l10n.pointsConversionNote,
+                                   "1 point = 1 rupee",
                                    style: GoogleFonts.poppins(
                                      fontSize: 12,
                                      color: colorScheme.onSurfaceVariant,

@@ -35,6 +35,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
   final TextEditingController _parentPhoneController = TextEditingController();
   final TextEditingController _schoolNameController = TextEditingController(text: "The Learning Institute");
   final TextEditingController _customCityController = TextEditingController();
+  final TextEditingController _referralCodeController = TextEditingController();
 
   // Selection States
   String? _selectedStandard;
@@ -467,6 +468,14 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             // ),
             // const SizedBox(height: 24),
 
+            // Referral Code
+            _buildTextField(
+              controller: _referralCodeController,
+              hint: "Referral Code (Optional)",
+              icon: Icons.card_giftcard_outlined,
+            ),
+            const SizedBox(height: 16),
+
             // Terms Checkbox
             Row(
               children: [
@@ -563,7 +572,8 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       CustomLoader.show(context); // Show Loader
                       final response = await ApiService.registerUser(
                         payload: payload, 
-                        dpin: _passwordController.text
+                        dpin: _passwordController.text,
+                        referralCode: _referralCodeController.text.trim()
                       );
 
                       if (!mounted) return;

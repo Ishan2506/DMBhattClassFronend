@@ -175,6 +175,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _handlePaymentFailure(PaymentFailureResponse response) {
+    debugPrint(
+      "[SUBSCRIPTION] Razorpay payment failed/cancelled -> code: ${response.code}, message: ${response.message}",
+    );
     CustomToast.showError(context, "Payment Cancelled");
   }
 
@@ -438,11 +441,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _initiatePayment() async {
-    if (!_validateReferralForPurchase()) return;
-    if (!_validateRedeemCodeForPurchase()) return;
+    debugPrint(
+      "[SUBSCRIPTION] Initiate payment tapped -> platform: ${_isIOS ? 'iOS' : 'Android'}, "
+      "std: $_std, medium: $_medium, stream: $_stream, board: $_board, "
+      "originalAmount: $_originalAmount, finalAmount: $_finalAmount, discount: $_discount, "
+      "redeemApplied: $_isDiscountApplied, referralApplied: $_hasValidatedReferralCode",
+    );
+    if (!_validateReferralForPurchase()) {
+      debugPrint("[SUBSCRIPTION] Aborted: referral code not validated");
+      return;
+    }
+    if (!_validateRedeemCodeForPurchase()) {
+      debugPrint("[SUBSCRIPTION] Aborted: redeem code not validated");
+      return;
+    }
 
     if (_finalAmount <= 0) {
       // If amount is 0 (e.g. 100% discount), skip payment
+      debugPrint(
+        "[SUBSCRIPTION] Final amount is 0 -> skipping payment, registering as FREE_PLAN",
+      );
       _processRegistration(paymentId: "FREE_PLAN");
       return;
     }
@@ -467,6 +485,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     } else {
       // Android: Use Razorpay
       try {
+        debugPrint(
+          "[SUBSCRIPTION] Creating Razorpay order for amount: $_finalAmount",
+        );
         CustomLoader.show(context);
         final orderResponse = await ApiService.createPaymentOrder(_finalAmount);
 
@@ -477,6 +498,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
           final orderData = jsonDecode(orderResponse.body);
           final String orderId = orderData['id'];
 
+          debugPrint(
+            "[SUBSCRIPTION] Order created (orderId: $orderId) -> opening Razorpay checkout",
+          );
           _razorpayHelper!.openCheckout(
             amount: _finalAmount,
             name: "Padhaku Desk",
@@ -486,12 +510,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
             orderId: orderId,
           );
         } else {
+          debugPrint(
+            "[SUBSCRIPTION] Order creation failed -> status: ${orderResponse.statusCode}, body: ${orderResponse.body}",
+          );
           CustomToast.showError(
             context,
             "Failed to create order: ${ApiService.getErrorMessage(orderResponse.body)}",
           );
         }
       } catch (e) {
+        debugPrint("[SUBSCRIPTION] Exception initiating payment: $e");
         if (mounted) {
           CustomLoader.hide(context);
           CustomToast.showError(context, "Error initiating payment: $e");
@@ -652,6 +680,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    debugPrint(
+      "[SUBSCRIPTION] Razorpay payment success -> paymentId: ${response.paymentId}, "
+      "orderId: ${response.orderId}, hasSignature: ${response.signature != null}",
+    );
     CustomToast.showSuccess(
       context,
       "Payment Successful: ${response.paymentId}",
@@ -674,6 +706,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Redeem codes and referral codes are mutually exclusive in this flow;
     // the backend's registerUser accepts either through the same field.
     final hasValidRedeemCode = _hasValidRedeemCodeForSelectedStandard();
+
+    debugPrint(
+      "[SUBSCRIPTION] Processing registration -> paymentId: $paymentId, orderId: $orderId, "
+      "hasSignature: ${signature != null}, amount: $_finalAmount, "
+      "referral: $shouldIncludeReferral, redeem: $hasValidRedeemCode",
+    );
 
     // Proceed to Registration
     try {
@@ -729,7 +767,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
       CustomLoader.hide(context);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
+        debugPrint(
+          "[SUBSCRIPTION] Registration succeeded (status: ${response.statusCode}) -> membership activated",
+        );
         if (widget.payload == null && _hasValidatedReferralCode) {
+          debugPrint("[SUBSCRIPTION] Applying referral after purchase");
           await _applyReferralAfterPurchase();
           if (!mounted) return;
         }
@@ -745,12 +787,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Navigator.pop(context, true); // Return success to Landing
         }
       } else {
+        debugPrint(
+          "[SUBSCRIPTION] Registration failed -> status: ${response.statusCode}, body: ${response.body}",
+        );
         CustomToast.showError(
           context,
           "Registration Failed: ${ApiService.getErrorMessage(response.body)}",
         );
       }
     } catch (e) {
+      debugPrint("[SUBSCRIPTION] Exception during registration: $e");
       if (mounted) {
         CustomLoader.hide(context);
         CustomToast.showError(context, "Error: $e");
