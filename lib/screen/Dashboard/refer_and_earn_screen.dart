@@ -28,7 +28,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
   int _bonusPoints = 0;
   List<dynamic> _invitedFriends = [];
   int _maxReferrals = 5;
-  int _pointsPerReferral = 500;
+  List<int> _pointsList = [50, 50, 50, 50, 50];
   String _studentName = "Student";
   final GlobalKey _globalKey = GlobalKey();
 
@@ -46,14 +46,13 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
   }
 
   Future<void> _fetchReferralData() async {
-    setState(() => _isLoading = true);
-    // Removed CustomLoader.show(context) here as it causes issues when called immediately.
-    // relying on _isLoading
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      // Token managed internally
-
-
       final response = await ApiService.getReferralData();
       final configResponse = await ApiService.getReferralSystemConfig();
 
@@ -66,8 +65,20 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
             _maxReferrals = int.parse(configData['maxReferralsAllowed'].toString());
           }
           if (configData['pointsPerReferral'] != null) {
-            _pointsPerReferral = int.parse(configData['pointsPerReferral'].toString());
+            final rawPts = configData['pointsPerReferral'];
+            if (rawPts is List) {
+              _pointsList = rawPts.map<int>((e) => int.parse(e.toString())).toList();
+            } else {
+              final ptsVal = int.parse(rawPts.toString());
+              _pointsList = List<int>.filled(_maxReferrals, ptsVal);
+            }
           }
+        }
+        
+        // Ensure pointsList has enough elements for maxReferrals
+        if (_pointsList.length < _maxReferrals) {
+          final filler = List<int>.filled(_maxReferrals - _pointsList.length, _pointsList.lastOrNull ?? 50);
+          _pointsList.addAll(filler);
         }
         
         // Also fetch profile to get name
@@ -365,14 +376,14 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                                    ),
                                  ),
                                  const SizedBox(height: 8),
-                                 Text(
-                                   "${milestoneNum * _pointsPerReferral} pts",
-                                   style: GoogleFonts.poppins(
-                                     fontSize: 10,
-                                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                                     color: isCompleted ? Colors.green : isCurrent ? colorScheme.primary : colorScheme.onSurfaceVariant,
-                                   ),
-                                 ),
+                                  Text(
+                                    "${index < _pointsList.length ? _pointsList[index] : 50} pts",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                      color: isCompleted ? Colors.green : isCurrent ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
                                ],
                              );
                            }),

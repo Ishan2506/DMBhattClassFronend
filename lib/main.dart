@@ -67,7 +67,7 @@ Future<void> _requestPermissions() async {
 Future<void> _secureScreen() async {
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     try {
-      await ScreenProtector.preventScreenshotOn();
+      // await ScreenProtector.preventScreenshotOn();
     } catch (e) {
       if (kDebugMode) {
         print('Error setting screen protection: $e');
