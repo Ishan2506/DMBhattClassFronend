@@ -554,15 +554,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                   },
                 ),
-              const SizedBox(height: 10),
-              
-              // Referral Code
-              _buildTextField(
-                controller: _referralCodeController,
-                hint: "Referral Code (Optional)",
-                icon: Icons.card_giftcard_outlined,
-                colorScheme: colorScheme,
-              ),
+              // Referral Code hidden/removed from register screen UI
               const SizedBox(height: 16),
 
               // Terms Checkbox
@@ -708,7 +700,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         final response = await ApiService.registerUser(
                           payload: payload,
                           dpin: _passwordController.text,
-                          referralCode: _referralCodeController.text.trim(),
                         );
 
                         if (!mounted) return;

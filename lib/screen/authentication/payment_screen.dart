@@ -429,9 +429,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final response = await ApiService.applyReferralCode(code);
       if (!mounted) return;
       if (response.statusCode != 200) {
+        final errorMsg = ApiService.getErrorMessage(response.body);
+        // If they already applied it (e.g. during registration), don't show an error toast
+        if (response.statusCode == 400 && 
+            (errorMsg.toLowerCase().contains("already used") || 
+             errorMsg.toLowerCase().contains("already applied"))) {
+          debugPrint("[SUBSCRIPTION] Referral already applied/used, skipping error toast.");
+          return;
+        }
         CustomToast.showError(
           context,
-          "Referral apply failed: ${ApiService.getErrorMessage(response.body)}",
+          "Referral apply failed: $errorMsg",
         );
       }
     } catch (e) {
@@ -751,12 +759,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
             files: [],
           );
 
+      // Add referralCode or redeemCode directly into the payload fields
+      final fields = Map<String, String>.from(currentPayload.fields);
+      if (shouldIncludeReferral) {
+        fields["referralCode"] = referralCode;
+      } else if (hasValidRedeemCode && _validatedRedeemCode != null) {
+        fields["referralCode"] = _validatedRedeemCode!;
+      }
+      
+      final updatedPayload = RegistrationPayload(
+        role: currentPayload.role,
+        fields: fields,
+        files: currentPayload.files,
+      );
+
       final response = await ApiService.registerUser(
-        payload: currentPayload,
+        payload: updatedPayload,
         dpin: _cachedPassword ?? "",
-        referralCode: shouldIncludeReferral
-            ? referralCode
-            : (hasValidRedeemCode ? _validatedRedeemCode : null),
         razorpayPaymentId: paymentId,
         razorpayOrderId: orderId,
         razorpaySignature: signature,

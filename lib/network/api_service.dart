@@ -210,7 +210,6 @@ class ApiService {
   static Future<http.Response> registerUser({
     required RegistrationPayload payload,
     required String dpin,
-    String? referralCode,
     String? razorpayPaymentId,
     String? razorpayOrderId,
     String? razorpaySignature,
@@ -228,9 +227,6 @@ class ApiService {
     fields["loginCode"] = dpin;
     fields["role"] = payload.role;
 
-    if (referralCode != null && referralCode.isNotEmpty) {
-      fields["referralCode"] = referralCode;
-    }
     if (razorpayPaymentId != null) {
       fields["razorpay_payment_id"] = razorpayPaymentId;
       fields["razorpay_order_id"] = razorpayOrderId!;
@@ -246,7 +242,7 @@ class ApiService {
       "${jsonEncode({...fields, if (fields.containsKey('loginCode')) 'loginCode': '***'})}",
     );
     debugPrint(
-      "[SUBSCRIPTION][Register API] referralCode: $referralCode, "
+      "[SUBSCRIPTION][Register API] "
       "razorpayPaymentId: $razorpayPaymentId, razorpayOrderId: $razorpayOrderId, "
       "hasSignature: ${razorpaySignature != null}, amount: $amount, "
       "files: ${payload.files.length}",
