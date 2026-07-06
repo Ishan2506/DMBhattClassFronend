@@ -101,13 +101,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         content: SingleChildScrollView(
           child: Text(
-            "1. By registering, you agree to abide by the rules and regulations of our Learning Academy.\n\n"
-            "2. Ensure all provided information is accurate and up-to-date.\n\n"
-            "3. The institute reserves the right to modify the curriculum and schedule as needed.\n\n"
-            "4. Fees once paid are non-refundable under any circumstances.\n\n"
-            "5. Respectful behavior towards staff and fellow students is mandatory.\n\n"
-            "6. Unauthorized sharing of study material is strictly prohibited.\n\n"
-            "7. Regular attendance and participation in assessments are expected for optimal performance.",
+            """By using Padhaku – The Learning App, you agree to provide accurate information, comply with all applicable laws, and use the app only for lawful educational purposes. Your personal data is collected, stored, and processed in accordance with our Privacy Policy to provide and improve our services.
+             All educational content, designs, trademarks, and software within the app are protected by intellectual property laws and may not be copied, modified, or redistributed without permission.
+             We reserve the right to suspend or terminate accounts that violate these Terms or misuse the platform. While we strive to provide secure and uninterrupted services, Padhaku shall not be liable for temporary service interruptions, data loss beyond our reasonable control, or damages arising from the use of the application.""",
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: colorScheme.onSurface,
