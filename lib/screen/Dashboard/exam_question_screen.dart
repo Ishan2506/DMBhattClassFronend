@@ -417,70 +417,77 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                 ),
               ),
 
-              // Question Card with Gradient
-              Container(
-                margin: const EdgeInsets.all(24),
-                padding: const EdgeInsets.all(24),
-                constraints: const BoxConstraints(minHeight: 120),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.primary.withOpacity(0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty && question['questionImage'] != "null")
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            ApiService.getFileUrl(question['questionImage']),
-                            height: 200,
-                            width: double.infinity,
-                            fit: BoxFit.contain,
-                            errorBuilder: (ctx, err, stack) => Container(
-                              height: 100,
-                              color: Colors.white24,
-                              child: const Icon(Icons.broken_image, color: Colors.white, size: 40),
-                            ),
+              // Scrollable Area containing both Question Card and Options List
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Question Card with Gradient
+                      Container(
+                        margin: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(24),
+                        constraints: const BoxConstraints(minHeight: 120),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colorScheme.primary,
+                              theme.colorScheme.primary.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (question['questionImage'] != null && question['questionImage'].toString().isNotEmpty && question['questionImage'] != "null")
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    ApiService.getFileUrl(question['questionImage']),
+                                    height: 200,
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (ctx, err, stack) => Container(
+                                      height: 100,
+                                      color: Colors.white24,
+                                      child: const Icon(Icons.broken_image, color: Colors.white, size: 40),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Text(
+                              question['question'] ?? "",
+                              style: textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                height: 1.4,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
-                    Text(
-                      question['question'] ?? "",
-                      style: textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
 
-              // Options List
-              Expanded(
-                flex: 3,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: _buildAnswerOptions(question['answers']),
+                      // Options List
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          children: _buildAnswerOptions(question['answers']),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

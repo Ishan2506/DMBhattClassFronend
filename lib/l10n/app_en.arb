@@ -348,5 +348,6 @@
   "submitIssue": "Submit Issue",
   "emailCopied": "Email copied to clipboard!",
   "issueSubmitted": "Issue Submitted Successfully!",
-  "issueSubmitSuccessText": "Thank you for submitting the issue. We will get in touch with you very soon."
+  "issueSubmitSuccessText": "Thank you for submitting the issue. We will get in touch with you very soon.",
+  "privacyPolicy": "Privacy Policy"
 }

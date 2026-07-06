@@ -1128,4 +1128,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get issueSubmitSuccessText =>
       'Thank you for submitting the issue. We will get in touch with you very soon.';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
 }

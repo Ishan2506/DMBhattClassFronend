@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/leaderboard_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/about_us_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/privacy_policy_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -352,6 +353,7 @@ class _AppInfoScreen extends StatelessWidget {
                 );
               },
             ),
+            
             if (!api.ApiService.isGuest) ...[
               _MoreScreenItem(
                 title: l10n.upgradePlan,
@@ -378,7 +380,18 @@ class _AppInfoScreen extends StatelessWidget {
                 },
               ),
             ],
-          
+            _MoreScreenItem(
+              title: l10n.privacyPolicy,
+              value: "",
+              icon: Icons.privacy_tip_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const PrivacyPolicyScreen()),
+                );
+              },
+            ),
             _MoreScreenItem(
               title: l10n.shareApp,
               value: "",

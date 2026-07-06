@@ -1132,4 +1132,7 @@ class AppLocalizationsGu extends AppLocalizations {
   @override
   String get issueSubmitSuccessText =>
       'સમસ્યા સબમિટ કરવા બદલ આભાર. અમે ટૂંક સમયમાં તમારો સંપર્ક કરીશું.';
+
+  @override
+  String get privacyPolicy => 'પ્રાઇવસી પોલિસી';
 }

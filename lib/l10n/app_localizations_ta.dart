@@ -1147,4 +1147,7 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get issueSubmitSuccessText =>
       'சிக்கலைச் சமர்ப்பித்ததற்கு நன்றி. நாங்கள் மிக விரைவில் உங்களைத் தொடர்புகொள்வோம்.';
+
+  @override
+  String get privacyPolicy => 'தனியுரிமைக் கொள்கை';
 }

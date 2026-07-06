@@ -2197,6 +2197,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thank you for submitting the issue. We will get in touch with you very soon.'**
   String get issueSubmitSuccessText;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
 }
 
 class _AppLocalizationsDelegate

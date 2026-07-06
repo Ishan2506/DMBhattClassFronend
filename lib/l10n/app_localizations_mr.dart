@@ -1135,4 +1135,7 @@ class AppLocalizationsMr extends AppLocalizations {
   @override
   String get issueSubmitSuccessText =>
       'समस्या सबमिट केल्याबद्दल धन्यवाद. आम्ही लवकरच तुमच्याशी संपर्क साधू.';
+
+  @override
+  String get privacyPolicy => 'गोपनीयता धोरण';
 }
