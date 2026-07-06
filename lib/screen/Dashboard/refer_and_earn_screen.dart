@@ -27,7 +27,8 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
   String _referralCode = "";
   int _bonusPoints = 0;
   List<dynamic> _invitedFriends = [];
-  final int _maxReferrals = 5;
+  int _maxReferrals = 5;
+  List<int> _pointsList = [50, 50, 50, 50, 50];
   String _studentName = "Student";
   final GlobalKey _globalKey = GlobalKey();
 
@@ -45,18 +46,40 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
   }
 
   Future<void> _fetchReferralData() async {
-    setState(() => _isLoading = true);
-    // Removed CustomLoader.show(context) here as it causes issues when called immediately.
-    // relying on _isLoading
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      // Token managed internally
-
-
       final response = await ApiService.getReferralData();
+      final configResponse = await ApiService.getReferralSystemConfig();
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        
+        if (configResponse.statusCode == 200) {
+          final configData = jsonDecode(configResponse.body);
+          if (configData['maxReferralsAllowed'] != null) {
+            _maxReferrals = int.parse(configData['maxReferralsAllowed'].toString());
+          }
+          if (configData['pointsPerReferral'] != null) {
+            final rawPts = configData['pointsPerReferral'];
+            if (rawPts is List) {
+              _pointsList = rawPts.map<int>((e) => int.parse(e.toString())).toList();
+            } else {
+              final ptsVal = int.parse(rawPts.toString());
+              _pointsList = List<int>.filled(_maxReferrals, ptsVal);
+            }
+          }
+        }
+        
+        // Ensure pointsList has enough elements for maxReferrals
+        if (_pointsList.length < _maxReferrals) {
+          final filler = List<int>.filled(_maxReferrals - _pointsList.length, _pointsList.lastOrNull ?? 50);
+          _pointsList.addAll(filler);
+        }
         
         // Also fetch profile to get name
         String name = "Student";
@@ -314,10 +337,12 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                      ),
                      child: Column(
                        children: [
-                         Row(
-                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                           children: List.generate(5, (index) {
-                             final milestoneNum = index + 1;
+                          Wrap(
+                            spacing: 16.0,
+                            runSpacing: 16.0,
+                            alignment: WrapAlignment.center,
+                            children: List.generate(_maxReferrals, (index) {
+                                final milestoneNum = index + 1;
                              final isCompleted = _invitedFriends.length >= milestoneNum;
                              final isCurrent = _invitedFriends.length == index;
                              
@@ -351,14 +376,14 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                                    ),
                                  ),
                                  const SizedBox(height: 8),
-                                 Text(
-                                   "${milestoneNum * 500} pts",
-                                   style: GoogleFonts.poppins(
-                                     fontSize: 10,
-                                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                                     color: isCompleted ? Colors.green : isCurrent ? colorScheme.primary : colorScheme.onSurfaceVariant,
-                                   ),
-                                 ),
+                                  Text(
+                                    "${index < _pointsList.length ? _pointsList[index] : 50} pts",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                      color: isCompleted ? Colors.green : isCurrent ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
                                ],
                              );
                            }),
@@ -376,7 +401,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                                const SizedBox(width: 12),
                                Expanded(
                                  child: Text(
-                                   l10n.pointsConversionNote,
+                                   "1 point = 1 rupee",
                                    style: GoogleFonts.poppins(
                                      fontSize: 12,
                                      color: colorScheme.onSurfaceVariant,

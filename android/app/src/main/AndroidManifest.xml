@@ -73,7 +73,13 @@
     <intent>
         <action android:name="android.intent.action.RECOGNIZE_SPEECH" />
     </intent>
-    
+
+    <!-- Email apps (mailto:) -->
+    <intent>
+        <action android:name="android.intent.action.SENDTO" />
+        <data android:scheme="mailto" />
+    </intent>
+
     <!-- HTTP/HTTPS browser -->
     <intent>
         <action android:name="android.intent.action.VIEW" />

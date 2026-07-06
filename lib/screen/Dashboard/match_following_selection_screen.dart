@@ -134,6 +134,8 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
         _titles = [];
         _isLoading = false;
       });
+
+      if (_subjects.isEmpty) _showNoExercisesDialog();
     } catch (e) {
       debugPrint("Error loading profile or subjects: $e");
       setState(() {
@@ -143,6 +145,29 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
         _isLoading = false;
       });
     }
+  }
+
+  void _showNoExercisesDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text("No Match the Following Available"),
+        content: const Text(
+          "No matching exercises available for your standard. Please try again later.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onSubjectChanged(String? subject) {
@@ -306,67 +331,76 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
       ),
       body: _isLoading
           ? const CustomLoader()
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  CustomDropdown<String>(
-                    labelText: _getTranslation(context, 'subject'),
-                    hintText: _getTranslation(context, 'selectSubject'),
-                    value: _selectedSubject,
-                    items: _subjects,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onSubjectChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomDropdown<String>(
-                    labelText: "Unit",
-                    hintText: "Select Unit",
-                    value: _selectedUnit,
-                    items: _units,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onUnitChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomDropdown<String>(
-                    labelText: "Exercise Title",
-                    hintText: "Select Title",
-                    value: _selectedTitle,
-                    items: _titles,
-                    itemLabelBuilder: (String item) => item,
-                    onChanged: _onTitleChanged,
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: !exerciseSelected
-                          ? null
-                          : LinearGradient(
-                              colors: [
-                                primary,
-                                primary.withOpacity(0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+          : SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(24.0),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight - 48,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CustomDropdown<String>(
+                              labelText: _getTranslation(context, 'subject'),
+                              hintText: _getTranslation(context, 'selectSubject'),
+                              value: _selectedSubject,
+                              items: _subjects,
+                              itemLabelBuilder: (String item) => item,
+                              onChanged: _onSubjectChanged,
                             ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: !exerciseSelected
-                          ? []
-                          : [
-                              BoxShadow(
-                                color: primary.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+                            const SizedBox(height: 16),
+                            CustomDropdown<String>(
+                              labelText: "Unit",
+                              hintText: "Select Unit",
+                              value: _selectedUnit,
+                              items: _units,
+                              itemLabelBuilder: (String item) => item,
+                              onChanged: _onUnitChanged,
+                            ),
+                            const SizedBox(height: 16),
+                            CustomDropdown<String>(
+                              labelText: "Exercise Title",
+                              hintText: "Select Title",
+                              value: _selectedTitle,
+                              items: _titles,
+                              itemLabelBuilder: (String item) => item,
+                              onChanged: _onTitleChanged,
+                            ),
+                            const SizedBox(height: 32),
+                            const Spacer(),
+                            Container(
+                              width: double.infinity,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                gradient: !exerciseSelected
+                                    ? null
+                                    : LinearGradient(
+                                        colors: [
+                                          primary,
+                                          primary.withOpacity(0.8),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: !exerciseSelected
+                                    ? []
+                                    : [
+                                        BoxShadow(
+                                          color: primary.withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
                               ),
-                            ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: !exerciseSelected
-                          ? null
-                          : () {
+                              child: ElevatedButton(
+                                onPressed: !exerciseSelected
+                                    ? null
+                                    : () {
                               final exercise = _filteredExercises[0];
                               
                               if (_isTaken(exercise)) {
@@ -426,8 +460,13 @@ class _MatchFollowingSelectionScreenState extends State<MatchFollowingSelectionS
                         ),
                       ),
                     ),
-                  ),
-                ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
     );

@@ -757,9 +757,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   const SizedBox(height: 32),
 
                   // 4. Switch Account Section (Clearly Visible)
-                  _buildSwitchAccountSection(context, theme),
+                  // _buildSwitchAccountSection(context, theme),
 
-                  const SizedBox(height: 32),
+                  // const SizedBox(height: 32),
 
                   // 5. Academic Performance Section
                   Padding(
@@ -922,6 +922,89 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     ),
                   */
 
+                  // Delete Account
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: TextButton.icon(
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("Delete Account", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                            content: Text("Are you sure you want to permanently delete your account? This action cannot be undone.", style: GoogleFonts.poppins()),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text("Cancel", style: GoogleFonts.poppins(color: Colors.grey)),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text("Delete", style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          CustomLoader.show(context);
+                          try {
+                            final response = await ApiService.deleteAccount();
+                            CustomLoader.hide(context);
+                            if (response.statusCode == 200 || response.statusCode == 201) {
+                              final prefs = await SharedPreferences.getInstance();
+                              final currentToken = prefs.getString('auth_token') ?? "";
+                              
+                              // Delete from local SQLite database
+                              final db = DatabaseHelper();
+                              final accounts = await db.getAccounts();
+                              final activeAcc = accounts.firstWhere(
+                                (acc) => acc['token'] == currentToken,
+                                orElse: () => <String, dynamic>{},
+                              );
+                              if (activeAcc.isNotEmpty && activeAcc['userId'] != null) {
+                                await db.deleteAccount(activeAcc['userId']);
+                              }
+
+                              await ApiService.logoutUser(currentToken);
+                              await ApiService.clearAuthToken();
+                              if (!mounted) return;
+                              CustomToast.showSuccess(context, "Account deleted successfully");
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                                (route) => false,
+                              );
+                            } else {
+                              CustomToast.showError(context, "Failed to delete account: ${ApiService.getErrorMessage(response.body)}");
+                            }
+                          } catch (e) {
+                            CustomLoader.hide(context);
+                            CustomToast.showError(context, "Error: $e");
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.delete_forever, color: Colors.red),
+                      label: Text(
+                        "Delete Account",
+                        style: GoogleFonts.poppins(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 24,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: Colors.red, width: 1),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   // 8. Sign Out
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1056,6 +1139,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildSwitchAccountSection(BuildContext context, ThemeData theme) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseHelper().getAccounts(),

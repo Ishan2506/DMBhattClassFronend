@@ -14,6 +14,8 @@ import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
 import 'package:intl/intl.dart';
 
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
+
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -46,7 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final ImagePicker _picker = ImagePicker();
 
   // Data Lists
-  final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  List<String> get _standards => AcademicConstants.standards[_selectedBoard ?? "GSEB"] ?? ["6", "7", "8", "9", "10", "11", "12"];
 
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
@@ -425,6 +427,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           controller: _phoneController,
                           hint: "Phone Number",
                           icon: Icons.phone_outlined,
+                          readOnly: false,
                           inputType: TextInputType.phone,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -434,12 +437,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Parent's Mobile
+                        // Parent's Mobile (ReadOnly)
                         _buildTextField(
                           context,
                           controller: _parentPhoneController,
                           hint: "Parent's Mobile Number",
                           icon: Icons.family_restroom_outlined,
+                          readOnly: true,
                           inputType: TextInputType.phone,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -466,8 +470,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               Expanded(
                                 child: Text(
                                   _selectedDob == null
-                                      ? "Date of Birth: Not Provided"
-                                      : "Date of Birth: ${DateFormat('dd/MM/yyyy').format(_selectedDob!)}",
+                                      ? "Not Provided"
+                                      : "${DateFormat('dd/MM/yyyy').format(_selectedDob!)}",
                                   style: GoogleFonts.poppins(
                                     color: theme.textTheme.bodyLarge?.color,
                                     fontWeight: FontWeight.bold,
@@ -639,6 +643,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     TextEditingController? controller,
     bool isPassword = false,
     bool isVisible = false,
+    bool readOnly = false,
     TextInputType inputType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
@@ -648,7 +653,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+        color: readOnly
+            ? (isDark ? Colors.grey.shade800 : Colors.grey.shade200)
+            : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
@@ -656,10 +663,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       child: TextFormField(
         controller: controller,
+        readOnly: readOnly,
+        enableInteractiveSelection: !readOnly,
         obscureText: isPassword && !isVisible,
         keyboardType: inputType,
         inputFormatters: inputFormatters,
-        validator: validator,
+        validator: readOnly ? null : validator,
         style: GoogleFonts.poppins(
           color: theme.textTheme.bodyLarge?.color,
           fontWeight: FontWeight.bold,

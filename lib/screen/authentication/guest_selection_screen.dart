@@ -5,6 +5,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 
 class GuestSelectionScreen extends StatefulWidget {
   const GuestSelectionScreen({super.key});
@@ -18,7 +19,7 @@ class _GuestSelectionScreenState extends State<GuestSelectionScreen> {
   String? _selectedMedium;
   String? _selectedBoard;
 
-  final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  List<String> get _standards => AcademicConstants.standards[_selectedBoard ?? "GSEB"] ?? ["6", "7", "8", "9", "10", "11", "12"];
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _boards = ["GSEB", "CBSE"];
 

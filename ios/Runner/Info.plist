@@ -53,5 +53,11 @@
 	<string>This app requires camera access to capture photos.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>mailto</string>
+		<string>https</string>
+		<string>http</string>
+	</array>
 </dict>
 </plist>

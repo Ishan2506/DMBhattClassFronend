@@ -55,8 +55,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   double _referralDiscount = 0;
 
   String? _board;
-  bool _isRedeemPercentage = false;
-  double _redeemDiscountPercent = 0;
+  String _redeemDiscountType = 'percentage'; // 'percentage' | 'flat'
+  double _redeemDiscountValue = 0;
+  String? _validatedRedeemCode;
 
   String? _std;
   String? _medium;
@@ -66,12 +67,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String? _cachedPassword;
   bool _isLoading = true;
 
+  // Dynamic plans storage
+  Map<String, double> _planPrices = {};
+
   bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {
     super.initState();
-    _initData();
+    _initializeAllData();
 
     if (_isIOS) {
       // RevenueCat is initialized in main.dart
@@ -82,6 +86,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
         onSuccess: _handlePaymentSuccess,
         onFailure: _handlePaymentFailure,
       );
+    }
+  }
+
+  Future<void> _initializeAllData() async {
+    await Future.wait([
+      _initData(),
+      _fetchSubscriptionPlans(),
+    ]);
+    
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -120,10 +137,33 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (_std != null) {
       _calculateInitialAmount();
     }
+  }
 
-    setState(() {
-      _isLoading = false;
-    });
+  Future<void> _fetchSubscriptionPlans() async {
+    try {
+      final response = await ApiService.getActivePlans();
+
+      if (response.statusCode == 200) {
+        final plans = jsonDecode(response.body) as List;
+        final Map<String, double> prices = {};
+
+        for (var plan in plans) {
+          prices[plan['standard']] = (plan['amount'] as num).toDouble();
+        }
+
+        if (!mounted) return;
+        setState(() {
+          _planPrices = prices;
+          if (_std != null) {
+            _calculateInitialAmount();
+          }
+        });
+      } else {
+        debugPrint('Failed to fetch plans: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching subscription plans: $e');
+    }
   }
 
   @override
@@ -135,36 +175,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _handlePaymentFailure(PaymentFailureResponse response) {
+    debugPrint(
+      "[SUBSCRIPTION] Razorpay payment failed/cancelled -> code: ${response.code}, message: ${response.message}",
+    );
     CustomToast.showError(context, "Payment Cancelled");
   }
 
   void _calculateInitialAmount() {
-    // Base amounts from the excel requirement
-    switch (_std) {
-      case "6":
-        _originalAmount = 300;
-        break;
-      case "7":
-        _originalAmount = 400;
-        break;
-      case "8":
-        _originalAmount = 500;
-        break;
-      case "9":
-        _originalAmount = 600;
-        break;
-      case "10":
-        _originalAmount = 700;
-        break;
-      case "11":
-        _originalAmount = 800;
-        break;
-      case "12":
-        _originalAmount = 900;
-        break;
-      default:
-        _originalAmount = 0;
-    }
+    _originalAmount = _planPrices[_std] ?? 0;
     _calculateFinalAmount();
   }
 
@@ -182,10 +200,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       // Android / non-iOS logic: Apply redeem code and/or referral code dynamically
       double totalDiscount = 0;
       if (_isDiscountApplied) {
-        if (_isRedeemPercentage) {
-          totalDiscount += (_originalAmount * _redeemDiscountPercent / 100.0);
+        if (_redeemDiscountType == 'flat') {
+          totalDiscount += _redeemDiscountValue;
         } else {
-          totalDiscount += 100; // Redeem code discount (static)
+          totalDiscount += (_originalAmount * _redeemDiscountValue / 100.0);
         }
       }
       if (_hasValidatedReferralCode) {
@@ -214,7 +232,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
     final code = _promoCodeController.text.trim().toUpperCase();
-    final expectedCode = "DMBHATT$_std";
 
     if (code.isEmpty) {
       _resetRedeemValidation();
@@ -222,65 +239,56 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
 
-    if (code == expectedCode) {
-      setState(() {
-        _isDiscountApplied = true;
-        _isRedeemValid = true;
-        _isRedeemPercentage = false;
-        _redeemDiscountPercent = 0;
-        _redeemMessage = "Redeem code applied successfully.";
-        _calculateFinalAmount();
-      });
-      CustomToast.showSuccess(context, "Redeem code applied successfully!");
-    } else {
-      try {
-        CustomLoader.show(context);
-        final response = await ApiService.validateRedeemCode(
-          code,
-          targetStd: _std,
-          targetBoard: _board,
-          targetMedium: _medium,
-          targetStream: _stream,
-        );
-        if (!mounted) return;
-        CustomLoader.hide(context);
+    try {
+      CustomLoader.show(context);
+      final response = await ApiService.validateRedeemCode(
+        code,
+        targetStd: _std,
+        targetBoard: _board,
+        targetMedium: _medium,
+        targetStream: _stream,
+      );
+      if (!mounted) return;
+      CustomLoader.hide(context);
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          setState(() {
-            _isDiscountApplied = true;
-            _isRedeemValid = true;
-            _isRedeemPercentage = true;
-            _redeemDiscountPercent = (data['discount'] ?? 0).toDouble();
-            _redeemMessage = data['message'] ?? "Redeem code applied successfully.";
-            _calculateFinalAmount();
-          });
-          CustomToast.showSuccess(context, _redeemMessage);
-        } else {
-          final errorMsg = ApiService.getErrorMessage(response.body);
-          setState(() {
-            _isDiscountApplied = false;
-            _isRedeemValid = false;
-            _isRedeemPercentage = false;
-            _redeemDiscountPercent = 0;
-            _redeemMessage = errorMsg;
-            _calculateFinalAmount();
-          });
-          CustomToast.showError(context, errorMsg);
-        }
-      } catch (e) {
-        if (mounted) {
-          CustomLoader.hide(context);
-          setState(() {
-            _isDiscountApplied = false;
-            _isRedeemValid = false;
-            _isRedeemPercentage = false;
-            _redeemDiscountPercent = 0;
-            _redeemMessage = "Error validating code: $e";
-            _calculateFinalAmount();
-          });
-          CustomToast.showError(context, _redeemMessage);
-        }
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _isDiscountApplied = true;
+          _isRedeemValid = true;
+          _redeemDiscountType = data['discountType'] == 'flat'
+              ? 'flat'
+              : 'percentage';
+          _redeemDiscountValue = (data['discount'] ?? 0).toDouble();
+          _validatedRedeemCode = code;
+          _redeemMessage = data['message'] ?? "Redeem code applied successfully.";
+          _calculateFinalAmount();
+        });
+        CustomToast.showSuccess(context, _redeemMessage);
+      } else {
+        final errorMsg = ApiService.getErrorMessage(response.body);
+        setState(() {
+          _isDiscountApplied = false;
+          _isRedeemValid = false;
+          _redeemDiscountValue = 0;
+          _validatedRedeemCode = null;
+          _redeemMessage = errorMsg;
+          _calculateFinalAmount();
+        });
+        CustomToast.showError(context, errorMsg);
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomLoader.hide(context);
+        setState(() {
+          _isDiscountApplied = false;
+          _isRedeemValid = false;
+          _redeemDiscountValue = 0;
+          _validatedRedeemCode = null;
+          _redeemMessage = "Error validating code: $e";
+          _calculateFinalAmount();
+        });
+        CustomToast.showError(context, _redeemMessage);
       }
     }
   }
@@ -289,8 +297,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() {
       _isDiscountApplied = false;
       _isRedeemValid = null;
-      _isRedeemPercentage = false;
-      _redeemDiscountPercent = 0;
+      _redeemDiscountValue = 0;
+      _validatedRedeemCode = null;
       _redeemMessage = '';
       _calculateFinalAmount();
     });
@@ -298,7 +306,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   bool _hasValidRedeemCodeForSelectedStandard() {
     final code = _promoCodeController.text.trim().toUpperCase();
-    return _isRedeemValid == true && code == "DMBHATT$_std";
+    return _isRedeemValid == true &&
+        _validatedRedeemCode != null &&
+        code == _validatedRedeemCode;
   }
 
   bool _validateRedeemCodeForPurchase() {
@@ -320,7 +330,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _validateReferralCode() async {
+    debugPrint("[XCODE][Referral Validate Screen] Validate button tapped");
     if (_isDiscountApplied) {
+      debugPrint(
+        "[XCODE][Referral Validate Screen] Blocked: redeem code already applied",
+      );
       CustomToast.showError(
         context,
         "Cannot apply referral code when a redeem code is already applied.",
@@ -328,8 +342,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
     final code = _referralCodeController.text.trim();
+    debugPrint("[XCODE][Referral Validate Screen] Entered code: $code");
 
     if (code.isEmpty) {
+      debugPrint("[XCODE][Referral Validate Screen] Blocked: empty code");
       _resetReferralValidation();
       CustomToast.showError(context, "Referral code is required");
       return;
@@ -342,12 +358,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     try {
+      debugPrint("[XCODE][Referral Validate Screen] Calling API");
       final refResponse = await ApiService.validateReferralCode(code);
+      debugPrint(
+        "[XCODE][Referral Validate Screen] API status: ${refResponse.statusCode}",
+      );
+      debugPrint(
+        "[XCODE][Referral Validate Screen] API body: ${refResponse.body}",
+      );
 
       if (!mounted) return;
 
       if (refResponse.statusCode == 200) {
         final refData = jsonDecode(refResponse.body);
+        debugPrint(
+          "[XCODE][Referral Validate Screen] Parsed valid=${refData['valid']} discount=${refData['discountAmount']} message=${refData['message']}",
+        );
         setState(() {
           _isReferralValid = refData['valid'] == true;
           _referralMessage = refData['message'] ?? "Referral applied!";
@@ -363,8 +389,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
         _referralMessage = ApiService.getErrorMessage(refResponse.body);
         _calculateFinalAmount();
       });
+      debugPrint(
+        "[XCODE][Referral Validate Screen] Validation failed: $_referralMessage",
+      );
       CustomToast.showError(context, _referralMessage);
     } catch (e) {
+      debugPrint("[XCODE][Referral Validate Screen] Exception: $e");
       if (mounted) {
         setState(() {
           _isReferralValid = false;
@@ -399,9 +429,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final response = await ApiService.applyReferralCode(code);
       if (!mounted) return;
       if (response.statusCode != 200) {
+        final errorMsg = ApiService.getErrorMessage(response.body);
+        // If they already applied it (e.g. during registration), don't show an error toast
+        if (response.statusCode == 400 && 
+            (errorMsg.toLowerCase().contains("already used") || 
+             errorMsg.toLowerCase().contains("already applied"))) {
+          debugPrint("[SUBSCRIPTION] Referral already applied/used, skipping error toast.");
+          return;
+        }
         CustomToast.showError(
           context,
-          "Referral apply failed: ${ApiService.getErrorMessage(response.body)}",
+          "Referral apply failed: $errorMsg",
         );
       }
     } catch (e) {
@@ -411,11 +449,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _initiatePayment() async {
-    if (!_validateReferralForPurchase()) return;
-    if (!_validateRedeemCodeForPurchase()) return;
+    debugPrint(
+      "[SUBSCRIPTION] Initiate payment tapped -> platform: ${_isIOS ? 'iOS' : 'Android'}, "
+      "std: $_std, medium: $_medium, stream: $_stream, board: $_board, "
+      "originalAmount: $_originalAmount, finalAmount: $_finalAmount, discount: $_discount, "
+      "redeemApplied: $_isDiscountApplied, referralApplied: $_hasValidatedReferralCode",
+    );
+    if (!_validateReferralForPurchase()) {
+      debugPrint("[SUBSCRIPTION] Aborted: referral code not validated");
+      return;
+    }
+    if (!_validateRedeemCodeForPurchase()) {
+      debugPrint("[SUBSCRIPTION] Aborted: redeem code not validated");
+      return;
+    }
 
     if (_finalAmount <= 0) {
       // If amount is 0 (e.g. 100% discount), skip payment
+      debugPrint(
+        "[SUBSCRIPTION] Final amount is 0 -> skipping payment, registering as FREE_PLAN",
+      );
       _processRegistration(paymentId: "FREE_PLAN");
       return;
     }
@@ -440,6 +493,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     } else {
       // Android: Use Razorpay
       try {
+        debugPrint(
+          "[SUBSCRIPTION] Creating Razorpay order for amount: $_finalAmount",
+        );
         CustomLoader.show(context);
         final orderResponse = await ApiService.createPaymentOrder(_finalAmount);
 
@@ -450,6 +506,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
           final orderData = jsonDecode(orderResponse.body);
           final String orderId = orderData['id'];
 
+          debugPrint(
+            "[SUBSCRIPTION] Order created (orderId: $orderId) -> opening Razorpay checkout",
+          );
           _razorpayHelper!.openCheckout(
             amount: _finalAmount,
             name: "Padhaku Desk",
@@ -459,12 +518,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
             orderId: orderId,
           );
         } else {
+          debugPrint(
+            "[SUBSCRIPTION] Order creation failed -> status: ${orderResponse.statusCode}, body: ${orderResponse.body}",
+          );
           CustomToast.showError(
             context,
             "Failed to create order: ${ApiService.getErrorMessage(orderResponse.body)}",
           );
         }
       } catch (e) {
+        debugPrint("[SUBSCRIPTION] Exception initiating payment: $e");
         if (mounted) {
           CustomLoader.hide(context);
           CustomToast.showError(context, "Error initiating payment: $e");
@@ -625,6 +688,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    debugPrint(
+      "[SUBSCRIPTION] Razorpay payment success -> paymentId: ${response.paymentId}, "
+      "orderId: ${response.orderId}, hasSignature: ${response.signature != null}",
+    );
     CustomToast.showSuccess(
       context,
       "Payment Successful: ${response.paymentId}",
@@ -644,6 +711,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Get referral code if provided and valid
     final referralCode = _referralCodeController.text.trim();
     final shouldIncludeReferral = _hasValidatedReferralCode;
+    // Redeem codes and referral codes are mutually exclusive in this flow;
+    // the backend's registerUser accepts either through the same field.
+    final hasValidRedeemCode = _hasValidRedeemCodeForSelectedStandard();
+
+    debugPrint(
+      "[SUBSCRIPTION] Processing registration -> paymentId: $paymentId, orderId: $orderId, "
+      "hasSignature: ${signature != null}, amount: $_finalAmount, "
+      "referral: $shouldIncludeReferral, redeem: $hasValidRedeemCode",
+    );
 
     // Proceed to Registration
     try {
@@ -683,10 +759,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
             files: [],
           );
 
+      // Add referralCode or redeemCode directly into the payload fields
+      final fields = Map<String, String>.from(currentPayload.fields);
+      if (shouldIncludeReferral) {
+        fields["referralCode"] = referralCode;
+      } else if (hasValidRedeemCode && _validatedRedeemCode != null) {
+        fields["referralCode"] = _validatedRedeemCode!;
+      }
+      
+      final updatedPayload = RegistrationPayload(
+        role: currentPayload.role,
+        fields: fields,
+        files: currentPayload.files,
+      );
+
       final response = await ApiService.registerUser(
-        payload: currentPayload,
+        payload: updatedPayload,
         dpin: _cachedPassword ?? "",
-        referralCode: shouldIncludeReferral ? referralCode : null,
         razorpayPaymentId: paymentId,
         razorpayOrderId: orderId,
         razorpaySignature: signature,
@@ -697,7 +786,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
       CustomLoader.hide(context);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
+        debugPrint(
+          "[SUBSCRIPTION] Registration succeeded (status: ${response.statusCode}) -> membership activated",
+        );
         if (widget.payload == null && _hasValidatedReferralCode) {
+          debugPrint("[SUBSCRIPTION] Applying referral after purchase");
           await _applyReferralAfterPurchase();
           if (!mounted) return;
         }
@@ -713,12 +806,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Navigator.pop(context, true); // Return success to Landing
         }
       } else {
+        debugPrint(
+          "[SUBSCRIPTION] Registration failed -> status: ${response.statusCode}, body: ${response.body}",
+        );
         CustomToast.showError(
           context,
           "Registration Failed: ${ApiService.getErrorMessage(response.body)}",
         );
       }
     } catch (e) {
+      debugPrint("[SUBSCRIPTION] Exception during registration: $e");
       if (mounted) {
         CustomLoader.hide(context);
         CustomToast.showError(context, "Error: $e");

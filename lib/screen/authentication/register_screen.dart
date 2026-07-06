@@ -15,6 +15,7 @@ import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/utils/states_cities_data.dart';
 import 'package:intl/intl.dart';
+import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -38,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _parentPhoneController = TextEditingController();
   final TextEditingController _schoolNameController = TextEditingController();
   final TextEditingController _customCityController = TextEditingController();
+  final TextEditingController _referralCodeController = TextEditingController();
 
   // Selection States
   String? _selectedStandard;
@@ -51,7 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final String _selectedRole = "Student";
 
   // Data Lists
-  final List<String> _standards = ["6", "7", "8", "9", "10", "11", "12"];
+  List<String> get _standards => AcademicConstants.standards[_selectedBoard ?? "GSEB"] ?? ["6", "7", "8", "9", "10", "11", "12"];
   final List<String> _institutes = ["The Learning Institute"];
 
   final List<String> _mediums = ["English", "Gujarati"];
@@ -548,7 +550,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                   },
                 ),
-              const SizedBox(height: 10),
+              // Referral Code hidden/removed from register screen UI
+              const SizedBox(height: 16),
 
               // Terms Checkbox
               Row(

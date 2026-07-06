@@ -13,7 +13,8 @@ import 'package:dm_bhatt_tutions/utils/connectivity_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:9657/api";
+  // static const String baseUrl = "http://localhost:9657/api";
+  static const String baseUrl = "http://103.212.121.139:5000/api";
 
   /// Helper to get the full URL for a file (image, pdf, etc.)
   static String getFileUrl(String? url) {
@@ -146,6 +147,15 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
+  static Future<http.Response> getReferralSystemConfig() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/config/referral");
+    return _handleSession(await http.get(uri, headers: _addAuth({
+      'Accept': 'application/json',
+    })));
+  }
+
   static Future<bool> _checkConnectivity() async {
     final isConnected = await ConnectivityService.isConnected();
     if (!isConnected) {
@@ -179,19 +189,27 @@ class ApiService {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/create-order");
-    return _handleSession(
-      await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'amount': amount, 'currency': 'INR'}),
-      ),
+    debugPrint("[SUBSCRIPTION][Create Order API] POST $uri");
+    debugPrint(
+      "[SUBSCRIPTION][Create Order API] Request: ${jsonEncode({'amount': amount, 'currency': 'INR'})}",
     );
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'amount': amount, 'currency': 'INR'}),
+    );
+    debugPrint(
+      "[SUBSCRIPTION][Create Order API] Response status: ${response.statusCode}",
+    );
+    debugPrint(
+      "[SUBSCRIPTION][Create Order API] Response body: ${response.body}",
+    );
+    return _handleSession(response);
   }
 
   static Future<http.Response> registerUser({
     required RegistrationPayload payload,
     required String dpin,
-    String? referralCode,
     String? razorpayPaymentId,
     String? razorpayOrderId,
     String? razorpaySignature,
@@ -209,9 +227,6 @@ class ApiService {
     fields["loginCode"] = dpin;
     fields["role"] = payload.role;
 
-    if (referralCode != null && referralCode.isNotEmpty) {
-      fields["referralCode"] = referralCode;
-    }
     if (razorpayPaymentId != null) {
       fields["razorpay_payment_id"] = razorpayPaymentId;
       fields["razorpay_order_id"] = razorpayOrderId!;
@@ -220,6 +235,18 @@ class ApiService {
     }
 
     request.fields.addAll(fields);
+
+    debugPrint("[SUBSCRIPTION][Register API] POST $uri");
+    debugPrint(
+      "[SUBSCRIPTION][Register API] Request fields: "
+      "${jsonEncode({...fields, if (fields.containsKey('loginCode')) 'loginCode': '***'})}",
+    );
+    debugPrint(
+      "[SUBSCRIPTION][Register API] "
+      "razorpayPaymentId: $razorpayPaymentId, razorpayOrderId: $razorpayOrderId, "
+      "hasSignature: ${razorpaySignature != null}, amount: $amount, "
+      "files: ${payload.files.length}",
+    );
 
     if (payload.files.isNotEmpty) {
       if (payload.role == "assistant") {
@@ -249,7 +276,12 @@ class ApiService {
     }
 
     final streamedResponse = await request.send();
-    return _handleSession(await http.Response.fromStream(streamedResponse));
+    final response = await http.Response.fromStream(streamedResponse);
+    debugPrint(
+      "[SUBSCRIPTION][Register API] Response status: ${response.statusCode}",
+    );
+    debugPrint("[SUBSCRIPTION][Register API] Response body: ${response.body}");
+    return _handleSession(response);
   }
 
   static Future<http.Response> loginUser({
@@ -794,15 +826,27 @@ class ApiService {
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/referral/validate");
     final body = {'referralCode': referralCode};
-    debugPrint("[Referral Validate] POST $uri");
-    debugPrint("[Referral Validate] Request: ${jsonEncode(body)}");
+    final stopwatch = Stopwatch()..start();
+    debugPrint("[SUBSCRIPTION][Referral Validate API] START");
+    debugPrint("[SUBSCRIPTION][Referral Validate API] POST $uri");
+    debugPrint(
+      "[SUBSCRIPTION][Referral Validate API] Request body: ${jsonEncode(body)}",
+    );
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(body),
     );
-    debugPrint("[Referral Validate] Response status: ${response.statusCode}");
-    debugPrint("[Referral Validate] Response body: ${response.body}");
+    stopwatch.stop();
+    debugPrint(
+      "[SUBSCRIPTION][Referral Validate API] Response status: ${response.statusCode}",
+    );
+    debugPrint(
+      "[SUBSCRIPTION][Referral Validate API] Response body: ${response.body}",
+    );
+    debugPrint(
+      "[SUBSCRIPTION][Referral Validate API] END ${stopwatch.elapsedMilliseconds}ms",
+    );
     return _handleSession(response);
   }
 
@@ -811,15 +855,23 @@ class ApiService {
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/referral/apply");
     final body = {'referralCode': referralCode};
-    debugPrint("[Referral Apply] POST $uri");
-    debugPrint("[Referral Apply] Request: ${jsonEncode(body)}");
+    final stopwatch = Stopwatch()..start();
+    debugPrint("[SUBSCRIPTION][Referral Apply API] START");
+    debugPrint("[SUBSCRIPTION][Referral Apply API] POST $uri");
+    debugPrint("[SUBSCRIPTION][Referral Apply API] Request: ${jsonEncode(body)}");
     final response = await http.post(
       uri,
       headers: _addAuth({'Content-Type': 'application/json'}),
       body: jsonEncode(body),
     );
-    debugPrint("[Referral Apply] Response status: ${response.statusCode}");
-    debugPrint("[Referral Apply] Response body: ${response.body}");
+    stopwatch.stop();
+    debugPrint(
+      "[SUBSCRIPTION][Referral Apply API] Response status: ${response.statusCode}",
+    );
+    debugPrint("[SUBSCRIPTION][Referral Apply API] Response body: ${response.body}");
+    debugPrint(
+      "[SUBSCRIPTION][Referral Apply API] END ${stopwatch.elapsedMilliseconds}ms",
+    );
     return _handleSession(response);
   }
 
@@ -992,6 +1044,7 @@ class ApiService {
     required String newStandard,
     required String medium,
     String? stream,
+    String? redeemCode,
   }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
@@ -1008,6 +1061,7 @@ class ApiService {
           'newStandard': newStandard,
           'medium': medium,
           'stream': stream,
+          if (redeemCode != null) 'redeemCode': redeemCode,
         }),
       ),
     );
@@ -1019,6 +1073,97 @@ class ApiService {
     final uri = Uri.parse("$baseUrl/profile/upgrade-history");
     return _handleSession(
       await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
+  }
+
+  // --- Subscription Plans ---
+  static Future<http.Response> getActivePlans() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/active");
+    return _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
+  }
+
+  static Future<http.Response> getAllPlans() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans");
+    return _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
+  }
+
+  static Future<http.Response> getPlanByStandard(String standard) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/$standard");
+    return _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/json'})),
+    );
+  }
+
+  static Future<http.Response> createOrUpdatePlan({
+    required String standard,
+    required double amount,
+    String? description,
+    bool? isActive,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans");
+    final body = {
+      'standard': standard,
+      'amount': amount,
+      if (description != null) 'description': description,
+      if (isActive != null) 'isActive': isActive,
+    };
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode(body),
+      ),
+    );
+  }
+
+  static Future<http.Response> bulkUpdatePlans(
+    List<Map<String, dynamic>> plans,
+  ) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/bulk-update");
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+        body: jsonEncode({'plans': plans}),
+      ),
+    );
+  }
+
+  static Future<http.Response> deletePlan(String standard) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/$standard");
+    return _handleSession(
+      await http.delete(
+        uri,
+        headers: _addAuth({'Accept': 'application/json'}),
+      ),
+    );
+  }
+
+  static Future<http.Response> initializeDefaultPlans() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/plans/initialize-default");
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({'Content-Type': 'application/json'}),
+      ),
     );
   }
 

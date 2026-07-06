@@ -4,6 +4,22 @@
 
 set -e
 
+# Unset any proxy settings and URL rewrites to ensure direct git connections
+git config --global --unset http.proxy || true
+git config --global --unset https.proxy || true
+git config --global --remove-section url."http://github.com" || true
+git config --global --remove-section url."https://github.com" || true
+git config --global --remove-section url."git@github.com:" || true
+git config --local --unset http.proxy || true
+git config --local --unset https.proxy || true
+
+export http_proxy=""
+export https_proxy=""
+export HTTP_PROXY=""
+export HTTPS_PROXY=""
+export no_proxy="*"
+export NO_PROXY="*"
+
 echo "=========================================="
 echo "🏗️  Xcode Cloud: Pre-Xcodebuild Phase"
 echo "=========================================="
