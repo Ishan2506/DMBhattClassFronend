@@ -139,7 +139,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
       if (kIsWeb) {
          // Web doesn't support file sharing easily or path_provider, share text only
          await Share.share(
-          l10n.shareTextWeb(_referralCode, 'https://play.google.com/store/apps/details?id=com.dmbhatt.tutions'),
+          l10n.shareTextWeb(_referralCode, 'https://play.google.com/store/apps/details?id=com.bondbyte.students'),
          );
          if (mounted) CustomLoader.hide(context);
          return;
@@ -161,7 +161,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
 
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: l10n.shareTextMobile(_referralCode, 'https://play.google.com/store/apps/details?id=com.dmbhatt.tutions'),
+        text: l10n.shareTextMobile(_referralCode, 'https://play.google.com/store/apps/details?id=com.bondbyte.students'),
       );
       if (mounted) CustomLoader.hide(context);
     } catch (e) {

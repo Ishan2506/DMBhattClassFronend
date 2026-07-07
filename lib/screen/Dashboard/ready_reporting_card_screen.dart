@@ -524,7 +524,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                            children: [
                                pw.BarcodeWidget(
                                    barcode: pw.Barcode.qrCode(),
-                                   data: "https://play.google.com/store/apps/details?id=com.dmbhatt.tutions",
+                                   data: "https://play.google.com/store/apps/details?id=com.bondbyte.students",
                                    width: 50,
                                    height: 50,
                                ),
