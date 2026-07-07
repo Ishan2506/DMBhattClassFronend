@@ -415,7 +415,7 @@ class _ExamPdfViewerState extends State<ExamPdfViewer> {
               ...List.generate((fullExam!['questions'] as List).length, (index) {
                 final q = fullExam!['questions'][index];
                 final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
-                final isTrue = q['isTrue'] ?? false;
+                final isTrue = q['isTrue'] ?? (q['correctAnswer']?.toString().toLowerCase() == 'true');
                 return pw.Padding(
                   padding: const pw.EdgeInsets.only(bottom: 8),
                   child: _buildQuestionItem(index + 1, qText, isTrue),

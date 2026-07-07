@@ -376,9 +376,36 @@ class _ExamPdfViewerState extends State<ExamPdfViewer> {
                 final q = fullExam!['questions'][index];
                 // Handle both Exam (questionText) and FiveMinTest (question) formats
                 final qText = q['questionText'] ?? q['question'] ?? "Question ${index + 1}";
+                
+                String resolvedCorrectText = "";
+                final correctKey = q['correctAnswer'];
+                if (q['options'] != null) {
+                  final options = q['options'] as List? ?? [];
+                  try {
+                    final correctOption = options.firstWhere((o) => o['key'] == correctKey);
+                    resolvedCorrectText = "${correctOption['key']}. ${correctOption['text']}";
+                  } catch (e) {
+                    resolvedCorrectText = correctKey?.toString() ?? "";
+                  }
+                } else {
+                  if (correctKey != null) {
+                    if (correctKey == 'A') {
+                      resolvedCorrectText = "A. ${q['optionA'] ?? ''}";
+                    } else if (correctKey == 'B') {
+                      resolvedCorrectText = "B. ${q['optionB'] ?? ''}";
+                    } else if (correctKey == 'C') {
+                      resolvedCorrectText = "C. ${q['optionC'] ?? ''}";
+                    } else if (correctKey == 'D') {
+                      resolvedCorrectText = "D. ${q['optionD'] ?? ''}";
+                    } else {
+                      resolvedCorrectText = correctKey.toString();
+                    }
+                  }
+                }
+
                 return pw.Padding(
                   padding: const pw.EdgeInsets.only(bottom: 8),
-                  child: _buildQuestionItem(index + 1, qText),
+                  child: _buildQuestionItem(index + 1, qText, correctAnswer: resolvedCorrectText),
                 );
               })
             else ...[
@@ -394,14 +421,29 @@ class _ExamPdfViewerState extends State<ExamPdfViewer> {
     return pdf.save();
   }
 
-  pw.Widget _buildQuestionItem(int number, String question) {
+  pw.Widget _buildQuestionItem(int number, String question, {String? correctAnswer}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 10),
-      child: pw.Row(
+      child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text("$number. ", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-          pw.Expanded(child: pw.Text(question)),
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text("$number. ", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+              pw.Expanded(child: pw.Text(question)),
+            ],
+          ),
+          if (correctAnswer != null && correctAnswer.isNotEmpty) ...[
+            pw.SizedBox(height: 4),
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(left: 15),
+              child: pw.Text(
+                "Correct Answer: $correctAnswer",
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.green),
+              ),
+            ),
+          ],
         ],
       ),
     );
