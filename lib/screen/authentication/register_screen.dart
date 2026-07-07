@@ -707,6 +707,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           await prefs.setString('std', _selectedStandard!);
                           await prefs.setString('medium', _selectedMedium!);
                           await prefs.setString('board', _selectedBoard!);
+                          // Persist parent phone so renewal/re-subscription flows
+                          // (which rebuild the payload from prefs) don't lose it.
+                          await prefs.setString(
+                            'parentPhone',
+                            _parentPhoneController.text.trim(),
+                          );
                           if (_selectedStream != null &&
                               _selectedStream!.isNotEmpty) {
                             await prefs.setString('stream', _selectedStream!);

@@ -126,9 +126,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _selectedStream = profile['stream'] ?? _selectedStream;
             if (!_streams.contains(_selectedStream)) _selectedStream = null;
 
-            _parentPhoneController.text =
+            // Parent's mobile can be stored under different keys / types across
+            // registration flows and legacy imports, so read defensively and
+            // always coerce to a String (an int value would crash the assignment).
+            final dynamic rawParentPhone =
                 profile['parentPhone'] ??
-                (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
+                profile['parentNo'] ??
+                profile['parentMobile'] ??
+                user['parentPhone'] ??
+                user['parentNo'];
+            _parentPhoneController.text =
+                (rawParentPhone == null || rawParentPhone.toString() == 'null')
+                    ? ""
+                    : rawParentPhone.toString();
             _selectedBoard = profile['board'];
             if (!_boards.contains(_selectedBoard)) _selectedBoard = null;
 

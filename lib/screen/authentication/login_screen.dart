@@ -243,6 +243,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                   );
                                 if (user['board'] != null)
                                   await prefs.setString('board', user['board']);
+                                if (user['parentPhone'] != null &&
+                                    user['parentPhone'].toString().isNotEmpty)
+                                  await prefs.setString(
+                                    'parentPhone',
+                                    user['parentPhone'].toString(),
+                                  );
                                 if (user['role'] != null)
                                   await prefs.setString('user_role', user['role']);
                               }

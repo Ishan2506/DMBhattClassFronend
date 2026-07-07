@@ -359,10 +359,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 "${profile['std'] ?? 'N/A'}${l10n.th} - ${profile['medium'] ?? ''}";
             schoolName = profile['school'] ?? (profile['schoolName'] ?? 'N/A');
             profilePic = user['photoPath'] ?? ""; // Use photoPath from user
-            // Check parentPhone, then parentNo, then maybe in user object?
-            parentMobile =
+            // Parent's mobile may be stored under different keys / types, so read
+            // defensively and coerce to a String (avoids an int-assignment crash).
+            final dynamic rawParentPhone =
                 profile['parentPhone'] ??
-                (profile['parentNo'] ?? (user['parentPhone'] ?? ""));
+                profile['parentNo'] ??
+                profile['parentMobile'] ??
+                user['parentPhone'] ??
+                user['parentNo'];
+            parentMobile =
+                (rawParentPhone == null || rawParentPhone.toString() == 'null')
+                    ? ""
+                    : rawParentPhone.toString();
 
             // Subscribe to user-specific and standard-specific notification topics
             final userId = user['_id'];
@@ -617,11 +625,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                                   profile['school'] ??
                                                   (profile['schoolName'] ??
                                                       'N/A');
-                                              parentMobile =
+                                              final dynamic rawParentPhone =
                                                   profile['parentPhone'] ??
-                                                  (profile['parentNo'] ??
-                                                      (user?['parentPhone'] ??
-                                                          ""));
+                                                  profile['parentNo'] ??
+                                                  profile['parentMobile'] ??
+                                                  user?['parentPhone'] ??
+                                                  user?['parentNo'];
+                                              parentMobile =
+                                                  (rawParentPhone == null ||
+                                                          rawParentPhone
+                                                                  .toString() ==
+                                                              'null')
+                                                      ? ""
+                                                      : rawParentPhone
+                                                          .toString();
                                             }
                                           });
                                           debugPrint(
