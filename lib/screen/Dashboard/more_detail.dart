@@ -404,12 +404,12 @@ class _AppInfoScreen extends StatelessWidget {
               icon: Icons.star_rate_rounded,
               onTap: () => _showRateUsDialog(context),
             ),
-            _MoreScreenItem(
-              title: l10n.followUs,
-              value: "",
-              icon: Icons.rss_feed_rounded,
-              onTap: () => _showFollowUsSheet(context),
-            ),
+            // _MoreScreenItem(
+            //   title: l10n.followUs,
+            //   value: "",
+            //   icon: Icons.rss_feed_rounded,
+            //   onTap: () => _showFollowUsSheet(context),
+            // ),
             _MoreScreenItem(
               title: l10n.helpSupport,
               value: "",

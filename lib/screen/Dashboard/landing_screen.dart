@@ -60,7 +60,7 @@ class _LandingScreenState extends State<LandingScreen> {
   Future<void> _initializeApp() async {
     await _checkMembershipStatus();
     if (mounted && !_isLoadingMembership) {
-      _checkAndShowAd();
+      // _checkAndShowAd();
     }
   }
 
