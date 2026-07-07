@@ -49,13 +49,26 @@ class _MatchFollowingResultScreenState extends State<MatchFollowingResultScreen>
 
   Future<Uint8List> _generatePdfBytes() async {
     final pdf = pw.Document();
+    // Poppins stays primary for the Latin/English text; Noto Gujarati/Devanagari
+    // are fallbacks so Gujarati/Hindi glyphs render instead of tofu boxes.
+    // (Same setup as the exam-history PDF.)
     final font = await _loadCustomFont();
     final fontBold = await _loadCustomFontBold();
 
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          theme: pw.ThemeData.withFont(
+            base: font,
+            bold: fontBold,
+            fontFallback: [
+              await PdfGoogleFonts.notoSansGujaratiRegular(),
+              await PdfGoogleFonts.notoSansDevanagariRegular(),
+            ],
+          ),
+        ),
         build: (pw.Context context) {
           final String formattedDate = DateFormat('MMM dd, yyyy').format(DateTime.now());
           final double accuracy = widget.averageAccuracy.toDouble();
@@ -66,14 +79,14 @@ class _MatchFollowingResultScreenState extends State<MatchFollowingResultScreen>
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text("Padhaku", style: pw.TextStyle(font: fontBold, fontSize: 18)),
-                  pw.Text("Date: $formattedDate", style: pw.TextStyle(font: font)),
+                  pw.Text("Padhaku", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18)),
+                  pw.Text("Date: $formattedDate"),
                 ],
               ),
             ),
             pw.SizedBox(height: 20),
             pw.Center(
-              child: pw.Text(widget.title, style: pw.TextStyle(font: fontBold, fontSize: 24)),
+              child: pw.Text(widget.title, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 24)),
             ),
             pw.SizedBox(height: 10),
             pw.Center(
@@ -81,18 +94,18 @@ class _MatchFollowingResultScreenState extends State<MatchFollowingResultScreen>
                 children: [
                   pw.Text(
                     "Marks Obtained: ${widget.correctMatches}/${widget.totalPairs}",
-                    style: pw.TextStyle(font: font, fontSize: 16),
+                    style: const pw.TextStyle(fontSize: 16),
                   ),
                   pw.Text(
                     "Accuracy: ${accuracy.toStringAsFixed(1)}%",
-                    style: pw.TextStyle(font: font, fontSize: 14, color: accuracy >= 70 ? PdfColors.green : PdfColors.orange),
+                    style: pw.TextStyle(fontSize: 14, color: accuracy >= 70 ? PdfColors.green : PdfColors.orange),
                   ),
                 ],
               ),
             ),
             pw.Divider(),
             pw.SizedBox(height: 20),
-            pw.Text("Questions:", style: pw.TextStyle(font: fontBold, fontSize: 18)),
+            pw.Text("Questions:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18)),
             pw.SizedBox(height: 10),
             ...List.generate(widget.answers.length, (index) {
               final answer = widget.answers[index];
@@ -104,7 +117,7 @@ class _MatchFollowingResultScreenState extends State<MatchFollowingResultScreen>
 
               return pw.Padding(
                 padding: const pw.EdgeInsets.only(bottom: 8),
-                child: _buildResultItem(index + 1, leftVal, rightVal, correctRightVal, isCorrect, font, fontBold),
+                child: _buildResultItem(index + 1, leftVal, rightVal, correctRightVal, isCorrect),
               );
             }),
           ];
@@ -144,24 +157,24 @@ class _MatchFollowingResultScreenState extends State<MatchFollowingResultScreen>
     }
   }
 
-  pw.Widget _buildResultItem(int number, String question, String yourAnswer, String correctAnswer, bool isCorrect, pw.Font font, pw.Font fontBold) {
+  pw.Widget _buildResultItem(int number, String question, String yourAnswer, String correctAnswer, bool isCorrect) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 10),
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text("$number. ", style: pw.TextStyle(font: fontBold)),
+          pw.Text("$number. ", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
           pw.Expanded(
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(question, style: pw.TextStyle(font: font)),
+                pw.Text(question),
                 pw.SizedBox(height: 4),
                 pw.Row(
                   children: [
-                    pw.Text("Your Answer: $yourAnswer ", style: pw.TextStyle(font: font, fontSize: 10, color: isCorrect ? PdfColors.green : PdfColors.red)),
+                    pw.Text("Your Answer: $yourAnswer ", style: pw.TextStyle(fontSize: 10, color: isCorrect ? PdfColors.green : PdfColors.red)),
                     if (!isCorrect)
-                      pw.Text("(Correct: $correctAnswer)", style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.green)),
+                      pw.Text("(Correct: $correctAnswer)", style: pw.TextStyle(fontSize: 10, color: PdfColors.green)),
                   ],
                 ),
               ],
@@ -170,7 +183,7 @@ class _MatchFollowingResultScreenState extends State<MatchFollowingResultScreen>
           pw.SizedBox(width: 10),
           pw.Text(
             isCorrect ? "CORRECT" : "WRONG",
-            style: pw.TextStyle(font: fontBold, color: isCorrect ? PdfColors.green : PdfColors.red, fontSize: 12),
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: isCorrect ? PdfColors.green : PdfColors.red, fontSize: 12),
           ),
         ],
       ),

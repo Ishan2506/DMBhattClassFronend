@@ -23,12 +23,24 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
       final ByteData data = await rootBundle.load('assets/images/app_logo.png');
       final Uint8List logoBytes = data.buffer.asUint8List();
 
+      // Poppins stays primary for the Latin/English labels; Noto Gujarati/Devanagari
+      // are fallbacks so Gujarati/Hindi values (material name, subject, etc.) render
+      // instead of tofu boxes. (Same setup as the exam-history PDF.)
       final font = await PdfGoogleFonts.poppinsRegular();
       final boldFont = await PdfGoogleFonts.poppinsBold();
+      final theme = pw.ThemeData.withFont(
+        base: font,
+        bold: boldFont,
+        fontFallback: [
+          await PdfGoogleFonts.notoSansGujaratiRegular(),
+          await PdfGoogleFonts.notoSansDevanagariRegular(),
+        ],
+      );
 
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
+          theme: theme,
           build: (pw.Context context) {
             return pw.Stack(
               children: [
@@ -55,45 +67,45 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
                         child: pw.Center(
                           child: pw.Text("Payment Receipt",
                               style: pw.TextStyle(
-                                  font: boldFont,
+                                  fontWeight: pw.FontWeight.bold,
                                   fontSize: 28,
                                   color: PdfColors.blue900)),
                         ),
                       ),
                       pw.SizedBox(height: 32),
                       pw.Text("Material Name:",
-                          style: pw.TextStyle(font: boldFont, fontSize: 16)),
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
                       pw.Text(transactionDetails['title'] ?? "N/A",
-                          style: pw.TextStyle(font: font, fontSize: 18)),
+                          style: const pw.TextStyle(fontSize: 18)),
                       pw.Divider(color: PdfColors.grey400),
                       pw.SizedBox(height: 16),
                       if (transactionDetails['standard'] != null && transactionDetails['standard'] != "N/A") ...[
-                        _buildPdfRow("Standard", transactionDetails['standard'], font, boldFont),
+                        _buildPdfRow("Standard", transactionDetails['standard']),
                         pw.SizedBox(height: 12),
                       ],
                       if (transactionDetails['medium'] != null && transactionDetails['medium'] != "N/A") ...[
-                        _buildPdfRow("Medium", transactionDetails['medium'], font, boldFont),
+                        _buildPdfRow("Medium", transactionDetails['medium']),
                         pw.SizedBox(height: 12),
                       ],
                       if (transactionDetails['category'] != null && transactionDetails['category'] != "N/A") ...[
-                        _buildPdfRow("Category", transactionDetails['category'], font, boldFont),
+                        _buildPdfRow("Category", transactionDetails['category']),
                         pw.SizedBox(height: 12),
                       ],
                       if (transactionDetails['subject'] != null && transactionDetails['subject'] != "N/A") ...[
-                        _buildPdfRow("Subject", transactionDetails['subject'], font, boldFont),
+                        _buildPdfRow("Subject", transactionDetails['subject']),
                         pw.SizedBox(height: 12),
                       ],
-                      _buildPdfRow("Date", transactionDetails['date'] ?? "N/A", font, boldFont),
+                      _buildPdfRow("Date", transactionDetails['date'] ?? "N/A"),
                       pw.SizedBox(height: 12),
-                      _buildPdfRow("Transaction ID", transactionDetails['transactionId'] ?? "N/A", font, boldFont),
+                      _buildPdfRow("Transaction ID", transactionDetails['transactionId'] ?? "N/A"),
                       pw.SizedBox(height: 12),
-                      _buildPdfRow("Amount", "₹${transactionDetails['amountRaw']}", font, boldFont),
+                      _buildPdfRow("Amount", "₹${transactionDetails['amountRaw']}"),
                       pw.SizedBox(height: 50),
                       pw.Center(
                         child: pw.Text(
                           "Thank you for your purchase!",
                           style: pw.TextStyle(
-                              font: boldFont,
+                              fontWeight: pw.FontWeight.bold,
                               fontSize: 18,
                               color: PdfColors.grey700),
                         ),
@@ -118,12 +130,12 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
     }
   }
 
-  pw.Widget _buildPdfRow(String label, String value, pw.Font font, pw.Font boldFont) {
+  pw.Widget _buildPdfRow(String label, String value) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
-        pw.Text(label, style: pw.TextStyle(font: font, fontSize: 14, color: PdfColors.grey700)),
-        pw.Text(value, style: pw.TextStyle(font: boldFont, fontSize: 14, color: PdfColors.black)),
+        pw.Text(label, style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
+        pw.Text(value, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14, color: PdfColors.black)),
       ],
     );
   }
