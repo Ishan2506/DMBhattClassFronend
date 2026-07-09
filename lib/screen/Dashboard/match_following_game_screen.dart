@@ -70,6 +70,15 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
     _score = 0;
   }
 
+  void _onResetPressed() {
+    setState(_startNewGame);
+    // The new GlobalKeys have no layout until the next frame, so the
+    // connection painter needs a second pass to pick up card positions.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   bool _isCorrectMatch(int leftIdx, int rightIdx) {
     final leftVal = _leftItems[leftIdx];
     final rightVal = _rightItems[rightIdx];
@@ -578,7 +587,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: _startNewGame,
+            onPressed: _onResetPressed,
             child: Text(
               _getTranslation(context, 'reset'),
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
