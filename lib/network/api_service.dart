@@ -1002,6 +1002,23 @@ class ApiService {
     );
   }
 
+  /// Downloads the server-generated invoice PDF for [invoiceId].
+  /// Returns the raw PDF bytes, or null if the invoice is unavailable.
+  static Future<Uint8List?> downloadInvoice(String invoiceId) async {
+    if (!await _checkConnectivity()) return null;
+    final uri = Uri.parse("$baseUrl/invoice/download/$invoiceId");
+    final response = _handleSession(
+      await http.get(uri, headers: _addAuth({'Accept': 'application/pdf'})),
+    );
+    if (response.statusCode != 200) {
+      debugPrint(
+        "[Invoice] Download failed (${response.statusCode}): ${response.body}",
+      );
+      return null;
+    }
+    return response.bodyBytes;
+  }
+
   static Future<http.Response> getPurchasedProducts() async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);

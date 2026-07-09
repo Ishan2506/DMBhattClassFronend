@@ -3,6 +3,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_payment_confirmation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,6 +40,7 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
             
             return {
               "id": hasProduct ? productId['_id'] : "missing_id",
+              "invoiceId": item['invoiceId']?.toString(),
               "title": hasProduct ? (productId['name'] ?? "Unknown Product") : "Unknown Product",
               "date": _formatDate(item['createdAt'] ?? ""),
               "type": hasProduct ? (productId['category'] ?? "Material") : "Material",
@@ -210,17 +212,30 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
   }
 
   void _openMaterialViewer(BuildContext context, Map<String, dynamic> item) {
-    // Navigate to a screen that shows the full PDF or image
+    final isPdf = item['isPdf'] == true;
+
+    // Purchased material: PDFs use the standard preview screen with full access,
+    // images fall back to the simple zoomable viewer.
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FullMaterialViewerScreen(
-          product: {
-            'name': item['title'],
-            'image': item['image'],
-          },
-          isPdf: item['isPdf'] ?? false,
-        ),
+        builder: (context) => isPdf
+            ? PdfPreviewScreen(
+                product: {
+                  'id': item['id'],
+                  'name': item['title'],
+                  'image': item['image'],
+                  'price': item['amountRaw'],
+                },
+                isFullAccess: true,
+              )
+            : FullMaterialViewerScreen(
+                product: {
+                  'name': item['title'],
+                  'image': item['image'],
+                },
+                isPdf: false,
+              ),
       ),
     );
   }

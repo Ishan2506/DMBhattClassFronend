@@ -1,4 +1,6 @@
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +18,25 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
   });
 
   Future<void> _downloadReceipt(BuildContext context) async {
+    final invoiceId = transactionDetails['invoiceId']?.toString();
+
+    if (invoiceId != null && invoiceId.isNotEmpty) {
+      final bytes = await ApiService.downloadInvoice(invoiceId);
+      if (bytes != null) {
+        await Printing.sharePdf(
+          bytes: bytes,
+          filename: 'invoice_$invoiceId.pdf',
+        );
+        return;
+      }
+      // Server invoice unavailable — fall through to the local receipt.
+      if (!context.mounted) return;
+    }
+
+    await _buildLocalReceipt(context);
+  }
+
+  Future<void> _buildLocalReceipt(BuildContext context) async {
     try {
       final pdf = pw.Document();
 
@@ -247,6 +268,26 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 2,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Back to Dashboard
+            TextButton(
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LandingScreen()),
+                  (route) => false,
+                );
+              },
+              child: Text(
+                "Back to Dashboard",
+                style: GoogleFonts.poppins(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

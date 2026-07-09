@@ -88,11 +88,19 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
 
       if (verifyResponse.statusCode == 200) {
         CustomToast.showSuccess(context, "Purchase Successful!");
-        
+
+        // Reflect the purchase immediately. This map is shared with the Explore
+        // list, so the "Buy Now" button there flips to "Read Material" too.
+        widget.product['isPurchased'] = true;
+
         final DateTime now = DateTime.now();
         final String formattedDate = "${now.day}/${now.month}/${now.year}";
-        
+
+        final verifyBody = jsonDecode(verifyResponse.body) as Map<String, dynamic>;
+        final invoiceId = verifyBody['invoice']?['invoiceId']?.toString();
+
         final transactionDetails = {
+          "invoiceId": invoiceId,
           "title": widget.product['name'] ?? "Material Purchase",
           "standard": widget.product['standard'] ?? widget.product['standardId']?['name'] ?? "N/A",
           "medium": widget.product['medium'] ?? widget.product['mediumId']?['name'] ?? "N/A",
