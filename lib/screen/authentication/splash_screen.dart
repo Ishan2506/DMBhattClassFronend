@@ -7,6 +7,7 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import 'package:dm_bhatt_tutions/network/api_service.dart';
+import 'package:dm_bhatt_tutions/utils/notification_service.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/force_update_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:http/http.dart' as http;
@@ -120,6 +121,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         context,
         MaterialPageRoute(builder: (context) => const LandingScreen()),
       );
+      // A notification that cold-started the app is only routable now that a
+      // signed-in destination exists. Dropped for logged-out users.
+      final tap = NotificationService.instance.takePendingTap();
+      if (tap != null) {
+        debugPrint('Cold-start notification tap: $tap');
+      }
     } else {
       Navigator.pushReplacement(
         context,

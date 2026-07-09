@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -6,6 +8,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
+
+  /// Payload of a notification tapped while the app was terminated. Consumed
+  /// once by [takePendingTap] after the first screen is ready to route.
+  Map<String, dynamic>? _pendingTap;
 
   FirebaseMessaging? get _fcm {
     try {
@@ -66,7 +72,13 @@ class NotificationService {
     await _localNotifications.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap if needed
+        final payload = response.payload;
+        if (payload == null || payload.isEmpty) return;
+        try {
+          _handleTap(Map<String, dynamic>.from(jsonDecode(payload) as Map));
+        } catch (e) {
+          if (kDebugMode) print('Bad notification payload: $e');
+        }
       },
     );
 
@@ -99,6 +111,7 @@ class NotificationService {
               priority: Priority.high,
             ),
           ),
+          payload: jsonEncode(message.data),
         );
       }
 
@@ -108,12 +121,34 @@ class NotificationService {
       }
     });
 
-    // 5. Handle Background/Terminated Click
+    // 5. Tap while the app was backgrounded but still alive.
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      if (kDebugMode) {
-        print('Notification clicked! Opening app...');
-      }
+      _handleTap(message.data);
     });
+
+    // 6. Tap that cold-started the app. No stream fires for this case, so the
+    // message is only ever available from this one-shot call. Stash it until a
+    // navigator exists.
+    final initialMessage = await fcm.getInitialMessage();
+    if (initialMessage != null) {
+      _pendingTap = initialMessage.data;
+    }
+  }
+
+  /// Returns the payload of a tap that launched the app from a terminated
+  /// state, or null. Clears it so it is only ever routed once.
+  Map<String, dynamic>? takePendingTap() {
+    final tap = _pendingTap;
+    _pendingTap = null;
+    return tap;
+  }
+
+  void _handleTap(Map<String, dynamic> data) {
+    if (kDebugMode) {
+      print('Notification tapped, data: $data');
+    }
+    // The app is already in the foreground by the time this runs; add
+    // deep-link routing off `data` here when the payload defines a target.
   }
 
   Future<void> subscribeToStandardTopic(String standard) async {

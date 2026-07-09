@@ -157,16 +157,6 @@ class _MindMapSelectionScreenState extends State<MindMapSelectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-                  Text(
-                    "Select Subject & Unit to View Mind Map",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
                   CustomDropdown<String>(
                     labelText: "Subject",
                     hintText: "Select Subject",
