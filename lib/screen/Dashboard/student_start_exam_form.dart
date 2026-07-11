@@ -422,23 +422,24 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                                 return;
                               }
                               
-                              if (_takenExamIds.contains(_selectedExamId)) {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text("Already Taken"),
-                                    content: const Text("You have already performed this exam. Students can only take each exam once."),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text("OK"),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                return;
-                              }
-                              
+                              // DISABLED: students may now retake an exam any number of times
+                              // if (_takenExamIds.contains(_selectedExamId)) {
+                              //   showDialog(
+                              //     context: context,
+                              //     builder: (context) => AlertDialog(
+                              //       title: const Text("Already Taken"),
+                              //       content: const Text("You have already performed this exam. Students can only take each exam once."),
+                              //       actions: [
+                              //         TextButton(
+                              //           onPressed: () => Navigator.pop(context),
+                              //           child: const Text("OK"),
+                              //         ),
+                              //       ],
+                              //     ),
+                              //   );
+                              //   return;
+                              // }
+
                               CustomLoader.show(context);
                               await Future.delayed(const Duration(milliseconds: 500));
                               if (context.mounted) {

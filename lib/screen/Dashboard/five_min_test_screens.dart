@@ -226,8 +226,10 @@ class _FiveMinTestSelectionScreenState
     return result;
   }
 
-  bool _isTaken(dynamic test) =>
-      _takenTestIds.contains(test['_id'].toString());
+  // DISABLED: students may now retake a test any number of times
+  // bool _isTaken(dynamic test) =>
+  //     _takenTestIds.contains(test['_id'].toString());
+  bool _isTaken(dynamic test) => false;
 
   Future<void> _startTest(dynamic test) async {
     if (!await GuestUtils.canGuestAccessExam(context, 'FIVEMIN')) return;

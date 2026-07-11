@@ -200,8 +200,10 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
   @override
   Widget build(BuildContext context) {
     // Reward Logic: 1 reward point for every 10 marks
+    // DISABLED: reward points are no longer awarded, so the banner stays hidden
     final int rewardPoints = widget.correctAnswers ~/ 10;
-    final bool hasReward = rewardPoints > 0;
+    // final bool hasReward = rewardPoints > 0;
+    const bool hasReward = false;
     
     // Theme Colors
     final theme = Theme.of(context);

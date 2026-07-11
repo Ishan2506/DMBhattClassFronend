@@ -278,24 +278,25 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
       return;
     }
     
-    if (_takenExamIds.contains(_selectedExamId)) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text("Already Taken"),
-            content: const Text("You have already performed this exam. Students can only take each exam once."),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK"),
-              ),
-            ],
-          ),
-        );
-      }
-      return;
-    }
+    // DISABLED: students may now retake an exam any number of times
+    // if (_takenExamIds.contains(_selectedExamId)) {
+    //   if (mounted) {
+    //     showDialog(
+    //       context: context,
+    //       builder: (context) => AlertDialog(
+    //         title: const Text("Already Taken"),
+    //         content: const Text("You have already performed this exam. Students can only take each exam once."),
+    //         actions: [
+    //           TextButton(
+    //             onPressed: () => Navigator.pop(context),
+    //             child: const Text("OK"),
+    //           ),
+    //         ],
+    //       ),
+    //     );
+    //   }
+    //   return;
+    // }
 
     Navigator.push(
       context,
