@@ -182,7 +182,7 @@ class TuitionAIService {
       return _channelId!;
     }
 
-    throw Exception('DM Bhatt Education channel not found');
+    throw Exception('DM Bhatt Education channel not found ');
   }
 
   /// SEARCH VIDEO INSIDE CHANNEL ONLY
