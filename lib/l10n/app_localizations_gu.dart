@@ -221,6 +221,16 @@ class AppLocalizationsGu extends AppLocalizations {
   String get phoneNumber => 'ફોન નંબર';
 
   @override
+  String get phoneOrEmail => 'ફોન નંબર અથવા ઇમેઇલ';
+
+  @override
+  String get pleaseEnterPhoneOrEmail => 'કૃપા કરી ફોન નંબર અથવા ઇમેઇલ દાખલ કરો';
+
+  @override
+  String get invalidPhoneOrEmail =>
+      'માન્ય 10-અંકનો ફોન નંબર અથવા ઇમેઇલ સરનામું દાખલ કરો';
+
+  @override
   String get std => 'ધોરણ';
 
   @override

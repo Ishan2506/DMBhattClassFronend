@@ -68,7 +68,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
         _messages.add(ChatMessage(text: "Sure! Here are the contact details for our professors. You can chat with them directly on WhatsApp:", isUser: false));
         _messages.add(ChatMessage(text: "English Professor", isUser: false, contact: {"name": "Prof. English", "number": "98251 89540"}));
         _messages.add(ChatMessage(text: "Science Professor", isUser: false, contact: {"name": "Prof. Science", "number": "90332 39340"}));
-        _messages.add(ChatMessage(text: "Maths Professor", isUser: false, contact: {"name": "Prof. Maths", "number": "78783 21090"}));
         _messages.add(ChatMessage(text: "How else can I help you?", isUser: false));
       });
       _scrollToBottom();
@@ -84,9 +83,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
           String responseText = "I'm still learning about your specific query! For now, I can help you find videos for your subjects.";
           Map<String, String>? subjectContact;
 
-          if (query.toLowerCase().contains('math')) {
-            subjectContact = {"name": "Prof. Maths", "number": "78783 21090"};
-          } else if (query.toLowerCase().contains('science') || query.toLowerCase().contains('physics') || query.toLowerCase().contains('chemistry')) {
+          if (query.toLowerCase().contains('science') || query.toLowerCase().contains('physics') || query.toLowerCase().contains('chemistry')) {
             subjectContact = {"name": "Prof. Science", "number": "90332 39340"};
           } else if (query.toLowerCase().contains('english')) {
             subjectContact = {"name": "Prof. English", "number": "98251 89540"};

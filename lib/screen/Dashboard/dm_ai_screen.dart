@@ -171,7 +171,6 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
       _addBot("Sure! Here are the contact details for our professors. You can chat with them directly on WhatsApp:");
       _addBot("English Professor", contact: {"name": "Prof. English", "number": "98251 89540"});
       _addBot("Science Professor", contact: {"name": "Prof. Science", "number": "90332 39340"});
-      _addBot("Maths Professor", contact: {"name": "Prof. Maths", "number": "78783 21090"});
       _addBot("How else can I help you?", options: ['Std 8', 'Std 9', 'Std 10', 'Std 11', 'Std 12']);
       return;
     }
@@ -286,9 +285,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
         Map<String, String>? subjectContact;
         final sub = _subject?.toLowerCase() ?? "";
         
-        if (sub.contains('math') || sub.contains('state')) {
-          subjectContact = {"name": "Prof. Maths", "number": "78783 21090"};
-        } else if (sub.contains('science') || sub.contains('physics') || sub.contains('chemistry') || sub.contains('bio')) {
+        if (sub.contains('science') || sub.contains('physics') || sub.contains('chemistry') || sub.contains('bio')) {
           subjectContact = {"name": "Prof. Science", "number": "90332 39340"};
         } else if (sub.contains('english')) {
           subjectContact = {"name": "Prof. English", "number": "98251 89540"};

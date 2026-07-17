@@ -222,6 +222,17 @@ class AppLocalizationsTa extends AppLocalizations {
   String get phoneNumber => 'தொலைபேசி எண்';
 
   @override
+  String get phoneOrEmail => 'தொலைபேசி எண் அல்லது மின்னஞ்சல்';
+
+  @override
+  String get pleaseEnterPhoneOrEmail =>
+      'தொலைபேசி எண் அல்லது மின்னஞ்சலை உள்ளிடவும்';
+
+  @override
+  String get invalidPhoneOrEmail =>
+      'சரியான 10-இலக்க தொலைபேசி எண் அல்லது மின்னஞ்சல் முகவரியை உள்ளிடவும்';
+
+  @override
   String get std => ' வகுப்பு';
 
   @override

@@ -518,6 +518,24 @@ abstract class AppLocalizations {
   /// **'Phone Number'**
   String get phoneNumber;
 
+  /// No description provided for @phoneOrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number or Email'**
+  String get phoneOrEmail;
+
+  /// No description provided for @pleaseEnterPhoneOrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter phone number or email'**
+  String get pleaseEnterPhoneOrEmail;
+
+  /// No description provided for @invalidPhoneOrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid 10-digit phone number or email address'**
+  String get invalidPhoneOrEmail;
+
   /// No description provided for @std.
   ///
   /// In en, this message translates to:

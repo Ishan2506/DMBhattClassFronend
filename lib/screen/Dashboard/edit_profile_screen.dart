@@ -182,7 +182,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final l10n = AppLocalizations.of(context)!;
-    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
+    final trimmedPhone = _phoneController.text.trim();
+    final trimmedParentPhone = _parentPhoneController.text.trim();
+    if (trimmedPhone.isNotEmpty &&
+        trimmedParentPhone.isNotEmpty &&
+        trimmedPhone == trimmedParentPhone) {
       CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
       return;
     }
@@ -443,7 +447,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             FilteringTextInputFormatter.digitsOnly,
                             LengthLimitingTextInputFormatter(10),
                           ],
-                          validator: ValidationUtils.validateIndianPhoneNumber,
+                          validator: ValidationUtils.validateOptionalIndianPhoneNumber,
                         ),
                         const SizedBox(height: 16),
 
@@ -459,7 +463,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             FilteringTextInputFormatter.digitsOnly,
                             LengthLimitingTextInputFormatter(10),
                           ],
-                          validator: ValidationUtils.validateIndianPhoneNumber,
+                          validator: ValidationUtils.validateOptionalIndianPhoneNumber,
                         ),
                         const SizedBox(height: 16),
 

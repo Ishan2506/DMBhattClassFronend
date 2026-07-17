@@ -219,6 +219,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneNumber => 'Phone Number';
 
   @override
+  String get phoneOrEmail => 'Phone Number or Email';
+
+  @override
+  String get pleaseEnterPhoneOrEmail => 'Please enter phone number or email';
+
+  @override
+  String get invalidPhoneOrEmail =>
+      'Enter a valid 10-digit phone number or email address';
+
+  @override
   String get std => 'STD';
 
   @override

@@ -21,6 +21,15 @@ class ValidationUtils {
     return null;
   }
 
+  /// Same rules as [validateIndianPhoneNumber] but the field itself is optional:
+  /// empty is allowed, non-empty must still be a valid 10-digit Indian number.
+  static String? validateOptionalIndianPhoneNumber(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+    return validateIndianPhoneNumber(value);
+  }
+
   /// Full password complexity validation for Toast messages:
   /// - Minimum 6 characters
   /// - At least one capital letter
@@ -62,6 +71,28 @@ class ValidationUtils {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
       return "Please enter a valid email address";
+    }
+    return null;
+  }
+
+  /// Validates a login identifier that may be either a 10-digit Indian phone
+  /// number or an email address.
+  static String? validatePhoneOrEmail(String? value, dynamic l10n) {
+    if (value == null || value.trim().isEmpty) {
+      return l10n.pleaseEnterPhoneOrEmail;
+    }
+
+    final trimmed = value.trim();
+    final isDigitsOnly = RegExp(r'^\d+$').hasMatch(trimmed);
+    if (isDigitsOnly) {
+      return validateIndianPhoneNumber(trimmed) == null
+          ? null
+          : l10n.invalidPhoneOrEmail;
+    }
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(trimmed)) {
+      return l10n.invalidPhoneOrEmail;
     }
     return null;
   }

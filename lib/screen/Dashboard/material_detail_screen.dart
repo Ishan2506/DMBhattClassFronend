@@ -161,9 +161,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
           ],
         ),
         content: Text(
-          "Buying materials from the iPhone app isn't available yet — we're working on it.\n\n"
-          "If you already bought this material on the Android app, sign in with the same account "
-          "and it will show up here with a Read Material button.",
+          "Buying materials isn't available yet — we're working on it.\n\n",
           style: GoogleFonts.poppins(fontSize: 14, height: 1.6),
         ),
         actions: [

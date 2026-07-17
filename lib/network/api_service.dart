@@ -287,7 +287,7 @@ class ApiService {
   static Future<http.Response> loginUser({
     String? role,
     required String loginCode,
-    required String phoneNum,
+    required String identifier,
     String? deviceId,
   }) async {
     if (!await _checkConnectivity())
@@ -296,7 +296,7 @@ class ApiService {
 
     final body = {
       'loginCode': loginCode,
-      'phoneNum': phoneNum,
+      'identifier': identifier,
       if (deviceId != null) 'deviceId': deviceId,
     };
 

@@ -12,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/register_screen.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
+import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 
 class AddAccountScreen extends StatefulWidget {
   const AddAccountScreen({super.key});
@@ -23,7 +24,7 @@ class AddAccountScreen extends StatefulWidget {
 class _AddAccountScreenState extends State<AddAccountScreen> {
   bool _isPasswordVisible = false;
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _identifierController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   Future<void> _handleLogin() async {
@@ -32,7 +33,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       try {
         final response = await ApiService.loginUser(
           loginCode: _passwordController.text,
-          phoneNum: _phoneController.text,
+          identifier: _identifierController.text.trim(),
         );
 
         if (!mounted) return;
@@ -116,15 +117,18 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               .map((e) => jsonDecode(e) as Map<String, dynamic>)
               .toList();
 
+          final resolvedPhone =
+              user['phoneNum'] ?? _identifierController.text.trim();
+
           // Check if already exists
           final existingIndex = accounts.indexWhere(
-            (acc) => acc['phone'] == _phoneController.text,
+            (acc) => acc['phone'] == resolvedPhone,
           );
 
           final newAccount = {
             'token': token,
             'password': _passwordController.text,
-            'phone': _phoneController.text,
+            'phone': resolvedPhone,
             'name': name,
             'userId': userId,
             'std': std,
@@ -299,20 +303,12 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
 
               _buildTextField(
                 context: context,
-                controller: _phoneController,
-                hint: l10n.phoneNumber,
-                icon: Icons.phone_outlined,
-                inputType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return l10n.pleaseEnterPhone;
-                  if (value.length != 10) return l10n.phoneMustBeTenDigits;
-                  return null;
-                },
+                controller: _identifierController,
+                hint: l10n.phoneOrEmail,
+                icon: Icons.person_outline,
+                inputType: TextInputType.emailAddress,
+                validator: (value) =>
+                    ValidationUtils.validatePhoneOrEmail(value, l10n),
                 colorScheme: colorScheme,
               ),
               const SizedBox(height: 16),

@@ -221,6 +221,16 @@ class AppLocalizationsMr extends AppLocalizations {
   String get phoneNumber => 'फोन नंबर';
 
   @override
+  String get phoneOrEmail => 'फोन नंबर किंवा ईमेल';
+
+  @override
+  String get pleaseEnterPhoneOrEmail => 'कृपया फोन नंबर किंवा ईमेल टाका';
+
+  @override
+  String get invalidPhoneOrEmail =>
+      'वैध 10-अंकी फोन नंबर किंवा ईमेल पत्ता टाका';
+
+  @override
   String get std => 'इयत्ता';
 
   @override

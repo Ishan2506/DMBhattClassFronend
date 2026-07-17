@@ -248,7 +248,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
                 ],
-                validator: ValidationUtils.validateIndianPhoneNumber,
+                validator: ValidationUtils.validateOptionalIndianPhoneNumber,
                 colorScheme: colorScheme,
               ),
               const SizedBox(height: 16),
@@ -280,7 +280,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
                 ],
-                validator: ValidationUtils.validateIndianPhoneNumber,
+                validator: ValidationUtils.validateOptionalIndianPhoneNumber,
                 colorScheme: colorScheme,
               ),
               const SizedBox(height: 16),
@@ -636,27 +636,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return;
                       }
 
-                      // Validate Phone != Parent Phone
-                      if (_phoneController.text ==
-                          _parentPhoneController.text) {
-                        CustomToast.showError(
-                          context,
-                          "Student and Parent mobile numbers cannot be the same.",
-                        );
-                        return;
-                      }
-
-                      if (_phoneController.text.trim() ==
-                          _parentPhoneController.text.trim()) {
-                        CustomToast.showError(
-                          context,
-                          l10n.phoneNumbersCannotBeSame,
-                        );
-                        return;
-                      }
-
-                      if (_phoneController.text.trim() ==
-                          _parentPhoneController.text.trim()) {
+                      // Validate Phone != Parent Phone (only when both are provided)
+                      final trimmedPhone = _phoneController.text.trim();
+                      final trimmedParentPhone =
+                          _parentPhoneController.text.trim();
+                      if (trimmedPhone.isNotEmpty &&
+                          trimmedParentPhone.isNotEmpty &&
+                          trimmedPhone == trimmedParentPhone) {
                         CustomToast.showError(
                           context,
                           l10n.phoneNumbersCannotBeSame,

@@ -27,7 +27,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _identifierController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
@@ -99,17 +99,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Phone Number Field
+                  // Phone Number or Email Field
                   _buildTextField(
-                    controller: _phoneController,
-                    hint: l10n.phoneNumber,
-                    icon: Icons.phone_outlined,
-                    inputType: TextInputType.phone,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(10),
-                    ],
-                    validator: ValidationUtils.validateIndianPhoneNumber,
+                    controller: _identifierController,
+                    hint: l10n.phoneOrEmail,
+                    icon: Icons.person_outline,
+                    inputType: TextInputType.emailAddress,
+                    validator: (value) =>
+                        ValidationUtils.validatePhoneOrEmail(value, l10n),
                     errorMaxLines: 2,
                     colorScheme: colorScheme,
                   ),
@@ -171,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           try {
                             final response = await ApiService.loginUser(
                               loginCode: _passwordController.text,
-                              phoneNum: _phoneController.text,
+                              identifier: _identifierController.text.trim(),
                             );
 
                             if (!mounted) return;
@@ -270,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         .trim(),
                                 token: token,
                                 role: user['role'] ?? 'student',
-                                phone: _phoneController.text,
+                                phone: user['phoneNum'] ?? _identifierController.text.trim(),
                                 userData: jsonEncode(user),
                                 profilePic: user['photoPath'] ?? "",
                               );

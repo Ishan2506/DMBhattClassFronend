@@ -200,7 +200,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              validator: ValidationUtils.validateIndianPhoneNumber,
+              validator: ValidationUtils.validateOptionalIndianPhoneNumber,
             ),
             const SizedBox(height: 16),
 
@@ -230,10 +230,10 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              validator: ValidationUtils.validateIndianPhoneNumber,
+              validator: ValidationUtils.validateOptionalIndianPhoneNumber,
             ),
             const SizedBox(height: 16),
-            
+
             // Standard Dropdown
             _buildDropdown(
               context,
@@ -540,9 +540,12 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       return;
                     }
 
-                    // Validate Phone != Parent Phone
-                    // Validate Phone != Parent Phone
-                    if (_phoneController.text.trim() == _parentPhoneController.text.trim()) {
+                    // Validate Phone != Parent Phone (only when both are provided)
+                    final trimmedPhone = _phoneController.text.trim();
+                    final trimmedParentPhone = _parentPhoneController.text.trim();
+                    if (trimmedPhone.isNotEmpty &&
+                        trimmedParentPhone.isNotEmpty &&
+                        trimmedPhone == trimmedParentPhone) {
                       CustomToast.showError(context, l10n.phoneNumbersCannotBeSame);
                       return;
                     }
