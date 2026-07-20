@@ -389,10 +389,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 16),
 
-              // State Dropdown
+              // State Dropdown (Optional)
               _buildDropdown(
                 context,
-                hint: l10n.state,
+                hint: "${l10n.state} (Optional)",
                 icon: Icons.map_outlined,
                 value: _selectedState,
                 items: indiaStatesCities.keys.toList(),
@@ -407,10 +407,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // City Dropdown (Conditional)
+              // City Dropdown (Optional)
               _buildDropdown(
                 context,
-                hint: l10n.city,
+                hint: "${l10n.city} (Optional)",
                 icon: Icons.location_city,
                 value: _selectedCity,
                 items: _selectedState != null ? indiaStatesCities[_selectedState]! : [],
@@ -616,8 +616,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       }
                       if (_selectedStandard == null ||
                           _selectedMedium == null ||
-                          _selectedState == null ||
-                          _selectedCity == null ||
                           _selectedBoard == null) {
                         CustomToast.showError(
                           context,
@@ -670,8 +668,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           "stream": _selectedStream ?? "",
                           "board": _selectedBoard!,
                           "loginAs": _selectedRole,
-                          "city": _selectedCity == "Other" ? _customCityController.text.trim() : _selectedCity!,
-                          "state": _selectedState!,
+                          "city": _selectedCity == "Other"
+                              ? _customCityController.text.trim()
+                              : (_selectedCity ?? ""),
+                          "state": _selectedState ?? "",
                         },
                         files: [],
                       );
