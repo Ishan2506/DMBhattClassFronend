@@ -8,7 +8,6 @@ import 'package:flutter/rendering.dart' as rendering;
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'dart:io';
@@ -29,6 +28,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
   List<dynamic> _invitedFriends = [];
   int _maxReferrals = 5;
   List<int> _pointsList = [50, 50, 50, 50, 50];
+  int _pointsPerRupee = 10;
   String _studentName = "Student";
   final GlobalKey _globalKey = GlobalKey();
 
@@ -58,7 +58,12 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        
+        int parsedPointsPerRupee = 10;
+
+        if (data['pointsPerRupee'] != null) {
+          parsedPointsPerRupee = int.tryParse(data['pointsPerRupee'].toString()) ?? 10;
+        }
+
         if (configResponse.statusCode == 200) {
           final configData = jsonDecode(configResponse.body);
           if (configData['maxReferralsAllowed'] != null) {
@@ -72,6 +77,9 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
               final ptsVal = int.parse(rawPts.toString());
               _pointsList = List<int>.filled(_maxReferrals, ptsVal);
             }
+          }
+          if (configData['pointsPerRupee'] != null) {
+            parsedPointsPerRupee = int.tryParse(configData['pointsPerRupee'].toString()) ?? parsedPointsPerRupee;
           }
         }
         
@@ -97,6 +105,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
             _referralCode = data['referralCode'] ?? "Generate Code";
             _bonusPoints = data['bonusPoints'] ?? 0;
             _invitedFriends = data['invitedFriends'] ?? [];
+            _pointsPerRupee = parsedPointsPerRupee;
             _studentName = name;
             _isLoading = false;
           });
@@ -401,12 +410,14 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                                const SizedBox(width: 12),
                                Expanded(
                                  child: Text(
-                                   "1 point = 1 rupee",
-                                   style: GoogleFonts.poppins(
-                                     fontSize: 12,
-                                     color: colorScheme.onSurfaceVariant,
-                                   ),
-                                 ),
+                                  _pointsPerRupee == 1
+                                      ? "1 point = 1 rupee"
+                                      : "$_pointsPerRupee points = 1 rupee",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
                                ),
                              ],
                            ),
