@@ -23,6 +23,7 @@ class _NotesScreenState extends State<NotesScreen> {
   String? _selectedSubject;
   bool _isGuest = false;
   bool _isPaid = false;
+  bool _isProfileLoading = true;
   String? _std;
   String? _stream;
   String? _board;
@@ -34,8 +35,10 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   Future<void> _loadProfileAndCheckGuest() async {
+    setState(() => _isProfileLoading = true);
     _isGuest = await GuestUtils.isGuest();
     final prefs = await SharedPreferences.getInstance();
+    _isPaid = prefs.getBool('isPaid') ?? false;
 
     if (!_isGuest) {
       try {
@@ -54,6 +57,7 @@ class _NotesScreenState extends State<NotesScreen> {
             });
           }
 
+          await prefs.setBool('isPaid', _isPaid);
           if (_std != null) await prefs.setString('std', _std!);
           if (_stream != null) await prefs.setString('stream', _stream!);
           if (_board != null) await prefs.setString('board', _board!);
@@ -67,7 +71,7 @@ class _NotesScreenState extends State<NotesScreen> {
     _stream ??= prefs.getString('stream');
     _board ??= prefs.getString('board');
 
-    if (mounted) setState(() {});
+    if (mounted) setState(() => _isProfileLoading = false);
   }
 
   void _showUpgradeDialog() {
@@ -259,7 +263,7 @@ class _NotesScreenState extends State<NotesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!_isPaid || _isGuest) _buildUnpaidBanner(context),
+            if (!_isProfileLoading && (!_isPaid || _isGuest)) _buildUnpaidBanner(context),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(

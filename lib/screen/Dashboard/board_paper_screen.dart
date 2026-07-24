@@ -63,6 +63,9 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
     _isGuest = await GuestUtils.isGuest();
     final prefs = await SharedPreferences.getInstance();
     
+    // Read cached isPaid state to avoid banner flash for paid users
+    _isPaid = prefs.getBool('isPaid') ?? false;
+
     // Load initial values from prefs
     final profileFromPrefs = {
       'board': prefs.getString('board'),
@@ -79,6 +82,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
           final user = data['user'];
           final profile = data['profile'];
           _isPaid = user?['isPaid'] ?? false;
+          await prefs.setBool('isPaid', _isPaid);
           
           final board = user?['board'] ?? profile?['board'] ?? profileFromPrefs['board'];
           final studentStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? profileFromPrefs['std'];
@@ -239,7 +243,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (!_isPaid || _isGuest) _buildUnpaidBanner(context),
+                if (!_isProfileLoading && (!_isPaid || _isGuest)) _buildUnpaidBanner(context),
                 _buildFilterCard(colorScheme, isDark),
                 const SizedBox(height: 24),
                 

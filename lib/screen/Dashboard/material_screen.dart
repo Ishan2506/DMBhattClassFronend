@@ -35,6 +35,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
   Future<void> _loadUserStd() async {
     _isGuest = await GuestUtils.isGuest();
     final prefs = await SharedPreferences.getInstance();
+    _isPaid = prefs.getBool('isPaid') ?? false;
     String rawStd = prefs.getString('std') ?? '';
 
     if (!_isGuest) {
@@ -45,6 +46,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
           final user = data['user'];
           final profile = data['profile'];
           _isPaid = user?['isPaid'] ?? false;
+          await prefs.setBool('isPaid', _isPaid);
           rawStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? rawStd;
           if (rawStd.isNotEmpty) await prefs.setString('std', rawStd);
         }

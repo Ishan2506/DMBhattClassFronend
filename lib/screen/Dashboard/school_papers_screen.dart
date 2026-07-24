@@ -20,13 +20,25 @@ class SchoolPapersScreen extends StatefulWidget {
 }
 
 class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
+  // Filter States
+  String? _selectedMedium;
+  String? _selectedStd;
+  String? _selectedStream;
+  String? _selectedYear;
   String? _selectedSubject;
+
+  final List<String> _mediums = ["Gujarati", "English"];
+  final List<String> _stds = ["6", "7", "8", "9", "10", "11", "12"];
+  final List<String> _streams = ["Science", "Commerce", "Arts"];
+  final List<String> _years = List.generate(10, (index) => (DateTime.now().year - index).toString());
+
+  String? _board;
   bool _isGuest = false;
   bool _isPaid = false;
-  String? _std;
-  String? _stream;
-  String? _board;
-  String? _medium;
+  bool _isLoading = false;
+  bool _isProfileLoading = true;
+  bool _hasSearched = false;
+  List<dynamic> _displayPapers = [];
 
   @override
   void initState() {
@@ -35,8 +47,19 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   }
 
   Future<void> _loadProfileAndCheckGuest() async {
+    setState(() => _isProfileLoading = true);
     _isGuest = await GuestUtils.isGuest();
     final prefs = await SharedPreferences.getInstance();
+
+    // Read cached isPaid state to avoid flashing banner for paid users
+    _isPaid = prefs.getBool('isPaid') ?? false;
+
+    final profileFromPrefs = {
+      'board': prefs.getString('board'),
+      'std': prefs.getString('std'),
+      'stream': prefs.getString('stream'),
+      'medium': prefs.getString('medium'),
+    };
 
     if (!_isGuest) {
       try {
@@ -46,35 +69,58 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
           final user = profileData['user'];
           final profile = profileData['profile'];
           
+          _isPaid = user?['isPaid'] ?? false;
+          await prefs.setBool('isPaid', _isPaid);
+          final board = user?['board'] ?? profile?['board'] ?? profileFromPrefs['board'];
+          final studentStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? profileFromPrefs['std'];
+          final studentStream = user?['stream'] ?? profile?['stream'] ?? profileFromPrefs['stream'];
+          final medium = user?['medium'] ?? profile?['medium'] ?? profileFromPrefs['medium'];
+
+          String? validStd;
+          if (studentStd != null) {
+            final match = RegExp(r'(\d+)').firstMatch(studentStd);
+            if (match != null) {
+              validStd = match.group(1);
+            }
+          }
+
           if (mounted) {
             setState(() {
-              _isPaid = user?['isPaid'] ?? false;
-              // Priority: Profile API User Object > Profile API Profile Object > SharedPreferences
-              _std = user?['std']?.toString() ?? profile?['std']?.toString() ?? prefs.getString('std');
-              _stream = user?['stream'] ?? profile?['stream'] ?? prefs.getString('stream');
-              _board = user?['board'] ?? profile?['board'] ?? prefs.getString('board');
-              _medium = user?['medium'] ?? profile?['medium'] ?? prefs.getString('medium');
+              _selectedMedium = medium ?? profileFromPrefs['medium'];
+              _selectedStd = validStd;
+              _selectedStream = (validStd == '11' || validStd == '12') ? studentStream : null;
+              _board = board;
             });
           }
 
-          // Sync back to SharedPreferences if missing
-          if (_std != null) await prefs.setString('std', _std!);
-          if (_stream != null) await prefs.setString('stream', _stream!);
-          if (_board != null) await prefs.setString('board', _board!);
-          if (_medium != null) await prefs.setString('medium', _medium!);
+          // Sync back to SharedPreferences
+          if (studentStd != null) await prefs.setString('std', studentStd);
+          if (studentStream != null) await prefs.setString('stream', studentStream);
+          if (board != null) await prefs.setString('board', board);
+          if (medium != null) await prefs.setString('medium', medium);
         }
       } catch (e) {
         debugPrint("Error fetching profile: $e");
       }
+    } else {
+      _selectedMedium ??= profileFromPrefs['medium'] ?? "English";
+      if (profileFromPrefs['std'] != null) {
+        final match = RegExp(r'(\d+)').firstMatch(profileFromPrefs['std']!);
+        if (match != null) _selectedStd = match.group(1);
+      }
+      _selectedStream ??= profileFromPrefs['stream'];
+      _board ??= profileFromPrefs['board'];
     }
 
-    // Fallback/Ensure values from Prefs if guest or API failed
-    _std ??= prefs.getString('std');
-    _stream ??= prefs.getString('stream');
-    _board ??= prefs.getString('board');
-    _medium ??= prefs.getString('medium');
+    if (mounted) setState(() => _isProfileLoading = false);
+  }
 
-    if (mounted) setState(() {});
+  List<String> _getFilteredSubjects() {
+    return AcademicConstants.getSubjectsForStudent(
+      board: _board,
+      std: _selectedStd,
+      stream: _selectedStream,
+    );
   }
 
   void _showUpgradeDialog() {
@@ -110,17 +156,6 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       ),
     );
   }
-
-  List<String> _getFilteredSubjects() {
-    return AcademicConstants.getSubjectsForStudent(
-      board: _board,
-      std: _std,
-      stream: _stream,
-    );
-  }
-  
-  bool _isLoading = false;
-  List<dynamic> _displayPapers = [];
 
   Widget _buildUnpaidBanner(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -219,40 +254,53 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
     );
   }
 
-  Future<void> _filterPapers() async {
-    if (_selectedSubject == null) {
-      setState(() {
-        _displayPapers = [];
-      });
+  Future<void> _filterPapers({bool isAuto = false}) async {
+    if (_selectedMedium == null || _selectedStd == null) {
+      if (!isAuto) CustomToast.showError(context, "Please select Medium and Standard");
       return;
     }
-    
-    setState(() => _isLoading = true);
+    if (_selectedYear == null) {
+      if (!isAuto) CustomToast.showError(context, "Please select Year");
+      return;
+    }
+    if ((_selectedStd == "11" || _selectedStd == "12") && _selectedStream == null) {
+      if (!isAuto) CustomToast.showError(context, AppLocalizations.of(context)!.selectStreamError);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _hasSearched = true;
+      _displayPapers = [];
+    });
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final currentMedium = _medium ?? prefs.getString('medium');
-      debugPrint("Fetching School Papers with: Subject: $_selectedSubject, Std: $_std, Board: $_board, Medium: $currentMedium, Stream: $_stream");
       final response = await ApiService.getSchoolPapers(
         subject: _selectedSubject,
-        std: _std,
-        medium: currentMedium,
+        std: _selectedStd,
+        medium: _selectedMedium,
+        year: _selectedYear,
         board: _board,
-        stream: _stream,
+        stream: _selectedStream,
       );
+
       if (response.statusCode == 200) {
+        final List<dynamic> allPapers = jsonDecode(response.body);
         setState(() {
-          final List<dynamic> allPapers = jsonDecode(response.body);
           if ((!_isPaid || _isGuest) && allPapers.length > 2) {
             _displayPapers = allPapers.sublist(0, 2);
           } else {
             _displayPapers = allPapers;
           }
         });
+        if (_displayPapers.isEmpty && !isAuto) {
+          CustomToast.showSuccess(context, AppLocalizations.of(context)!.noPapersFound);
+        }
       } else {
-        CustomToast.showError(context, "Failed to fetch papers");
+        if (!isAuto) CustomToast.showError(context, "Failed to fetch papers: ${ApiService.getErrorMessage(response.body)}");
       }
     } catch (e) {
-      CustomToast.showError(context, "Error: $e");
+      if (!isAuto) CustomToast.showError(context, "Error: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -269,108 +317,197 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
         title: l10n.schoolPapers,
-        centerTitle: true, 
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!_isPaid || _isGuest) _buildUnpaidBanner(context),
-            // Filter Section
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.selectSubject, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedSubject,
-                    hint: Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
-                    items: _getFilteredSubjects().map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                    onChanged: (val) {
-                      _selectedSubject = val;
-                      _filterPapers();
-                    },
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      filled: true,
-                      fillColor: theme.cardColor,
-                    ),
-                    style: GoogleFonts.poppins(color: colorScheme.onSurface),
-                    dropdownColor: theme.cardColor,
-                    icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
-                  ),
-                ],
-              ),
-            ),
+            if (!_isProfileLoading && (!_isPaid || _isGuest)) _buildUnpaidBanner(context),
+
+            // Filter Section Card
+            _buildFilterCard(colorScheme, isDark),
             
             const SizedBox(height: 24),
 
             // Results Section
-            if (_selectedSubject == null)
-               Center(
-                 child: Padding(
-                   padding: const EdgeInsets.only(top: 40),
-                   child: Column(
-                     children: [
-                       Icon(Icons.subject, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
-                       const SizedBox(height: 16),
-                       Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
-                     ],
-                   ),
-                 ),
-               )
-            else if (_displayPapers.isEmpty && !_isLoading)
-               Center(
-                 child: Padding(
-                   padding: const EdgeInsets.only(top: 40),
-                   child: Column(
-                     children: [
-                       Icon(Icons.description_outlined, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
-                       const SizedBox(height: 16),
-                        Text(l10n.noPapersFoundForSubject(_selectedSubject!), style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
-                     ],
-                   ),
-                 ),
-               )
-            else if (_isLoading)
-               CustomLoader()
-            else
+            if (_selectedMedium == null || _selectedStd == null || _selectedYear == null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 40),
+                  child: Column(
+                    children: [
+                      Icon(Icons.manage_search_rounded, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                      const SizedBox(height: 16),
+                      Text("Select filters and apply to view papers", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ),
+              )
+            else if (_isLoading || _isProfileLoading)
+              const Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: CustomLoader(),
+              )
+            else if (_hasSearched && _displayPapers.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 40),
+                  child: Column(
+                    children: [
+                      Icon(Icons.search_off_rounded, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                      const SizedBox(height: 16),
+                      Text("No papers found for this search", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+              )
+            else if (_hasSearched && _displayPapers.isNotEmpty) ...[
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${l10n.availablePapers} (${_displayPapers.length})", // Corrected
+                    "${l10n.availablePapers} (${_displayPapers.length})",
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                   ),
                   const SizedBox(height: 12),
                   ..._displayPapers.map((paper) => _buildPaperCard(paper, theme)),
                 ],
               ),
+            ],
           ],
         ),
       ),
     );
   }
 
+  Widget _buildFilterCard(ColorScheme colorScheme, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.selectSubject, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildDropdown(
+                  l10n.medium, 
+                  _mediums, 
+                  _selectedMedium, 
+                  (val) => setState(() => _selectedMedium = val),
+                  enabled: false,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDropdown(
+                  l10n.standard, 
+                  _stds.map((e) => "$e${l10n.th}").toList(), 
+                  _selectedStd != null ? "$_selectedStd${l10n.th}" : null, 
+                  (val) => setState(() {
+                    _selectedStd = val?.replaceAll(l10n.th, "");
+                    _selectedSubject = null; // Reset subject when std changes
+                    _selectedStream = null;  // Reset stream when std changes
+                  }),
+                  enabled: false,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          if (_selectedStd == "11" || _selectedStd == "12") ...[
+            _buildDropdown(
+              l10n.stream, 
+              _streams, 
+              _selectedStream, 
+              (val) => setState(() {
+                _selectedStream = val;
+                _selectedSubject = null; // Reset subject when stream changes
+              }),
+              enabled: false,
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          _buildDropdown(
+            l10n.year, 
+            _years, 
+            _selectedYear, 
+            (val) => setState(() => _selectedYear = val)
+          ),
+          const SizedBox(height: 12),
+          
+          _buildDropdown(
+            l10n.subject, 
+            _getFilteredSubjects(), 
+            _selectedSubject, 
+            (val) => setState(() => _selectedSubject = val)
+          ),
+
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _filterPapers(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(l10n.apply, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdown(String label, List<String> items, String? value, Function(String?)? onChanged, {bool enabled = true}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return DropdownButtonFormField<String>(
+      initialValue: items.contains(value) ? value : null,
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      onChanged: enabled ? onChanged : null,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.poppins(fontSize: 14, color: colorScheme.onSurfaceVariant),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: theme.cardColor,
+      ),
+      style: GoogleFonts.poppins(color: colorScheme.onSurface),
+      dropdownColor: theme.cardColor,
+    );
+  }
+
   Widget _buildPaperCard(Map<String, dynamic> paper, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = theme.colorScheme;
+    final yearText = paper['year'] != null && paper['year'].toString().isNotEmpty ? " • ${paper['year']}" : "";
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -395,11 +532,11 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  paper['title'] ?? 'School Paper',
+                  paper['title'] ?? paper['name'] ?? 'School Paper',
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15, color: colorScheme.onSurface),
                 ),
                 Text(
-                  paper['subject'] ?? '',
+                  "${paper['subject'] ?? ''}$yearText",
                   style: GoogleFonts.poppins(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
               ],
@@ -416,21 +553,24 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                }
 
                // Allow viewing sample paper preview
-               final productId = paper['id']?.toString() ?? paper['name'];
+               final productId = paper['id']?.toString() ?? paper['_id']?.toString() ?? paper['name'] ?? paper['title'];
                final prefs = await SharedPreferences.getInstance();
                final alreadyUsed = prefs.getBool('preview_used_$productId') ?? false;
 
                if (alreadyUsed) {
-                 if (!mounted) return;
-                 CustomToast.showError(context, "Free preview already used for this paper. Please purchase to view.");
-                 return;
+                  if (!mounted) return;
+                  CustomToast.showError(context, "Free preview already used for this paper. Please purchase to view.");
+                  return;
                }
+
+               final pdfPaper = Map<String, dynamic>.from(paper);
+               if (pdfPaper['image'] == null) pdfPaper['image'] = pdfPaper['file'] ?? pdfPaper['url'];
 
                if (!mounted) return;
                Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PdfPreviewScreen(product: paper,isFullAccess: true,),
+                    builder: (context) => PdfPreviewScreen(product: pdfPaper, isFullAccess: true),
                   ),
                 );
             },
@@ -441,3 +581,4 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
     );
   }
 }
+

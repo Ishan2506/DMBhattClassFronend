@@ -41,6 +41,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
   List<dynamic> _images = [];
   bool _isGuest = false;
   bool _isPaid = false;
+  bool _isProfileLoading = true;
 
   @override
   void initState() {
@@ -49,8 +50,10 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
   }
 
   Future<void> _checkUserStatus() async {
+    setState(() => _isProfileLoading = true);
     _isGuest = await GuestUtils.isGuest();
     final prefs = await SharedPreferences.getInstance();
+    _isPaid = prefs.getBool('isPaid') ?? false;
     
     if (!_isGuest) {
       try {
@@ -69,6 +72,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
             });
           }
 
+          await prefs.setBool('isPaid', _isPaid);
           if (_std != null) await prefs.setString('std', _std!);
           if (_stream != null) await prefs.setString('stream', _stream!);
           if (_board != null) await prefs.setString('board', _board!);
@@ -83,7 +87,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
     _stream ??= prefs.getString('stream');
     _board ??= prefs.getString('board');
     
-    if (mounted) setState(() {});
+    if (mounted) setState(() => _isProfileLoading = false);
   }
 
   Widget _buildUnpaidBanner(BuildContext context) {
@@ -200,7 +204,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                if (!_isPaid || _isGuest) _buildUnpaidBanner(context),
+                if (!_isProfileLoading && (!_isPaid || _isGuest)) _buildUnpaidBanner(context),
                 _buildFilterCard(colorScheme),
                 const SizedBox(height: 24),
                 if (_hasSearched && _images.isEmpty && !_isLoading)
