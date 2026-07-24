@@ -240,7 +240,7 @@ class _TrueFalseHistoryScreenState extends State<TrueFalseHistoryScreen> {
     try {
       Map<String, dynamic>? fullExam;
       if (examId != null && examId.isNotEmpty) {
-        final response = await ApiService.getTrueFalseExamById(examId);
+        final response = await ApiService.getTrueFalseExamById(examId, original: true);
         if (response.statusCode == 200) {
           fullExam = jsonDecode(response.body);
         }

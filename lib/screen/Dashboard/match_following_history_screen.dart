@@ -330,7 +330,7 @@ class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScree
     try {
       Map<String, dynamic>? fullExam;
       if (examId != null && examId.isNotEmpty) {
-        final response = await ApiService.getMatchFollowingExamById(examId);
+        final response = await ApiService.getMatchFollowingExamById(examId, original: true);
         if (response.statusCode == 200) {
           fullExam = jsonDecode(response.body);
         }

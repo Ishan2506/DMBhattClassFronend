@@ -221,9 +221,10 @@ class _StudentExamHistoryScreenState extends State<StudentExamHistoryScreen> {
         final String type = exam['type']?.toString().toUpperCase() ?? 'REGULAR';
         final bool isOnline = exam['isOnline'] ?? true;
         
+        // original: true - this is a past paper, show it as the student sat it.
         final response = (type == 'QUIZ' || !isOnline)
-            ? await ApiService.getFiveMinTestById(examId)
-            : await ApiService.getExamById(examId);
+            ? await ApiService.getFiveMinTestById(examId, original: true)
+            : await ApiService.getExamById(examId, original: true);
 
         debugPrint("Exam fetch ($type): ${response.statusCode} for examId=$examId");
 

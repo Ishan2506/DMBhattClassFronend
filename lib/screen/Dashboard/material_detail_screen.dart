@@ -33,6 +33,27 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   bool _isProcessing = false;
   bool _previewUsed = false;
 
+  // Points redemption state, all driven by the server's quote so the figures shown
+  // here always match what the student will actually be charged.
+  Map<String, dynamic>? _quote;
+  bool _loadingQuote = false;
+  bool _usePoints = false;
+  int _pointsToUse = 0;
+
+  int get _pointsBalance => (_quote?['pointsBalance'] as num?)?.toInt() ?? 0;
+  int get _maxUsablePoints => (_quote?['maxUsablePoints'] as num?)?.toInt() ?? 0;
+  int get _pointsPerRupee => (_quote?['pointsPerRupee'] as num?)?.toInt() ?? 10;
+  bool get _canUsePoints => _maxUsablePoints > 0;
+
+  /// Rupee discount for the currently selected points, mirroring the server's
+  /// floor-division so the preview never promises more than it delivers.
+  int get _discount => _pointsPerRupee > 0 ? (_pointsToUse ~/ _pointsPerRupee) : 0;
+
+  double get _productPrice =>
+      ((_quote?['productPrice'] as num?) ?? (widget.product['price'] as num? ?? 0)).toDouble();
+
+  double get _payableAmount => (_productPrice - _discount).clamp(0, double.infinity).toDouble();
+
   /// Buying explore products is not available on iOS yet. Materials already
   /// purchased elsewhere (e.g. on Android) stay readable here.
   bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
@@ -49,6 +70,34 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
       );
     }
     _checkPreviewStatus();
+    _fetchQuote();
+  }
+
+  /// Loads the student's points balance and redemption limits for this product.
+  /// Failure is non-fatal: the screen simply falls back to a normal full-price buy.
+  Future<void> _fetchQuote() async {
+    final bool alreadyPurchased = widget.product['isPurchased'] == true;
+    if (_isIOS || alreadyPurchased) return;
+
+    final String productId = widget.product['id']?.toString() ?? '';
+    if (productId.isEmpty) return;
+
+    if (mounted) setState(() => _loadingQuote = true);
+    try {
+      final response = await ApiService.getProductQuote(productId);
+      if (!mounted) return;
+      if (response.statusCode == 200) {
+        setState(() {
+          _quote = jsonDecode(response.body) as Map<String, dynamic>;
+          _loadingQuote = false;
+        });
+      } else {
+        setState(() => _loadingQuote = false);
+      }
+    } catch (e) {
+      debugPrint('Error fetching points quote: $e');
+      if (mounted) setState(() => _loadingQuote = false);
+    }
   }
 
   Future<void> _checkPreviewStatus() async {
@@ -86,7 +135,6 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
         razorpayPaymentId: response.paymentId ?? '',
         razorpayOrderId: response.orderId ?? '',
         razorpaySignature: response.signature ?? '',
-        amount: (widget.product['price'] as num).toDouble(),
       );
 
       if (!mounted) return;
@@ -114,7 +162,9 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
           "subject": widget.product['subject'] ?? "N/A",
           "date": formattedDate,
           "transactionId": response.paymentId ?? "N/A",
-          "amountRaw": widget.product['price'] ?? 0,
+          "amountRaw": _payableAmount,
+          "pointsUsed": _usePoints ? _pointsToUse : 0,
+          "pointsDiscount": _usePoints ? _discount : 0,
         };
 
         Navigator.pushReplacement(
@@ -192,7 +242,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
     try {
       final orderResponse = await ApiService.createProductOrder(
         widget.product['id'],
-        (widget.product['price'] as num).toDouble(),
+        pointsToUse: _usePoints ? _pointsToUse : 0,
       );
 
       if (!mounted) return;
@@ -201,8 +251,20 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
         final orderData = jsonDecode(orderResponse.body);
         final String orderId = orderData['id'];
 
+        // The server recalculates the discount, so trust its figure over the local
+        // preview — they can differ if points were spent elsewhere meanwhile.
+        final serverQuote = orderData['quote'] as Map<String, dynamic>?;
+        final double chargeAmount =
+            ((serverQuote?['payableAmount'] as num?) ?? _payableAmount).toDouble();
+        if (serverQuote != null) {
+          setState(() {
+            _quote = serverQuote;
+            _pointsToUse = (serverQuote['pointsUsed'] as num?)?.toInt() ?? _pointsToUse;
+          });
+        }
+
         _razorpayHelper!.openCheckout(
-          amount: (widget.product['price'] as num).toDouble(),
+          amount: chargeAmount,
           name: "Padhaku Desk",
           description: widget.product['name'],
           contact: '',
@@ -464,15 +526,25 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
                               isOutlined: true,
                               onPressed: _showIosComingSoonInfo,
                             )
-                          else
+                          else ...[
+                            if (_loadingQuote)
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 16),
+                                child: LinearProgressIndicator(minHeight: 2),
+                              )
+                            else if (_canUsePoints)
+                              _buildPointsCard(theme),
                             _buildActionButton(
                               context: context,
-                              label: "Buy Now ₹${widget.product['price']}",
+                              label: _usePoints && _discount > 0
+                                  ? "Buy Now ₹${_payableAmount.toStringAsFixed(0)}"
+                                  : "Buy Now ₹${widget.product['price']}",
                               icon: Icons.shopping_cart_outlined,
                               color: theme.colorScheme.primary, // Use theme color
                               isPrimary: true,
                               onPressed: _initiatePurchase,
                             ),
+                          ],
 
                           const SizedBox(height: 16),
 
@@ -507,6 +579,116 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
         if (_isProcessing)
           const CustomLoader(),
       ],
+    );
+  }
+
+  /// Lets the student put their reward points towards this purchase. The slider is
+  /// bounded by maxUsablePoints from the server, so the UI cannot offer a discount
+  /// the backend would refuse.
+  Widget _buildPointsCard(ThemeData theme) {
+    final Color accent = theme.colorScheme.primary;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.stars_rounded, color: accent, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "Use Reward Points",
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Switch(
+                value: _usePoints,
+                activeThumbColor: accent,
+                onChanged: _isProcessing
+                    ? null
+                    : (value) {
+                        setState(() {
+                          _usePoints = value;
+                          // Open at the full allowance — the common intent — and let
+                          // the student dial it back.
+                          _pointsToUse = value ? _maxUsablePoints : 0;
+                        });
+                      },
+              ),
+            ],
+          ),
+          Text(
+            "You have $_pointsBalance points · $_pointsPerRupee points = ₹1",
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+            ),
+          ),
+          if (_usePoints) ...[
+            const SizedBox(height: 8),
+            Slider(
+              value: _pointsToUse.toDouble().clamp(0, _maxUsablePoints.toDouble()),
+              min: 0,
+              max: _maxUsablePoints.toDouble(),
+              divisions: _maxUsablePoints > 0 ? _maxUsablePoints : null,
+              activeColor: accent,
+              label: "$_pointsToUse pts",
+              onChanged: _isProcessing
+                  ? null
+                  : (value) => setState(() => _pointsToUse = value.round()),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "$_pointsToUse of $_maxUsablePoints points",
+                  style: GoogleFonts.poppins(fontSize: 12),
+                ),
+                Text(
+                  "− ₹$_discount",
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "To pay",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  "₹${_payableAmount.toStringAsFixed(0)}",
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: accent,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 

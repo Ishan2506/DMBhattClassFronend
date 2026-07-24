@@ -241,7 +241,7 @@ class _OneLinerHistoryScreenState extends State<OneLinerHistoryScreen> {
     try {
       Map<String, dynamic>? fullExam;
       if (examId != null && examId.isNotEmpty) {
-        final response = await ApiService.getOneLinerExamById(examId);
+        final response = await ApiService.getOneLinerExamById(examId, original: true);
         if (response.statusCode == 200) {
           fullExam = jsonDecode(response.body);
         }

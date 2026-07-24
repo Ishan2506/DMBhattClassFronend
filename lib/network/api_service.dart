@@ -751,10 +751,18 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
-  static Future<http.Response> getExamById(String examId) async {
+  /// [original] = true asks the server for the admin's question order instead
+  /// of this student's next shuffled attempt. Use it for history / review /
+  /// PDF screens, which must show the paper as it was, not as it will be.
+  static Future<http.Response> getExamById(
+    String examId, {
+    bool original = false,
+  }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
-    final uri = Uri.parse("$baseUrl/exam/$examId");
+    final uri = Uri.parse(
+      "$baseUrl/exam/$examId",
+    ).replace(queryParameters: original ? {'original': 'true'} : null);
     return _handleSession(
       await http.get(
         uri,
@@ -781,14 +789,40 @@ class ApiService {
     final uri = Uri.parse(
       "$baseUrl/fiveMinTest/all",
     ).replace(queryParameters: queryParams);
-    return _handleSession(await http.get(uri));
+    // Auth lets the server reshuffle each test for this student's next attempt;
+    // the quiz is started from this payload rather than a follow-up fetch by id.
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
-  static Future<http.Response> getFiveMinTestById(String testId) async {
+  /// See [getExamById] for [original].
+  static Future<http.Response> getFiveMinTestById(
+    String testId, {
+    bool original = false,
+  }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
-    final uri = Uri.parse("$baseUrl/fiveMinTest/$testId");
-    return _handleSession(await http.get(uri));
+    // Auth is required for the server to identify the student and reshuffle
+    // the questions on a retake.
+    final uri = Uri.parse(
+      "$baseUrl/fiveMinTest/$testId",
+    ).replace(queryParameters: original ? {'original': 'true'} : null);
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
   }
 
   static Future<http.Response> getLeaderboard({required String std}) async {
@@ -957,10 +991,27 @@ class ApiService {
 
   // --- Product Purchase & History ---
 
+  /// Asks the server what [productId] costs for this student: price, their points
+  /// balance, how many points they may redeem, and the resulting payable amount.
+  /// Pass [pointsToUse] to preview a specific redemption. Read-only.
+  static Future<http.Response> getProductQuote(
+    String productId, {
+    int pointsToUse = 0,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse(
+      "$baseUrl/payment/product/$productId/quote?points=$pointsToUse",
+    );
+    return _handleSession(await http.get(uri, headers: _addAuth({})));
+  }
+
+  /// Creates a Razorpay order. The server derives the price and the points
+  /// discount itself, so no amount is sent from here.
   static Future<http.Response> createProductOrder(
-    String productId,
-    double amount,
-  ) async {
+    String productId, {
+    int pointsToUse = 0,
+  }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/payment/product/create-order");
@@ -970,19 +1021,20 @@ class ApiService {
         headers: _addAuth({'Content-Type': 'application/json'}),
         body: jsonEncode({
           'productId': productId,
-          'amount': amount,
+          'pointsToUse': pointsToUse,
           'currency': 'INR',
         }),
       ),
     );
   }
 
+  /// Verifies a completed product payment. The amount and any points redeemed are
+  /// read server-side from the Razorpay order, so they are not sent from here.
   static Future<http.Response> verifyProductPayment({
     required String productId,
     required String razorpayPaymentId,
     required String razorpayOrderId,
     required String razorpaySignature,
-    required double amount,
   }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
@@ -996,7 +1048,6 @@ class ApiService {
           'razorpay_payment_id': razorpayPaymentId,
           'razorpay_order_id': razorpayOrderId,
           'razorpay_signature': razorpaySignature,
-          'amount': amount,
         }),
       ),
     );
@@ -1222,10 +1273,16 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> getOneLinerExamById(String examId) async {
+  /// See [getExamById] for [original].
+  static Future<http.Response> getOneLinerExamById(
+    String examId, {
+    bool original = false,
+  }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
-    final uri = Uri.parse("$baseUrl/onelinerexam/$examId");
+    final uri = Uri.parse(
+      "$baseUrl/onelinerexam/$examId",
+    ).replace(queryParameters: original ? {'original': 'true'} : null);
     return _handleSession(
       await http.get(
         uri,
@@ -1294,10 +1351,16 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> getTrueFalseExamById(String examId) async {
+  /// See [getExamById] for [original].
+  static Future<http.Response> getTrueFalseExamById(
+    String examId, {
+    bool original = false,
+  }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
-    final uri = Uri.parse("$baseUrl/truefalseexam/$examId");
+    final uri = Uri.parse(
+      "$baseUrl/truefalseexam/$examId",
+    ).replace(queryParameters: original ? {'original': 'true'} : null);
     return _handleSession(
       await http.get(
         uri,
@@ -1614,9 +1677,12 @@ class ApiService {
     })));
   }
 
-  static Future<http.Response> getMatchFollowingExamById(String id) async {
+  /// See [getExamById] for [original].
+  static Future<http.Response> getMatchFollowingExamById(String id, {bool original = false}) async {
     if (!await _checkConnectivity()) return http.Response('{"error": "No internet connection"}', 503);
-    final uri = Uri.parse("$baseUrl/matchfollowingexam/$id");
+    final uri = Uri.parse(
+      "$baseUrl/matchfollowingexam/$id",
+    ).replace(queryParameters: original ? {'original': 'true'} : null);
     return _handleSession(await http.get(uri, headers: _addAuth({
       'Content-Type': 'application/json',
     })));

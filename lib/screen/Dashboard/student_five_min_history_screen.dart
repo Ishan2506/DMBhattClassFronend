@@ -216,7 +216,7 @@ class _StudentFiveMinHistoryScreenState extends State<StudentFiveMinHistoryScree
     try {
       Map<String, dynamic>? fullExam;
       if (examId != null && examId.isNotEmpty) {
-        final response = await ApiService.getFiveMinTestById(examId);
+        final response = await ApiService.getFiveMinTestById(examId, original: true);
         if (response.statusCode == 200) {
           fullExam = jsonDecode(response.body);
         }
