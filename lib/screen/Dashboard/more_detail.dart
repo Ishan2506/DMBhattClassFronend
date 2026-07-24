@@ -25,6 +25,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_history_screen
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
+import 'package:dm_bhatt_tutions/utils/in_app_review_service.dart';
 
 
 class MoreScreen extends StatelessWidget {
@@ -210,10 +211,7 @@ class _AppInfoScreen extends StatelessWidget {
   }
 
   void _showRateUsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => _RateUsDialog(),
-    );
+    InAppReviewService.requestReviewOrOpenStore();
   }
 
   void _showFollowUsSheet(BuildContext context) {
@@ -398,12 +396,13 @@ class _AppInfoScreen extends StatelessWidget {
               icon: Icons.share,
               onTap: _shareApp,
             ),
-            _MoreScreenItem(
-              title: l10n.rateUs,
-              value: "",
-              icon: Icons.star_rate_rounded,
-              onTap: () => _showRateUsDialog(context),
-            ),
+            if (InAppReviewService.isAndroidSupported)
+              _MoreScreenItem(
+                title: l10n.rateUs,
+                value: "",
+                icon: Icons.star_rate_rounded,
+                onTap: () => _showRateUsDialog(context),
+              ),
             // _MoreScreenItem(
             //   title: l10n.followUs,
             //   value: "",

@@ -78,6 +78,7 @@ dependencies:
   sqflite_common_ffi: ^2.3.0+2
   flutter_launcher_icons: ^0.14.4
   package_info_plus: ^9.0.1
+  in_app_review: ^2.0.9
 dev_dependencies:
   flutter_test:
     sdk: flutter

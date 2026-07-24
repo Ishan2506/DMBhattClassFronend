@@ -5,6 +5,8 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/board_paper_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/school_papers_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/notes_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_images_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,6 +23,8 @@ class MaterialScreen extends StatefulWidget {
 class _MaterialScreenState extends State<MaterialScreen> {
   String? _std;
   bool _isLoading = true;
+  bool _isGuest = false;
+  bool _isPaid = false;
 
   @override
   void initState() {
@@ -29,20 +33,24 @@ class _MaterialScreenState extends State<MaterialScreen> {
   }
 
   Future<void> _loadUserStd() async {
+    _isGuest = await GuestUtils.isGuest();
     final prefs = await SharedPreferences.getInstance();
     String rawStd = prefs.getString('std') ?? '';
 
-    try {
-      final response = await ApiService.getProfile();
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final user = data['user'];
-        final profile = data['profile'];
-        rawStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? rawStd;
-        if (rawStd.isNotEmpty) await prefs.setString('std', rawStd);
+    if (!_isGuest) {
+      try {
+        final response = await ApiService.getProfile();
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final user = data['user'];
+          final profile = data['profile'];
+          _isPaid = user?['isPaid'] ?? false;
+          rawStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? rawStd;
+          if (rawStd.isNotEmpty) await prefs.setString('std', rawStd);
+        }
+      } catch (e) {
+        debugPrint("Error fetching profile in MaterialScreen: $e");
       }
-    } catch (e) {
-      debugPrint("Error fetching profile in MaterialScreen: $e");
     }
 
     // Extract numeric part (e.g., "10th" -> "10")
@@ -53,6 +61,103 @@ class _MaterialScreenState extends State<MaterialScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Widget _buildUnpaidBanner(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.primaryContainer.withOpacity(0.85),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.workspace_premium_rounded, color: colorScheme.primary, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Free Preview Mode",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    Text(
+                      "Showing 2 free preview materials per section",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "You are currently on the free tier. Upgrade your subscription plan to unlock full access to all notes, papers & study materials!",
+            style: GoogleFonts.poppins(
+              fontSize: 12.5,
+              color: colorScheme.onPrimaryContainer.withOpacity(0.9),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
+                );
+              },
+              icon: const Icon(Icons.star_rounded, size: 18),
+              label: Text(
+                "Upgrade Plan to Unlock All",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -74,6 +179,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            if (!_isPaid || _isGuest) _buildUnpaidBanner(context),
             _buildMaterialItem(
               context,
               title: l10n.schoolPapers,

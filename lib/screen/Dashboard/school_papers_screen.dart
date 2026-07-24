@@ -124,6 +124,103 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
   bool _isLoading = false;
   List<dynamic> _displayPapers = [];
 
+  Widget _buildUnpaidBanner(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.primaryContainer.withOpacity(0.85),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.workspace_premium_rounded, color: colorScheme.primary, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Free Preview Mode",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    Text(
+                      "Showing 2 free sample school papers",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "Upgrade your subscription plan to unlock full access to all school papers & study materials!",
+            style: GoogleFonts.poppins(
+              fontSize: 12.5,
+              color: colorScheme.onPrimaryContainer.withOpacity(0.9),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
+                );
+              },
+              icon: const Icon(Icons.star_rounded, size: 18),
+              label: Text(
+                "Upgrade Plan to Unlock All",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _filterPapers() async {
     if (_selectedSubject == null) {
       setState(() {
@@ -147,7 +244,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
       if (response.statusCode == 200) {
         setState(() {
           final List<dynamic> allPapers = jsonDecode(response.body);
-          if (_isGuest && allPapers.length > 2) {
+          if ((!_isPaid || _isGuest) && allPapers.length > 2) {
             _displayPapers = allPapers.sublist(0, 2);
           } else {
             _displayPapers = allPapers;
@@ -181,6 +278,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (!_isPaid || _isGuest) _buildUnpaidBanner(context),
             // Filter Section
             Container(
               padding: const EdgeInsets.all(20),
@@ -319,11 +417,7 @@ class _SchoolPapersScreenState extends State<SchoolPapersScreen> {
                   return;
                }
 
-               if (!_isPaid) {
-                 _showUpgradeDialog();
-                 return;
-               }
-
+               // Allow viewing sample paper preview
                final productId = paper['id']?.toString() ?? paper['name'];
                final prefs = await SharedPreferences.getInstance();
                final alreadyUsed = prefs.getBool('preview_used_$productId') ?? false;

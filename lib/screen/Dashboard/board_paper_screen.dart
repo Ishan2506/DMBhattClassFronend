@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -34,6 +36,8 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
   String? _userBoard;
   bool _isDownloading = false;
+  bool _isGuest = false;
+  bool _isPaid = false;
 
   List<String> _getFilteredSubjects() {
     return AcademicConstants.getSubjectsForStudent(
@@ -56,6 +60,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
 
   Future<void> _fetchUserProfile() async {
     setState(() => _isProfileLoading = true);
+    _isGuest = await GuestUtils.isGuest();
     final prefs = await SharedPreferences.getInstance();
     
     // Load initial values from prefs
@@ -66,52 +71,152 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
       'medium': prefs.getString('medium'),
     };
 
-    try {
-      final response = await ApiService.getProfile(forceRefresh: true);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final user = data['user'];
-        final profile = data['profile'];
-        
-        final board = user?['board'] ?? profile?['board'] ?? profileFromPrefs['board'];
-        final studentStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? profileFromPrefs['std'];
-        final studentStream = user?['stream'] ?? profile?['stream'] ?? profileFromPrefs['stream'];
-        final medium = user?['medium'] ?? profile?['medium'] ?? profileFromPrefs['medium'];
-
-        String validBoardStd = '';
-        if (studentStd != null) {
-          final match = RegExp(r'(\d+)').firstMatch(studentStd);
-          if (match != null) {
-            final num = match.group(1);
-            if (num == '10' || num == '12') validBoardStd = num!;
-          }
-        }
-
-        if (mounted) {
-          setState(() {
-            _selectedMedium = medium;
-            _selectedStd = validBoardStd;
-            _selectedStream = (validBoardStd == '12') ? studentStream : null;
-            _userBoard = board;
-          });
+    if (!_isGuest) {
+      try {
+        final response = await ApiService.getProfile(forceRefresh: true);
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final user = data['user'];
+          final profile = data['profile'];
+          _isPaid = user?['isPaid'] ?? false;
           
-          // Auto-fetch if we have the primary filters
-          if (_selectedMedium != null && _selectedStd != null && _selectedYear != null) {
-             _validateAndFetch(isAuto: true);
-          }
-        }
+          final board = user?['board'] ?? profile?['board'] ?? profileFromPrefs['board'];
+          final studentStd = user?['std']?.toString() ?? profile?['std']?.toString() ?? profileFromPrefs['std'];
+          final studentStream = user?['stream'] ?? profile?['stream'] ?? profileFromPrefs['stream'];
+          final medium = user?['medium'] ?? profile?['medium'] ?? profileFromPrefs['medium'];
 
-        // Sync back to SharedPreferences if we got data
-        if (studentStd != null) await prefs.setString('std', studentStd);
-        if (studentStream != null) await prefs.setString('stream', studentStream);
-        if (board != null) await prefs.setString('board', board);
-        if (medium != null) await prefs.setString('medium', medium);
+          String validBoardStd = '';
+          if (studentStd != null) {
+            final match = RegExp(r'(\d+)').firstMatch(studentStd);
+            if (match != null) {
+              final num = match.group(1);
+              if (num == '10' || num == '12') validBoardStd = num!;
+            }
+          }
+
+          if (mounted) {
+            setState(() {
+              _selectedMedium = medium;
+              _selectedStd = validBoardStd;
+              _selectedStream = (validBoardStd == '12') ? studentStream : null;
+              _userBoard = board;
+            });
+            
+            // Auto-fetch if we have the primary filters
+            if (_selectedMedium != null && _selectedStd != null && _selectedYear != null) {
+               _validateAndFetch(isAuto: true);
+            }
+          }
+
+          // Sync back to SharedPreferences if we got data
+          if (studentStd != null) await prefs.setString('std', studentStd);
+          if (studentStream != null) await prefs.setString('stream', studentStream);
+          if (board != null) await prefs.setString('board', board);
+          if (medium != null) await prefs.setString('medium', medium);
+        }
+      } catch (e) {
+        debugPrint("Error fetching profile: $e");
       }
-    } catch (e) {
-      debugPrint("Error fetching profile: $e");
-    } finally {
-      if (mounted) setState(() => _isProfileLoading = false);
     }
+    
+    if (mounted) setState(() => _isProfileLoading = false);
+  }
+
+  Widget _buildUnpaidBanner(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.primaryContainer.withOpacity(0.85),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.workspace_premium_rounded, color: colorScheme.primary, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Free Preview Mode",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    Text(
+                      "Showing 2 free sample board papers",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "Upgrade your subscription plan to unlock full access to all board papers & study materials!",
+            style: GoogleFonts.poppins(
+              fontSize: 12.5,
+              color: colorScheme.onPrimaryContainer.withOpacity(0.9),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
+                );
+              },
+              icon: const Icon(Icons.star_rounded, size: 18),
+              label: Text(
+                "Upgrade Plan to Unlock All",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -134,6 +239,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (!_isPaid || _isGuest) _buildUnpaidBanner(context),
                 _buildFilterCard(colorScheme, isDark),
                 const SizedBox(height: 24),
                 
@@ -438,9 +544,13 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          _papers = data; // Backend returns a list of materials直接
+          if ((!_isPaid || _isGuest) && data.length > 2) {
+            _papers = data.sublist(0, 2);
+          } else {
+            _papers = data;
+          }
         });
         if (_papers.isEmpty) {
            CustomToast.showSuccess(context, AppLocalizations.of(context)!.noPapersFound);

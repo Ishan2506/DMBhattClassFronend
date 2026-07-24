@@ -14,6 +14,8 @@ import 'dart:convert';
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/social_media_ad_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
+import 'package:dm_bhatt_tutions/utils/in_app_review_service.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -250,96 +252,108 @@ class _LandingScreenState extends State<LandingScreen> {
       l10n.more,
     ];
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface, // Dynamic Scaffold Background
-      appBar: AppBar(
-        backgroundColor:
-            Colors.transparent, // Make background transparent to show gradient
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colorScheme.primary,
-                colorScheme.primary.withOpacity(0.8),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (InAppReviewService.isAndroidSupported) {
+          await InAppReviewService.requestReviewOrOpenStore();
+        }
+        if (context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: colorScheme.surface, // Dynamic Scaffold Background
+        appBar: AppBar(
+          backgroundColor:
+              Colors.transparent, // Make background transparent to show gradient
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.primary,
+                  colorScheme.primary.withOpacity(0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
           ),
-        ),
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Image.asset("assets/images/robot_logo.png", height: 30),
-          ),
-        ),
-        title: Text(
-          titles[_selectedIndex],
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const CircleAvatar(
-              backgroundColor: Colors.white24,
-              child: Icon(Icons.person, color: Colors.white),
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Image.asset("assets/images/robot_logo.png", height: 30),
             ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StudentProfileScreen(),
-                ),
-              );
-            },
           ),
-          const SizedBox(width: 8),
-          // IconButton(
-          //   icon: const CircleAvatar(
-          //     backgroundColor: Colors.white24,
-          //     child: Icon(Icons.switch_account, color: Colors.white, size: 20),
-          //   ),
-          //   onPressed: () => StudentProfileScreen.showSwitchAccountSheet(context),
-          // ),
-          // const SizedBox(width: 8),
-        ],
-      ),
-      body: _isLoadingMembership
-          ? const CustomLoader()
-          : IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed, // Ensure all labels are visible
-        backgroundColor: colorScheme.surface, // Dynamic BG for BottomNav
-        selectedItemColor: colorScheme.primary, // Dynamic Active Color
-        unselectedItemColor:
-            colorScheme.onSurfaceVariant, // Dynamic Inactive Color
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home_rounded),
-            label: l10n.home,
+          title: Text(
+            titles[_selectedIndex],
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(
-              Icons.grid_view_rounded,
-            ), // Meaningful Icon for Explore
-            label: l10n.explore,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.smart_toy_outlined), // DMAI Icon
-            label: l10n.dmai,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.menu),
-            label: l10n.more,
-          ),
-        ],
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const CircleAvatar(
+                backgroundColor: Colors.white24,
+                child: Icon(Icons.person, color: Colors.white),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StudentProfileScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            // IconButton(
+            //   icon: const CircleAvatar(
+            //     backgroundColor: Colors.white24,
+            //     child: Icon(Icons.switch_account, color: Colors.white, size: 20),
+            //   ),
+            //   onPressed: () => StudentProfileScreen.showSwitchAccountSheet(context),
+            // ),
+            // const SizedBox(width: 8),
+          ],
+        ),
+        body: _isLoadingMembership
+            ? const CustomLoader()
+            : IndexedStack(index: _selectedIndex, children: _pages),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed, // Ensure all labels are visible
+          backgroundColor: colorScheme.surface, // Dynamic BG for BottomNav
+          selectedItemColor: colorScheme.primary, // Dynamic Active Color
+          unselectedItemColor:
+              colorScheme.onSurfaceVariant, // Dynamic Inactive Color
+          items: [
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.home_rounded),
+              label: l10n.home,
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(
+                Icons.grid_view_rounded,
+              ), // Meaningful Icon for Explore
+              label: l10n.explore,
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.smart_toy_outlined), // DMAI Icon
+              label: l10n.dmai,
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.menu),
+              label: l10n.more,
+            ),
+          ],
+        ),
       ),
     );
   }

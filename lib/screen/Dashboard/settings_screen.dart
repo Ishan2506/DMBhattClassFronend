@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:dm_bhatt_tutions/utils/in_app_review_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -109,6 +110,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     },
                   ),
+                   if (InAppReviewService.isAndroidSupported)
+                     _buildSettingsItem(
+                      context,
+                      title: l10n.rateUs,
+                      value: "",
+                      icon: Icons.star_rate_rounded,
+                      onTap: () => InAppReviewService.requestReviewOrOpenStore(),
+                    ),
                    _buildSettingsItem(
                     context,
                     title: l10n.signOut,
