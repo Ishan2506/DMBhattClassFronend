@@ -135,7 +135,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     context,
                     title: "7. Contact Us",
                     content:
-                        "If you have any questions or concerns about this Privacy Policy or your personal information, please contact us at support@padhaku.in.",
+                        "If you have any questions or concerns about this Privacy Policy or your personal information, please contact us at support@padhakudesk.com.",
                     icon: Icons.mail_outline_rounded,
                   ),
                   const SizedBox(height: 40),

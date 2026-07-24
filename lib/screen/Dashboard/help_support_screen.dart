@@ -161,7 +161,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   }
 
   void _copyEmail() {
-    Clipboard.setData(const ClipboardData(text: "support@padhakudesk.in"));
+    Clipboard.setData(const ClipboardData(text: "support@padhakudesk.com"));
     final l10n = AppLocalizations.of(context)!;
     CustomToast.showSuccess(context, l10n.emailCopied);
   }
@@ -282,7 +282,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                             Icon(Icons.email_outlined, color: theme.colorScheme.primary, size: 18),
                             const SizedBox(width: 8),
                             SelectableText(
-                              "support@padhakudesk.in",
+                              "support@padhakudesk.com",
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
