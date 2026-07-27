@@ -1,15 +1,6 @@
-# Disable git proxy and url rewrites for this CocoaPods run
-ENV['http_proxy'] = nil
-ENV['https_proxy'] = nil
-ENV['HTTP_PROXY'] = nil
-ENV['HTTPS_PROXY'] = nil
-ENV['no_proxy'] = '*'
-ENV['NO_PROXY'] = '*'
-
-system("git config --local http.proxy ''")
-system("git config --local https.proxy ''")
 system("git config --global url.'https://github.com/'.insteadOf 'http://github.com/' >/dev/null 2>&1")
 system("git config --global url.'https://github.com/'.insteadOf 'git://github.com/' >/dev/null 2>&1")
+
 
 # Force Git subprocesses to use HTTPS for github.com via environment variables in CocoaPods
 ENV['GIT_CONFIG_COUNT'] = '2'
