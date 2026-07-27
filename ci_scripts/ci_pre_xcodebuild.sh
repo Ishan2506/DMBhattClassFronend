@@ -13,6 +13,11 @@ git config --global --remove-section url."git@github.com:" || true
 git config --local --unset http.proxy || true
 git config --local --unset https.proxy || true
 
+# Force git to use HTTPS for all github.com URLs (crucial for CocoaPods dependencies like purchases-hybrid-common)
+git config --global url."https://github.com/".insteadOf "http://github.com/"
+git config --global url."https://github.com/".insteadOf "git://github.com/"
+
+
 export http_proxy=""
 export https_proxy=""
 export HTTP_PROXY=""

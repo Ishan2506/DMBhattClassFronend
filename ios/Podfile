@@ -8,8 +8,9 @@ ENV['NO_PROXY'] = '*'
 
 system("git config --local http.proxy ''")
 system("git config --local https.proxy ''")
-system("git config --local --remove-section url.'http://github.com' >/dev/null 2>&1")
-system("git config --local --remove-section url.'https://github.com' >/dev/null 2>&1")
+system("git config --global url.'https://github.com/'.insteadOf 'http://github.com/' >/dev/null 2>&1")
+system("git config --global url.'https://github.com/'.insteadOf 'git://github.com/' >/dev/null 2>&1")
+
 
 platform :ios, '13.0'
 
