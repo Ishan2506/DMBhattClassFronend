@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
@@ -43,7 +45,10 @@ class QuickAccessCategories extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: _categories.map((cat) => _buildCategoryItem(context, cat)).toList(),
+        children: _categories
+            .where((cat) => !(Platform.isIOS && cat['title'] == "Mind Games"))
+            .map((cat) => _buildCategoryItem(context, cat))
+            .toList(),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart' as api;
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
@@ -151,18 +153,19 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 );
               },
             ),
-            _MoreScreenItem(
-              title: l10n.mindGames,
-              value: "",
-              icon: Icons.games_outlined,
-              onTap: () {
-                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MindGamesScreen()),
-                );
-              },
-            ),
+            if (!Platform.isIOS)
+              _MoreScreenItem(
+                title: l10n.mindGames,
+                value: "",
+                icon: Icons.games_outlined,
+                onTap: () {
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const MindGamesScreen()),
+                  );
+                },
+              ),
              _MoreScreenItem(
               title: "Mind Map", 
               value: "",
@@ -175,14 +178,15 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 );
               },
             ),
-            _MoreScreenItem(
-              title: l10n.readyReportingCard,
-              value: "",
-              icon: Icons.bar_chart_rounded,
-              onTap: () {
-                 CustomToast.showInfo(context, l10n.comingSoon);
-              },
-            ),
+            if (!Platform.isIOS)
+              _MoreScreenItem(
+                title: l10n.readyReportingCard,
+                value: "",
+                icon: Icons.bar_chart_rounded,
+                onTap: () {
+                   CustomToast.showInfo(context, l10n.comingSoon);
+                },
+              ),
             // _MoreScreenItem(
             //   title: "One-Liner Exam",
             //   value: "",

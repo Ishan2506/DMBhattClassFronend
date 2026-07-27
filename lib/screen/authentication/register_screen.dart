@@ -610,10 +610,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         CustomToast.showError(context, l10n.pleaseAgreeTerms);
                         return;
                       }
-                      if (_selectedDob == null) {
-                        CustomToast.showError(context, l10n.pleaseSelectDob);
-                        return;
-                      }
                       if (_selectedStandard == null ||
                           _selectedMedium == null ||
                           _selectedBoard == null) {
@@ -662,7 +658,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           "email": _emailController.text,
                           "phoneNum": _phoneController.text,
                           "parentPhone": _parentPhoneController.text,
-                          "dob": DateFormat('yyyy-MM-dd').format(_selectedDob!),
+                          if (_selectedDob != null)
+                            "dob": DateFormat(
+                              'yyyy-MM-dd',
+                            ).format(_selectedDob!),
                           "std": _selectedStandard!,
                           "medium": _selectedMedium!,
                           "stream": _selectedStream ?? "",
