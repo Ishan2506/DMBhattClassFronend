@@ -219,6 +219,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneNumber => 'Phone Number';
 
   @override
+  String get phoneNumberOptional => 'Phone Number (Optional)';
+
+  @override
   String get phoneOrEmail => 'Phone Number or Email';
 
   @override
@@ -364,6 +367,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'Please select a stream';
+
+  @override
+  String get pleaseSelectStandard => 'Please select a standard';
+
+  @override
+  String get pleaseSelectMedium => 'Please select a medium';
+
+  @override
+  String get pleaseSelectBoard => 'Please select a board';
+
+  @override
+  String get pleaseSelectState => 'Please select a state';
+
+  @override
+  String get pleaseSelectCity => 'Please select a city';
 
   @override
   String get phoneNumbersCannotBeSame =>

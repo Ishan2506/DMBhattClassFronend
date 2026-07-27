@@ -193,7 +193,7 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
             // Phone
              _buildTextField(
               controller: _phoneController,
-              hint: AppLocalizations.of(context)!.phoneNumber, 
+              hint: AppLocalizations.of(context)!.phoneNumberOptional,
               icon: Icons.phone_outlined, 
               inputType: TextInputType.phone,
               inputFormatters: [
@@ -526,17 +526,35 @@ class _GuestRegisterScreenState extends State<GuestRegisterScreen> {
                       CustomToast.showError(context, l10n.pleaseAgreeTerms);
                       return;
                     }
-                    // Validate Dropdowns
-                     if (_selectedStandard == null || _selectedMedium == null || _selectedState == null || _selectedCity == null || _selectedBoard == null) {
-                        CustomToast.showError(context, l10n.pleaseSelectAllFields);
+                    // Validate Dropdowns. Report the first missing selection by
+                    // name, in the same order the fields appear on screen, so
+                    // the user is told exactly what to fix.
+                    if (_selectedStandard == null) {
+                      CustomToast.showError(context, l10n.pleaseSelectStandard);
                       return;
-                     }
-                    if (_selectedCity == "Other" && _customCityController.text.trim().isEmpty) {
-                      CustomToast.showError(context, "Please enter your city name");
+                    }
+                    if (_selectedMedium == null) {
+                      CustomToast.showError(context, l10n.pleaseSelectMedium);
+                      return;
+                    }
+                    if (_selectedBoard == null) {
+                      CustomToast.showError(context, l10n.pleaseSelectBoard);
                       return;
                     }
                     if ((_selectedStandard == "11" || _selectedStandard == "12") && _selectedStream == null) {
                         CustomToast.showError(context, l10n.pleaseSelectStream);
+                      return;
+                    }
+                    if (_selectedState == null) {
+                      CustomToast.showError(context, l10n.pleaseSelectState);
+                      return;
+                    }
+                    if (_selectedCity == null) {
+                      CustomToast.showError(context, l10n.pleaseSelectCity);
+                      return;
+                    }
+                    if (_selectedCity == "Other" && _customCityController.text.trim().isEmpty) {
+                      CustomToast.showError(context, "Please enter your city name");
                       return;
                     }
 

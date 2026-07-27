@@ -221,6 +221,9 @@ class AppLocalizationsGu extends AppLocalizations {
   String get phoneNumber => 'ફોન નંબર';
 
   @override
+  String get phoneNumberOptional => 'ફોન નંબર (વૈકલ્પિક)';
+
+  @override
   String get phoneOrEmail => 'ફોન નંબર અથવા ઇમેઇલ';
 
   @override
@@ -368,6 +371,21 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'કૃપા કરીને સ્ટ્રીમ પસંદ કરો';
+
+  @override
+  String get pleaseSelectStandard => 'કૃપા કરીને ધોરણ પસંદ કરો';
+
+  @override
+  String get pleaseSelectMedium => 'કૃપા કરીને માધ્યમ પસંદ કરો';
+
+  @override
+  String get pleaseSelectBoard => 'કૃપા કરીને બોર્ડ પસંદ કરો';
+
+  @override
+  String get pleaseSelectState => 'કૃપા કરીને રાજ્ય પસંદ કરો';
+
+  @override
+  String get pleaseSelectCity => 'કૃપા કરીને શહેર પસંદ કરો';
 
   @override
   String get phoneNumbersCannotBeSame =>

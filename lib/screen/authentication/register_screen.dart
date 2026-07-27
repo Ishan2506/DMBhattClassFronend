@@ -241,7 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // Phone
               _buildTextField(
                 controller: _phoneController,
-                hint: l10n.phoneNumber,
+                hint: l10n.phoneNumberOptional,
                 icon: Icons.phone_outlined,
                 inputType: TextInputType.phone,
                 inputFormatters: [
@@ -610,23 +610,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         CustomToast.showError(context, l10n.pleaseAgreeTerms);
                         return;
                       }
-                      if (_selectedStandard == null ||
-                          _selectedMedium == null ||
-                          _selectedBoard == null) {
+                      // Report the first missing selection by name, in the same
+                      // order the fields appear on screen, so the user is told
+                      // exactly what to fix instead of a generic message.
+                      if (_selectedStandard == null) {
                         CustomToast.showError(
                           context,
-                          l10n.pleaseSelectAllFields,
+                          l10n.pleaseSelectStandard,
                         );
                         return;
                       }
-                      if (_selectedCity == "Other" && _customCityController.text.trim().isEmpty) {
-                        CustomToast.showError(context, "Please enter your city name");
+                      if (_selectedMedium == null) {
+                        CustomToast.showError(context, l10n.pleaseSelectMedium);
+                        return;
+                      }
+                      if (_selectedBoard == null) {
+                        CustomToast.showError(context, l10n.pleaseSelectBoard);
                         return;
                       }
                       if ((_selectedStandard == "11" ||
                               _selectedStandard == "12") &&
                           _selectedStream == null) {
                         CustomToast.showError(context, l10n.pleaseSelectStream);
+                        return;
+                      }
+                      if (_selectedCity == "Other" && _customCityController.text.trim().isEmpty) {
+                        CustomToast.showError(context, "Please enter your city name");
                         return;
                       }
 
@@ -655,9 +664,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         fields: {
                           "firstName": firstName,
 
-                          "email": _emailController.text,
-                          "phoneNum": _phoneController.text,
-                          "parentPhone": _parentPhoneController.text,
+                          "email": _emailController.text.trim(),
+                          // Phone is optional; send the trimmed value so a
+                          // blank field reaches the API as an empty string.
+                          "phoneNum": trimmedPhone,
+                          "parentPhone": trimmedParentPhone,
                           if (_selectedDob != null)
                             "dob": DateFormat(
                               'yyyy-MM-dd',

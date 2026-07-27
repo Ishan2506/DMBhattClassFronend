@@ -210,6 +210,7 @@ class ApiService {
   static Future<http.Response> registerUser({
     required RegistrationPayload payload,
     required String dpin,
+    String? referralCode,
     String? razorpayPaymentId,
     String? razorpayOrderId,
     String? razorpaySignature,
@@ -226,6 +227,10 @@ class ApiService {
     final fields = Map<String, String>.from(payload.fields);
     fields["loginCode"] = dpin;
     fields["role"] = payload.role;
+
+    if (referralCode != null && referralCode.isNotEmpty) {
+      fields["referralCode"] = referralCode;
+    }
 
     if (razorpayPaymentId != null) {
       fields["razorpay_payment_id"] = razorpayPaymentId;

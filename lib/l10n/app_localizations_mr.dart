@@ -221,6 +221,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get phoneNumber => 'फोन नंबर';
 
   @override
+  String get phoneNumberOptional => 'फोन नंबर (पर्यायी)';
+
+  @override
   String get phoneOrEmail => 'फोन नंबर किंवा ईमेल';
 
   @override
@@ -367,6 +370,21 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'कृपया एक शाखा निवडा';
+
+  @override
+  String get pleaseSelectStandard => 'कृपया इयत्ता निवडा';
+
+  @override
+  String get pleaseSelectMedium => 'कृपया माध्यम निवडा';
+
+  @override
+  String get pleaseSelectBoard => 'कृपया बोर्ड निवडा';
+
+  @override
+  String get pleaseSelectState => 'कृपया राज्य निवडा';
+
+  @override
+  String get pleaseSelectCity => 'कृपया शहर निवडा';
 
   @override
   String get phoneNumbersCannotBeSame =>

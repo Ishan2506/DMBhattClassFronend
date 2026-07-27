@@ -222,6 +222,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get phoneNumber => 'தொலைபேசி எண்';
 
   @override
+  String get phoneNumberOptional => 'தொலைபேசி எண் (விருப்பத்தேர்வு)';
+
+  @override
   String get phoneOrEmail => 'தொலைபேசி எண் அல்லது மின்னஞ்சல்';
 
   @override
@@ -373,6 +376,21 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get pleaseSelectStream => 'ஒரு பிரிவைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get pleaseSelectStandard => 'வகுப்பைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get pleaseSelectMedium => 'பயிற்று மொழியைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get pleaseSelectBoard => 'வாரியத்தைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get pleaseSelectState => 'மாநிலத்தைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get pleaseSelectCity => 'நகரத்தைத் தேர்ந்தெடுக்கவும்';
 
   @override
   String get phoneNumbersCannotBeSame =>

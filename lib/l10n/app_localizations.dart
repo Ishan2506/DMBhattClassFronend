@@ -518,6 +518,12 @@ abstract class AppLocalizations {
   /// **'Phone Number'**
   String get phoneNumber;
 
+  /// No description provided for @phoneNumberOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number (Optional)'**
+  String get phoneNumberOptional;
+
   /// No description provided for @phoneOrEmail.
   ///
   /// In en, this message translates to:
@@ -805,6 +811,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please select a stream'**
   String get pleaseSelectStream;
+
+  /// No description provided for @pleaseSelectStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a standard'**
+  String get pleaseSelectStandard;
+
+  /// No description provided for @pleaseSelectMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a medium'**
+  String get pleaseSelectMedium;
+
+  /// No description provided for @pleaseSelectBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a board'**
+  String get pleaseSelectBoard;
+
+  /// No description provided for @pleaseSelectState.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a state'**
+  String get pleaseSelectState;
+
+  /// No description provided for @pleaseSelectCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a city'**
+  String get pleaseSelectCity;
 
   /// No description provided for @phoneNumbersCannotBeSame.
   ///
