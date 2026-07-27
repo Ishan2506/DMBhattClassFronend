@@ -25,6 +25,14 @@ export HTTPS_PROXY=""
 export no_proxy="*"
 export NO_PROXY="*"
 
+# Force Git subprocesses to use HTTPS for github.com via environment variables
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0="url.https://github.com/.insteadOf"
+export GIT_CONFIG_VALUE_0="http://github.com/"
+export GIT_CONFIG_KEY_1="url.https://github.com/.insteadOf"
+export GIT_CONFIG_VALUE_1="git://github.com/"
+
+
 echo "=========================================="
 echo "🔄 Xcode Cloud: Post Clone Phase"
 echo "=========================================="

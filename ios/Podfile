@@ -11,6 +11,14 @@ system("git config --local https.proxy ''")
 system("git config --global url.'https://github.com/'.insteadOf 'http://github.com/' >/dev/null 2>&1")
 system("git config --global url.'https://github.com/'.insteadOf 'git://github.com/' >/dev/null 2>&1")
 
+# Force Git subprocesses to use HTTPS for github.com via environment variables in CocoaPods
+ENV['GIT_CONFIG_COUNT'] = '2'
+ENV['GIT_CONFIG_KEY_0'] = 'url.https://github.com/.insteadOf'
+ENV['GIT_CONFIG_VALUE_0'] = 'http://github.com/'
+ENV['GIT_CONFIG_KEY_1'] = 'url.https://github.com/.insteadOf'
+ENV['GIT_CONFIG_VALUE_1'] = 'git://github.com/'
+
+
 
 platform :ios, '13.0'
 
