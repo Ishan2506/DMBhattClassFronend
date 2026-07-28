@@ -299,6 +299,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentPhone => 'Parent\'s Mobile Number';
 
   @override
+  String get parentPhoneOptional => 'Parent\'s Mobile Number (Optional)';
+
+  @override
   String get standard => 'Standard';
 
   @override

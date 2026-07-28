@@ -459,18 +459,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context); // Close dialog
-              
+
+              // Release the server-side session first, so this device stops
+              // counting against the student's device limit. Best-effort: if
+              // the network is down we still sign out locally, and the session
+              // is reclaimed on next login from this device or by an admin.
+              final currentToken = ApiService.userToken;
+              if (currentToken != null) {
+                try {
+                  await ApiService.logoutUser(currentToken);
+                } catch (e) {
+                  debugPrint('Server logout failed, clearing local session: $e');
+                }
+              }
+
               // Clear session
               // Clear active session ONLY, preserve saved accounts and settings
               final prefs = await SharedPreferences.getInstance();
               final savedAccounts = prefs.getStringList('saved_accounts');
               final themeSettings = prefs.getString('theme_settings');
-              
+              // The device id identifies this phone to the server's device
+              // limit. It must survive sign-out, otherwise signing back in on
+              // the same phone looks like a brand-new device and burns another
+              // device slot.
+              final deviceId = prefs.getString('device_id');
+              final deviceName = prefs.getString('device_name');
+
               await prefs.clear();
-              
+
               // Restore preserved data
               if (savedAccounts != null) await prefs.setStringList('saved_accounts', savedAccounts);
               if (themeSettings != null) await prefs.setString('theme_settings', themeSettings);
+              if (deviceId != null) await prefs.setString('device_id', deviceId);
+              if (deviceName != null) await prefs.setString('device_name', deviceName);
               
               // Navigate to Welcome Screen
               if (context.mounted) {

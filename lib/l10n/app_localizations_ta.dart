@@ -304,6 +304,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get parentPhone => 'பெற்றோரின் மொபைல் எண்';
 
   @override
+  String get parentPhoneOptional => 'Parent\'s Mobile Number (Optional)';
+
+  @override
   String get standard => 'வகுப்பு';
 
   @override

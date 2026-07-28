@@ -11,6 +11,7 @@ import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dm_bhatt_tutions/utils/connectivity_service.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
+import 'package:dm_bhatt_tutions/utils/device_identity.dart';
 
 class ApiService {
   // static const String baseUrl = "http://localhost:9657/api";
@@ -106,6 +107,17 @@ class ApiService {
     if (response.statusCode == 401 && !_isGuest) {
       debugPrint("Session expired (401). Redirecting to LoginScreen.");
 
+      // A session that was revoked (admin force-logout, or the student logging
+      // in elsewhere after the limit was raised) looks identical to an expiry,
+      // so explain it rather than bouncing them out silently.
+      bool wasRevoked = false;
+      try {
+        final decoded = jsonDecode(response.body);
+        wasRevoked = decoded is Map && decoded['code'] == 'SESSION_REVOKED';
+      } catch (_) {
+        // Non-JSON body — fall back to the generic message.
+      }
+
       // Clear token to prevent infinite loop or persistent bad state
       clearAuthToken();
 
@@ -117,6 +129,16 @@ class ApiService {
             MaterialPageRoute(builder: (context) => const LoginScreen()),
             (route) => false,
           );
+
+          final context = navigatorKey.currentContext;
+          if (context != null) {
+            CustomToast.showError(
+              context,
+              wasRevoked
+                  ? 'You have been logged out because this account was signed in on another device.'
+                  : 'Your session has expired. Please login again.',
+            );
+          }
         });
       }
     }
@@ -299,10 +321,16 @@ class ApiService {
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/login");
 
+    // The server counts distinct devices against the admin-configured limit,
+    // so every login must identify its device.
+    final resolvedDeviceId = deviceId ?? await DeviceIdentity.getDeviceId();
+
     final body = {
       'loginCode': loginCode,
       'identifier': identifier,
-      if (deviceId != null) 'deviceId': deviceId,
+      'deviceId': resolvedDeviceId,
+      'deviceName': await DeviceIdentity.getDeviceName(),
+      'platform': DeviceIdentity.getPlatform(),
     };
 
     if (role != null) {

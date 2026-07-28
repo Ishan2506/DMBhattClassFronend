@@ -30,6 +30,136 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _identifierController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  /// True when the server rejected the login because the account is already
+  /// signed in on the maximum number of devices.
+  bool _isDeviceLimitError(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      return decoded is Map && decoded['code'] == 'DEVICE_LIMIT_REACHED';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Lists the devices currently holding a session, so the student knows where
+  /// to go and log out.
+  List<String> _activeDeviceLabels(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map && decoded['activeDevices'] is List) {
+        return (decoded['activeDevices'] as List).map((d) {
+          final name = (d['deviceName'] ?? 'Unknown device').toString();
+          final lastActive = d['lastActive'];
+          if (lastActive == null) return name;
+          final when = DateTime.tryParse(lastActive.toString())?.toLocal();
+          if (when == null) return name;
+          return '$name — last used ${_formatWhen(when)}';
+        }).cast<String>().toList();
+      }
+    } catch (_) {
+      // Fall through to an empty list; the message alone is still useful.
+    }
+    return const [];
+  }
+
+  String _formatWhen(DateTime when) {
+    final diff = DateTime.now().difference(when);
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hr ago';
+    return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
+  }
+
+  /// [responseBody] is the raw 403 payload, which carries both the message and
+  /// the list of devices currently holding a session.
+  void _showDeviceLimitDialog(BuildContext context, String responseBody) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final message = ApiService.getErrorMessage(responseBody);
+    final devices = _activeDeviceLabels(responseBody);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        icon: Icon(
+          Icons.phonelink_lock_outlined,
+          size: 40,
+          color: colorScheme.error,
+        ),
+        title: Text(
+          'Already Logged In',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+            if (devices.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Signed in on:',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              ...devices.map(
+                (d) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.smartphone,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          d,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.5,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Text(
+              'Log out from that device and try again. If you no longer have '
+              'access to it, please contact your institute for help.',
+              style: GoogleFonts.poppins(
+                fontSize: 12.5,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'OK',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -313,6 +443,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 (route) => false,
                               );
+                            } else if (response.statusCode == 403 &&
+                                _isDeviceLimitError(response.body)) {
+                              // Blocked by the device limit — explain what to do
+                              // instead of showing a generic "login failed".
+                              _showDeviceLimitDialog(context, response.body);
                             } else {
                               CustomToast.showError(
                                 context,

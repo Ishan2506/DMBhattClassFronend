@@ -302,6 +302,9 @@ class AppLocalizationsGu extends AppLocalizations {
   String get parentPhone => 'વાલીનો મોબાઈલ નંબર';
 
   @override
+  String get parentPhoneOptional => 'Parent\'s Mobile Number (Optional)';
+
+  @override
   String get standard => 'ધોરણ';
 
   @override

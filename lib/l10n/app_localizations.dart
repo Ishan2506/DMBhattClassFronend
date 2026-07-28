@@ -674,6 +674,12 @@ abstract class AppLocalizations {
   /// **'Parent\'s Mobile Number'**
   String get parentPhone;
 
+  /// No description provided for @parentPhoneOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent\'s Mobile Number (Optional)'**
+  String get parentPhoneOptional;
+
   /// No description provided for @standard.
   ///
   /// In en, this message translates to:

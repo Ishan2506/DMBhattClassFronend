@@ -301,6 +301,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get parentPhone => 'पालकांचा मोबाइल नंबर';
 
   @override
+  String get parentPhoneOptional => 'Parent\'s Mobile Number (Optional)';
+
+  @override
   String get standard => 'इयत्ता';
 
   @override

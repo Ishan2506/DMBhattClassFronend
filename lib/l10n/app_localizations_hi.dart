@@ -302,6 +302,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get parentPhone => 'माता-पिता का मोबाइल नंबर';
 
   @override
+  String get parentPhoneOptional => 'Parent\'s Mobile Number (Optional)';
+
+  @override
   String get standard => 'कक्षा';
 
   @override
