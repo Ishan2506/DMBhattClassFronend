@@ -225,7 +225,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
         debugPrint('Failed to fetch plans: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error fetching subscription plans: $e');
+      debugPrint('Error fetching plans: $e');
     }
   }
 

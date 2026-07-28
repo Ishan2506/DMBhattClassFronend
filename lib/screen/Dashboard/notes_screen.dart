@@ -177,7 +177,7 @@ class _NotesScreenState extends State<NotesScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            "Upgrade your subscription plan to unlock full access to all notes, study materials & subjects!",
+            "Upgrade your plan to unlock full access to all notes, study materials & subjects!",
             style: GoogleFonts.poppins(
               fontSize: 12.5,
               color: colorScheme.onPrimaryContainer.withOpacity(0.9),

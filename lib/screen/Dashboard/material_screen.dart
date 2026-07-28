@@ -123,7 +123,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            "You are currently on the free tier. Upgrade your subscription plan to unlock full access to all notes, papers & study materials!",
+            "You are currently on the free tier. Upgrade your  plan to unlock full access to all notes, papers & study materials!",
             style: GoogleFonts.poppins(
               fontSize: 12.5,
               color: colorScheme.onPrimaryContainer.withOpacity(0.9),

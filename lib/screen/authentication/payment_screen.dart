@@ -162,7 +162,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         debugPrint('Failed to fetch plans: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error fetching subscription plans: $e');
+      debugPrint('Error fetching plans: $e');
     }
   }
 
