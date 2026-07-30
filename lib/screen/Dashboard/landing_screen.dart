@@ -11,6 +11,7 @@ import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/social_media_ad_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,7 +37,7 @@ class _LandingScreenState extends State<LandingScreen> {
   // These will replace the 'body' area when the index changes
   late final List<Widget> _pages = [
     const StudentHomeScreen(),
-    ExploreScreen(key: _exploreKey),
+    if (!Platform.isIOS) ExploreScreen(key: _exploreKey),
     //const DMAIScreen(),
     //AIChatScreen(),
     DMAIChatScreen(),
@@ -48,7 +49,7 @@ class _LandingScreenState extends State<LandingScreen> {
     setState(() {
       _selectedIndex = index;
     });
-    if (index == 1) {
+    if (!Platform.isIOS && index == 1) {
       _exploreKey.currentState?.fetchProducts(showLoader: false);
     }
   }
@@ -338,12 +339,13 @@ class _LandingScreenState extends State<LandingScreen> {
               icon: const Icon(Icons.home_rounded),
               label: l10n.home,
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(
-                Icons.grid_view_rounded,
-              ), // Meaningful Icon for Explore
-              label: l10n.explore,
-            ),
+            if (!Platform.isIOS)
+              BottomNavigationBarItem(
+                icon: const Icon(
+                  Icons.grid_view_rounded,
+                ), // Meaningful Icon for Explore
+                label: l10n.explore,
+              ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.smart_toy_outlined), // DMAI Icon
               label: l10n.dmai,
