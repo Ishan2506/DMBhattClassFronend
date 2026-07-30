@@ -1132,40 +1132,44 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                 ],
               ),
 
-              const SizedBox(height: 32),
-              Text(
-                "Apply Code",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildCodeField(
-                label: "Redeem Code",
-                hintText: "Enter Redeem Code",
-                controller: _promoCodeController,
-                colorScheme: colorScheme,
-                showValidIcon: _hasValidRedeemCodeForSelectedStandard(),
-                showErrorIcon: _isRedeemValid == false,
-                showLoadingIcon: _isValidatingRedeemCode,
-                onChanged: (_) => _resetRedeemValidation(),
-                actionLabel: "Validate",
-                onActionPressed: _isValidatingRedeemCode
-                    ? null
-                    : _validateRedeemCode,
-              ),
-              if (_redeemMessage.isNotEmpty) ...[
-                const SizedBox(height: 8),
+              if (!_isIOS) ...[
+                const SizedBox(height: 32),
                 Text(
-                  _redeemMessage,
+                  "Apply Code",
                   style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _isRedeemValid == true ? Colors.green : Colors.red,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
                 ),
+                const SizedBox(height: 16),
+                _buildCodeField(
+                  label: "Redeem Code",
+                  hintText: "Enter Redeem Code",
+                  controller: _promoCodeController,
+                  colorScheme: colorScheme,
+                  showValidIcon: _hasValidRedeemCodeForSelectedStandard(),
+                  showErrorIcon: _isRedeemValid == false,
+                  showLoadingIcon: _isValidatingRedeemCode,
+                  onChanged: (_) => _resetRedeemValidation(),
+                  actionLabel: "Validate",
+                  onActionPressed: _isValidatingRedeemCode
+                      ? null
+                      : _validateRedeemCode,
+                ),
+                if (_redeemMessage.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _redeemMessage,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: _isRedeemValid == true
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                  ),
+                ],
               ],
               const SizedBox(height: 16),
               // Reward Points Section
