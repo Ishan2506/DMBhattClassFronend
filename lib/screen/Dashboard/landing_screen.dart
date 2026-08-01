@@ -245,10 +245,10 @@ class _LandingScreenState extends State<LandingScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    // Titles corresponding to each page
+    // Titles corresponding to each page (must match _pages and nav items)
     final List<String> titles = [
       l10n.dashboard,
-      l10n.explore,
+      if (!Platform.isIOS) l10n.explore,
       l10n.dmai,
       l10n.more,
     ];
