@@ -1171,87 +1171,89 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   ),
                 ],
               ],
-              const SizedBox(height: 16),
-              // Reward Points Section
-              Text(
-                "Use Reward Points (Available: $_availablePoints)",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
+              // Reward Points Section (hidden on iOS)
+              if (!_isIOS) ...[
+                const SizedBox(height: 16),
+                Text(
+                  "Use Reward Points (Available: $_availablePoints)",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outlineVariant.withOpacity(0.5),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withOpacity(0.5),
+                          ),
                         ),
-                      ),
-                      child: TextField(
-                        controller: _rewardPointsController,
-                        keyboardType: TextInputType.number,
-                        onChanged: (_) => _resetRewardPoints(),
-                        decoration: InputDecoration(
-                          hintText: l10n.pointsHint,
-                          hintStyle: GoogleFonts.poppins(
-                            color: colorScheme.onSurfaceVariant.withOpacity(
-                              0.5,
+                        child: TextField(
+                          controller: _rewardPointsController,
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => _resetRewardPoints(),
+                          decoration: InputDecoration(
+                            hintText: l10n.pointsHint,
+                            hintStyle: GoogleFonts.poppins(
+                              color: colorScheme.onSurfaceVariant.withOpacity(
+                                0.5,
+                              ),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
                             ),
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                            color: colorScheme.onSurface,
                           ),
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _applyRewardPoints,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.inverseSurface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 20,
+                        ),
+                      ),
+                      child: Text(
+                        l10n.use,
                         style: GoogleFonts.poppins(
+                          color: colorScheme.onInverseSurface,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
-                          color: colorScheme.onSurface,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _applyRewardPoints,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.inverseSurface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 20,
-                      ),
-                    ),
-                    child: Text(
-                      l10n.use,
-                      style: GoogleFonts.poppins(
-                        color: colorScheme.onInverseSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ],
+                ),
+                if (_rewardPointsMessage.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _rewardPointsMessage,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: _areRewardPointsValid == true
+                          ? Colors.green
+                          : Colors.red,
                     ),
                   ),
                 ],
-              ),
-              if (_rewardPointsMessage.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _rewardPointsMessage,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _areRewardPointsValid == true
-                        ? Colors.green
-                        : Colors.red,
-                  ),
-                ),
               ],
 
               const SizedBox(height: 32),
