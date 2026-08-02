@@ -61,19 +61,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
     });
     _scrollToBottom();
 
-    if (query.toLowerCase().contains('contact professor') || query.toLowerCase().contains('teacher number')) {
-      setState(() {
-        _isLoading = false;
-        _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
-        _messages.add(ChatMessage(text: "Sure! Here are the contact details for our professors. You can chat with them directly on WhatsApp:", isUser: false));
-        _messages.add(ChatMessage(text: "English Professor", isUser: false, contact: {"name": "Prof. English", "number": "98251 89540"}));
-        _messages.add(ChatMessage(text: "Science Professor", isUser: false, contact: {"name": "Prof. Science", "number": "90332 39340"}));
-        _messages.add(ChatMessage(text: "How else can I help you?", isUser: false));
-      });
-      _scrollToBottom();
-      return;
-    }
-
     // Existing AI logic (mocked)
     Future.delayed(Duration(seconds: 1), () {
       if (mounted) {
@@ -81,24 +68,9 @@ class _AIChatScreenState extends State<AIChatScreen> {
           _messages.removeWhere((msg) => msg.text == "Let me think... 🤔");
           
           String responseText = "I'm still learning about your specific query! For now, I can help you find videos for your subjects.";
-          Map<String, String>? subjectContact;
-
-          if (query.toLowerCase().contains('science') || query.toLowerCase().contains('physics') || query.toLowerCase().contains('chemistry')) {
-            subjectContact = {"name": "Prof. Science", "number": "90332 39340"};
-          } else if (query.toLowerCase().contains('english')) {
-            subjectContact = {"name": "Prof. English", "number": "98251 89540"};
-          }
 
           _messages.add(ChatMessage(text: responseText, isUser: false));
-          
-          if (subjectContact != null) {
-            _messages.add(ChatMessage(
-              text: "If you have more doubts in this subject, you can contact our professor:",
-              isUser: false,
-              contact: subjectContact
-            ));
-          }
-          
+
           _isLoading = false;
         });
         _scrollToBottom();
