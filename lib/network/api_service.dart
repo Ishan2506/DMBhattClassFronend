@@ -345,7 +345,12 @@ class ApiService {
       },
       body: jsonEncode(body),
     );
-    return _handleSession(response);
+    // Deliberately NOT passed through _handleSession: the login endpoint
+    // returns 401 for every failure (bad password, deleted account, wrong
+    // role). Treating those as an expired session would replace the real
+    // reason with "Your session has expired" and bounce the user to a fresh
+    // LoginScreen. The caller shows the server's message instead.
+    return response;
   }
 
   static Future<http.Response> logoutUser(String token) async {
@@ -709,12 +714,12 @@ class ApiService {
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/verify-otp");
 
-    return _handleSession(
-      await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'otp': otp}),
-      ),
+    // Pre-auth endpoint: a 401 here means a bad/expired OTP, not an expired
+    // session, so it must not trigger the session-expiry redirect.
+    return await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'otp': otp}),
     );
   }
 
@@ -726,12 +731,12 @@ class ApiService {
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/auth/reset-password");
 
-    return _handleSession(
-      await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'newPassword': newPassword}),
-      ),
+    // Pre-auth endpoint: the user has no session yet, so a 401 is a rejected
+    // reset attempt rather than an expiry.
+    return await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'newPassword': newPassword}),
     );
   }
 
