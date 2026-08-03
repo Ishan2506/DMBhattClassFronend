@@ -105,18 +105,19 @@ class _StudentActivitiesScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            _MoreScreenItem(
-              title: l10n.myArea,
-              value: "",
-              icon: Icons.person_pin,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const _MyAreaScreen()),
-                );
-              },
-            ),
+            if (!Platform.isIOS)
+              _MoreScreenItem(
+                title: l10n.myArea,
+                value: "",
+                icon: Icons.person_pin,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const _MyAreaScreen()),
+                  );
+                },
+              ),
             // _MoreScreenItem(
             //   title: l10n.events,
             //   value: "",
@@ -369,18 +370,19 @@ class _AppInfoScreen extends StatelessWidget {
                   );
                 },
               ),
-              _MoreScreenItem(
-                title: l10n.referAndEarn,
-                value: "",
-                icon: Icons.diversity_3,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ReferAndEarnScreen()),
-                  );
-                },
-              ),
+              if (!Platform.isIOS)
+                _MoreScreenItem(
+                  title: l10n.referAndEarn,
+                  value: "",
+                  icon: Icons.diversity_3,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ReferAndEarnScreen()),
+                    );
+                  },
+                ),
             ],
             _MoreScreenItem(
               title: l10n.privacyPolicy,
