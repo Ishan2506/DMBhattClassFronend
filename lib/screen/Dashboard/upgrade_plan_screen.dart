@@ -138,11 +138,19 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       CustomLoader.hide(context);
 
       if (response.statusCode == 200) {
+        // Best-effort refresh so the server's latest membership status is
+        // cached before returning; a failure here must not mask the
+        // already-successful payment, so errors are swallowed.
+        try {
+          await ApiService.getProfile(forceRefresh: true);
+        } catch (_) {}
+
+        if (!mounted) return;
         CustomToast.showSuccess(
           context,
           AppLocalizations.of(context)!.planUpgradeSuccess,
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         final errorMsg = ApiService.getErrorMessage(response.body);
         CustomToast.showError(context, "Verification Failed: $errorMsg");
@@ -660,6 +668,12 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     if (_selectedStream != null) {
       await prefs.setString("stream", _selectedStream!);
     }
+    // Best-effort refresh so the server's latest membership status is
+    // cached before returning; a failure here must not mask the
+    // already-successful purchase, so errors are swallowed.
+    try {
+      await ApiService.getProfile(forceRefresh: true);
+    } catch (_) {}
     if (!mounted) return;
     await _showApplePurchaseDialog(
       "Purchase Successful",

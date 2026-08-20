@@ -162,7 +162,9 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-                );
+                ).then((result) {
+                  if (result == true) _checkUserStatus();
+                });
               },
               icon: const Icon(Icons.star_rounded, size: 18),
               label: Text(
@@ -425,7 +427,9 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-              );
+              ).then((result) {
+                if (result == true) _checkUserStatus();
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,

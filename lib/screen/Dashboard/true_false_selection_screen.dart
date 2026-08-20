@@ -271,7 +271,10 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
               onPressed: () {
                 Navigator.pop(context);
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const UpgradePlanScreen()));
+                    MaterialPageRoute(builder: (_) => const UpgradePlanScreen()))
+                    .then((result) {
+                  if (result == true) _fetchExams();
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,

@@ -94,7 +94,9 @@ class _NotesScreenState extends State<NotesScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-              );
+              ).then((result) {
+                if (result == true) _loadProfileAndCheckGuest();
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -191,7 +193,9 @@ class _NotesScreenState extends State<NotesScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-                );
+                ).then((result) {
+                  if (result == true) _loadProfileAndCheckGuest();
+                });
               },
               icon: const Icon(Icons.star_rounded, size: 18),
               label: Text(

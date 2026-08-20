@@ -137,7 +137,9 @@ class _MaterialScreenState extends State<MaterialScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-                );
+                ).then((result) {
+                  if (result == true) _loadUserStd();
+                });
               },
               icon: const Icon(Icons.star_rounded, size: 18),
               label: Text(

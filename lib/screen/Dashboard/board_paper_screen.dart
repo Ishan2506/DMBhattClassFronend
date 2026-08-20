@@ -198,7 +198,9 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-                );
+                ).then((result) {
+                  if (result == true) _fetchUserProfile();
+                });
               },
               icon: const Icon(Icons.star_rounded, size: 18),
               label: Text(

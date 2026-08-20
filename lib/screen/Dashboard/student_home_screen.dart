@@ -151,7 +151,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-              );
+              ).then((result) {
+                if (result == true) _fetchProfile();
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,

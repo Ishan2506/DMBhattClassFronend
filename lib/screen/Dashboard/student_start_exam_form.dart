@@ -406,7 +406,9 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(builder: (context) => UpgradePlanScreen()),
-                                            );
+                                            ).then((result) {
+                                              if (result == true) _fetchExams();
+                                            });
                                           },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Theme.of(context).primaryColor,

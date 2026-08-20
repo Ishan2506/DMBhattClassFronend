@@ -154,7 +154,9 @@ class _MindGamesScreenState extends State<MindGamesScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const UpgradePlanScreen()),
-              );
+              ).then((result) {
+                if (result == true) _initService();
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
