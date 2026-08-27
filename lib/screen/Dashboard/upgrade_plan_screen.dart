@@ -34,7 +34,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
   String? _selectedStream;
 
   String? _currentBoard;
-  List<String> get _standards => AcademicConstants.standards[_currentBoard ?? "GSEB"] ?? ["6", "7", "8", "9", "10", "11", "12"];
+  List<String> get _standards =>
+      AcademicConstants.standards[_currentBoard ?? "GSEB"] ??
+      ["6", "7", "8", "9", "10", "11", "12"];
   final List<String> _mediums = ["English", "Gujarati"];
   final List<String> _streams = ["Science", "Commerce"];
 
@@ -589,7 +591,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     debugPrint(
       "[Apple Upgrade Screen] amount: ${result.amountPaid ?? _finalAmount}",
     );
-    final active = await RevenueCatService.instance.refreshIsProActive();
+    final active = await RevenueCatService.instance.refreshIsProActive(
+      force: true,
+    );
     if (!active ||
         productId == null ||
         productId.isEmpty ||
@@ -1178,9 +1182,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: _isRedeemValid == true
-                          ? Colors.green
-                          : Colors.red,
+                      color: _isRedeemValid == true ? Colors.green : Colors.red,
                     ),
                   ),
                 ],

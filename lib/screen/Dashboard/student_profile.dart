@@ -370,13 +370,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 user['parentNo'];
             parentMobile =
                 (rawParentPhone == null || rawParentPhone.toString() == 'null')
-                    ? ""
-                    : rawParentPhone.toString();
+                ? ""
+                : rawParentPhone.toString();
 
             // Subscribe to user-specific and standard-specific notification topics
             final userId = user['_id'];
             if (userId != null && userId.toString().isNotEmpty) {
-              NotificationService.instance.subscribeToUserTopic(userId.toString());
+              NotificationService.instance.subscribeToUserTopic(
+                userId.toString(),
+              );
             }
             final std = profile['std'];
             if (std != null && std.toString().isNotEmpty) {
@@ -606,12 +608,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                               _photoPath = user['photoPath'];
                                               profilePic =
                                                   user['photoPath'] ?? "";
-                                              
+
                                               final rawDob = user['dob'];
-                                              if (rawDob != null && rawDob.toString().isNotEmpty) {
+                                              if (rawDob != null &&
+                                                  rawDob
+                                                      .toString()
+                                                      .isNotEmpty) {
                                                 try {
-                                                  final parsedDate = DateTime.parse(rawDob.toString());
-                                                  dob = DateFormat('dd/MM/yyyy').format(parsedDate);
+                                                  final parsedDate =
+                                                      DateTime.parse(
+                                                        rawDob.toString(),
+                                                      );
+                                                  dob = DateFormat(
+                                                    'dd/MM/yyyy',
+                                                  ).format(parsedDate);
                                                 } catch (e) {
                                                   dob = rawDob.toString();
                                                 }
@@ -634,12 +644,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                                   user?['parentNo'];
                                               parentMobile =
                                                   (rawParentPhone == null ||
-                                                          rawParentPhone
-                                                                  .toString() ==
-                                                              'null')
-                                                      ? ""
-                                                      : rawParentPhone
-                                                          .toString();
+                                                      rawParentPhone
+                                                              .toString() ==
+                                                          'null')
+                                                  ? ""
+                                                  : rawParentPhone.toString();
                                             }
                                           });
                                           debugPrint(
@@ -701,7 +710,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   ),
 
                   // 3. Quick Stats (Reward Points) — hidden on iOS
-                  if (!Platform.isIOS) ...[                  
+                  if (!Platform.isIOS) ...[
                     const SizedBox(height: 24),
 
                     Padding(
@@ -952,16 +961,35 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         final confirm = await showDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text("Delete Account", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                            content: Text("Are you sure you want to permanently delete your account? This action cannot be undone.", style: GoogleFonts.poppins()),
+                            title: Text(
+                              "Delete Account",
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            content: Text(
+                              "Are you sure you want to permanently delete your account? This action cannot be undone.",
+                              style: GoogleFonts.poppins(),
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
-                                child: Text("Cancel", style: GoogleFonts.poppins(color: Colors.grey)),
+                                child: Text(
+                                  "Cancel",
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(context, true),
-                                child: Text("Delete", style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
+                                child: Text(
+                                  "Delete",
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -972,10 +1000,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           try {
                             final response = await ApiService.deleteAccount();
                             CustomLoader.hide(context);
-                            if (response.statusCode == 200 || response.statusCode == 201) {
-                              final prefs = await SharedPreferences.getInstance();
-                              final currentToken = prefs.getString('auth_token') ?? "";
-                              
+                            if (response.statusCode == 200 ||
+                                response.statusCode == 201) {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              final currentToken =
+                                  prefs.getString('auth_token') ?? "";
+
                               // Delete from local SQLite database
                               final db = DatabaseHelper();
                               final accounts = await db.getAccounts();
@@ -983,21 +1014,30 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                 (acc) => acc['token'] == currentToken,
                                 orElse: () => <String, dynamic>{},
                               );
-                              if (activeAcc.isNotEmpty && activeAcc['userId'] != null) {
+                              if (activeAcc.isNotEmpty &&
+                                  activeAcc['userId'] != null) {
                                 await db.deleteAccount(activeAcc['userId']);
                               }
 
                               await ApiService.logoutUser(currentToken);
                               await ApiService.clearAuthToken();
                               if (!mounted) return;
-                              CustomToast.showSuccess(context, "Account deleted successfully");
+                              CustomToast.showSuccess(
+                                context,
+                                "Account deleted successfully",
+                              );
                               Navigator.pushAndRemoveUntil(
                                 context,
-                                MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                                MaterialPageRoute(
+                                  builder: (context) => const WelcomeScreen(),
+                                ),
                                 (route) => false,
                               );
                             } else {
-                              CustomToast.showError(context, "Failed to delete account: ${ApiService.getErrorMessage(response.body)}");
+                              CustomToast.showError(
+                                context,
+                                "Failed to delete account: ${ApiService.getErrorMessage(response.body)}",
+                              );
                             }
                           } catch (e) {
                             CustomLoader.hide(context);
@@ -1348,73 +1388,70 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     final theme = Theme.of(context);
 
     return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-          ],
-          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.auto_stories_rounded,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
+            child: Icon(
+              Icons.auto_stories_rounded,
+              color: theme.colorScheme.primary,
+              size: 20,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
-                  Text(
-                    isOnline ? l10n.onlineExam : l10n.offlineExam,
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                marks,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: color,
                 ),
+                Text(
+                  isOnline ? l10n.onlineExam : l10n.offlineExam,
+                  style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              marks,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: color,
               ),
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1893,7 +1930,9 @@ class _ManageSubscriptionScreenState extends State<_ManageSubscriptionScreen> {
     debugPrint(
       "[Apple Profile Upgrade] amount: ${result.amountPaid ?? planInfo.amount}",
     );
-    final active = await RevenueCatService.instance.refreshIsProActive();
+    final active = await RevenueCatService.instance.refreshIsProActive(
+      force: true,
+    );
     if (!active ||
         productId == null ||
         productId.isEmpty ||

@@ -90,11 +90,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _initializeAllData() async {
-    await Future.wait([
-      _initData(),
-      _fetchSubscriptionPlans(),
-    ]);
-    
+    await Future.wait([_initData(), _fetchSubscriptionPlans()]);
+
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -128,7 +125,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     // Always ensure values not passed by the caller are loaded from the profile.
     final prefs = await SharedPreferences.getInstance();
-    _board = widget.payload?.fields['board']?.toString() ?? prefs.getString('board');
+    _board =
+        widget.payload?.fields['board']?.toString() ?? prefs.getString('board');
     if (_cachedPassword == null) {
       _cachedPassword = prefs.getString('user_password');
     }
@@ -211,7 +209,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       }
       _discount = totalDiscount;
       _finalAmount -= _discount;
-      debugPrint("[_calculateFinalAmount] _originalAmount: $_originalAmount, _discount: $_discount, _finalAmount: $_finalAmount, _referralDiscount: $_referralDiscount, _hasValidatedReferralCode: $_hasValidatedReferralCode");
+      debugPrint(
+        "[_calculateFinalAmount] _originalAmount: $_originalAmount, _discount: $_discount, _finalAmount: $_finalAmount, _referralDiscount: $_referralDiscount, _hasValidatedReferralCode: $_hasValidatedReferralCode",
+      );
     }
     if (_finalAmount < 0) _finalAmount = 0;
   }
@@ -261,7 +261,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
               : 'percentage';
           _redeemDiscountValue = (data['discount'] ?? 0).toDouble();
           _validatedRedeemCode = code;
-          _redeemMessage = data['message'] ?? "Redeem code applied successfully.";
+          _redeemMessage =
+              data['message'] ?? "Redeem code applied successfully.";
           _calculateFinalAmount();
         });
         CustomToast.showSuccess(context, _redeemMessage);
@@ -431,16 +432,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
       if (response.statusCode != 200) {
         final errorMsg = ApiService.getErrorMessage(response.body);
         // If they already applied it (e.g. during registration), don't show an error toast
-        if (response.statusCode == 400 && 
-            (errorMsg.toLowerCase().contains("already used") || 
-             errorMsg.toLowerCase().contains("already applied"))) {
-          debugPrint("[SUBSCRIPTION] Referral already applied/used, skipping error toast.");
+        if (response.statusCode == 400 &&
+            (errorMsg.toLowerCase().contains("already used") ||
+                errorMsg.toLowerCase().contains("already applied"))) {
+          debugPrint(
+            "[SUBSCRIPTION] Referral already applied/used, skipping error toast.",
+          );
           return;
         }
-        CustomToast.showError(
-          context,
-          "Referral apply failed: $errorMsg",
-        );
+        CustomToast.showError(context, "Referral apply failed: $errorMsg");
       }
     } catch (e) {
       if (!mounted) return;
@@ -541,7 +541,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   ) async {
     try {
       CustomLoader.show(context);
-      final active = await RevenueCatService.instance.refreshIsProActive();
+      final active = await RevenueCatService.instance.refreshIsProActive(
+        force: true,
+      );
       if (!mounted) return;
 
       final productId = result.productId;
@@ -766,7 +768,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       } else if (hasValidRedeemCode && _validatedRedeemCode != null) {
         fields["referralCode"] = _validatedRedeemCode!;
       }
-      
+
       final updatedPayload = RegistrationPayload(
         role: currentPayload.role,
         fields: fields,

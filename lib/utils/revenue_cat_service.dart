@@ -215,8 +215,16 @@ class RevenueCatService {
     return _customerInfo!.entitlements.all[entitlementId]?.isActive ?? false;
   }
 
-  Future<bool> refreshIsProActive() async {
+  Future<bool> refreshIsProActive({bool force = false}) async {
     try {
+      if (force) {
+        try {
+          await Purchases.syncPurchases();
+        } catch (e) {
+          debugPrint("Error syncing purchases before refresh: $e");
+        }
+        await Purchases.invalidateCustomerInfoCache();
+      }
       _customerInfo = await Purchases.getCustomerInfo();
       return isProActive;
     } catch (e) {
@@ -580,6 +588,11 @@ class RevenueCatService {
   /// Restore purchases
   Future<RevenueCatPurchaseResult> restorePurchases() async {
     try {
+      try {
+        await Purchases.syncPurchases();
+      } catch (e) {
+        debugPrint("Error syncing purchases before restore: $e");
+      }
       _customerInfo = await Purchases.restorePurchases();
       final active = isProActive;
       return RevenueCatPurchaseResult(
@@ -602,6 +615,17 @@ class RevenueCatService {
     try {
       LogInResult result = await Purchases.logIn(userId);
       _customerInfo = result.customerInfo;
+      // The anonymous-to-identified alias/transfer is applied server-side, so a
+      // freshly returned CustomerInfo can still be pre-transfer. Re-read past
+      // the cache before concluding the entitlement is missing.
+      if (!isProActive) {
+        try {
+          await Purchases.invalidateCustomerInfoCache();
+          _customerInfo = await Purchases.getCustomerInfo();
+        } catch (e) {
+          debugPrint("Error re-reading customer info after login: $e");
+        }
+      }
     } catch (e) {
       debugPrint("Error logging in to RevenueCat: $e");
     }
