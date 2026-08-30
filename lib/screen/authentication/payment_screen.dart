@@ -146,7 +146,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
         final Map<String, double> prices = {};
 
         for (var plan in plans) {
-          prices[plan['standard']] = (plan['amount'] as num).toDouble();
+          // iOS can carry its own price. A null/absent iosAmount means the
+          // admin did not set an override, so iOS uses the base amount.
+          final iosAmount = plan['iosAmount'];
+          final effectiveAmount = (_isIOS && iosAmount is num)
+              ? iosAmount
+              : plan['amount'] as num;
+          prices[plan['standard']] = effectiveAmount.toDouble();
         }
 
         if (!mounted) return;
