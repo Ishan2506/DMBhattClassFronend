@@ -440,6 +440,12 @@ class AppLocalizationsGu extends AppLocalizations {
   String get boardPapers => 'બોર્ડ પેપર્સ';
 
   @override
+  String get phantomPapers => 'ફેન્ટમ પેપર્સ';
+
+  @override
+  String get impNotes => 'IMP નોટ્સ';
+
+  @override
   String get examHistory => 'પરીક્ષા ઇતિહાસ';
 
   @override

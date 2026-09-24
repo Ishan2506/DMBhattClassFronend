@@ -441,6 +441,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get boardPapers => 'बोर्ड पेपर्स';
 
   @override
+  String get phantomPapers => 'फैंटम पेपर्स';
+
+  @override
+  String get impNotes => 'IMP नोट्स';
+
+  @override
   String get examHistory => 'परीक्षा इतिहास';
 
   @override

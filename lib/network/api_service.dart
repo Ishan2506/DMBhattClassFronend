@@ -658,11 +658,14 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> getNotes({String? subject}) async {
+  static Future<http.Response> getNotes({
+    String? subject,
+    String type = 'Notes',
+  }) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final queryParams = await _getDefaultQueryParams();
-    queryParams['type'] = 'Notes';
+    queryParams['type'] = type;
     if (subject != null) queryParams['subject'] = subject;
 
     final uri = Uri.parse(

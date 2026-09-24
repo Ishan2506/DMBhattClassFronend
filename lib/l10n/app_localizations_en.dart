@@ -436,6 +436,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get boardPapers => 'Board Papers';
 
   @override
+  String get phantomPapers => 'Phantom Papers';
+
+  @override
+  String get impNotes => 'IMP Notes';
+
+  @override
   String get examHistory => 'Exam History';
 
   @override

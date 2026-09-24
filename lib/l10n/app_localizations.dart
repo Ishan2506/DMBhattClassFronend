@@ -944,6 +944,18 @@ abstract class AppLocalizations {
   /// **'Board Papers'**
   String get boardPapers;
 
+  /// No description provided for @phantomPapers.
+  ///
+  /// In en, this message translates to:
+  /// **'Phantom Papers'**
+  String get phantomPapers;
+
+  /// No description provided for @impNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'IMP Notes'**
+  String get impNotes;
+
   /// No description provided for @examHistory.
   ///
   /// In en, this message translates to:

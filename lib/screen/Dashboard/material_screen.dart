@@ -195,17 +195,6 @@ class _MaterialScreenState extends State<MaterialScreen> {
                 );
               },
             ),
-            _buildMaterialItem(
-              context,
-              title: l10n.notes,
-              icon: Icons.description_outlined,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const NotesScreen()),
-                );
-              },
-            ),
             if (showBoardPapers)
               _buildMaterialItem(
                 context,
@@ -218,6 +207,49 @@ class _MaterialScreenState extends State<MaterialScreen> {
                   );
                 },
               ),
+            _buildMaterialItem(
+              context,
+              title: l10n.phantomPapers,
+              icon: Icons.quiz_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NotesScreen(
+                      materialType: 'PhantomPaper',
+                      title: l10n.phantomPapers,
+                    ),
+                  ),
+                );
+              },
+            ),
+            _buildMaterialItem(
+              context,
+              title: l10n.impNotes,
+              icon: Icons.star_outline_rounded,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NotesScreen(
+                      materialType: 'ImpNotes',
+                      title: l10n.impNotes,
+                    ),
+                  ),
+                );
+              },
+            ),
+            _buildMaterialItem(
+              context,
+              title: l10n.notes,
+              icon: Icons.description_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NotesScreen()),
+                );
+              },
+            ),
             _buildMaterialItem(
               context,
               title: l10n.images,

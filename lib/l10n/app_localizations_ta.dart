@@ -446,6 +446,12 @@ class AppLocalizationsTa extends AppLocalizations {
   String get boardPapers => 'வாரியத் தாள்கள்';
 
   @override
+  String get phantomPapers => 'பேண்டம் தாள்கள்';
+
+  @override
+  String get impNotes => 'IMP Notes';
+
+  @override
   String get examHistory => 'தேர்வு வரலாறு';
 
   @override

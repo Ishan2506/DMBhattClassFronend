@@ -13,7 +13,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotesScreen extends StatefulWidget {
-  const NotesScreen({super.key});
+  /// Material type to list: 'Notes', 'ImpNotes' or 'PhantomPaper'.
+  final String materialType;
+
+  /// App bar title; defaults to the localized "Notes".
+  final String? title;
+
+  const NotesScreen({super.key, this.materialType = 'Notes', this.title});
 
   @override
   State<NotesScreen> createState() => _NotesScreenState();
@@ -230,7 +236,10 @@ class _NotesScreenState extends State<NotesScreen> {
     
     setState(() => _isLoading = true);
     try {
-      final response = await ApiService.getNotes(subject: _selectedSubject);
+      final response = await ApiService.getNotes(
+        subject: _selectedSubject,
+        type: widget.materialType,
+      );
       if (response.statusCode == 200) {
         setState(() {
           final List<dynamic> allNotes = jsonDecode(response.body);
@@ -259,7 +268,7 @@ class _NotesScreenState extends State<NotesScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
-        title: l10n.notes,
+        title: widget.title ?? l10n.notes,
         centerTitle: true, 
       ),
       body: SingleChildScrollView(
@@ -344,7 +353,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${l10n.availableNotes} (${_displayNotes.length})",
+                    "${widget.title ?? l10n.availableNotes} (${_displayNotes.length})",
                     style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                   ),
                   const SizedBox(height: 12),

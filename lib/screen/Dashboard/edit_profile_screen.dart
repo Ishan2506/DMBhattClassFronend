@@ -372,10 +372,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                       : (_currentPhotoPath != null &&
                                             _currentPhotoPath!.isNotEmpty)
                                       ? NetworkImage(_currentPhotoPath!)
-                                      : const AssetImage(
-                                              "assets/images/user_placeholder.png",
-                                            )
-                                            as ImageProvider,
+                                      : null,
+                                  child:
+                                      (_imageFile == null &&
+                                          (_currentPhotoPath == null ||
+                                              _currentPhotoPath!.isEmpty))
+                                      ? Text(
+                                          _nameController.text.trim().isNotEmpty
+                                              ? _nameController.text
+                                                    .trim()[0]
+                                                    .toUpperCase()
+                                              : "U",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 40,
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                        )
+                                      : null,
                                 ),
                               ),
                               Positioned(

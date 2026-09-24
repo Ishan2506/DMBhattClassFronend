@@ -567,10 +567,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                       ? NetworkImage(
                                           ApiService.getFileUrl(_photoPath!),
                                         )
-                                      : const AssetImage(
-                                              "assets/images/user_placeholder.png",
-                                            )
-                                            as ImageProvider,
+                                      : null,
+                                  child:
+                                      (_photoPath == null ||
+                                          _photoPath!.isEmpty)
+                                      ? Text(
+                                          studentName.trim().isNotEmpty
+                                              ? studentName
+                                                    .trim()[0]
+                                                    .toUpperCase()
+                                              : "U",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 44,
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                        )
+                                      : null,
                                 ),
                               ),
                               Positioned(
