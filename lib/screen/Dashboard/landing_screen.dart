@@ -14,21 +14,34 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/social_media_ad_dialog.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/app_banner_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:dm_bhatt_tutions/utils/in_app_review_service.dart';
 
 class LandingScreen extends StatefulWidget {
-  const LandingScreen({super.key});
+  /// Show the admin-uploaded banner popup. Set only when arriving from app
+  /// open or login, so returning here from e.g. an exam result doesn't re-show it.
+  final bool showBanner;
+
+  const LandingScreen({super.key, this.showBanner = false});
 
   @override
   State<LandingScreen> createState() => _LandingScreenState();
 }
 
-class _LandingScreenState extends State<LandingScreen> {
+class _LandingScreenState extends State<LandingScreen>
+    with WidgetsBindingObserver {
+  // Returning from the background after at least this long counts as opening
+  // the app again, so a quick app switch doesn't re-show the banner.
+  static const Duration _bannerResumeGap = Duration(minutes: 1);
+
   // 1. Track the current active index
   int _selectedIndex = 0;
   bool _isLoadingMembership = true;
+  bool _redirectedToPayment = false;
+  bool _isShowingBanner = false;
+  DateTime? _backgroundedAt;
 
   final GlobalKey<ExploreScreenState> _exploreKey =
       GlobalKey<ExploreScreenState>();
@@ -57,13 +70,51 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeApp();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _backgroundedAt ??= DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      final backgroundedAt = _backgroundedAt;
+      _backgroundedAt = null;
+      // Coming back from a banner's own link isn't a fresh app open.
+      final leftViaBannerLink = AppBannerDialog.consumeLinkOpened();
+      if (backgroundedAt != null &&
+          !leftViaBannerLink &&
+          DateTime.now().difference(backgroundedAt) >= _bannerResumeGap) {
+        _showBanner();
+      }
+    }
   }
 
   Future<void> _initializeApp() async {
     await _checkMembershipStatus();
     if (mounted && !_isLoadingMembership) {
       // _checkAndShowAd();
+    }
+    // Skip the banner when the paywall was pushed, so it doesn't pop up over it.
+    if (widget.showBanner && !_redirectedToPayment) {
+      await _showBanner();
+    }
+  }
+
+  Future<void> _showBanner() async {
+    if (_isShowingBanner || !mounted || _isLoadingMembership) return;
+    _isShowingBanner = true;
+    try {
+      await AppBannerDialog.showIfAvailable(context);
+    } finally {
+      _isShowingBanner = false;
     }
   }
 
@@ -156,6 +207,7 @@ class _LandingScreenState extends State<LandingScreen> {
           if (!mounted) return;
 
           // Redirect to Payment Screen with data directly from API
+          _redirectedToPayment = true;
           Navigator.push(
             context,
             MaterialPageRoute(

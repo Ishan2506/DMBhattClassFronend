@@ -179,7 +179,7 @@ Future<void> registerUser({
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Success!")));
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LandingScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LandingScreen(showBanner: true)));
     } else {
       // If still failing, the response body will now show the actual Node.js error
       ScaffoldMessenger.of(context).showSnackBar(

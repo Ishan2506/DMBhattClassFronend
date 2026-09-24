@@ -119,7 +119,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if ((token != null && token.isNotEmpty) || isGuest) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LandingScreen()),
+        MaterialPageRoute(builder: (context) => const LandingScreen(showBanner: true)),
       );
       // A notification that cold-started the app is only routable now that a
       // signed-in destination exists. Dropped for logged-out users.

@@ -49,7 +49,7 @@ class _GuestSelectionScreenState extends State<GuestSelectionScreen> {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const LandingScreen()),
+      MaterialPageRoute(builder: (context) => const LandingScreen(showBanner: true)),
       (route) => false,
     );
   }

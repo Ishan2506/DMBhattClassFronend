@@ -235,7 +235,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
           const SizedBox(height: 12),
           const QuickAccessCategories(),
-          const YouTubeChannelAd(),
+          const BoardCrackersBanner(),
           blankVerticalSpace24,
 
           // Auto-Playing Exam Cards Slider

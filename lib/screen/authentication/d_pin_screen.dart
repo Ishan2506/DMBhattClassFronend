@@ -170,7 +170,7 @@ class _DPinScreenState extends State<DPinScreen> {
       onPressed: () {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const LandingScreen()),
+          MaterialPageRoute(builder: (context) => const LandingScreen(showBanner: true)),
           (route) => false,
         );
       },

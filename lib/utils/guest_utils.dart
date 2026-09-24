@@ -9,6 +9,7 @@ class GuestUtils {
   static const String keyMainExam = 'guest_main_exam_count';
   static const String keyFiveMinTest = 'guest_five_min_test_count';
   static const String keyOneLinerExam = 'guest_one_liner_exam_count';
+  static const String keyBoardCracker = 'guest_board_cracker_count';
 
   static Future<bool> isGuest() async {
     final prefs = await SharedPreferences.getInstance();
@@ -45,6 +46,8 @@ class GuestUtils {
         return keyFiveMinTest;
       case 'ONELINER':
         return keyOneLinerExam;
+      case 'BOARDCRACKER':
+        return keyBoardCracker;
       default:
         return 'guest_other_count';
     }
@@ -95,6 +98,8 @@ class GuestUtils {
         return "5-Min Rapid Test";
       case 'ONELINER':
         return "One-Liner Exam";
+      case 'BOARDCRACKER':
+        return "Objectives Test Series paper";
       default:
         return "exam";
     }

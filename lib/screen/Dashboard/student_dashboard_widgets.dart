@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:dm_bhatt_tutions/screen/Dashboard/board_crackers_screens.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_games_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
@@ -7,7 +8,6 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class QuickAccessCategories extends StatelessWidget {
   const QuickAccessCategories({super.key});
@@ -127,15 +127,10 @@ class QuickAccessCategories extends StatelessWidget {
 
 
 
-class YouTubeChannelAd extends StatelessWidget {
-  const YouTubeChannelAd({super.key});
-
-  Future<void> _launchURL() async {
-    final Uri url = Uri.parse('https://www.youtube.com/@DMBhattSir'); // Replace with actual URL if known
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $url');
-    }
-  }
+/// Home-screen entry point for Objectives Test Series (replaces the old
+/// "Watch & Learn" YouTube card in the same slot).
+class BoardCrackersBanner extends StatelessWidget {
+  const BoardCrackersBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -144,15 +139,15 @@ class YouTubeChannelAd extends StatelessWidget {
     return Container(
       margin: EdgeInsets.all(screenWidth * 0.05),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.red.shade700, Colors.red.shade500],
+        gradient: const LinearGradient(
+          colors: [kBoardCrackerStart, kBoardCrackerEnd],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withOpacity(0.3),
+            color: kBoardCrackerStart.withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -161,7 +156,10 @@ class YouTubeChannelAd extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: _launchURL,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BoardCrackersScreen()),
+          ),
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: EdgeInsets.all(screenWidth * 0.05),
@@ -180,8 +178,8 @@ class YouTubeChannelAd extends StatelessWidget {
                     ],
                   ),
                   child: Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.red,
+                    Icons.workspace_premium_rounded,
+                    color: kBoardCrackerStart,
                     size: screenWidth * 0.08,
                   ),
                 ),
@@ -191,7 +189,7 @@ class YouTubeChannelAd extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Watch & Learn!",
+                        "Objectives Test Series",
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: screenWidth * 0.04,
@@ -200,7 +198,7 @@ class YouTubeChannelAd extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Subscribe to our Official YouTube Channel",
+                        "100 MCQs related to Board",
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: screenWidth * 0.03,

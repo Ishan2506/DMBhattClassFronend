@@ -1021,6 +1021,24 @@ class ApiService {
     return _handleSession(await http.get(uri));
   }
 
+  /// Active promotional banners uploaded from the admin panel, newest first.
+  /// Silent on failure: returns an empty list rather than toasting, since the
+  /// banner popup is optional and fetched on every app open.
+  static Future<List<Map<String, dynamic>>> getActiveBanners() async {
+    try {
+      final response = await http
+          .get(Uri.parse("$baseUrl/banner/active"))
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return [];
+      final data = jsonDecode(response.body);
+      if (data is! List) return [];
+      return data.whereType<Map<String, dynamic>>().toList();
+    } catch (e) {
+      debugPrint("Error fetching banners: $e");
+      return [];
+    }
+  }
+
   static Future<http.Response> getGameQuestions(String gameType) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
@@ -1438,6 +1456,102 @@ class ApiService {
           'violationCount': violationCount,
           if (type != null) 'type': type,
           if (answers != null) 'answers': answers,
+        }),
+      ),
+    );
+  }
+
+  // --- Objectives Test Series ---
+  /// Papers come back without their questions (each holds up to 100 MCQs);
+  /// use [getBoardCrackerById] to load one for the exam screen.
+  static Future<http.Response> getAllBoardCrackers({
+    String? std,
+    String? medium,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final queryParams = await _getDefaultQueryParams();
+    // The server filters exactly on these; stream is matched on the client
+    // because papers for std 1-10 are stored with stream "None".
+    queryParams.remove('standard');
+    queryParams.remove('stream');
+    if (std != null && std.isNotEmpty) queryParams['std'] = std;
+    if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
+
+    final uri = Uri.parse(
+      "$baseUrl/objectivestestseries/all",
+    ).replace(queryParameters: queryParams);
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
+  }
+
+  /// Returned without answers - scoring happens in [submitBoardCrackerResult].
+  static Future<http.Response> getBoardCrackerById(String examId) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/objectivestestseries/$examId");
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
+  }
+
+  /// Ranked standings for one paper (top 100 plus the caller's own entry).
+  static Future<http.Response> getBoardCrackerLeaderboard(String examId) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/objectivestestseries/$examId/leaderboard");
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
+  }
+
+  /// [answers] is a list of `{questionId, selectedAnswer}` where selectedAnswer
+  /// is an option letter (A-D) or empty when skipped. The response carries the
+  /// score plus a per-question `review` with the correct answers.
+  static Future<http.Response> submitBoardCrackerResult({
+    required String examId,
+    required List<Map<String, dynamic>> answers,
+    int timeTakenSeconds = 0,
+    int violationCount = 0,
+    List<String> violations = const [],
+    String submitReason = 'MANUAL',
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/objectivestestseries/submit");
+    return _handleSession(
+      await http.post(
+        uri,
+        headers: _addAuth({
+          'Content-Type': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+        body: jsonEncode({
+          'examId': examId,
+          'answers': answers,
+          'timeTakenSeconds': timeTakenSeconds,
+          'violationCount': violationCount,
+          'violations': violations,
+          'submitReason': submitReason,
         }),
       ),
     );

@@ -189,7 +189,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
             CustomToast.showSuccess(context, "Account Added & Switched");
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const LandingScreen()),
+              MaterialPageRoute(builder: (context) => const LandingScreen(showBanner: true)),
               (route) => false,
             );
           }
