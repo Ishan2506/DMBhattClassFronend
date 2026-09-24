@@ -182,7 +182,7 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -205,10 +205,10 @@ class StudentPaymentConfirmationScreen extends StatelessWidget {
             // Details Card
             Card(
               elevation: 0,
-              color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),

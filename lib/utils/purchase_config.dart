@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/payment_config.dart';
 import '../network/api_service.dart';
@@ -31,7 +32,7 @@ class PurchaseConfig {
         await prefs.setString('payment_config', response.body);
       }
     } catch (e) {
-      print('Error fetching payment config: $e');
+      debugPrint('Error fetching payment config: $e');
     }
   }
 }

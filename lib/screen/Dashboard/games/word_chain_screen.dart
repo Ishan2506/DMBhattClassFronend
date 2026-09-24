@@ -44,10 +44,10 @@ class _WordChainScreenState extends State<WordChainScreen> {
     setState(() => _isLoading = true);
     try {
       final response = await ApiService.getGameQuestions('Word Chain');
-      print("Word Chain API Status: ${response.statusCode}");
+      debugPrint("Word Chain API Status: ${response.statusCode}");
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        print("Word Chain Data received: ${data.length} items");
+        debugPrint("Word Chain Data received: ${data.length} items");
         if (data.isNotEmpty) {
           Set<String> newWords = {};
           for (var item in data) {
@@ -57,7 +57,7 @@ class _WordChainScreenState extends State<WordChainScreen> {
               newWords.addAll(words);
             }
           }
-          print("Word Chain Dictionary size: ${newWords.length}");
+          debugPrint("Word Chain Dictionary size: ${newWords.length}");
           if (newWords.isNotEmpty) {
             setState(() {
               _dictionary = newWords.toList();
@@ -65,7 +65,7 @@ class _WordChainScreenState extends State<WordChainScreen> {
           }
         }
       } else {
-        print("Word Chain Fetch failed: ${response.body}");
+        debugPrint("Word Chain Fetch failed: ${response.body}");
         // Fallback to minimal dictionary if empty to prevent crash
         if (_dictionary.isEmpty) {
           _dictionary = ["APPLE", "ELEPHANT", "TIGER", "RABBIT", "TRAIN"];
@@ -206,7 +206,7 @@ class _WordChainScreenState extends State<WordChainScreen> {
                         Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                                color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
+                                color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: theme.colorScheme.primary, width: 2)
                             ),
@@ -284,9 +284,9 @@ class _WordChainScreenState extends State<WordChainScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

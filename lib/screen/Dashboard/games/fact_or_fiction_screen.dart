@@ -58,7 +58,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
         });
       }
     } catch (e) {
-      print("Error fetching questions: $e");
+      debugPrint("Error fetching questions: $e");
       setState(() {
         _isLoading = false;
       });
@@ -144,7 +144,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -178,9 +178,9 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -247,7 +247,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -268,7 +268,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -373,7 +373,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
                Container(
                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                  decoration: BoxDecoration(
-                   color: theme.dividerColor.withOpacity(0.1), 
+                   color: theme.dividerColor.withValues(alpha: 0.1), 
                    borderRadius: BorderRadius.circular(12)
                  ),
                  child: Text(
@@ -391,7 +391,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: _animationController.value,
-              backgroundColor: theme.dividerColor.withOpacity(0.1),
+              backgroundColor: theme.dividerColor.withValues(alpha: 0.1),
               color: Colors.amber,
               minHeight: 8,
             ),
@@ -448,10 +448,10 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.1), 
+            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.1), 
             blurRadius: 15, 
             offset: const Offset(0, 8)
           )
@@ -462,7 +462,7 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
           Text(
             "Question ${_currentIndex + 1}",
             style: GoogleFonts.poppins(
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5), 
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5), 
               fontSize: 14
             ),
           ),
@@ -487,12 +487,12 @@ class _FactOrFictionScreenState extends State<FactOrFictionScreen> with SingleTi
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+        color: isCorrect ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: isCorrect ? Colors.green : Colors.red, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.1), 
+            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.1), 
             blurRadius: 15, 
             offset: const Offset(0, 8)
           )

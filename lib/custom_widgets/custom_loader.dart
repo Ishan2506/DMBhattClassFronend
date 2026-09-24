@@ -16,7 +16,7 @@ class CustomLoader extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 15,
               spreadRadius: 2,
               offset: const Offset(0, 4),
@@ -53,7 +53,7 @@ class CustomLoader extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.3), // Dimmed background
+      barrierColor: Colors.black.withValues(alpha: 0.3), // Dimmed background
       builder: (context) {
         return const CustomLoader();
       },

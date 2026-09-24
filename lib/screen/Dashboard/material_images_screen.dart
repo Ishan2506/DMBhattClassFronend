@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/utils/academic_constants.dart';
-import 'dart:ui';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
@@ -99,13 +98,13 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
         gradient: LinearGradient(
           colors: [
             colorScheme.primaryContainer,
-            colorScheme.primaryContainer.withOpacity(0.85),
+            colorScheme.primaryContainer.withValues(alpha: 0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,7 +114,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.2),
+                  color: colorScheme.primary.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.workspace_premium_rounded, color: colorScheme.primary, size: 24),
@@ -138,7 +137,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                        color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -151,7 +150,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
             "Upgrade your plan to unlock full access to all diagrams, notes & study materials!",
             style: GoogleFonts.poppins(
               fontSize: 12.5,
-              color: colorScheme.onPrimaryContainer.withOpacity(0.9),
+              color: colorScheme.onPrimaryContainer.withValues(alpha: 0.9),
             ),
           ),
           const SizedBox(height: 12),
@@ -229,7 +228,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -311,7 +310,7 @@ class _MaterialImagesScreenState extends State<MaterialImagesScreen> {
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [

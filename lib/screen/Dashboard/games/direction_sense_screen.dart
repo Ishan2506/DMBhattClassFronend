@@ -194,7 +194,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.videogame_asset, color: colorScheme.primary, size: 28),
@@ -223,9 +223,9 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -286,7 +286,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -307,7 +307,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -351,7 +351,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
           Positioned(bottom: 10, child: Text("S", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.primary))),
           Positioned(right: 15, child: Text("E", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.primary))),
           Positioned(left: 15, child: Text("W", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.primary))),
-          Icon(Icons.explore, size: 80, color: theme.colorScheme.secondary.withOpacity(0.5)),
+          Icon(Icons.explore, size: 80, color: theme.colorScheme.secondary.withValues(alpha: 0.5)),
        ],
     );
 
@@ -389,7 +389,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withOpacity(0.2),
+                                color: Colors.amber.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(color: Colors.amber.shade300),
                               ),
@@ -444,9 +444,9 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.05),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
+                        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
                       ),
                       child: Column(
                         children: [
@@ -485,7 +485,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
                               elevation: 2,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.2)),
                               ),
                             ),
                             label: Text(
@@ -508,7 +508,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
               Container(
                 width: double.infinity,
                 height: double.infinity,
-                color: Colors.black.withOpacity(0.8),
+                color: Colors.black.withValues(alpha: 0.8),
                 child: Center(
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.85,
@@ -518,7 +518,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
                       borderRadius: BorderRadius.circular(32),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         )
@@ -530,7 +530,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.15),
+                            color: Colors.amber.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.emoji_events_rounded, size: 80, color: Colors.amber),
@@ -571,7 +571,7 @@ class _DirectionSenseScreenState extends State<DirectionSenseScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 18),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                             elevation: 8,
-                            shadowColor: theme.colorScheme.primary.withOpacity(0.5),
+                            shadowColor: theme.colorScheme.primary.withValues(alpha: 0.5),
                           ),
                           child: Text(
                             "Play Again", 

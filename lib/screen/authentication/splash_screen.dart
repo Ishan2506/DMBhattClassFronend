@@ -126,6 +126,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       final tap = NotificationService.instance.takePendingTap();
       if (tap != null) {
         debugPrint('Cold-start notification tap: $tap');
+        if (!isGuest) NotificationService.instance.routeTap(tap);
       }
     } else {
       Navigator.pushReplacement(

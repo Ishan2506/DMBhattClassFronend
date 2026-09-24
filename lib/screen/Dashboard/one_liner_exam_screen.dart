@@ -406,10 +406,10 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
                       Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withOpacity(0.3),
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: colorScheme.primary.withOpacity(0.2),
+                            color: colorScheme.primary.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Text(
@@ -437,7 +437,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -487,7 +487,7 @@ class _OneLinerExamScreenState extends State<OneLinerExamScreen>
                                       (_isListening
                                               ? Colors.red
                                               : colorScheme.primary)
-                                          .withOpacity(0.4),
+                                          .withValues(alpha: 0.4),
                                   blurRadius: _isListening ? 30 : 20,
                                   spreadRadius: _isListening ? 10 : 5,
                                 ),

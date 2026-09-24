@@ -127,9 +127,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final prefs = await SharedPreferences.getInstance();
     _board =
         widget.payload?.fields['board']?.toString() ?? prefs.getString('board');
-    if (_cachedPassword == null) {
-      _cachedPassword = prefs.getString('user_password');
-    }
+    _cachedPassword ??= prefs.getString('user_password');
     _stream ??= prefs.getString('stream');
 
     if (_std != null) {
@@ -902,7 +900,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: colorScheme.primary.withOpacity(0.2),
+                          color: colorScheme.primary.withValues(alpha: 0.2),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         ),
@@ -922,7 +920,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: colorScheme.onPrimary.withOpacity(
+                                    color: colorScheme.onPrimary.withValues(alpha: 
                                       0.8,
                                     ),
                                   ),
@@ -967,7 +965,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               "Total Payable",
                               style: GoogleFonts.poppins(
                                 fontSize: 16,
-                                color: colorScheme.onPrimary.withOpacity(0.9),
+                                color: colorScheme.onPrimary.withValues(alpha: 0.9),
                               ),
                             ),
                             Text(
@@ -1143,7 +1141,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: colorScheme.primary.withOpacity(0.3),
+                          color: colorScheme.primary.withValues(alpha: 0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -1213,7 +1211,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ? Colors.green
                     : showErrorIcon
                     ? Colors.red
-                    : colorScheme.outlineVariant.withOpacity(0.5),
+                    : colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
             ),
             child: TextField(
@@ -1297,9 +1295,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1311,7 +1309,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: color.withOpacity(0.9),
+              color: color.withValues(alpha: 0.9),
             ),
           ),
         ],

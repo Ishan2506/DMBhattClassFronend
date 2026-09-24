@@ -183,7 +183,7 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.videogame_asset, color: colorScheme.primary, size: 28),
@@ -212,9 +212,9 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -240,7 +240,7 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
                     const SizedBox(height: 8),
                     Text(
                       "Watch the sequence: Red -> Blue -> Green, then tap them in that order.",
-                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8)),
+                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8)),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -271,7 +271,7 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
       width: 30,
       height: 30,
       decoration: BoxDecoration(
-        color: isActive ? color : color.withOpacity(0.3),
+        color: isActive ? color : color.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: isActive ? Colors.white : Colors.transparent, width: 2),
       ),
@@ -286,7 +286,7 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -307,7 +307,7 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -363,7 +363,7 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
+                      color: Colors.amber.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.amber.shade300),
                     ),
@@ -420,14 +420,14 @@ class _SequenceMemoryScreenState extends State<SequenceMemoryScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
                         decoration: BoxDecoration(
-                          color: isActive ? _padColors[index] : _padColors[index].withOpacity(0.4),
+                          color: isActive ? _padColors[index] : _padColors[index].withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
                              color: isActive ? Colors.white : Colors.transparent, 
                              width: 4
                           ),
                           boxShadow: isActive ? [
-                              BoxShadow(color: _padColors[index].withOpacity(0.8), blurRadius: 20, spreadRadius: 5)
+                              BoxShadow(color: _padColors[index].withValues(alpha: 0.8), blurRadius: 20, spreadRadius: 5)
                           ] : [],
                         ),
                       ),

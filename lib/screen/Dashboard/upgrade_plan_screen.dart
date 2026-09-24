@@ -944,7 +944,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                 color: colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: colorScheme.outlineVariant.withOpacity(0.5),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
               ),
               child: Column(
@@ -1008,7 +1008,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.2),
+                      color: colorScheme.primary.withValues(alpha: 0.2),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -1028,7 +1028,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: colorScheme.onPrimary.withOpacity(0.8),
+                                color: colorScheme.onPrimary.withValues(alpha: 0.8),
                               ),
                             ),
                             Text(
@@ -1044,7 +1044,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                                 _selectedStream!,
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
-                                  color: colorScheme.onPrimary.withOpacity(0.8),
+                                  color: colorScheme.onPrimary.withValues(alpha: 0.8),
                                 ),
                               ),
                           ],
@@ -1079,7 +1079,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                           l10n.totalPayable,
                           style: GoogleFonts.poppins(
                             fontSize: 16,
-                            color: colorScheme.onPrimary.withOpacity(0.9),
+                            color: colorScheme.onPrimary.withValues(alpha: 0.9),
                           ),
                         ),
                         Text(
@@ -1213,7 +1213,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                           color: colorScheme.surfaceContainer,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: colorScheme.outlineVariant.withOpacity(0.5),
+                            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                           ),
                         ),
                         child: TextField(
@@ -1223,7 +1223,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                           decoration: InputDecoration(
                             hintText: l10n.pointsHint,
                             hintStyle: GoogleFonts.poppins(
-                              color: colorScheme.onSurfaceVariant.withOpacity(
+                              color: colorScheme.onSurfaceVariant.withValues(alpha: 
                                 0.5,
                               ),
                             ),
@@ -1318,7 +1318,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.3),
+                      color: colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -1445,7 +1445,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   color: colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withOpacity(0.5),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                   ),
                 ),
                 child: TextField(
@@ -1455,7 +1455,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   decoration: InputDecoration(
                     hintText: hintText,
                     hintStyle: GoogleFonts.poppins(
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                     ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1560,9 +1560,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1574,7 +1574,7 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: color.withOpacity(0.9),
+              color: color.withValues(alpha: 0.9),
             ),
           ),
         ],

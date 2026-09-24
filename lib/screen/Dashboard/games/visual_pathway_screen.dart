@@ -211,10 +211,10 @@ class _VisualPathwayScreenState extends State<VisualPathwayScreen> {
                               decoration: BoxDecoration(
                                 color: isFlashed || isSelected ? theme.colorScheme.primary : theme.cardColor,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: theme.dividerColor.withOpacity(0.3), width: 2),
+                                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.3), width: 2),
                                 boxShadow: isFlashed || isSelected ? [
                                   BoxShadow(
-                                    color: theme.colorScheme.primary.withOpacity(0.5),
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
                                     blurRadius: 10,
                                     spreadRadius: 2,
                                   )
@@ -238,9 +238,9 @@ class _VisualPathwayScreenState extends State<VisualPathwayScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

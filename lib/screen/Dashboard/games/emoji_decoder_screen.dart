@@ -53,7 +53,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
         });
       }
     } catch (e) {
-      print("Error fetching questions: $e");
+      debugPrint("Error fetching questions: $e");
       setState(() {
         _isLoading = false;
       });
@@ -145,7 +145,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -179,9 +179,9 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -248,7 +248,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -269,7 +269,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -409,7 +409,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                Text(
                  "Guess the Phrase:",
                  style: GoogleFonts.poppins(
-                   color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7), 
+                   color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7), 
                    fontSize: 18
                  ),
                ),
@@ -419,10 +419,10 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                  decoration: BoxDecoration(
                    color: theme.cardColor,
                    borderRadius: BorderRadius.circular(24),
-                   border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                   border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                    boxShadow: [
                      BoxShadow(
-                       color: Colors.black.withOpacity(isDark ? 0.3 : 0.1), 
+                       color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1), 
                        blurRadius: 15, 
                        offset: const Offset(0, 8)
                      )
@@ -451,7 +451,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                    fillColor: theme.cardColor,
                    enabledBorder: OutlineInputBorder(
                      borderRadius: BorderRadius.circular(16), 
-                     borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2))
+                     borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.2))
                    ),
                    focusedBorder: OutlineInputBorder(
                      borderRadius: BorderRadius.circular(16), 
@@ -493,7 +493,7 @@ class _EmojiDecoderScreenState extends State<EmojiDecoderScreen> {
                  onPressed: _skipLevel,
                  child: Text(
                    "Skip Level", 
-                   style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5))
+                   style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5))
                  ),
                )
             ],

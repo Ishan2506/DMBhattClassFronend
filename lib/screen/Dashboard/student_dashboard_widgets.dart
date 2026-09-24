@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_selection_screen.dart';
@@ -46,7 +47,7 @@ class QuickAccessCategories extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: _categories
-            .where((cat) => !(Platform.isIOS && cat['title'] == "Mind Games"))
+            .where((cat) => !((!kIsWeb && Platform.isIOS) && cat['title'] == "Mind Games"))
             .map((cat) => _buildCategoryItem(context, cat))
             .toList(),
       ),
@@ -78,19 +79,19 @@ class QuickAccessCategories extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     cat['color'],
-                    cat['color'].withOpacity(0.7),
+                    cat['color'].withValues(alpha: 0.7),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: cat['color'].withOpacity(0.3),
+                    color: cat['color'].withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                   BoxShadow(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     blurRadius: 2,
                     offset: const Offset(-2, -2),
                   ),
@@ -152,7 +153,7 @@ class YouTubeChannelAd extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withOpacity(0.3),
+            color: Colors.red.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -174,7 +175,7 @@ class YouTubeChannelAd extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 5,
                       ),
                     ],
@@ -202,7 +203,7 @@ class YouTubeChannelAd extends StatelessWidget {
                       Text(
                         "Subscribe to our Official YouTube Channel",
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: screenWidth * 0.03,
                         ),
                       ),

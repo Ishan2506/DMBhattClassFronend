@@ -317,7 +317,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
                      boxShadow: [
                        BoxShadow(
-                         color: Colors.black.withOpacity(0.05),
+                         color: Colors.black.withValues(alpha: 0.05),
                          blurRadius: 10,
                          offset: const Offset(0, 5),
                        )
@@ -378,7 +378,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -727,10 +727,10 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
           : ElevatedButton(
               onPressed: onPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: isPrimary ? color : color.withOpacity(0.1),
+                backgroundColor: isPrimary ? color : color.withValues(alpha: 0.1),
                 foregroundColor: isPrimary ? Colors.white : color,
                 elevation: isPrimary ? 4 : 0,
-                shadowColor: isPrimary ? color.withOpacity(0.4) : Colors.transparent,
+                shadowColor: isPrimary ? color.withValues(alpha: 0.4) : Colors.transparent,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               child: Row(

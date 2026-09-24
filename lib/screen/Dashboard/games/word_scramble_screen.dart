@@ -59,7 +59,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
         });
       }
     } catch (e) {
-      print("Error fetching questions: $e");
+      debugPrint("Error fetching questions: $e");
        setState(() {
           _isLoading = false;
         });
@@ -183,7 +183,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -217,9 +217,9 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -284,7 +284,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -305,7 +305,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -350,7 +350,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                _isGameOver ? "Time Up!" : "Unscramble:",
                style: GoogleFonts.poppins(
                  fontSize: 18, 
-                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)
+                 color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)
                ),
              ),
              const SizedBox(height: 16),
@@ -374,16 +374,16 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
                ),
                decoration: InputDecoration(
                  hintText: "Enter Word",
-                 hintStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.4)),
+                 hintStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.4)),
                  filled: true,
                  fillColor: theme.cardColor,
                  border: OutlineInputBorder(
                    borderRadius: BorderRadius.circular(16), 
-                   borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1))
+                   borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1))
                  ),
                  enabledBorder: OutlineInputBorder(
                    borderRadius: BorderRadius.circular(16), 
-                   borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1))
+                   borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1))
                  ),
                ),
                onSubmitted: (_) => _submitAnswer(),
@@ -439,7 +439,7 @@ class _WordScrambleScreenState extends State<WordScrambleScreen> {
   Widget _buildBadge(IconData icon, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Icon(icon, color: color),

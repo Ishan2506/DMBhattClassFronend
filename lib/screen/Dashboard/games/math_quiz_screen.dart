@@ -61,7 +61,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
         });
       }
     } catch (e) {
-      print("Error fetching questions: $e");
+      debugPrint("Error fetching questions: $e");
        setState(() {
           _isLoading = false;
         });
@@ -167,7 +167,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -201,9 +201,9 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -261,7 +261,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
       decoration: BoxDecoration(
         color: isCorrect ? Colors.green : theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isCorrect ? Colors.green : theme.dividerColor.withOpacity(0.2)),
+        border: Border.all(color: isCorrect ? Colors.green : theme.dividerColor.withValues(alpha: 0.2)),
       ),
       child: Text(
         val,
@@ -282,7 +282,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -303,7 +303,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -414,7 +414,7 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                           ),
                         ),
                         child: Center(
@@ -460,9 +460,9 @@ class _MathQuizScreenState extends State<MathQuizScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
 import 'dart:io';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
@@ -11,7 +12,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/edit_profile_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/student_exam_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/more_detail.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
@@ -88,7 +88,7 @@ class StudentProfileScreen extends StatefulWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? theme.colorScheme.primary.withOpacity(0.05)
+                        ? theme.colorScheme.primary.withValues(alpha: 0.05)
                         : theme.cardColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
@@ -105,7 +105,7 @@ class StudentProfileScreen extends StatefulWidget {
                     ),
                     leading: CircleAvatar(
                       radius: 24,
-                      backgroundColor: theme.colorScheme.primary.withOpacity(
+                      backgroundColor: theme.colorScheme.primary.withValues(alpha: 
                         0.1,
                       ),
                       backgroundImage:
@@ -249,18 +249,22 @@ class StudentProfileScreen extends StatefulWidget {
       if (revenueCatUserId != null && revenueCatUserId.isNotEmpty) {
         await RevenueCatService.instance.login(revenueCatUserId);
       }
-      if (account['phone'] != null)
+      if (account['phone'] != null) {
         await prefs.setString('user_phone', account['phone']);
-      if (account['userId'] != null)
+      }
+      if (account['userId'] != null) {
         await prefs.setString('userId', account['userId']);
+      }
 
       // Handle userData if present
       if (account['userData'] != null) {
         final user = jsonDecode(account['userData']);
-        if (user['role'] != null)
+        if (user['role'] != null) {
           await prefs.setString('user_role', user['role']);
-        if (user['firstName'] != null)
+        }
+        if (user['firstName'] != null) {
           await prefs.setString('firstName', user['firstName']);
+        }
       }
 
       if (context.mounted) {
@@ -456,7 +460,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -551,7 +555,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: Colors.black.withValues(alpha: 0.1),
                                       blurRadius: 10,
                                       spreadRadius: 2,
                                     ),
@@ -560,7 +564,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                 child: CircleAvatar(
                                   radius: 55,
                                   backgroundColor: theme.colorScheme.primary
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   backgroundImage:
                                       (_photoPath != null &&
                                           _photoPath!.isNotEmpty)
@@ -710,7 +714,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   ),
 
                   // 3. Quick Stats (Reward Points) — hidden on iOS
-                  if (!Platform.isIOS) ...[
+                  if (!(!kIsWeb && Platform.isIOS)) ...[
                     const SizedBox(height: 24),
 
                     Padding(
@@ -729,7 +733,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.orange.withOpacity(0.3),
+                              color: Colors.orange.withValues(alpha: 0.3),
                               blurRadius: 15,
                               offset: const Offset(0, 8),
                             ),
@@ -740,7 +744,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -756,7 +760,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                 Text(
                                   l10n.learningPoints,
                                   style: GoogleFonts.poppins(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -918,7 +922,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
                   /*
                   // 7. Manage Subscription
-                  if (Platform.isIOS)
+                  if ((!kIsWeb && Platform.isIOS))
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -1125,9 +1129,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -1161,14 +1165,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: theme.colorScheme.primary, size: 20),
@@ -1206,8 +1210,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseHelper().getAccounts(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty)
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
+        }
         final l10n = AppLocalizations.of(context)!;
         final accounts = snapshot.data!;
 
@@ -1231,7 +1236,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 color: theme.colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 ),
               ),
               child: Column(
@@ -1294,7 +1299,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                 color: theme.colorScheme.surface,
                                 borderRadius: BorderRadius.circular(30),
                                 border: Border.all(
-                                  color: theme.dividerColor.withOpacity(0.1),
+                                  color: theme.dividerColor.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Row(
@@ -1303,7 +1308,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                   CircleAvatar(
                                     radius: 14,
                                     backgroundColor: theme.colorScheme.primary
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                     backgroundImage:
                                         (acc['profilePic'] != null &&
                                             acc['profilePic']
@@ -1394,19 +1399,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -1437,7 +1442,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(

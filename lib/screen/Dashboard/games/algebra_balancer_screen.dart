@@ -188,7 +188,7 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.videogame_asset, color: colorScheme.primary, size: 28),
@@ -227,7 +227,7 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
       children: [
         Container(
           width: 24, height: 24,
-          decoration: BoxDecoration(color: theme.colorScheme.secondary.withOpacity(0.15), shape: BoxShape.circle),
+          decoration: BoxDecoration(color: theme.colorScheme.secondary.withValues(alpha: 0.15), shape: BoxShape.circle),
           child: Center(child: Text(number, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: theme.colorScheme.secondary, fontSize: 12))),
         ),
         const SizedBox(width: 12),
@@ -284,7 +284,7 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
                                 color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -302,7 +302,7 @@ class _AlgebraBalancerScreenState extends State<AlgebraBalancerScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.1),
+                                  color: Colors.blue.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(color: Colors.blue.shade300, width: 2),
                                 ),

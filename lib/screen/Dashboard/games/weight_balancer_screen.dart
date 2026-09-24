@@ -191,7 +191,7 @@ class _WeightBalancerScreenState extends State<WeightBalancerScreen> {
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: isTarget ? theme.colorScheme.primary.withOpacity(0.2) : Colors.orangeAccent.withOpacity(0.2),
+            color: isTarget ? theme.colorScheme.primary.withValues(alpha: 0.2) : Colors.orangeAccent.withValues(alpha: 0.2),
             shape: BoxShape.circle,
             border: Border.all(color: isTarget ? theme.colorScheme.primary : Colors.orangeAccent, width: 4),
           ),
@@ -211,9 +211,9 @@ class _WeightBalancerScreenState extends State<WeightBalancerScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

@@ -17,7 +17,7 @@ class CustomOutlinedButtonTheme {
         overlayColor: WidgetStateProperty.resolveWith<Color?>(
           (Set<WidgetState> states) {
             if (states.contains(WidgetState.pressed)) {
-              return colorScheme.primary.withOpacity(0.1);
+              return colorScheme.primary.withValues(alpha: 0.1);
             }
             return null; // Defer to the widget's default.
           },

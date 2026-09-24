@@ -325,7 +325,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             gradient: LinearGradient(
               colors: [
                 theme.colorScheme.primary,
-                theme.colorScheme.primary.withOpacity(0.8),
+                theme.colorScheme.primary.withValues(alpha: 0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -354,7 +354,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 decoration: BoxDecoration(
                                   color: isDark
                                       ? Colors.grey.shade800
-                                      : theme.colorScheme.primary.withOpacity(
+                                      : theme.colorScheme.primary.withValues(alpha: 
                                           0.1,
                                         ),
                                   shape: BoxShape.circle,
@@ -485,7 +485,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 child: Text(
                                   _selectedDob == null
                                       ? "Not Provided"
-                                      : "${DateFormat('dd/MM/yyyy').format(_selectedDob!)}",
+                                      : DateFormat('dd/MM/yyyy').format(_selectedDob!),
                                   style: GoogleFonts.poppins(
                                     color: theme.textTheme.bodyLarge?.color,
                                     fontWeight: FontWeight.bold,

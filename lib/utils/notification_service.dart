@@ -2,7 +2,10 @@ import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:dm_bhatt_tutions/main.dart' show navigatorKey;
+import 'package:dm_bhatt_tutions/screen/Dashboard/live_arena/live_exam_detail_screen.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
@@ -149,6 +152,17 @@ class NotificationService {
     }
     // The app is already in the foreground by the time this runs; add
     // deep-link routing off `data` here when the payload defines a target.
+    routeTap(data);
+  }
+
+  /// Deep-links a notification payload to its screen, if it names one.
+  void routeTap(Map<String, dynamic> data) {
+    final liveExamId = data['liveExamId']?.toString();
+    if (data['type'] == 'live_exam' && liveExamId != null && liveExamId.isNotEmpty) {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => LiveExamDetailScreen(examId: liveExamId)),
+      );
+    }
   }
 
   Future<void> subscribeToStandardTopic(String standard) async {

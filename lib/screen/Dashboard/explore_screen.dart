@@ -173,7 +173,7 @@ class ExploreScreenState extends State<ExploreScreen> {
                          borderRadius: BorderRadius.circular(16),
                          boxShadow: [
                            BoxShadow(
-                             color: Colors.black.withOpacity(0.05),
+                             color: Colors.black.withValues(alpha: 0.05),
                              blurRadius: 10,
                              offset: const Offset(0, 4),
                            )
@@ -186,12 +186,12 @@ class ExploreScreenState extends State<ExploreScreen> {
                         decoration: InputDecoration(
                           hintText: l10n.search,
                           hintStyle: GoogleFonts.poppins(
-                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                             fontSize: 16,
                           ),
                          border: InputBorder.none,
                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                         prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),)
+                         prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),)
                         ),
                       ),
                     ),
@@ -214,7 +214,7 @@ class ExploreScreenState extends State<ExploreScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             )
@@ -261,7 +261,7 @@ class ExploreScreenState extends State<ExploreScreen> {
                         color: isSelected ? theme.colorScheme.primary : Colors.transparent,
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: isSelected ? Colors.transparent : theme.colorScheme.outline.withOpacity(0.5),
+                          color: isSelected ? Colors.transparent : theme.colorScheme.outline.withValues(alpha: 0.5),
                         ),
                       ),
                       child: Text(
@@ -342,7 +342,7 @@ class ExploreScreenState extends State<ExploreScreen> {
                               borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.08),
+                                  color: Colors.black.withValues(alpha: 0.08),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),

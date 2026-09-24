@@ -332,7 +332,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.videogame_asset, color: colorScheme.primary, size: 28),
@@ -361,9 +361,9 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -389,7 +389,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
                     const SizedBox(height: 8),
                     Text(
                       "Drag from E to H to find 'EARTH'!",
-                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8)),
+                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8)),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -420,7 +420,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
       width: 28,
       height: 28,
       decoration: BoxDecoration(
-        color: isSelected ? theme.colorScheme.primary.withOpacity(0.2) : theme.cardColor,
+        color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.2) : theme.cardColor,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.dividerColor),
       ),
@@ -445,7 +445,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -466,7 +466,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -539,9 +539,9 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
+                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       level.category,
@@ -555,7 +555,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
+                      color: Colors.amber.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.amber.shade300),
                     ),
@@ -620,8 +620,8 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
                                     height: cellWidth,
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        border: Border.all(color: theme.dividerColor.withOpacity(0.2)),
-                                        color: isSelected ? theme.colorScheme.primary.withOpacity(0.3) : Colors.transparent,
+                                        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2)),
+                                        color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.3) : Colors.transparent,
                                       ),
                                       child: Center(
                                         child: Text(
@@ -656,7 +656,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
                   decoration: BoxDecoration(
                     color: theme.cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                    border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                   ),
                   child: SingleChildScrollView(
                      child: Wrap(
@@ -668,7 +668,7 @@ class _SubjectWordSearchScreenState extends State<SubjectWordSearchScreen> {
                          return Container(
                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                            decoration: BoxDecoration(
-                             color: isFound ? Colors.green.withOpacity(0.2) : theme.scaffoldBackgroundColor,
+                             color: isFound ? Colors.green.withValues(alpha: 0.2) : theme.scaffoldBackgroundColor,
                              borderRadius: BorderRadius.circular(8),
                              border: Border.all(color: isFound ? Colors.green : theme.dividerColor),
                            ),

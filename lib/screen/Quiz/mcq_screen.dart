@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
-import 'package:dm_bhatt_tutions/utils/app_theme.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class McqScreen extends StatefulWidget {
   const McqScreen({super.key});
@@ -208,9 +206,6 @@ class _McqScreenState extends State<McqScreen> {
                 ),
               );
              }
-         } else {
-            if(mounted) CustomToast.showError(context, "Failed to submit result");
-         }
       } catch (e) {
       if(mounted) CustomToast.showError(context, "Error: $e");
     } finally {
@@ -298,7 +293,7 @@ class _McqScreenState extends State<McqScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: isSelected ? colorScheme.primaryContainer.withOpacity(0.4) : colorScheme.surfaceContainer,
+                            color: isSelected ? colorScheme.primaryContainer.withValues(alpha: 0.4) : colorScheme.surfaceContainer,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected ? colorScheme.primary : Colors.transparent,
@@ -381,7 +376,7 @@ class _McqScreenState extends State<McqScreen> {
           color: colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             )

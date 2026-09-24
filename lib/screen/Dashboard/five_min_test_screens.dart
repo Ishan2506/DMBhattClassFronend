@@ -387,7 +387,7 @@ class _FiveMinTestSelectionScreenState
                           : LinearGradient(
                               colors: [
                                 primary,
-                                primary.withOpacity(0.8),
+                                primary.withValues(alpha: 0.8),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -397,7 +397,7 @@ class _FiveMinTestSelectionScreenState
                           ? []
                           : [
                               BoxShadow(
-                                color: primary.withOpacity(0.3),
+                                color: primary.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -515,7 +515,7 @@ class FiveMinTestInstructionScreen extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     theme.colorScheme.primary,
-                    theme.colorScheme.primary.withOpacity(0.7),
+                    theme.colorScheme.primary.withValues(alpha: 0.7),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -523,7 +523,7 @@ class FiveMinTestInstructionScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(S.s12),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -665,7 +665,7 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
               },
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -736,7 +736,7 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                     ? LinearGradient(
                         colors: [
                           theme.colorScheme.primary,
-                          theme.colorScheme.primary.withOpacity(0.7),
+                          theme.colorScheme.primary.withValues(alpha: 0.7),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -749,7 +749,7 @@ class _FiveMinStudyScreenState extends State<FiveMinStudyScreen> {
                 boxShadow: _canProceed
                     ? [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity(0.3),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -1156,12 +1156,12 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withOpacity(
+                      color: theme.colorScheme.primaryContainer.withValues(alpha: 
                         0.3,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: theme.colorScheme.primary.withOpacity(0.2),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Text(
@@ -1189,7 +1189,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                             gradient: LinearGradient(
                               colors: [
                                 theme.colorScheme.primary,
-                                theme.colorScheme.primary.withOpacity(0.8),
+                                theme.colorScheme.primary.withValues(alpha: 0.8),
                               ], // Consistent with App Theme
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -1197,7 +1197,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withOpacity(0.3),
+                                color: theme.colorScheme.primary.withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -1306,7 +1306,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
                                       color: isSelected
-                                          ? theme.colorScheme.primary.withOpacity(0.1)
+                                          ? theme.colorScheme.primary.withValues(alpha: 0.1)
                                           : Colors.white,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(

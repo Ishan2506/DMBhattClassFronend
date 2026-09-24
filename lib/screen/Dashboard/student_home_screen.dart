@@ -8,11 +8,10 @@ import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_dashboard_widgets.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/live_arena/live_arena_home_entry.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_selection_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_selection_screen.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/student_profile.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 
@@ -192,7 +191,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               gradient: LinearGradient(
                 colors: [
                   colorScheme.primary,
-                  colorScheme.primary.withOpacity(0.8),
+                  colorScheme.primary.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -203,7 +202,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.5),
+                  color: colorScheme.primary.withValues(alpha: 0.5),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
@@ -235,6 +234,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
           const SizedBox(height: 12),
           const QuickAccessCategories(),
+          const LiveArenaHomeEntry(),
           const YouTubeChannelAd(),
           blankVerticalSpace24,
 
@@ -331,7 +331,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 height: 8,
                 width: isActive ? 20 : 8,
                 decoration: BoxDecoration(
-                  color: isActive ? colorScheme.primary : colorScheme.primary.withOpacity(0.3),
+                  color: isActive ? colorScheme.primary : colorScheme.primary.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
               );
@@ -363,7 +363,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         gradient: LinearGradient(
           colors: [
             colorScheme.primary,
-            colorScheme.primary.withOpacity(0.8),
+            colorScheme.primary.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -371,7 +371,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(isActive ? 0.3 : 0.1),
+            color: colorScheme.primary.withValues(alpha: isActive ? 0.3 : 0.1),
             blurRadius: isActive ? 12 : 6,
             offset: Offset(0, isActive ? 6 : 3),
           ),
@@ -400,7 +400,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     subtitle,
                     style: GoogleFonts.poppins(
                       fontSize: 10.5,
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -435,7 +435,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(

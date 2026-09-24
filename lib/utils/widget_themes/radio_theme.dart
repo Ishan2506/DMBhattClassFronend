@@ -9,7 +9,7 @@ class CustomRadioTheme {
         if (states.contains(WidgetState.selected)) {
           return colorScheme.primary;
         }
-        return colorScheme.onSurface.withOpacity(0.54);
+        return colorScheme.onSurface.withValues(alpha: 0.54);
       }),
     );
   }

@@ -9,8 +9,8 @@ class CustomElevatedButtonTheme {
         elevation: 0,
         foregroundColor: colorScheme.onPrimary,
         backgroundColor: colorScheme.primary,
-        disabledForegroundColor: colorScheme.onSurface.withOpacity(0.38),
-        disabledBackgroundColor: colorScheme.onSurface.withOpacity(0.12),
+        disabledForegroundColor: colorScheme.onSurface.withValues(alpha: 0.38),
+        disabledBackgroundColor: colorScheme.onSurface.withValues(alpha: 0.12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
         ),

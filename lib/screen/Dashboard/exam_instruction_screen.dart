@@ -55,14 +55,14 @@ class ExamInstructionScreen extends StatelessWidget {
                 height: MediaQuery.of(context).size.height * 0.065,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.7)],
+                    colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(S.s12),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.3),
+                      color: colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),

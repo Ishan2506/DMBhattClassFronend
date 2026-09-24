@@ -133,7 +133,7 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
                 pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
                 showCursor: true,
                 onCompleted: (pin) {
-                  print("Entered PIN: $pin");
+                  debugPrint("Entered PIN: $pin");
                 },
               ),
             ),

@@ -324,11 +324,11 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: colorScheme.primary.withOpacity(0.3), width: 2),
+                                color: colorScheme.primary.withValues(alpha: 0.3), width: 2),
                           ),
                           child: CircleAvatar(
                             radius: 35,
-                            backgroundColor: colorScheme.primary.withOpacity(0.1),
+                            backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                             backgroundImage: const AssetImage(imgLoaderBot),
                           ),
                         ),
@@ -383,10 +383,10 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
           Container(
             decoration: BoxDecoration(
               color: colorScheme.surface,
-              border: Border(top: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.2))),
+              border: Border(top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.2))),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 )
@@ -399,7 +399,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainer,
                     shape: BoxShape.circle,
-                    border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+                    border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
                   ),
                   child: IconButton(
                     icon: Icon(Icons.refresh_rounded, color: colorScheme.onSurfaceVariant),
@@ -422,7 +422,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                           decoration: InputDecoration(
                             hintText: "Type your answer...",
                             hintStyle: GoogleFonts.poppins(
-                              color: colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 14
+                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5), fontSize: 14
                             ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -451,7 +451,7 @@ class _DMAIChatScreenState extends State<DMAIChatScreen> {
                     color: colorScheme.primary, // Matching deep blue
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.primary.withOpacity(0.3),
+                        color: colorScheme.primary.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       )

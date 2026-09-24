@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/dm_ai_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_home_screen.dart';
@@ -37,7 +38,7 @@ class _LandingScreenState extends State<LandingScreen> {
   // These will replace the 'body' area when the index changes
   late final List<Widget> _pages = [
     const StudentHomeScreen(),
-    if (!Platform.isIOS) ExploreScreen(key: _exploreKey),
+    if (!(!kIsWeb && Platform.isIOS)) ExploreScreen(key: _exploreKey),
     //const DMAIScreen(),
     //AIChatScreen(),
     DMAIChatScreen(),
@@ -49,7 +50,7 @@ class _LandingScreenState extends State<LandingScreen> {
     setState(() {
       _selectedIndex = index;
     });
-    if (!Platform.isIOS && index == 1) {
+    if (!(!kIsWeb && Platform.isIOS) && index == 1) {
       _exploreKey.currentState?.fetchProducts(showLoader: false);
     }
   }
@@ -128,8 +129,9 @@ class _LandingScreenState extends State<LandingScreen> {
           }
 
           // Persist data for payment flow
-          if (user['firstName'] != null)
+          if (user['firstName'] != null) {
             await prefs.setString('firstName', user['firstName']);
+          }
           if (currentStandard != null) {
             await prefs.setString('std', currentStandard);
           }
@@ -146,10 +148,11 @@ class _LandingScreenState extends State<LandingScreen> {
           bool skippedOnce = prefs.getBool('skipped_payment_prompt') ?? false;
 
           if (skippedOnce) {
-            if (mounted)
+            if (mounted) {
               setState(() {
                 _isLoadingMembership = false;
               });
+            }
             return;
           }
 
@@ -248,7 +251,7 @@ class _LandingScreenState extends State<LandingScreen> {
     // Titles corresponding to each page (must match _pages and nav items)
     final List<String> titles = [
       l10n.dashboard,
-      if (!Platform.isIOS) l10n.explore,
+      if (!(!kIsWeb && Platform.isIOS)) l10n.explore,
       l10n.dmai,
       l10n.more,
     ];
@@ -274,7 +277,7 @@ class _LandingScreenState extends State<LandingScreen> {
               gradient: LinearGradient(
                 colors: [
                   colorScheme.primary,
-                  colorScheme.primary.withOpacity(0.8),
+                  colorScheme.primary.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -339,7 +342,7 @@ class _LandingScreenState extends State<LandingScreen> {
               icon: const Icon(Icons.home_rounded),
               label: l10n.home,
             ),
-            if (!Platform.isIOS)
+            if (!(!kIsWeb && Platform.isIOS))
               BottomNavigationBarItem(
                 icon: const Icon(
                   Icons.grid_view_rounded,

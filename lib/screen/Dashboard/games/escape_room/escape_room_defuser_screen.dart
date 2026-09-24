@@ -176,15 +176,15 @@ class _EscapeRoomDefuserScreenState extends State<EscapeRoomDefuserScreen> {
                                           margin: const EdgeInsets.symmetric(horizontal: 4),
                                           decoration: BoxDecoration(
                                              color: _getColorFromName(_gameState!.wires[index]),
-                                             border: Border.symmetric(horizontal: BorderSide(color: Colors.black.withOpacity(0.3))),
+                                             border: Border.symmetric(horizontal: BorderSide(color: Colors.black.withValues(alpha: 0.3))),
                                              gradient: isCut 
                                                 ? null 
                                                 : LinearGradient(
                                                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
                                                    colors: [
-                                                      _getColorFromName(_gameState!.wires[index]).withOpacity(0.8),
+                                                      _getColorFromName(_gameState!.wires[index]).withValues(alpha: 0.8),
                                                       _getColorFromName(_gameState!.wires[index]),
-                                                      _getColorFromName(_gameState!.wires[index]).withOpacity(0.5),
+                                                      _getColorFromName(_gameState!.wires[index]).withValues(alpha: 0.5),
                                                    ]
                                                 )
                                           ),

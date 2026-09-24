@@ -12,7 +12,6 @@ import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
-import 'package:dm_bhatt_tutions/utils/download_service.dart';
 
 class BoardPaperScreen extends StatefulWidget {
   const BoardPaperScreen({super.key});
@@ -35,7 +34,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
   String? _selectedSubject;
 
   String? _userBoard;
-  bool _isDownloading = false;
+  final bool _isDownloading = false;
   bool _isGuest = false;
   bool _isPaid = false;
 
@@ -135,13 +134,13 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
         gradient: LinearGradient(
           colors: [
             colorScheme.primaryContainer,
-            colorScheme.primaryContainer.withOpacity(0.85),
+            colorScheme.primaryContainer.withValues(alpha: 0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +150,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.2),
+                  color: colorScheme.primary.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.workspace_premium_rounded, color: colorScheme.primary, size: 24),
@@ -174,7 +173,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                        color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -187,7 +186,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
             "Upgrade your plan to unlock full access to all board papers & study materials!",
             style: GoogleFonts.poppins(
               fontSize: 12.5,
-              color: colorScheme.onPrimaryContainer.withOpacity(0.9),
+              color: colorScheme.onPrimaryContainer.withValues(alpha: 0.9),
             ),
           ),
           const SizedBox(height: 12),
@@ -255,7 +254,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                       padding: const EdgeInsets.only(top: 40),
                       child: Column(
                         children: [
-                          Icon(Icons.manage_search_rounded, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                          Icon(Icons.manage_search_rounded, size: 64, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                           const SizedBox(height: 16),
                           Text("Select filters and apply to view papers", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                         ],
@@ -273,7 +272,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
                        padding: const EdgeInsets.only(top: 40),
                        child: Column(
                          children: [
-                           Icon(Icons.search_off_rounded, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                           Icon(Icons.search_off_rounded, size: 64, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                            const SizedBox(height: 16),
                            Text("No papers found for this search", style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500)),
                          ],
@@ -316,10 +315,10 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -432,7 +431,7 @@ class _BoardPaperScreenState extends State<BoardPaperScreen> {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [

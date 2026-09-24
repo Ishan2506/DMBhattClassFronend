@@ -74,13 +74,13 @@ class _MaterialScreenState extends State<MaterialScreen> {
         gradient: LinearGradient(
           colors: [
             colorScheme.primaryContainer,
-            colorScheme.primaryContainer.withOpacity(0.85),
+            colorScheme.primaryContainer.withValues(alpha: 0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +90,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.2),
+                  color: colorScheme.primary.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.workspace_premium_rounded, color: colorScheme.primary, size: 24),
@@ -113,7 +113,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                        color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -126,7 +126,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
             "You are currently on the free tier. Upgrade your  plan to unlock full access to all notes, papers & study materials!",
             style: GoogleFonts.poppins(
               fontSize: 12.5,
-              color: colorScheme.onPrimaryContainer.withOpacity(0.9),
+              color: colorScheme.onPrimaryContainer.withValues(alpha: 0.9),
             ),
           ),
           const SizedBox(height: 12),
@@ -246,10 +246,10 @@ class _MaterialScreenState extends State<MaterialScreen> {
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -260,7 +260,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: colorScheme.primary, size: 24),

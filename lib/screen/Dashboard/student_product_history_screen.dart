@@ -142,7 +142,7 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -180,7 +180,7 @@ class _StudentProductHistoryScreenState extends State<StudentProductHistoryScree
                     "Txn ID: ${item['transactionId']}",
                      style: GoogleFonts.poppins(
                       fontSize: 11,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.8)
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8)
                     ),
                   ),
                 ],

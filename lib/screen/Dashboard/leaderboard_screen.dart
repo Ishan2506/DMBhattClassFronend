@@ -128,14 +128,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             gradient: LinearGradient(
               colors: [
                 colorScheme.primary,
-                colorScheme.primary.withOpacity(0.8),
+                colorScheme.primary.withValues(alpha: 0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: colorScheme.primary.withOpacity(0.3),
+                color: colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -213,7 +213,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               gradient: LinearGradient(
                                 colors: [
                                   colorScheme.primary,
-                                  colorScheme.primary.withOpacity(0.8),
+                                  colorScheme.primary.withValues(alpha: 0.8),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -224,7 +224,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: colorScheme.primary.withOpacity(0.3),
+                                  color: colorScheme.primary.withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -287,7 +287,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                         ? Theme.of(context)
                                             .colorScheme
                                             .primaryContainer
-                                            .withOpacity(0.2)
+                                            .withValues(alpha: 0.2)
                                         : Theme.of(context).colorScheme.surface,
                                     borderRadius: BorderRadius.circular(12),
                                     border: isUser
@@ -295,12 +295,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .primary
-                                                .withOpacity(0.3),
+                                                .withValues(alpha: 0.3),
                                           )
                                         : null,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.03),
+                                        color: Colors.black.withValues(alpha: 0.03),
                                         blurRadius: 5,
                                         offset: const Offset(0, 2),
                                       ),
@@ -318,7 +318,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                       ),
                                       const SizedBox(width: 16),
                                       CircleAvatar(
-                                        backgroundColor: colorScheme.primary.withOpacity(0.1),
+                                        backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                                         radius: 20,
                                         child: Text(
                                           (item['firstName'] ?? 'U')[0]
@@ -347,7 +347,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.amber.withOpacity(0.1),
+                                          color: Colors.amber.withValues(alpha: 0.1),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
@@ -406,7 +406,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 border: Border.all(color: color, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -469,7 +469,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         Text(
           "$points pts",
           style: GoogleFonts.poppins(
-            color: colorScheme.onPrimary.withOpacity(0.8),
+            color: colorScheme.onPrimary.withValues(alpha: 0.8),
             fontSize: 12,
           ),
         ),

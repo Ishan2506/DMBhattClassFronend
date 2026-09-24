@@ -1,9 +1,6 @@
 import 'dart:math';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_result_screen.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
@@ -35,7 +32,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
   late List<String> _rightItems;
 
   // Track matched indices: key is left index, value is right index
-  Map<int, int> _matches = {};
+  final Map<int, int> _matches = {};
 
   // Currently selected left index
   int? _selectedLeftIndex;
@@ -230,7 +227,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.help_outline_rounded, color: colorScheme.primary, size: 28),
@@ -282,7 +279,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withOpacity(0.1),
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
@@ -301,7 +298,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
             text,
             style: GoogleFonts.poppins(
               fontSize: 13,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -442,11 +439,11 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
         final correct = _isCorrectMatch(index, matchedRightIdx!);
         borderCol = correct ? Colors.green : Colors.red;
         cardColor = correct
-            ? Colors.green.withOpacity(0.08)
-            : Colors.red.withOpacity(0.08);
+            ? Colors.green.withValues(alpha: 0.08)
+            : Colors.red.withValues(alpha: 0.08);
         borderW = 2.0;
       } else {
-        borderCol = primary.withOpacity(0.5);
+        borderCol = primary.withValues(alpha: 0.5);
       }
     }
 
@@ -463,7 +460,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
           border: Border.all(color: borderCol, width: borderW),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -528,11 +525,11 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
         final correct = _isCorrectMatch(leftIndexMatch!, index);
         borderCol = correct ? Colors.green : Colors.red;
         cardColor = correct
-            ? Colors.green.withOpacity(0.08)
-            : Colors.red.withOpacity(0.08);
+            ? Colors.green.withValues(alpha: 0.08)
+            : Colors.red.withValues(alpha: 0.08);
         borderW = 2.0;
       } else {
-        borderCol = primary.withOpacity(0.5);
+        borderCol = primary.withValues(alpha: 0.5);
       }
     }
 
@@ -549,7 +546,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
           border: Border.all(color: borderCol, width: borderW),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -695,7 +692,7 @@ class _MatchFollowingGameScreenState extends State<MatchFollowingGameScreen> {
                 color: theme.cardColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),
@@ -801,7 +798,7 @@ class ConnectionPainter extends CustomPainter {
           }
 
           final paint = Paint()
-            ..color = lineColor.withOpacity(0.85)
+            ..color = lineColor.withValues(alpha: 0.85)
             ..strokeWidth = 3.5
             ..style = PaintingStyle.stroke
             ..strokeCap = StrokeCap.round;
@@ -823,7 +820,7 @@ class ConnectionPainter extends CustomPainter {
           canvas.drawPath(
             path,
             Paint()
-              ..color = lineColor.withOpacity(0.18)
+              ..color = lineColor.withValues(alpha: 0.18)
               ..strokeWidth = 7.0
               ..style = PaintingStyle.stroke
               ..strokeCap = StrokeCap.round,

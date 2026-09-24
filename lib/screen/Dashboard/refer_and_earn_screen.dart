@@ -214,7 +214,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                    Container(
                      padding: const EdgeInsets.all(24),
                      decoration: BoxDecoration(
-                       color: colorScheme.primary.withOpacity(0.1),
+                       color: colorScheme.primary.withValues(alpha: 0.1),
                        shape: BoxShape.circle,
                      ),
                      child: Icon(Icons.diversity_3_rounded, size: 64, color: colorScheme.primary),
@@ -247,10 +247,10 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                      decoration: BoxDecoration(
                        color: colorScheme.surfaceContainer,
                        borderRadius: BorderRadius.circular(20),
-                       border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                       border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
                        boxShadow: [
                          BoxShadow(
-                           color: Colors.black.withOpacity(0.05),
+                           color: Colors.black.withValues(alpha: 0.05),
                            blurRadius: 10,
                            offset: const Offset(0, 4),
                          ),
@@ -274,9 +274,9 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                            child: Container(
                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                              decoration: BoxDecoration(
-                               color: colorScheme.primary.withOpacity(0.1),
+                               color: colorScheme.primary.withValues(alpha: 0.1),
                                borderRadius: BorderRadius.circular(12),
-                               border: Border.all(color: colorScheme.primary.withOpacity(0.3), style: BorderStyle.solid), // Dashed border is complex, solid for now
+                               border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3), style: BorderStyle.solid), // Dashed border is complex, solid for now
                              ),
                              child: Row(
                                mainAxisSize: MainAxisSize.min,
@@ -342,7 +342,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                      decoration: BoxDecoration(
                        color: colorScheme.surfaceContainer,
                        borderRadius: BorderRadius.circular(20),
-                       border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                       border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
                      ),
                      child: Column(
                        children: [
@@ -401,7 +401,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                          Container(
                            padding: const EdgeInsets.all(12),
                            decoration: BoxDecoration(
-                             color: colorScheme.primary.withOpacity(0.05),
+                             color: colorScheme.primary.withValues(alpha: 0.05),
                              borderRadius: BorderRadius.circular(12),
                            ),
                            child: Row(
@@ -440,7 +440,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                        borderRadius: BorderRadius.circular(16),
                        boxShadow: [
                          BoxShadow(
-                           color: Colors.orange.withOpacity(0.3),
+                           color: Colors.orange.withValues(alpha: 0.3),
                            blurRadius: 8,
                            offset: const Offset(0, 4),
                          ),
@@ -473,7 +473,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                          Container(
                            padding: const EdgeInsets.all(12),
                            decoration: BoxDecoration(
-                             color: Colors.white.withOpacity(0.2),
+                             color: Colors.white.withValues(alpha: 0.2),
                              shape: BoxShape.circle,
                            ),
                            child: const Icon(Icons.stars_rounded, color: Colors.white, size: 32),
@@ -503,7 +503,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                        alignment: Alignment.center,
                        child: Column(
                          children: [
-                           Icon(Icons.person_add_disabled_rounded, size: 48, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                           Icon(Icons.person_add_disabled_rounded, size: 48, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                            const SizedBox(height: 12),
                            Text(
                              "No friends invited yet",
@@ -529,12 +529,12 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                            decoration: BoxDecoration(
                              color: colorScheme.surfaceContainer,
                              borderRadius: BorderRadius.circular(12),
-                             border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+                             border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
                            ),
                            child: Row(
                              children: [
                                CircleAvatar(
-                                 backgroundColor: colorScheme.primary.withOpacity(0.1),
+                                 backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                                  child: Text(
                                    name.substring(0, 1).toUpperCase(),
                                    style: GoogleFonts.poppins(
@@ -557,7 +557,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
                                Container(
                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                  decoration: BoxDecoration(
-                                   color: Colors.green.withOpacity(0.1),
+                                   color: Colors.green.withValues(alpha: 0.1),
                                    borderRadius: BorderRadius.circular(20),
                                  ),
                                  child: Text(
@@ -625,7 +625,7 @@ class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Theme.of(context).primaryColor, width: 2, style: BorderStyle.solid), // Dashed preferred but solid for simplicity
             ),

@@ -396,10 +396,10 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: theme.colorScheme.primary.withOpacity(0.3),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -432,7 +432,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                           gradient: LinearGradient(
                             colors: [
                               theme.colorScheme.primary,
-                              theme.colorScheme.primary.withOpacity(0.8),
+                              theme.colorScheme.primary.withValues(alpha: 0.8),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -440,7 +440,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
                               blurRadius: 15,
                               offset: const Offset(0, 8),
                             ),
@@ -499,7 +499,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -584,13 +584,13 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? theme.colorScheme.primary.withOpacity(0.5)
+                ? theme.colorScheme.primary.withValues(alpha: 0.5)
                 : Colors.grey[200]!,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 5,
               offset: const Offset(0, 2),
             ),

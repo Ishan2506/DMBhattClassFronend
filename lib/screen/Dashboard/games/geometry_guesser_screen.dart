@@ -199,7 +199,7 @@ class _GeometryGuesserScreenState extends State<GeometryGuesserScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
+                      color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -227,7 +227,7 @@ class _GeometryGuesserScreenState extends State<GeometryGuesserScreen> {
                           backgroundColor: theme.cardColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                           ),
                         ),
                         child: Text(
@@ -251,9 +251,9 @@ class _GeometryGuesserScreenState extends State<GeometryGuesserScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

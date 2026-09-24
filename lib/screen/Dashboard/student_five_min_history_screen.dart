@@ -120,11 +120,11 @@ class _StudentFiveMinHistoryScreenState extends State<StudentFiveMinHistoryScree
           fillColor: colorScheme.surfaceContainer,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3)),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -175,7 +175,7 @@ class _StudentFiveMinHistoryScreenState extends State<StudentFiveMinHistoryScree
             leading: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.timer, color: colorScheme.primary),

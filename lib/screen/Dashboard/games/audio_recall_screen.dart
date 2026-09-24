@@ -196,7 +196,7 @@ class _AudioRecallScreenState extends State<AudioRecallScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.2)),
                           ),
                         ),
                         child: Text(word, style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
@@ -216,9 +216,9 @@ class _AudioRecallScreenState extends State<AudioRecallScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

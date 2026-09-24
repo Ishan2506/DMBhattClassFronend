@@ -209,7 +209,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
     final theme = Theme.of(context);
     final gradientColors = [
       theme.colorScheme.primary,
-      theme.colorScheme.primary.withOpacity(0.8),
+      theme.colorScheme.primary.withValues(alpha: 0.8),
     ];
 
     return Stack(
@@ -251,7 +251,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                   borderRadius: BorderRadius.circular(24), // More rounded
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -274,7 +274,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.onPrimary.withOpacity(0.2),
+                          color: theme.colorScheme.onPrimary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -325,7 +325,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                       "Your Score",
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                        color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -394,9 +394,9 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
+                      border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
                     ),
                     child: Column(
                       children: [
@@ -404,7 +404,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: isCorrect ? Colors.green.withOpacity(0.1) : (isSkipped ? Colors.orange.withOpacity(0.1) : Colors.red.withOpacity(0.1)),
+                            color: isCorrect ? Colors.green.withValues(alpha: 0.1) : (isSkipped ? Colors.orange.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1)),
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                           ),
                           child: Row(
@@ -436,7 +436,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                                 decoration: BoxDecoration(
                                   color: theme.colorScheme.surface,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
+                                  border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
                                 ),
                                 child: Text(
                                   "1 Mark",
@@ -466,7 +466,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
+                                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Column(
@@ -564,9 +564,9 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [

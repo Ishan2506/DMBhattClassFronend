@@ -189,7 +189,7 @@ class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScree
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: primary.withOpacity(0.1),
+                                            color: primary.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(6),
                                           ),
                                           child: Text(
@@ -306,11 +306,11 @@ class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScree
           fillColor: colorScheme.surfaceContainer,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3)),
+            borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

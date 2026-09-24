@@ -106,7 +106,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
               }
             }
           } catch (e) {
-            print("Error fetching profile: $e");
+            debugPrint("Error fetching profile: $e");
           }
 
           // Save to saved_accounts
@@ -234,7 +234,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
             gradient: LinearGradient(
               colors: [
                 theme.colorScheme.primary,
-                theme.colorScheme.primary.withOpacity(0.8),
+                theme.colorScheme.primary.withValues(alpha: 0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -263,8 +263,8 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? theme.colorScheme.primary.withOpacity(0.1)
-                      : theme.colorScheme.primary.withOpacity(0.05),
+                      ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                      : theme.colorScheme.primary.withValues(alpha: 0.05),
                   shape: BoxShape.circle,
                 ),
                 child: Image.asset(

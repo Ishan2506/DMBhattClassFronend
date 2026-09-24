@@ -171,7 +171,7 @@ class _MagicSquareScreenState extends State<MagicSquareScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -203,9 +203,9 @@ class _MagicSquareScreenState extends State<MagicSquareScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -235,7 +235,7 @@ class _MagicSquareScreenState extends State<MagicSquareScreen> {
                     ),
                     Text(
                       "2 + 9 + 4 = 15",
-                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8)),
+                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
@@ -285,7 +285,7 @@ class _MagicSquareScreenState extends State<MagicSquareScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -306,7 +306,7 @@ class _MagicSquareScreenState extends State<MagicSquareScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -380,7 +380,7 @@ class _MagicSquareScreenState extends State<MagicSquareScreen> {
                                child: Container(
                                   decoration: BoxDecoration(
                                      border: Border.all(color: theme.dividerColor, width: 1),
-                                     color: isSelected ? theme.colorScheme.primary.withOpacity(0.3) 
+                                     color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.3) 
                                            : (isFixed ? theme.cardColor : theme.scaffoldBackgroundColor),
                                   ),
                                   child: Center(
@@ -428,7 +428,7 @@ class _MagicSquareScreenState extends State<MagicSquareScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-               color: isUsed ? theme.dividerColor.withOpacity(0.2) : theme.cardColor,
+               color: isUsed ? theme.dividerColor.withValues(alpha: 0.2) : theme.cardColor,
                borderRadius: BorderRadius.circular(8),
                border: Border.all(color: isUsed ? Colors.transparent : theme.dividerColor),
                boxShadow: isUsed ? [] : const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],

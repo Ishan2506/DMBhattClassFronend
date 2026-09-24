@@ -180,14 +180,14 @@ class _SudokuLiteScreenState extends State<SudokuLiteScreen> {
                             
                             // Highlight 2x2 blocks lightly
                             bool isAltBlock = (r < 2 && c >= 2) || (r >= 2 && c < 2);
-                            Color bgColor = isAltBlock ? theme.cardColor.withOpacity(0.5) : theme.cardColor;
+                            Color bgColor = isAltBlock ? theme.cardColor.withValues(alpha: 0.5) : theme.cardColor;
 
                             return GestureDetector(
                               onTap: () => _onCellTap(r, c),
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: bgColor,
-                                  border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+                                  border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Center(
@@ -219,9 +219,9 @@ class _SudokuLiteScreenState extends State<SudokuLiteScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

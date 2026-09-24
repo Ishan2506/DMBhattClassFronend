@@ -175,7 +175,7 @@ class GuestUtils {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(
                       context,
-                    ).primaryColor.withOpacity(0.1),
+                    ).primaryColor.withValues(alpha: 0.1),
                     foregroundColor: Theme.of(context).primaryColor,
                     elevation: 0,
                     side: BorderSide(color: Theme.of(context).primaryColor),

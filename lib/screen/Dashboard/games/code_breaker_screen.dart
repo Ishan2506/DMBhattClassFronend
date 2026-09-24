@@ -157,7 +157,7 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -191,9 +191,9 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -225,7 +225,7 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.circle_outlined, size: 16, color: theme.colorScheme.onSurface.withOpacity(0.4)),
+                        Icon(Icons.circle_outlined, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                         const SizedBox(width: 4),
                         Text("1 Cow (4 is wrong spot)", style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
@@ -264,7 +264,7 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -285,7 +285,7 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -357,15 +357,15 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                      margin: const EdgeInsets.only(left: 4),
                      width: 30, height: 30,
                      decoration: BoxDecoration(
-                       color: _isGameOver ? _digitColors[_secretCode[index]-1] : theme.dividerColor.withOpacity(0.1),
+                       color: _isGameOver ? _digitColors[_secretCode[index]-1] : theme.dividerColor.withValues(alpha: 0.1),
                        shape: BoxShape.circle,
-                       border: Border.all(color: theme.dividerColor.withOpacity(0.2))
+                       border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2))
                      ),
                      child: Center(
                        child: Text(
                          _isGameOver ? "${_secretCode[index]}" : "?", 
                          style: TextStyle(
-                           color: _isGameOver ? Colors.white : theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
+                           color: _isGameOver ? Colors.white : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                            fontWeight: FontWeight.bold
                          )
                        )
@@ -385,7 +385,7 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)))
+                      border: Border(bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)))
                     ),
                     child: Row(
                       children: [
@@ -413,7 +413,7 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                             // Bulls (Correct position)
                             ...List.generate(result['Bulls']!, (i) => const Icon(Icons.circle, size: 12, color: Colors.red)),
                             // Cows (Wrong position)
-                            ...List.generate(result['Cows']!, (i) => Icon(Icons.circle_outlined, size: 12, color: theme.colorScheme.onSurface.withOpacity(0.4))),
+                            ...List.generate(result['Cows']!, (i) => Icon(Icons.circle_outlined, size: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
                           ],
                         )
                       ],
@@ -428,7 +428,7 @@ class _CodeBreakerScreenState extends State<CodeBreakerScreen> {
                color: theme.cardColor,
                boxShadow: [
                  BoxShadow(
-                   color: Colors.black.withOpacity(0.05),
+                   color: Colors.black.withValues(alpha: 0.05),
                    blurRadius: 10,
                    offset: const Offset(0, -2)
                  )
@@ -517,8 +517,8 @@ class _DigitInputState extends State<_DigitInput> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   width: 40, height: 40,
                   decoration: BoxDecoration(
-                    color: widget.theme.dividerColor.withOpacity(0.1),
-                    border: Border.all(color: widget.theme.dividerColor.withOpacity(0.2)),
+                    color: widget.theme.dividerColor.withValues(alpha: 0.1),
+                    border: Border.all(color: widget.theme.dividerColor.withValues(alpha: 0.2)),
                     borderRadius: BorderRadius.circular(8)
                   ),
                 );
@@ -540,7 +540,7 @@ class _DigitInputState extends State<_DigitInput> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(widget.theme.brightness == Brightness.dark ? 0.3 : 0.1), 
+                          color: Colors.black.withValues(alpha: widget.theme.brightness == Brightness.dark ? 0.3 : 0.1), 
                           blurRadius: 4, 
                           offset: const Offset(2,2)
                         )

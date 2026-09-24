@@ -381,7 +381,7 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
                           : LinearGradient(
                               colors: [
                                 Theme.of(context).primaryColor,
-                                Theme.of(context).primaryColor.withOpacity(0.8)
+                                Theme.of(context).primaryColor.withValues(alpha: 0.8)
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -391,7 +391,7 @@ class _OneLinerSelectionScreenState extends State<OneLinerSelectionScreen> {
                           ? []
                           : [
                               BoxShadow(
-                                color: Theme.of(context).primaryColor.withOpacity(0.3),
+                                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),

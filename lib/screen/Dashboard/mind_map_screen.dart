@@ -227,19 +227,19 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: widget.isRoot 
-                  ? [primaryColor, primaryColor.withOpacity(0.8)] 
+                  ? [primaryColor, primaryColor.withValues(alpha: 0.8)] 
                   : [Colors.white, Colors.grey.shade50],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: widget.isRoot ? Colors.white.withOpacity(0.5) : primaryColor.withOpacity(0.3),
+              color: widget.isRoot ? Colors.white.withValues(alpha: 0.5) : primaryColor.withValues(alpha: 0.3),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 12,
                 offset: const Offset(0, 5),
               ),
@@ -250,7 +250,7 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
             child: InkWell(
               onTap: hasChildren ? _toggleExpand : null,
               borderRadius: BorderRadius.circular(16),
-              splashColor: Colors.white.withOpacity(0.2),
+              splashColor: Colors.white.withValues(alpha: 0.2),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
@@ -271,7 +271,7 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
                       const SizedBox(width: 8),
                       Icon(
                         _isExpanded ? Icons.remove_circle_outline : Icons.add_circle_outline,
-                        color: widget.isRoot ? Colors.white.withOpacity(0.8) : Colors.black54,
+                        color: widget.isRoot ? Colors.white.withValues(alpha: 0.8) : Colors.black54,
                         size: 18,
                       ),
                     ],
@@ -295,7 +295,7 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
                   Container(
                     width: 40,
                     height: 2,
-                    color: primaryColor.withOpacity(0.4),
+                    color: primaryColor.withValues(alpha: 0.4),
                   ),
                   Stack(
                     children: [
@@ -308,10 +308,10 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                primaryColor.withOpacity(0.0),
-                                primaryColor.withOpacity(0.4),
-                                primaryColor.withOpacity(0.4),
-                                primaryColor.withOpacity(0.0),
+                                primaryColor.withValues(alpha: 0.0),
+                                primaryColor.withValues(alpha: 0.4),
+                                primaryColor.withValues(alpha: 0.4),
+                                primaryColor.withValues(alpha: 0.0),
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -332,7 +332,7 @@ class _MindMapTreeNodeWidgetState extends State<MindMapTreeNodeWidget> with Sing
                                 Container(
                                   width: 20,
                                   height: 2,
-                                  color: primaryColor.withOpacity(0.4),
+                                  color: primaryColor.withValues(alpha: 0.4),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 12.0),

@@ -338,46 +338,55 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _passwordController.text,
                               ); // Saving password for PDF encryption
                               if (user != null) {
-                                if (user['phoneNum'] != null)
+                                if (user['phoneNum'] != null) {
                                   await prefs.setString(
                                     'user_phone',
                                     user['phoneNum'],
                                   );
-                                if (user['email'] != null)
+                                }
+                                if (user['email'] != null) {
                                   await prefs.setString(
                                     'user_email',
                                     user['email'],
                                   );
-                                if (user['firstName'] != null)
+                                }
+                                if (user['firstName'] != null) {
                                   await prefs.setString(
                                     'firstName',
                                     user['firstName'],
                                   );
-                                if (user['std'] != null)
+                                }
+                                if (user['std'] != null) {
                                   await prefs.setString(
                                     'std',
                                     user['std'].toString(),
                                   );
-                                if (user['medium'] != null)
+                                }
+                                if (user['medium'] != null) {
                                   await prefs.setString(
                                     'medium',
                                     user['medium'],
                                   );
-                                if (user['stream'] != null)
+                                }
+                                if (user['stream'] != null) {
                                   await prefs.setString(
                                     'stream',
                                     user['stream'],
                                   );
-                                if (user['board'] != null)
+                                }
+                                if (user['board'] != null) {
                                   await prefs.setString('board', user['board']);
+                                }
                                 if (user['parentPhone'] != null &&
-                                    user['parentPhone'].toString().isNotEmpty)
+                                    user['parentPhone'].toString().isNotEmpty) {
                                   await prefs.setString(
                                     'parentPhone',
                                     user['parentPhone'].toString(),
                                   );
-                                if (user['role'] != null)
+                                }
+                                if (user['role'] != null) {
                                   await prefs.setString('user_role', user['role']);
+                                }
                               }
 
                               // Handle Multi-Account Storage
@@ -520,7 +529,7 @@ class _LoginScreenState extends State<LoginScreen> {
         fillColor: colorScheme.surfaceContainer,
         hintText: hint,
         hintStyle: GoogleFonts.poppins(
-          color: colorScheme.onSurfaceVariant.withOpacity(0.6), 
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6), 
           fontWeight: FontWeight.normal,
         ),
         prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant),

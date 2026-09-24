@@ -185,7 +185,7 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -234,10 +234,10 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: colorScheme.tertiary.withOpacity(0.5),
+                    color: colorScheme.tertiary.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Column(
@@ -308,7 +308,7 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -329,7 +329,7 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -400,7 +400,7 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
+                      color: Colors.amber.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.amber.shade300),
                     ),
@@ -527,7 +527,7 @@ class _GrammarSorterScreenState extends State<GrammarSorterScreen> {
           width: 100,
           height: 120,
           decoration: BoxDecoration(
-            color: isHovered ? color.withOpacity(0.4) : color.withOpacity(0.1),
+            color: isHovered ? color.withValues(alpha: 0.4) : color.withValues(alpha: 0.1),
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(32),
               bottomRight: Radius.circular(32),

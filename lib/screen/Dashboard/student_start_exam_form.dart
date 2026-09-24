@@ -166,7 +166,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      print("Error fetching exams: $e");
+      debugPrint("Error fetching exams: $e");
       setState(() => _isLoading = false);
     }
   }
@@ -364,7 +364,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                           : LinearGradient(
                               colors: [
                                 Theme.of(context).primaryColor,
-                                Theme.of(context).primaryColor.withOpacity(0.8)
+                                Theme.of(context).primaryColor.withValues(alpha: 0.8)
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -375,7 +375,7 @@ class _StudentStartExamFormState extends State<StudentStartExamForm> {
                           ? []
                           : [
                               BoxShadow(
-                                color: Theme.of(context).primaryColor.withOpacity(0.3),
+                                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),

@@ -57,9 +57,9 @@ class _DPinScreenState extends State<DPinScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
-                            border: Border.all(color: color.withOpacity(0.3), width: 2),
+                            border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
                           ),
                           child: Icon(icon, size: MediaQuery.of(context).size.width * 0.16, color: color),
                         ),
@@ -154,7 +154,7 @@ class _DPinScreenState extends State<DPinScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
       showCursor: true,
-      onCompleted: (pin) => print(pin),
+      onCompleted: (pin) => debugPrint(pin),
     );
   }
 

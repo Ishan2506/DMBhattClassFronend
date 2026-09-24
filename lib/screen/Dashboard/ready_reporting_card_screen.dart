@@ -202,7 +202,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                                     _filterExams();
                                   });
                                 },
-                                selectedColor: colorScheme.primary.withOpacity(0.2),
+                                selectedColor: colorScheme.primary.withValues(alpha: 0.2),
                                 checkmarkColor: colorScheme.primary,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
@@ -263,7 +263,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                     // Total Mark Bar (Gray/Black background effect)
                     BarChartRodData(
                         toY: total,
-                        color: Colors.grey.withOpacity(0.3),
+                        color: Colors.grey.withValues(alpha: 0.3),
                         width: 8,
                         borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
                     ),
@@ -286,7 +286,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
             children: [
               _buildLegendItem("Obtained Mark", colorScheme.primary),
               const SizedBox(width: 20),
-              _buildLegendItem("Total Mark", Colors.grey.withOpacity(0.3)),
+              _buildLegendItem("Total Mark", Colors.grey.withValues(alpha: 0.3)),
             ],
           ),
           const SizedBox(height: 16),
@@ -351,7 +351,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
              decoration: BoxDecoration(
                  color: colorScheme.surfaceContainer,
                  borderRadius: BorderRadius.circular(16),
-                 border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+                 border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
              ),
              child: Column(
                  crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +398,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                 decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+                    border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   children: [
@@ -417,7 +417,7 @@ class _ReadyReportingCardScreenState extends State<ReadyReportingCardScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getGradeColor(grade).withOpacity(0.1),
+                            color: _getGradeColor(grade).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(grade, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: _getGradeColor(grade))),

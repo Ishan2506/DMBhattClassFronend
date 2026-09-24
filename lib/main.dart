@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:screen_protector/screen_protector.dart';
 import 'constant/app_constant.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -99,7 +98,6 @@ class MyApp extends StatelessWidget {
 
           return MaterialApp(
             navigatorKey: navigatorKey,
-            useInheritedMediaQuery: true,
             // locale: DevicePreview.locale(context),
             // builder: DevicePreview.appBuilder,
             debugShowCheckedModeBanner: false,

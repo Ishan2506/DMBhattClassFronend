@@ -52,7 +52,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
         });
       }
     } catch (e) {
-      print("Error fetching questions: $e");
+      debugPrint("Error fetching questions: $e");
       setState(() {
         _isLoading = false;
       });
@@ -134,7 +134,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -168,9 +168,9 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -185,7 +185,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                     const SizedBox(height: 12),
                     Text(
                       "Jumbled:",
-                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8), fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8), fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Wrap(
@@ -203,7 +203,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                     const SizedBox(height: 12),
                     Text(
                       "Correct Order:",
-                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8), fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8), fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Wrap(
@@ -269,7 +269,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -290,7 +290,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -412,7 +412,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             width: double.infinity,
-            color: theme.colorScheme.primary.withOpacity(0.1),
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -438,7 +438,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 16, 
-                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)
+                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -470,12 +470,12 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                                  color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.05), 
                                   blurRadius: 4, 
                                   offset: const Offset(0, 2)
                                 )
                               ],
-                              border: Border.all(color: theme.dividerColor.withOpacity(0.1))
+                              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1))
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -501,7 +501,7 @@ class _SentenceBuilderScreenState extends State<SentenceBuilderScreen> {
           if (_isChecked)
             Container(
               padding: const EdgeInsets.all(16),
-              color: _isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+              color: _isCorrect ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
               width: double.infinity,
               child: Text(
                 _isCorrect ? "Correct! Well done." : "Not quite right yet.",

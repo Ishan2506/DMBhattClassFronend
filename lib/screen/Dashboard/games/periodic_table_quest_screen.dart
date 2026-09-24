@@ -175,7 +175,7 @@ class _PeriodicTableQuestScreenState extends State<PeriodicTableQuestScreen> {
                     width: 150,
                     height: 150,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
+                      color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
                       border: Border.all(color: theme.colorScheme.primary, width: 4),
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -205,7 +205,7 @@ class _PeriodicTableQuestScreenState extends State<PeriodicTableQuestScreen> {
                           backgroundColor: theme.cardColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
                           ),
                         ),
                         child: Text(
@@ -229,9 +229,9 @@ class _PeriodicTableQuestScreenState extends State<PeriodicTableQuestScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

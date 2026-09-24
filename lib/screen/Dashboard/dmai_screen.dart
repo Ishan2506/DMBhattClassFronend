@@ -226,7 +226,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
               color: Colors.white,
               boxShadow: [
                  BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 )
@@ -238,11 +238,11 @@ class _DMAIScreenState extends State<DMAIScreen> {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: colorScheme.primary.withOpacity(0.3), width: 2),
+                    border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3), width: 2),
                   ),
                   child: CircleAvatar(
                     radius: 35,
-                    backgroundColor: colorScheme.primary.withOpacity(0.1),
+                    backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                     backgroundImage: const AssetImage(imgLoaderBot), // Using bot image as specified "AI"
                   ),
                 ),
@@ -293,10 +293,10 @@ class _DMAIScreenState extends State<DMAIScreen> {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border(top: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.1))),
+              border: Border(top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.1))),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 )
@@ -323,7 +323,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
                                 fontSize: 13)),
                         const Spacer(),
                         Icon(_showQuickActions ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-                            color: colorScheme.primary.withOpacity(0.5), size: 18),
+                            color: colorScheme.primary.withValues(alpha: 0.5), size: 18),
                       ],
                     ),
                   ),
@@ -377,7 +377,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
                           color: colorScheme.primary, 
                           boxShadow: [
                             BoxShadow(
-                              color: colorScheme.primary.withOpacity(0.3),
+                              color: colorScheme.primary.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             )
@@ -424,7 +424,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
                 ]
               ),
               clipBehavior: Clip.antiAlias,
@@ -486,7 +486,7 @@ class _DMAIScreenState extends State<DMAIScreen> {
                 ),
                 boxShadow: [
                    if (!isUser) BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
                   )

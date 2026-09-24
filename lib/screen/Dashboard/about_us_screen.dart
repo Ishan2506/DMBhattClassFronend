@@ -28,7 +28,7 @@ class AboutUsScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    colorScheme.primary.withOpacity(0.05),
+                    colorScheme.primary.withValues(alpha: 0.05),
                     colorScheme.surface,
                   ],
                   begin: Alignment.topCenter,
@@ -44,7 +44,7 @@ class AboutUsScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -169,7 +169,7 @@ class AboutUsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.06),
+            color: colorScheme.primary.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 10),
           )
@@ -184,7 +184,7 @@ class AboutUsScreen extends StatelessWidget {
             top: -20,
             child: CircleAvatar(
               radius: 60,
-              backgroundColor: colorScheme.primary.withOpacity(0.05),
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.05),
             ),
           ),
           
@@ -202,7 +202,7 @@ class AboutUsScreen extends StatelessWidget {
                     border: Border.all(color: Colors.white, width: 4),
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.primary.withOpacity(0.2),
+                        color: colorScheme.primary.withValues(alpha: 0.2),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       )
@@ -265,9 +265,9 @@ class AboutUsScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.primary.withOpacity(0.05),
+        color: colorScheme.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

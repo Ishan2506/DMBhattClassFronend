@@ -130,13 +130,13 @@ class _NotesScreenState extends State<NotesScreen> {
         gradient: LinearGradient(
           colors: [
             colorScheme.primaryContainer,
-            colorScheme.primaryContainer.withOpacity(0.85),
+            colorScheme.primaryContainer.withValues(alpha: 0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +146,7 @@ class _NotesScreenState extends State<NotesScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.2),
+                  color: colorScheme.primary.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.workspace_premium_rounded, color: colorScheme.primary, size: 24),
@@ -169,7 +169,7 @@ class _NotesScreenState extends State<NotesScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                        color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -182,7 +182,7 @@ class _NotesScreenState extends State<NotesScreen> {
             "Upgrade your plan to unlock full access to all notes, study materials & subjects!",
             style: GoogleFonts.poppins(
               fontSize: 12.5,
-              color: colorScheme.onPrimaryContainer.withOpacity(0.9),
+              color: colorScheme.onPrimaryContainer.withValues(alpha: 0.9),
             ),
           ),
           const SizedBox(height: 12),
@@ -273,10 +273,10 @@ class _NotesScreenState extends State<NotesScreen> {
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -317,7 +317,7 @@ class _NotesScreenState extends State<NotesScreen> {
                    padding: const EdgeInsets.only(top: 40),
                    child: Column(
                      children: [
-                       Icon(Icons.subject, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                       Icon(Icons.subject, size: 64, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                        const SizedBox(height: 16),
                        Text(l10n.selectSubject, style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                      ],
@@ -330,7 +330,7 @@ class _NotesScreenState extends State<NotesScreen> {
                    padding: const EdgeInsets.only(top: 40),
                    child: Column(
                      children: [
-                       Icon(Icons.description_outlined, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                       Icon(Icons.description_outlined, size: 64, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                        const SizedBox(height: 16),
                         Text(l10n.noPapersFoundForSubject(_selectedSubject!), style: GoogleFonts.poppins(color: colorScheme.onSurfaceVariant)),
                      ],
@@ -365,7 +365,7 @@ class _NotesScreenState extends State<NotesScreen> {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [

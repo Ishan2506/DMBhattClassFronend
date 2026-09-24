@@ -211,7 +211,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.08), 
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08), 
             blurRadius: 10, 
             offset: Offset(0, -5)
           )

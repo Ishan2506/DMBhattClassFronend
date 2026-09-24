@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -405,7 +404,7 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
                                     : LinearGradient(
                                         colors: [
                                           primary,
-                                          primary.withOpacity(0.8),
+                                          primary.withValues(alpha: 0.8),
                                         ],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
@@ -415,7 +414,7 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
                                     ? []
                                     : [
                                         BoxShadow(
-                                          color: primary.withOpacity(0.3),
+                                          color: primary.withValues(alpha: 0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 4),
                                         ),

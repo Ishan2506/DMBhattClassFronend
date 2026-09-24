@@ -112,7 +112,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -146,9 +146,9 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -178,7 +178,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                     const SizedBox(height: 8),
                     Text(
                       "Answer: went (Past Tense)",
-                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8), fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8), fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -210,7 +210,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         border: Border.all(color: color),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -226,7 +226,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -247,7 +247,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -342,7 +342,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: (_currentIndex + 1) / _allQuestions.length,
-                backgroundColor: theme.dividerColor.withOpacity(0.1),
+                backgroundColor: theme.dividerColor.withValues(alpha: 0.1),
                 color: theme.colorScheme.primary,
                 minHeight: 8,
               ),
@@ -352,7 +352,7 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
             Text(
               "Question ${_currentIndex + 1}",
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: theme.colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
+              style: GoogleFonts.poppins(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 16),
             ),
             const SizedBox(height: 20),
             
@@ -361,10 +361,10 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
               decoration: BoxDecoration(
                 color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                    color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.05), 
                     blurRadius: 10, 
                     offset: const Offset(0, 4)
                   )
@@ -410,12 +410,12 @@ class _GrammarGuardianScreenState extends State<GrammarGuardianScreen> {
                       color: color,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: showColor ? Colors.transparent : theme.dividerColor.withOpacity(0.2)
+                        color: showColor ? Colors.transparent : theme.dividerColor.withValues(alpha: 0.2)
                       ),
                       boxShadow: [
                          if (!showColor) 
                            BoxShadow(
-                             color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                             color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.05), 
                              blurRadius: 4, 
                              offset: const Offset(0, 2)
                            )

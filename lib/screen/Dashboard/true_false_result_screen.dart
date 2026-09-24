@@ -217,7 +217,7 @@ class _TrueFalseResultScreenState extends State<TrueFalseResultScreen> {
               padding: P.all24,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
+                  colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.8)],
                 ),
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -269,9 +269,9 @@ class _TrueFalseResultScreenState extends State<TrueFalseResultScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: P.all16,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+                    border: Border.all(color: colorScheme.outline.withValues(alpha: 0.1)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +317,7 @@ class _TrueFalseResultScreenState extends State<TrueFalseResultScreen> {
     return Column(
       children: [
         Text(value, style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: GoogleFonts.poppins(fontSize: 12, color: color.withOpacity(0.8))),
+        Text(label, style: GoogleFonts.poppins(fontSize: 12, color: color.withValues(alpha: 0.8))),
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
@@ -105,7 +106,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            if (!Platform.isIOS)
+            if (!(!kIsWeb && Platform.isIOS))
               _MoreScreenItem(
                 title: l10n.myArea,
                 value: "",
@@ -154,7 +155,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 );
               },
             ),
-            if (!Platform.isIOS)
+            if (!(!kIsWeb && Platform.isIOS))
               _MoreScreenItem(
                 title: l10n.mindGames,
                 value: "",
@@ -179,7 +180,7 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 );
               },
             ),
-            if (!Platform.isIOS)
+            if (!(!kIsWeb && Platform.isIOS))
               _MoreScreenItem(
                 title: l10n.readyReportingCard,
                 value: "",
@@ -241,7 +242,7 @@ class _AppInfoScreen extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.grey.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -315,7 +316,7 @@ class _AppInfoScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: iconWidget,
@@ -370,7 +371,7 @@ class _AppInfoScreen extends StatelessWidget {
                   );
                 },
               ),
-              if (!Platform.isIOS)
+              if (!(!kIsWeb && Platform.isIOS))
                 _MoreScreenItem(
                   title: l10n.referAndEarn,
                   value: "",
@@ -483,7 +484,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
               gradient: LinearGradient(
                 colors: [
                   colorScheme.primary,
-                  colorScheme.primary.withOpacity(0.8),
+                  colorScheme.primary.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -538,7 +539,7 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                               e['icon'],
                               style: TextStyle(
                                 fontSize: 32,
-                                color: isSelected ? null : colorScheme.onSurface.withOpacity(0.5),
+                                color: isSelected ? null : colorScheme.onSurface.withValues(alpha: 0.5),
                               ),
                             ),
                           ],
@@ -565,14 +566,14 @@ class _RateUsDialogState extends State<_RateUsDialog> {
                   decoration: InputDecoration(
                     hintText: l10n.feedbackHint,
                     hintStyle:
-                        GoogleFonts.poppins(fontSize: 13, color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
+                        GoogleFonts.poppins(fontSize: 13, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: colorScheme.outlineVariant),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                      borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -793,14 +794,14 @@ class _MoreScreenItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainer, // Dynamic Card Color
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: colorScheme.primary, size: 20),
@@ -936,10 +937,10 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.06),
+            color: colorScheme.primary.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -950,7 +951,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.1),
+              color: colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -1002,7 +1003,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
                   borderRadius: BorderRadius.circular(10),
                   color: isActive
                       ? colorScheme.primary
-                      : colorScheme.primary.withOpacity(0.2),
+                      : colorScheme.primary.withValues(alpha: 0.2),
                 ),
               );
             }),
@@ -1031,7 +1032,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
               height: 135,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: colorScheme.primary.withOpacity(0.05),
+                color: colorScheme.primary.withValues(alpha: 0.05),
               ),
             ),
             // Decorative ring
@@ -1041,7 +1042,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: colorScheme.primary.withOpacity(0.2),
+                  color: colorScheme.primary.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -1055,7 +1056,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
                 border: Border.all(color: Colors.white, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.2),
+                    color: colorScheme.primary.withValues(alpha: 0.2),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   )
@@ -1103,7 +1104,7 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
           description,
           style: GoogleFonts.poppins(
             fontSize: 12,
-            color: colorScheme.onSurface.withOpacity(0.8),
+            color: colorScheme.onSurface.withValues(alpha: 0.8),
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,
@@ -1120,12 +1121,12 @@ class _InfluencerCarouselState extends State<_InfluencerCarousel> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
+                colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.8)],
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.3),
+                  color: colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -1178,10 +1179,10 @@ class _FeatureGridItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1194,7 +1195,7 @@ class _FeatureGridItem extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 28),

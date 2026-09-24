@@ -130,7 +130,7 @@ class SocialMediaAdDialog extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: gradientColors.first.withOpacity(0.3),
+                color: gradientColors.first.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -162,7 +162,7 @@ class SocialMediaAdDialog extends StatelessWidget {
                     Text(
                       subtitle,
                       style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: screenWidth * 0.025,
                       ),
                     ),

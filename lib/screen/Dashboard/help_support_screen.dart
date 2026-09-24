@@ -88,7 +88,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -138,9 +138,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         width: 100,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.05),
+          color: theme.colorScheme.primary.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
         ),
         child: Column(
           children: [
@@ -227,10 +227,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.05),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       width: 1.5,
                     ),
                   ),
@@ -239,7 +239,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -273,7 +273,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                           color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
                           ),
                         ),
                         child: Row(
@@ -295,7 +295,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(

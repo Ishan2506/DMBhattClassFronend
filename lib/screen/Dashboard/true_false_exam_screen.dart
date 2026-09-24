@@ -333,10 +333,10 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
                       Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withOpacity(0.3),
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: colorScheme.primary.withOpacity(0.2),
+                            color: colorScheme.primary.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Column(
@@ -460,13 +460,13 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
-              ? theme.colorScheme.primary.withOpacity(0.5)
+              ? theme.colorScheme.primary.withValues(alpha: 0.5)
               : Colors.grey[200]!,
           width: isSelected ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),

@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
-import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
@@ -222,7 +221,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -294,7 +293,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -341,7 +340,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                               filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.7),
+                                  color: Colors.black.withValues(alpha: 0.7),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Column(
@@ -353,7 +352,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                                           Icon(
                                             Icons.lock_outline,
                                             size: 64,
-                                            color: Colors.white.withOpacity(0.9),
+                                            color: Colors.white.withValues(alpha: 0.9),
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
@@ -369,7 +368,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
                                             'Purchase to unlock all pages',
                                             style: GoogleFonts.poppins(
                                               fontSize: 14,
-                                              color: Colors.white.withOpacity(0.8),
+                                              color: Colors.white.withValues(alpha: 0.8),
                                             ),
                                           ),
                                           const SizedBox(height: 24),
@@ -556,7 +555,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   Widget _buildZoomButton(IconData icon, VoidCallback onPressed) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         shape: BoxShape.circle,
       ),
       child: IconButton(

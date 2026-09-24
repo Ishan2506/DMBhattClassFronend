@@ -50,7 +50,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
         });
       }
     } catch (e) {
-      print("Error fetching questions: $e");
+      debugPrint("Error fetching questions: $e");
        setState(() {
           _isLoading = false;
         });
@@ -114,7 +114,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -146,9 +146,9 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -175,7 +175,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                     const SizedBox(height: 12),
                     Text(
                       "Carrot is the odd one out because it's a vegetable, not a fruit!",
-                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8), fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8), fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -230,7 +230,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -251,7 +251,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -367,7 +367,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
               child: LinearProgressIndicator(
                 value: (_currentIndex + 1) / _allQuestions.length,
                 color: theme.colorScheme.primary,
-                backgroundColor: theme.dividerColor.withOpacity(0.1),
+                backgroundColor: theme.dividerColor.withValues(alpha: 0.1),
                 minHeight: 8,
               ),
             ),
@@ -395,7 +395,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                 itemBuilder: (context, index) {
                    final opt = options[index];
                    Color bg = theme.cardColor;
-                   Color border = theme.dividerColor.withOpacity(0.2);
+                   Color border = theme.dividerColor.withValues(alpha: 0.2);
                    Color text = theme.colorScheme.onSurface;
                    
                    if (_isAnswered) {
@@ -408,7 +408,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                        text = Colors.white;
                        border = Colors.red;
                      } else {
-                       bg = theme.disabledColor.withOpacity(0.1);
+                       bg = theme.disabledColor.withValues(alpha: 0.1);
                        text = theme.disabledColor;
                      }
                    }
@@ -424,7 +424,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                          boxShadow: [
                            if (!_isAnswered) 
                              BoxShadow(
-                               color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
+                               color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.05), 
                                blurRadius: 4, 
                                offset: const Offset(0, 4)
                              )
@@ -448,7 +448,7 @@ class _OddOneOutScreenState extends State<OddOneOutScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1), 
+                  color: _isCorrect ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1), 
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _isCorrect ? Colors.green : Colors.red)
                 ),

@@ -180,7 +180,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -212,9 +212,9 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -240,7 +240,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                     const SizedBox(height: 8),
                     Text(
                       "Find the matching pairs! (🐼 & 🐼)",
-                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8), fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontSize: 12, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8), fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -275,7 +275,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
       decoration: BoxDecoration(
         color: isFlipped ? theme.cardColor : theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(8),
-        border: isFlipped ? Border.all(color: theme.colorScheme.primary.withOpacity(0.5), width: 1.5) : null,
+        border: isFlipped ? Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1.5) : null,
       ),
       child: Center(
         child: isFlipped
@@ -293,7 +293,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.15),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -314,7 +314,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               height: 1.4,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -365,7 +365,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -385,7 +385,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
+                    color: Colors.amber.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -442,13 +442,13 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
           ],
           border: isFlipped 
-              ? Border.all(color: theme.colorScheme.primary.withOpacity(0.5), width: 2) 
+              ? Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 2) 
               : null,
         ),
         child: Center(

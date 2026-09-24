@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/model/registration_payload.dart';
-import 'package:dm_bhatt_tutions/screen/authentication/payment_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -306,7 +305,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               : DateFormat('dd/MM/yyyy').format(_selectedDob!),
                           style: GoogleFonts.poppins(
                             color: _selectedDob == null
-                                ? colorScheme.onSurfaceVariant.withOpacity(0.6)
+                                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
                                 : colorScheme.onSurface,
                             fontWeight: _selectedDob == null ? FontWeight.normal : FontWeight.bold,
                           ),
@@ -797,7 +796,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: GoogleFonts.poppins(
-            color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
           prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant),
           suffixIcon: isPassword

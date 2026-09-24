@@ -138,7 +138,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         height: MediaQuery.of(context).size.height * 0.1, // Responsive height
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).primaryColor.withOpacity(0.1)
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(S.s12),
           border: Border.all(
