@@ -11,7 +11,7 @@ ENV['GIT_CONFIG_VALUE_1'] = 'git://github.com/'
 
 
 
-platform :ios, '13.0'
+platform :ios, '15.6'
 
 # connectivity_plus v6.x requires static frameworks but NOT global use_modular_headers.
 # Using global use_modular_headers! causes connectivity_plus module to be invisible
@@ -58,11 +58,11 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
 
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.6'
     end
   end
 
   installer.pods_project.build_configurations.each do |config|
-    config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+    config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.6'
   end
 end
