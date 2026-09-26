@@ -24,6 +24,7 @@ import 'package:dm_bhatt_tutions/screen/Dashboard/refer_and_earn_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/match_following_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/board_cracker_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_five_min_history_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/mind_map_selection_screen.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/material_screen.dart';
@@ -758,6 +759,18 @@ class HistoryMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const MatchFollowingHistoryScreen()),
+                  );
+                },
+              ),
+              _MoreScreenItem(
+                title: "Objectives Test History",
+                value: "",
+                icon: Icons.workspace_premium_rounded,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const BoardCrackerHistoryScreen()),
                   );
                 },
               ),

@@ -1511,11 +1511,74 @@ class ApiService {
     );
   }
 
+  /// Combined ranked standings across every currently-open Objectives Test
+  /// Series paper for [std]/[medium]/[stream] (top 100 plus the caller's own
+  /// entry, totalled across papers rather than one leaderboard per paper).
+  static Future<http.Response> getCombinedBoardCrackerLeaderboard({
+    String? std,
+    String? medium,
+    String? stream,
+  }) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final queryParams = <String, String>{};
+    if (std != null && std.isNotEmpty) queryParams['std'] = std;
+    if (medium != null && medium.isNotEmpty) queryParams['medium'] = medium;
+    if (stream != null && stream.isNotEmpty) queryParams['stream'] = stream;
+    final uri = Uri.parse("$baseUrl/objectivestestseries/leaderboard/combined")
+        .replace(queryParameters: queryParams);
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
+  }
+
   /// Ranked standings for one paper (top 100 plus the caller's own entry).
   static Future<http.Response> getBoardCrackerLeaderboard(String examId) async {
     if (!await _checkConnectivity())
       return http.Response('{"error": "No internet connection"}', 503);
     final uri = Uri.parse("$baseUrl/objectivestestseries/$examId/leaderboard");
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
+  }
+
+  /// The signed-in student's Objectives Test Series results, newest first
+  /// (summary only - no per-question answers).
+  static Future<http.Response> getMyBoardCrackerResults() async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri = Uri.parse("$baseUrl/objectivestestseries/my-results");
+    return _handleSession(
+      await http.get(
+        uri,
+        headers: _addAuth({
+          'Accept': 'application/json',
+          'User-Agent': 'Flutter-App',
+        }),
+      ),
+    );
+  }
+
+  /// One of the student's own results as `{result, exam}`, with the paper's
+  /// questions and correct answers - used for the history PDF.
+  static Future<http.Response> getMyBoardCrackerResultDetail(
+      String resultId) async {
+    if (!await _checkConnectivity())
+      return http.Response('{"error": "No internet connection"}', 503);
+    final uri =
+        Uri.parse("$baseUrl/objectivestestseries/my-results/$resultId");
     return _handleSession(
       await http.get(
         uri,

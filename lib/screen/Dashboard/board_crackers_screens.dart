@@ -3,9 +3,13 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
+import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/board_cracker_history_screen.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
+import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:dm_bhatt_tutions/utils/custom_toast.dart';
 import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -18,9 +22,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const List<String> _optionLetters = ['A', 'B', 'C', 'D'];
 
-/// Brand colours for the Objectives Test Series feature (home banner + headers).
-const Color kBoardCrackerStart = Color(0xFF6A11CB);
-const Color kBoardCrackerEnd = Color(0xFF2575FC);
+/// Objectives Test Series colours (home banner, headers, leaderboard) - the
+/// app's own theme primary (blue.shade900) fading to a lighter blue, so this
+/// feature matches the rest of the app instead of using its own brand colour.
+const Color kBoardCrackerStart = Color(0xFF0D47A1); // Theme primary (blue.shade900)
+const Color kBoardCrackerEnd = Color(0xFF1976D2); // Colors.blue.shade700
 
 String _formatDuration(int totalSeconds) {
   final h = totalSeconds ~/ 3600;
@@ -63,9 +69,8 @@ class _BoardCrackersScreenState extends State<BoardCrackersScreen> {
   List<dynamic> _papers = [];
   List<String> _subjects = [];
   String? _selectedSubject;
+  String? _selectedPaperId;
   bool _isLoading = true;
-  bool _isPaid = false;
-  int _attemptCount = 0;
 
   // Countdown for scheduled papers. The server sends secondsUntilStart, and
   // we count down from the moment the list arrived - so the lock never
@@ -151,8 +156,6 @@ class _BoardCrackersScreenState extends State<BoardCrackersScreen> {
       if (profileResponse.statusCode == 200) {
         final profileData = jsonDecode(profileResponse.body);
         final profile = profileData['profile'];
-        _isPaid = profileData['user']?['isPaid'] ?? false;
-        _attemptCount = profileData['examCounts']?['boardCracker'] ?? 0;
         std = profile?['std']?.toString() ?? std;
         medium = profile?['medium']?.toString() ?? medium;
         stream = profile?['stream']?.toString() ?? stream;
@@ -200,6 +203,11 @@ class _BoardCrackersScreenState extends State<BoardCrackersScreen> {
                 !_subjects.contains(_selectedSubject)) {
               _selectedSubject = null;
             }
+            // Only one subject - nothing to choose, so pre-select it.
+            if (_selectedSubject == null && _subjects.length == 1) {
+              _selectedSubject = _subjects.first;
+            }
+            if (_selectedPaper == null) _selectedPaperId = null;
             _isLoading = false;
           });
           _syncCountdown();
@@ -214,8 +222,15 @@ class _BoardCrackersScreenState extends State<BoardCrackersScreen> {
   }
 
   List<dynamic> get _visiblePapers => _selectedSubject == null
-      ? _papers
+      ? []
       : _papers.where((p) => p['subject'] == _selectedSubject).toList();
+
+  dynamic get _selectedPaper {
+    for (final p in _visiblePapers) {
+      if (p['_id']?.toString() == _selectedPaperId) return p;
+    }
+    return null;
+  }
 
   void _showNotStartedDialog(dynamic startAt) {
     showDialog(
@@ -248,49 +263,9 @@ class _BoardCrackersScreenState extends State<BoardCrackersScreen> {
       _showNotStartedDialog(paper['startAt']);
       return;
     }
+    // Guests (skipped login) get one free paper; logged-in students - free or
+    // paid - have no attempt limit.
     if (!await GuestUtils.canGuestAccessExam(context, 'BOARDCRACKER')) return;
-
-    if (!_isPaid && _attemptCount >= 1) {
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text("Limit Reached",
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text(
-            "You have already used your 1 free Objectives Test Series attempt. "
-            "Please upgrade your plan for unlimited access.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Later", style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const UpgradePlanScreen()),
-                ).then((result) {
-                  if (result == true) _fetchPapers();
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text("Upgrade Now",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
 
     if (!mounted) return;
     Navigator.push(
@@ -308,154 +283,144 @@ class _BoardCrackersScreenState extends State<BoardCrackersScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final selectedPaper = _selectedPaper;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
-      appBar: const CustomAppBar(title: "Objectives Test Series"),
+      appBar: CustomAppBar(
+        title: "Objectives Test Series",
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const BoardCrackerHistoryScreen()),
+            ),
+          ),
+        ],
+      ),
       body: _isLoading
           ? const CustomLoader()
-          : RefreshIndicator(
-              onRefresh: _fetchPapers,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
+          : Padding(
+              padding: P.all24,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _BoardCrackerHeader(),
-                  const SizedBox(height: 16),
-                  if (_subjects.length > 1) _buildSubjectChips(theme),
-                  if (_visiblePapers.isEmpty)
+                  if (_papers.isEmpty)
                     _buildEmpty(isDark)
-                  else
-                    ..._visiblePapers.map((p) => _buildPaperCard(p, theme)),
+                  else ...[
+                    CustomDropdown<String>(
+                      labelText: "Subject",
+                      hintText: "Select Subject",
+                      value: _selectedSubject,
+                      items: _subjects,
+                      itemLabelBuilder: (String item) => item,
+                      onChanged: (value) => setState(() {
+                        _selectedSubject = value;
+                        _selectedPaperId = null;
+                      }),
+                    ),
+                    blankVerticalSpace16,
+                    CustomDropdown<String>(
+                      // CustomDropdown only reads its initial value, so rebuild
+                      // it when the subject changes to clear the old paper.
+                      key: ValueKey('paper-$_selectedSubject'),
+                      labelText: "Paper",
+                      hintText: "Select Paper",
+                      value: _selectedPaperId,
+                      items: _visiblePapers
+                          .map((p) => p['_id'].toString())
+                          .toList(),
+                      itemLabelBuilder: (String id) =>
+                          _visiblePapers
+                              .firstWhere((p) => p['_id'].toString() == id)['title']
+                              ?.toString() ??
+                          'Objectives Test Series',
+                      onChanged: (value) =>
+                          setState(() => _selectedPaperId = value),
+                    ),
+                    if (selectedPaper != null) ...[
+                      blankVerticalSpace16,
+                      _buildPaperDetails(selectedPaper, theme),
+                    ],
+                  ],
+                  const Spacer(),
+                  _buildStartButton(selectedPaper),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildSubjectChips(ThemeData theme) {
-    final chips = <String?>[null, ..._subjects];
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: chips.map((subject) {
-            final selected = _selectedSubject == subject;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text(subject ?? "All"),
-                selected: selected,
-                onSelected: (_) => setState(() => _selectedSubject = subject),
-                selectedColor: theme.colorScheme.primary,
-                labelStyle: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? Colors.white : theme.colorScheme.onSurface,
-                ),
-                showCheckmark: false,
-              ),
-            );
-          }).toList(),
+  /// Question count, time limit and ranked/practice status of the chosen paper.
+  Widget _buildPaperDetails(dynamic paper, ThemeData theme) {
+    final count = paper['questionCount'] ?? 0;
+    final duration = paper['duration'] ?? 0;
+    final secondsLeft = _secondsUntilStart(paper);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 16,
+          children: [
+            _metaItem(Icons.quiz_outlined, "$count MCQs", theme.colorScheme),
+            _metaItem(
+              Icons.timer_outlined,
+              duration > 0 ? "$duration min" : "Untimed",
+              theme.colorScheme,
+            ),
+          ],
         ),
-      ),
+        const SizedBox(height: 8),
+        _buildStatusChip(paper, _statusOf(paper), secondsLeft),
+      ],
     );
   }
 
-  Widget _buildPaperCard(dynamic paper, ThemeData theme) {
-    final count = paper['questionCount'] ?? 0;
-    final duration = paper['duration'] ?? 0;
-    final colorScheme = theme.colorScheme;
-    final secondsLeft = _secondsUntilStart(paper);
-    final locked = secondsLeft > 0;
-    final status = _statusOf(paper);
+  Widget _buildStartButton(dynamic selectedPaper) {
+    final primary = Theme.of(context).primaryColor;
+    final enabled = selectedPaper != null;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _openPaper(paper),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: locked
-                        ? [Colors.grey.shade500, Colors.grey.shade400]
-                        : const [kBoardCrackerStart, kBoardCrackerEnd],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
+    return Container(
+      width: double.infinity,
+      height: MediaQuery.of(context).size.height * 0.065,
+      decoration: BoxDecoration(
+        gradient: enabled
+            ? LinearGradient(
+                colors: [primary, primary.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        borderRadius: BorderRadius.circular(S.s12),
+        boxShadow: enabled
+            ? [
+                BoxShadow(
+                  color: primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
-                child: Icon(
-                    locked
-                        ? Icons.lock_clock_rounded
-                        : Icons.workspace_premium_rounded,
-                    color: Colors.white,
-                    size: 28),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      paper['title']?.toString() ?? 'Objectives Test Series',
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      paper['subject']?.toString() ?? '',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 12,
-                      children: [
-                        _metaItem(Icons.quiz_outlined, "$count MCQs", colorScheme),
-                        _metaItem(
-                          Icons.timer_outlined,
-                          duration > 0 ? "$duration min" : "Untimed",
-                          colorScheme,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _buildStatusChip(paper, status, secondsLeft),
-                  ],
-                ),
-              ),
-              if (!locked)
-                IconButton(
-                  tooltip: "Leaderboard",
-                  icon: const Icon(Icons.leaderboard_rounded,
-                      color: kBoardCrackerStart),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => BoardCrackerLeaderboardScreen(
-                        examId: paper['_id'].toString(),
-                        title: paper['title']?.toString() ?? 'Objectives Test Series',
-                      ),
-                    ),
-                  ),
-                ),
-              Icon(locked ? Icons.lock_outline : Icons.arrow_forward_ios,
-                  size: 16, color: colorScheme.onSurfaceVariant),
-            ],
+              ]
+            : [],
+      ),
+      child: ElevatedButton(
+        onPressed: enabled ? () => _openPaper(selectedPaper) : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          disabledBackgroundColor: Colors.grey.shade400,
+          disabledForegroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(S.s12)),
+        ),
+        child: Text(
+          "Start Exam",
+          style: TextStyle(
+            letterSpacing: 0.5,
+            fontSize: MediaQuery.of(context).size.width * 0.045,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
@@ -566,54 +531,6 @@ class _BoardCrackersScreenState extends State<BoardCrackersScreen> {
               color: isDark ? Colors.white38 : Colors.grey.shade500,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BoardCrackerHeader extends StatelessWidget {
-  const _BoardCrackerHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [kBoardCrackerStart, kBoardCrackerEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Objectives Test Series",
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "100 MCQs related to Board — practise the real paper pattern.",
-                  style: GoogleFonts.poppins(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 48),
         ],
       ),
     );
@@ -1370,6 +1287,9 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final loaded = !_isLoading && _loadError == null && _questions.isNotEmpty;
+    final lowTime = _isTimed && _remainingSeconds <= 60;
+    final timeColor = lowTime ? Colors.orangeAccent : Colors.white;
 
     return PopScope(
       canPop: _isLoading || _loadError != null,
@@ -1378,17 +1298,37 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
         _registerViolation("Back navigation is not allowed during the exam.");
       },
       child: Scaffold(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: Colors.grey[50],
         appBar: CustomAppBar(
-          title: widget.title,
+          title: loaded
+              ? "Question ${_currentIndex + 1}/${_questions.length}"
+              : widget.title,
           centerTitle: true,
           actions: [
-            if (!_isLoading && _questions.isNotEmpty)
+            if (loaded) ...[
               IconButton(
                 tooltip: "Question palette",
                 icon: const Icon(Icons.grid_view_rounded, color: Colors.white),
                 onPressed: _openPalette,
               ),
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.timer, color: timeColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      _formatDuration(
+                          _isTimed ? _remainingSeconds : _elapsedSeconds),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(color: timeColor),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
         body: _isLoading
@@ -1425,39 +1365,49 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
     final q = _questions[_currentIndex];
     final options = _availableOptions(q);
     final isLast = _currentIndex == _questions.length - 1;
-    final lowTime = _isTimed && _remainingSeconds <= 60;
+    final ranked = _attemptMode == 'RANKED';
 
     return SafeArea(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // "Question X of Y" chip, plus ranked/practice and violations.
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
             child: Row(
               children: [
-                Text(
-                  "Question ${_currentIndex + 1} of ${_questions.length}",
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurfaceVariant,
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: colorScheme.primary.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    "Question ${_currentIndex + 1} of ${_questions.length}",
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: (_attemptMode == 'RANKED'
-                            ? Colors.green
-                            : Colors.blueGrey)
+                    color: (ranked ? Colors.green : Colors.blueGrey)
                         .withOpacity(0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    _attemptMode == 'RANKED' ? "RANKED" : "PRACTICE",
+                    ranked ? "RANKED" : "PRACTICE",
                     style: GoogleFonts.poppins(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: _attemptMode == 'RANKED'
+                      color: ranked
                           ? Colors.green.shade700
                           : Colors.blueGrey.shade700,
                     ),
@@ -1466,7 +1416,6 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
                 const Spacer(),
                 if (_violationCount > 0)
                   Container(
-                    margin: const EdgeInsets.only(right: 8),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
@@ -1489,117 +1438,152 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
                       ],
                     ),
                   ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: lowTime
-                        ? Colors.red.withOpacity(0.12)
-                        : colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+              ],
+            ),
+          ),
+
+          // Question card and options scroll together.
+          Expanded(
+            child: SingleChildScrollView(
+              key: ValueKey(_currentIndex),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
+                    constraints: const BoxConstraints(minHeight: 120),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          colorScheme.primary,
+                          colorScheme.primary.withOpacity(0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_hasImage(q['questionImage']))
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                ApiService.getFileUrl(q['questionImage']),
+                                height: 200,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Container(
+                                  height: 100,
+                                  color: Colors.white24,
+                                  child: const Icon(Icons.broken_image,
+                                      color: Colors.white, size: 40),
+                                ),
+                              ),
+                            ),
+                          ),
+                        Text(
+                          q['question']?.toString() ?? '',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                height: 1.4,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      children: options
+                          .map((letter) => _buildOption(q, letter, colorScheme))
+                          .toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Bottom navigation
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 16, 24, 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                if (_currentIndex > 0)
+                  IconButton(
+                    tooltip: "Previous",
+                    onPressed: () => setState(() => _currentIndex--),
+                    icon: Icon(Icons.arrow_back, color: Colors.grey[600]),
+                  ),
+                if (!isLast)
+                  TextButton(
+                    onPressed: () => setState(() => _currentIndex++),
+                    child: Text(
+                      "Skip",
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                const Spacer(),
+                ElevatedButton(
+                  // Next needs an answer (use Skip otherwise); Submit is
+                  // always allowed since unanswered questions count as skipped.
+                  onPressed: isLast
+                      ? _confirmSubmit
+                      : (_selected.containsKey(_currentIndex)
+                          ? () => setState(() => _currentIndex++)
+                          : null),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.timer_outlined,
-                          size: 16,
-                          color: lowTime ? Colors.red : colorScheme.primary),
-                      const SizedBox(width: 4),
                       Text(
-                        _formatDuration(
-                            _isTimed ? _remainingSeconds : _elapsedSeconds),
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          color: lowTime ? Colors.red : colorScheme.primary,
-                        ),
+                        isLast ? "Submit" : "Next",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18),
                       ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: LinearProgressIndicator(
-              value: (_currentIndex + 1) / _questions.length,
-              backgroundColor: colorScheme.primary.withOpacity(0.12),
-              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              key: ValueKey(_currentIndex),
-              padding: const EdgeInsets.all(20),
-              children: [
-                if (_hasImage(q['questionImage']))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        ApiService.getFileUrl(q['questionImage']),
-                        height: 200,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.broken_image, size: 40),
-                      ),
-                    ),
-                  ),
-                Text(
-                  q['question']?.toString() ?? '',
-                  style: GoogleFonts.poppins(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ...options.map((letter) => _buildOption(q, letter, colorScheme)),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Row(
-              children: [
-                if (_currentIndex > 0)
-                  OutlinedButton.icon(
-                    onPressed: () => setState(() => _currentIndex--),
-                    icon: const Icon(Icons.arrow_back_ios, size: 14),
-                    label: const Text("Previous"),
-                  ),
-                const Spacer(),
-                if (!isLast)
-                  ElevatedButton(
-                    onPressed: () => setState(() => _currentIndex++),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: Text(_selected.containsKey(_currentIndex)
-                        ? "Next"
-                        : "Skip"),
-                  )
-                else
-                  ElevatedButton(
-                    onPressed: _confirmSubmit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: const Text("Submit"),
-                  ),
               ],
             ),
           ),
@@ -1610,14 +1594,32 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
 
   Widget _buildOption(
       Map<String, dynamic> q, String letter, ColorScheme colorScheme) {
+    final textTheme = Theme.of(context).textTheme;
     final isSelected = _selected[_currentIndex] == letter;
     final text = q['option$letter']?.toString() ?? '';
     final image = q['option${letter}Image'];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected
+              ? colorScheme.primary.withOpacity(0.5)
+              : Colors.grey[200]!,
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => setState(() {
           // Tapping the selected option again clears it.
           if (isSelected) {
@@ -1626,60 +1628,54 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
             _selected[_currentIndex] = letter;
           }
         }),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primary.withOpacity(0.1)
-                : colorScheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSelected
-                  ? colorScheme.primary
-                  : colorScheme.outline.withOpacity(0.3),
-              width: isSelected ? 2 : 1,
-            ),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.primary.withOpacity(0.08),
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected ? colorScheme.primary : Colors.grey[100],
+                  shape: BoxShape.circle,
+                ),
                 child: Text(
                   letter,
-                  style: GoogleFonts.poppins(
+                  style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : colorScheme.primary,
+                    color: isSelected ? Colors.white : Colors.grey[600],
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_hasImage(image))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Image.network(
-                          ApiService.getFileUrl(image),
-                          height: 90,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) =>
-                              const Icon(Icons.broken_image),
-                        ),
-                      ),
                     if (text.isNotEmpty)
                       Text(
                         text,
-                        style: GoogleFonts.poppins(
-                          fontSize: 15,
+                        style: textTheme.titleMedium?.copyWith(
+                          color: isSelected
+                              ? colorScheme.primary
+                              : colorScheme.onSurface,
                           fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                          color: colorScheme.onSurface,
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    if (_hasImage(image))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            ApiService.getFileUrl(image),
+                            height: 120,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) =>
+                                const SizedBox.shrink(),
+                          ),
                         ),
                       ),
                   ],
@@ -1818,6 +1814,12 @@ class BoardCrackerResultScreen extends StatelessWidget {
             return _reviewCard(context, i, q, review);
           }),
           const SizedBox(height: 12),
+          CustomFilledButton(
+            label: "Preview Question Paper",
+            icon: Icons.visibility_rounded,
+            onPressed: () => _previewPdf(context, reviewById),
+          ),
+          const SizedBox(height: 12),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
@@ -1832,6 +1834,39 @@ class BoardCrackerResultScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _previewPdf(
+      BuildContext context, Map<String, dynamic> reviewById) async {
+    CustomLoader.show(context);
+    try {
+      final bytes = await buildObjectivesPaperPdf(
+        title: title,
+        obtainedMarks: result['obtainedMarks'] ?? 0,
+        totalMarks: result['totalMarks'] ?? questions.length,
+        accuracy: result['accuracy'] ?? 0,
+        questions: questions,
+        reviewById: reviewById,
+      );
+      if (!context.mounted) return;
+      CustomLoader.hide(context);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfPreviewScreen(
+            product: {'name': title, 'id': examId},
+            pdfBytes: bytes,
+            isFullAccess: true,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      CustomLoader.hide(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating preview: $e')),
+      );
+    }
   }
 
   Widget _buildRankCard(BuildContext context) {
@@ -1888,23 +1923,6 @@ class BoardCrackerResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(detail, style: GoogleFonts.poppins(fontSize: 13)),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BoardCrackerLeaderboardScreen(
-                    examId: examId,
-                    title: title,
-                  ),
-                ),
-              ),
-              icon: const Icon(Icons.leaderboard_rounded, size: 18),
-              label: const Text("View Leaderboard"),
-            ),
-          ),
         ],
       ),
     );
@@ -2232,7 +2250,7 @@ class _BoardCrackerLeaderboardScreenState
           Text("Your position",
               style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          _entryTile(me, theme),
+          _LeaderboardEntryTile(entry: me),
           const SizedBox(height: 16),
         ],
         if (entries.isEmpty)
@@ -2255,12 +2273,23 @@ class _BoardCrackerLeaderboardScreenState
             ),
           )
         else
-          ...entries.map((e) => _entryTile(e, theme)),
+          ...entries.map((e) => _LeaderboardEntryTile(entry: e)),
       ],
     );
   }
+}
 
-  Widget _entryTile(dynamic entry, ThemeData theme) {
+/// One row of a paper's standings; shared by the full leaderboard screen and
+/// the home-page leaderboard card.
+class _LeaderboardEntryTile extends StatelessWidget {
+  final dynamic entry;
+  final bool showTime;
+
+  const _LeaderboardEntryTile({required this.entry, this.showTime = true});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final int rank = (entry['rank'] as num?)?.toInt() ?? 0;
     final bool isMe = entry['isMe'] == true;
@@ -2325,13 +2354,14 @@ class _BoardCrackerLeaderboardScreenState
                     color: colorScheme.onSurface,
                   ),
                 ),
-                Text(
-                  "Time ${_formatDuration((entry['timeTakenSeconds'] as num?)?.toInt() ?? 0)}",
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: colorScheme.onSurfaceVariant,
+                if (showTime)
+                  Text(
+                    "Time ${_formatDuration((entry['timeTakenSeconds'] as num?)?.toInt() ?? 0)}",
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -2342,6 +2372,561 @@ class _BoardCrackerLeaderboardScreenState
               fontWeight: FontWeight.bold,
               color: kBoardCrackerStart,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Home-page combined leaderboard card
+// ---------------------------------------------------------------------------
+
+/// Home-page podium (2nd · 1st · 3rd) for the combined Objectives Test
+/// Series standings: total ranked marks across every currently-open paper
+/// for the student's std, not one leaderboard per paper. Hidden until the
+/// student's standard has at least one open paper.
+class BoardCrackerLeaderboardCard extends StatefulWidget {
+  const BoardCrackerLeaderboardCard({super.key});
+
+  @override
+  State<BoardCrackerLeaderboardCard> createState() =>
+      _BoardCrackerLeaderboardCardState();
+}
+
+class _BoardCrackerLeaderboardCardState
+    extends State<BoardCrackerLeaderboardCard> {
+  Map<String, dynamic>? _data;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? std = prefs.getString('std');
+      String? medium = prefs.getString('medium');
+      String? stream = prefs.getString('stream');
+      // Some profiles store "11 Science" as the std.
+      if (std != null && std.contains(' ')) {
+        final parts = std.split(' ');
+        std = parts[0];
+        if (stream == null || stream == '-' || stream.isEmpty) {
+          stream = parts.skip(1).join(' ');
+        }
+      }
+
+      final response = await ApiService.getCombinedBoardCrackerLeaderboard(
+        std: std,
+        medium: medium,
+        stream: stream,
+      );
+      if (response.statusCode != 200) return;
+
+      if (!mounted) return;
+      setState(() {
+        _data = jsonDecode(response.body) as Map<String, dynamic>;
+        _loaded = true;
+      });
+    } catch (e) {
+      debugPrint("Error loading home leaderboard: $e");
+      if (mounted) setState(() => _loaded = true);
+    }
+  }
+
+  void _openFullLeaderboard() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CombinedBoardCrackerLeaderboardScreen(),
+      ),
+    ).then((_) => _load());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final papers = (_data?['papers'] as List<dynamic>? ?? []);
+    // Nothing open for this student's std - stay hidden, same as before.
+    if (!_loaded || papers.isEmpty) return const SizedBox.shrink();
+
+    final entries = (_data?['entries'] as List<dynamic>? ?? []);
+    final screenWidth = MediaQuery.of(context).size.width;
+    dynamic at(int i) => i < entries.length ? entries[i] : null;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: screenWidth * 0.03),
+      child: GestureDetector(
+        onTap: _openFullLeaderboard,
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [kBoardCrackerStart, kBoardCrackerEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: kBoardCrackerStart.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.leaderboard_rounded,
+                      color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Test Series Leaderboard",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "Combined across ${papers.length} open paper${papers.length == 1 ? '' : 's'}",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    "View all",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.white, size: 18),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (entries.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    "No ranked attempts yet — be the first!",
+                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _buildPodiumSpot(at(1), 2, 56, Colors.grey.shade300),
+                  _buildPodiumSpot(at(0), 1, 70, Colors.amber),
+                  _buildPodiumSpot(at(2), 3, 56, Colors.brown.shade300),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// One podium position; an empty spot shows a placeholder until someone
+  /// takes that rank.
+  Widget _buildPodiumSpot(dynamic entry, int rank, double size, Color color) {
+    final String fullName = entry?['name']?.toString() ?? '';
+    final String firstName =
+        fullName.trim().isEmpty ? '' : fullName.trim().split(' ').first;
+    final bool isMe = entry?['isMe'] == true;
+    final String photo =
+        entry == null ? '' : ApiService.getFileUrl(entry['photoPath']?.toString());
+
+    return SizedBox(
+      width: 96,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              Container(
+                margin: EdgeInsets.only(top: rank == 1 ? 18 : 0, bottom: 10),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: entry == null ? Colors.white38 : color, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: size / 2,
+                  backgroundColor: entry == null
+                      ? Colors.white.withOpacity(0.15)
+                      : Colors.white,
+                  backgroundImage:
+                      photo.isNotEmpty ? NetworkImage(photo) : null,
+                  child: photo.isNotEmpty
+                      ? null
+                      : entry == null
+                          ? Icon(Icons.person_outline_rounded,
+                              color: Colors.white70, size: size * 0.45)
+                          : Text(
+                              firstName.isNotEmpty
+                                  ? firstName[0].toUpperCase()
+                                  : '?',
+                              style: GoogleFonts.poppins(
+                                fontSize: size * 0.4,
+                                fontWeight: FontWeight.bold,
+                                color: kBoardCrackerStart,
+                              ),
+                            ),
+                ),
+              ),
+              if (rank == 1)
+                const Positioned(
+                  top: 0,
+                  child: Icon(Icons.workspace_premium,
+                      color: Colors.amber, size: 28),
+                ),
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: entry == null ? Colors.white38 : color,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "$rank",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            entry == null ? "—" : (isMe ? "You" : firstName),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            entry == null
+                ? " "
+                : "${entry['obtainedMarks']}/${entry['totalMarks']}",
+            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Combined leaderboard (full screen)
+// ---------------------------------------------------------------------------
+
+/// Full standings for the combined leaderboard: total ranked marks across
+/// every currently-open Objectives Test Series paper for the student's std.
+class CombinedBoardCrackerLeaderboardScreen extends StatefulWidget {
+  const CombinedBoardCrackerLeaderboardScreen({super.key});
+
+  @override
+  State<CombinedBoardCrackerLeaderboardScreen> createState() =>
+      _CombinedBoardCrackerLeaderboardScreenState();
+}
+
+class _CombinedBoardCrackerLeaderboardScreenState
+    extends State<CombinedBoardCrackerLeaderboardScreen> {
+  Map<String, dynamic>? _data;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? std = prefs.getString('std');
+      String? medium = prefs.getString('medium');
+      String? stream = prefs.getString('stream');
+      if (std != null && std.contains(' ')) {
+        final parts = std.split(' ');
+        std = parts[0];
+        if (stream == null || stream == '-' || stream.isEmpty) {
+          stream = parts.skip(1).join(' ');
+        }
+      }
+
+      final response = await ApiService.getCombinedBoardCrackerLeaderboard(
+        std: std,
+        medium: medium,
+        stream: stream,
+      );
+      if (response.statusCode != 200) {
+        throw Exception("Server returned ${response.statusCode}");
+      }
+      if (!mounted) return;
+      setState(() {
+        _data = jsonDecode(response.body) as Map<String, dynamic>;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error loading combined leaderboard: $e");
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = "Could not load the leaderboard.";
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor:
+          isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
+      appBar: const CustomAppBar(title: "Leaderboard", centerTitle: true),
+      body: _isLoading
+          ? const CustomLoader()
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_error!),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                          onPressed: _load, child: const Text("Retry")),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(onRefresh: _load, child: _buildBody()),
+    );
+  }
+
+  Widget _buildBody() {
+    final entries = (_data?['entries'] as List<dynamic>? ?? []);
+    final me = _data?['me'];
+    final meInTop = entries.any((e) => e['isMe'] == true);
+    // Ranks 1-3 go on the podium; the rest are listed below it.
+    final rest = entries.length > 3 ? entries.sublist(3) : <dynamic>[];
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (entries.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 48),
+            child: Column(
+              children: [
+                Icon(Icons.leaderboard_outlined,
+                    size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 12),
+                Text(
+                  "No ranked attempts yet",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else ...[
+          _buildPodium(entries),
+          const SizedBox(height: 20),
+          if (me != null && !meInTop) ...[
+            Text("Your position",
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            _LeaderboardEntryTile(entry: me),
+            const SizedBox(height: 16),
+          ],
+          if (rest.isNotEmpty)
+            ...rest.map(
+                (e) => _LeaderboardEntryTile(entry: e, showTime: false)),
+        ],
+      ],
+    );
+  }
+
+  /// Top 3 shown as a podium (2nd · 1st · 3rd); an empty spot shows a
+  /// placeholder until someone takes that rank.
+  Widget _buildPodium(List<dynamic> entries) {
+    dynamic at(int i) => i < entries.length ? entries[i] : null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [kBoardCrackerStart, kBoardCrackerEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: kBoardCrackerStart.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _buildPodiumSpot(at(1), 2, 64, Colors.grey.shade300),
+          _buildPodiumSpot(at(0), 1, 80, Colors.amber),
+          _buildPodiumSpot(at(2), 3, 64, Colors.brown.shade300),
+        ],
+      ),
+    );
+  }
+
+  /// One podium position; an empty spot shows a placeholder until someone
+  /// takes that rank. Same look as the home-page leaderboard card's podium.
+  Widget _buildPodiumSpot(dynamic entry, int rank, double size, Color color) {
+    final String fullName = entry?['name']?.toString() ?? '';
+    final String firstName =
+        fullName.trim().isEmpty ? '' : fullName.trim().split(' ').first;
+    final bool isMe = entry?['isMe'] == true;
+    final String photo =
+        entry == null ? '' : ApiService.getFileUrl(entry['photoPath']?.toString());
+
+    return SizedBox(
+      width: 100,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              Container(
+                margin: EdgeInsets.only(top: rank == 1 ? 18 : 0, bottom: 10),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: entry == null ? Colors.white38 : color, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: size / 2,
+                  backgroundColor: entry == null
+                      ? Colors.white.withOpacity(0.15)
+                      : Colors.white,
+                  backgroundImage:
+                      photo.isNotEmpty ? NetworkImage(photo) : null,
+                  child: photo.isNotEmpty
+                      ? null
+                      : entry == null
+                          ? Icon(Icons.person_outline_rounded,
+                              color: Colors.white70, size: size * 0.45)
+                          : Text(
+                              firstName.isNotEmpty
+                                  ? firstName[0].toUpperCase()
+                                  : '?',
+                              style: GoogleFonts.poppins(
+                                fontSize: size * 0.4,
+                                fontWeight: FontWeight.bold,
+                                color: kBoardCrackerStart,
+                              ),
+                            ),
+                ),
+              ),
+              if (rank == 1)
+                const Positioned(
+                  top: 0,
+                  child: Icon(Icons.workspace_premium,
+                      color: Colors.amber, size: 30),
+                ),
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: entry == null ? Colors.white38 : color,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "$rank",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            entry == null ? "—" : (isMe ? "You" : firstName),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            entry == null
+                ? " "
+                : "${entry['obtainedMarks']}/${entry['totalMarks']}",
+            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
           ),
         ],
       ),
