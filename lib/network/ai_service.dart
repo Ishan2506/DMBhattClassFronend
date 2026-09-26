@@ -130,9 +130,16 @@ import 'package:http/http.dart' as http;
 
 class TuitionAIService {
   final String _youtubeKey = 'AIzaSyBxCUknZpAeSAzBCtUcYAkHUp8lnToSM0I';
-  final String _channelHandle = '@dmbhatteducationchannel';
-
-  String? _channelId;
+  // "DM Bhatt Sir" channel. Hardcoded by ID rather than by @handle — the
+  // handle this used to look up (@dmbhatteducationchannel) stopped resolving
+  // after the channel's handle changed, which broke every AI Assistant
+  // lookup app-wide. Channel IDs are permanent and can't be edited by the
+  // channel owner, so this can't break the same way again.
+  final String _channelId = 'UCKJUZTOXVZYOVsFnTT0GHsA';
+  // "StudentBro-TeamDM" channel. Searched only when the primary channel has
+  // no matching video for any of the escalating queries below, so a gap in
+  // the primary channel's catalog doesn't leave the student with nothing.
+  final String _fallbackChannelId = 'UCQnNzFGI6MpLMGSMCSVbh3g';
 
   /// MAIN METHOD CALLED FROM UI
   Future<List<Map<String, String>>> fetchLectureVideo({
@@ -141,8 +148,32 @@ class TuitionAIService {
     required String chapter,
     String? stream,
   }) async {
-    final channelId = await _getChannelId();
+    final videos = await _searchChannel(
+      channelId: _channelId,
+      standard: standard,
+      subject: subject,
+      chapter: chapter,
+      stream: stream,
+    );
+    if (videos.isNotEmpty) return videos;
 
+    return await _searchChannel(
+      channelId: _fallbackChannelId,
+      standard: standard,
+      subject: subject,
+      chapter: chapter,
+      stream: stream,
+    );
+  }
+
+  /// Runs the escalating (specific → broad) search against one channel.
+  Future<List<Map<String, String>>> _searchChannel({
+    required String channelId,
+    required String standard,
+    required String subject,
+    required String chapter,
+    String? stream,
+  }) async {
     final streamText = stream != null ? "$stream " : "";
 
     // 1. Specific Search (Best Match)
@@ -163,26 +194,6 @@ class TuitionAIService {
     // 4. Last Resort (Chapter only)
     return await _searchYouTubeVideo(
         chapter, channelId);
-  }
-
-  /// GET CHANNEL ID ONCE (CACHED)
-  Future<String> _getChannelId() async {
-    if (_channelId != null) return _channelId!;
-
-    final url = Uri.parse(
-      'https://www.googleapis.com/youtube/v3/channels'
-      '?part=id&forHandle=$_channelHandle&key=$_youtubeKey',
-    );
-
-    final response = await http.get(url);
-    final data = jsonDecode(response.body);
-
-    if (data['items'] != null && data['items'].isNotEmpty) {
-      _channelId = data['items'][0]['id'];
-      return _channelId!;
-    }
-
-    throw Exception('DM Bhatt Education channel not found ');
   }
 
   /// SEARCH VIDEO INSIDE CHANNEL ONLY
