@@ -111,9 +111,11 @@ class ApiService {
       // in elsewhere after the limit was raised) looks identical to an expiry,
       // so explain it rather than bouncing them out silently.
       bool wasRevoked = false;
+      bool wasBanned = false;
       try {
         final decoded = jsonDecode(response.body);
         wasRevoked = decoded is Map && decoded['code'] == 'SESSION_REVOKED';
+        wasBanned = decoded is Map && decoded['code'] == 'ACCOUNT_BANNED';
       } catch (_) {
         // Non-JSON body — fall back to the generic message.
       }
@@ -134,9 +136,11 @@ class ApiService {
           if (context != null) {
             CustomToast.showError(
               context,
-              wasRevoked
-                  ? 'You have been logged out because this account was signed in on another device.'
-                  : 'Your session has expired. Please login again.',
+              wasBanned
+                  ? 'This account has been banned. Please contact support.'
+                  : wasRevoked
+                      ? 'You have been logged out because this account was signed in on another device.'
+                      : 'Your session has expired. Please login again.',
             );
           }
         });
