@@ -53,6 +53,10 @@
 	<string>This app requires camera access to capture photos.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>mailto</string>

@@ -53,6 +53,14 @@ class NotificationService {
       }
     }
 
+    // iOS shows no banner for messages arriving while the app is open unless
+    // told to. Android gets its foreground popup from step 4 below instead.
+    await fcm.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
     // 2. Initialize Local Notifications for Foreground Popups
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/launcher_icon');
@@ -88,8 +96,9 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
-    // 3. Subscribe to the 'all' topic
-    await fcm.subscribeToTopic('all');
+    // 3. Subscribe to the 'all' topic. Not awaited: on iOS this waits for the
+    // APNs token, which must not hold up app startup.
+    _subscribe(fcm, 'all');
 
     // 4. Handle Foreground Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -163,13 +172,7 @@ class NotificationService {
       return;
     }
 
-    final topic = 'std_$standard';
-    try {
-      await fcm.subscribeToTopic(topic);
-      if (kDebugMode) print('Subscribed to topic: $topic');
-    } catch (e) {
-      if (kDebugMode) print('Error subscribing to topic $topic: $e');
-    }
+    await _subscribe(fcm, 'std_$standard');
   }
 
   Future<void> subscribeToUserTopic(String userId) async {
@@ -184,12 +187,31 @@ class NotificationService {
       return;
     }
 
-    final topic = 'user_$userId';
+    await _subscribe(fcm, 'user_$userId');
+  }
+
+  Future<void> _subscribe(FirebaseMessaging fcm, String topic) async {
     try {
+      if (!await _waitForApnsToken(fcm)) {
+        if (kDebugMode) print('No APNs token, skipping topic subscription: $topic');
+        return;
+      }
       await fcm.subscribeToTopic(topic);
-      if (kDebugMode) print('Subscribed to user topic: $topic');
+      if (kDebugMode) print('Subscribed to topic: $topic');
     } catch (e) {
-      if (kDebugMode) print('Error subscribing to user topic $topic: $e');
+      if (kDebugMode) print('Error subscribing to topic $topic: $e');
     }
+  }
+
+  /// On iOS, FCM topic calls throw `apns-token-not-set` until APNs has handed
+  /// the app its device token, which arrives asynchronously after permission
+  /// is granted (and never on a simulator). Poll briefly before giving up.
+  Future<bool> _waitForApnsToken(FirebaseMessaging fcm) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return true;
+    for (var i = 0; i < 20; i++) {
+      if (await fcm.getAPNSToken() != null) return true;
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    return false;
   }
 }
