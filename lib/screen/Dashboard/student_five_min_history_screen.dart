@@ -1,6 +1,7 @@
 
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:flutter/services.dart';
@@ -26,10 +27,15 @@ class _StudentFiveMinHistoryScreenState extends State<StudentFiveMinHistoryScree
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
+  bool _isGuest = false;
+
   @override
   void initState() {
     super.initState();
     _fetchHistory();
+    GuestUtils.isGuest().then((g) {
+      if (mounted && g) setState(() => _isGuest = true);
+    });
   }
 
   @override
@@ -141,6 +147,7 @@ class _StudentFiveMinHistoryScreenState extends State<StudentFiveMinHistoryScree
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (exams.isEmpty) {
+      if (_isGuest) return GuestUtils.historyLoginPrompt();
       return Center(
         child: Text(
           "No 5-min tests found",

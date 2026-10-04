@@ -180,15 +180,15 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 );
               },
             ),
-            if (!Platform.isIOS)
-              _MoreScreenItem(
-                title: l10n.readyReportingCard,
-                value: "",
-                icon: Icons.bar_chart_rounded,
-                onTap: () {
-                   CustomToast.showInfo(context, l10n.comingSoon);
-                },
-              ),
+            // if (!Platform.isIOS)
+            //   _MoreScreenItem(
+            //     title: l10n.readyReportingCard,
+            //     value: "",
+            //     icon: Icons.bar_chart_rounded,
+            //     onTap: () {
+            //        CustomToast.showInfo(context, l10n.comingSoon);
+            //     },
+            //   ),
             // _MoreScreenItem(
             //   title: "One-Liner Exam",
             //   value: "",

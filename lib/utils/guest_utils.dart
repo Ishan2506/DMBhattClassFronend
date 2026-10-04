@@ -88,6 +88,33 @@ class GuestUtils {
     return false;
   }
 
+  /// Shown in place of "No history found" on exam-history screens when the
+  /// user is browsing as a guest, since guests have no attempts to list.
+  static Widget historyLoginPrompt() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_outline_rounded, size: 64, color: Colors.grey.shade500),
+            const SizedBox(height: 16),
+            Text(
+              "Login required",
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Sign up, sign in, or purchase a paid plan to see your exam history.",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   static String _getTypeLabel(String type) {
     switch (type.toUpperCase()) {
       case 'REGULAR':

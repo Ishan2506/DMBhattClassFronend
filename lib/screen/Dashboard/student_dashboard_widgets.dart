@@ -139,15 +139,15 @@ class BoardCrackersBanner extends StatelessWidget {
     return Container(
       margin: EdgeInsets.all(screenWidth * 0.05),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [kBoardCrackerStart, kBoardCrackerEnd],
+        gradient: LinearGradient(
+          colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: kBoardCrackerStart.withOpacity(0.3),
+            color: kBoardCrackerStart(context).withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -179,7 +179,7 @@ class BoardCrackersBanner extends StatelessWidget {
                   ),
                   child: Icon(
                     Icons.workspace_premium_rounded,
-                    color: kBoardCrackerStart,
+                    color: kBoardCrackerStart(context),
                     size: screenWidth * 0.08,
                   ),
                 ),

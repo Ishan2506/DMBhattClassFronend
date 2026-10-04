@@ -4,6 +4,7 @@ import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/pdf_preview_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
@@ -25,10 +26,15 @@ class _TrueFalseHistoryScreenState extends State<TrueFalseHistoryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
+  bool _isGuest = false;
+
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    GuestUtils.isGuest().then((g) {
+      if (mounted && g) setState(() => _isGuest = true);
+    });
   }
 
   @override
@@ -148,6 +154,7 @@ class _TrueFalseHistoryScreenState extends State<TrueFalseHistoryScreen> {
   }
 
   Widget _buildEmptyState() {
+    if (_isGuest) return GuestUtils.historyLoginPrompt();
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

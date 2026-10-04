@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:dm_bhatt_tutions/utils/guest_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
@@ -26,10 +27,15 @@ class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScree
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
+  bool _isGuest = false;
+
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    GuestUtils.isGuest().then((g) {
+      if (mounted && g) setState(() => _isGuest = true);
+    });
   }
 
   @override
@@ -364,6 +370,7 @@ class _MatchFollowingHistoryScreenState extends State<MatchFollowingHistoryScree
   }
 
   Widget _buildEmptyState(bool isDark) {
+    if (_isGuest) return GuestUtils.historyLoginPrompt();
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,

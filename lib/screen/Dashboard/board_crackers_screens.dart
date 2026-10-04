@@ -22,11 +22,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const List<String> _optionLetters = ['A', 'B', 'C', 'D'];
 
-/// Objectives Test Series colours (home banner, headers, leaderboard) - the
-/// app's own theme primary (blue.shade900) fading to a lighter blue, so this
-/// feature matches the rest of the app instead of using its own brand colour.
-const Color kBoardCrackerStart = Color(0xFF0D47A1); // Theme primary (blue.shade900)
-const Color kBoardCrackerEnd = Color(0xFF1976D2); // Colors.blue.shade700
+/// Objectives Test Series colours follow the active theme, like the other
+/// exam screens (which use colorScheme.primary directly).
+Color kBoardCrackerStart(BuildContext context) => Theme.of(context).colorScheme.primary;
+Color kBoardCrackerEnd(BuildContext context) =>
+    Theme.of(context).colorScheme.primary.withOpacity(0.7);
 
 String _formatDuration(int totalSeconds) {
   final h = totalSeconds ~/ 3600;
@@ -237,9 +237,9 @@ class _BoardCrackersScreenState extends State<BoardCrackersScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.lock_clock_rounded, color: kBoardCrackerStart),
+            Icon(Icons.lock_clock_rounded, color: kBoardCrackerStart(context)),
             SizedBox(width: 8),
             Text("Not open yet", style: TextStyle(fontWeight: FontWeight.bold)),
           ],
@@ -902,8 +902,9 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
 
   Future<void> _disableScreenProtection() async {
     if (kIsWeb) return;
+    // Screenshot blocking is app-wide (main.dart), so leaving the exam must not
+    // switch it off - only the exam-specific iOS listener is removed here.
     try {
-      await ScreenProtector.preventScreenshotOff();
       if (Platform.isIOS) ScreenProtector.removeListener();
     } catch (e) {
       debugPrint("Error disabling screen protection: $e");
@@ -1747,8 +1748,8 @@ class BoardCrackerResultScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [kBoardCrackerStart, kBoardCrackerEnd],
+              gradient: LinearGradient(
+                colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -1893,7 +1894,7 @@ class BoardCrackerResultScreen extends StatelessWidget {
       };
     }
 
-    final color = isRanked ? kBoardCrackerStart : Colors.blueGrey;
+    final color = isRanked ? kBoardCrackerStart(context) : Colors.blueGrey;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -2214,8 +2215,8 @@ class _BoardCrackerLeaderboardScreenState
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [kBoardCrackerStart, kBoardCrackerEnd],
+            gradient: LinearGradient(
+              colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -2302,12 +2303,12 @@ class _LeaderboardEntryTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: isMe
-            ? kBoardCrackerStart.withOpacity(0.1)
+            ? kBoardCrackerStart(context).withOpacity(0.1)
             : theme.cardColor,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isMe
-              ? kBoardCrackerStart.withOpacity(0.5)
+              ? kBoardCrackerStart(context).withOpacity(0.5)
               : colorScheme.outline.withOpacity(0.15),
         ),
       ),
@@ -2328,14 +2329,14 @@ class _LeaderboardEntryTile extends StatelessWidget {
           ),
           CircleAvatar(
             radius: 18,
-            backgroundColor: kBoardCrackerEnd.withOpacity(0.15),
+            backgroundColor: kBoardCrackerEnd(context).withOpacity(0.15),
             backgroundImage: photo.isNotEmpty ? NetworkImage(photo) : null,
             child: photo.isEmpty
                 ? Text(
                     name.isNotEmpty ? name[0].toUpperCase() : '?',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
-                      color: kBoardCrackerEnd,
+                      color: kBoardCrackerEnd(context),
                     ),
                   )
                 : null,
@@ -2370,7 +2371,7 @@ class _LeaderboardEntryTile extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: kBoardCrackerStart,
+              color: kBoardCrackerStart(context),
             ),
           ),
         ],
@@ -2466,15 +2467,15 @@ class _BoardCrackerLeaderboardCardState
           margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [kBoardCrackerStart, kBoardCrackerEnd],
+            gradient: LinearGradient(
+              colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: kBoardCrackerStart.withOpacity(0.3),
+                color: kBoardCrackerStart(context).withOpacity(0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -2598,7 +2599,7 @@ class _BoardCrackerLeaderboardCardState
                               style: GoogleFonts.poppins(
                                 fontSize: size * 0.4,
                                 fontWeight: FontWeight.bold,
-                                color: kBoardCrackerStart,
+                                color: kBoardCrackerStart(context),
                               ),
                             ),
                 ),
@@ -2802,15 +2803,15 @@ class _CombinedBoardCrackerLeaderboardScreenState
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [kBoardCrackerStart, kBoardCrackerEnd],
+        gradient: LinearGradient(
+          colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: kBoardCrackerStart.withOpacity(0.3),
+            color: kBoardCrackerStart(context).withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -2879,7 +2880,7 @@ class _CombinedBoardCrackerLeaderboardScreenState
                               style: GoogleFonts.poppins(
                                 fontSize: size * 0.4,
                                 fontWeight: FontWeight.bold,
-                                color: kBoardCrackerStart,
+                                color: kBoardCrackerStart(context),
                               ),
                             ),
                 ),
