@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/landing_screen.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_dropdown.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_filled_button.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
@@ -1737,8 +1738,14 @@ class BoardCrackerResultScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.home_rounded, color: Colors.white),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LandingScreen()),
+                (route) => false,
+              );
+            },
           ),
         ],
       ),
@@ -1821,16 +1828,21 @@ class BoardCrackerResultScreen extends StatelessWidget {
             onPressed: () => _previewPdf(context, reviewById),
           ),
           const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+          TextButton(
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LandingScreen()),
+                (route) => false,
+              );
+            },
+            child: Text(
+              "Back to Dashboard",
+              style: GoogleFonts.poppins(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            child: const Text("Back to Objectives Test Series"),
           ),
         ],
       ),

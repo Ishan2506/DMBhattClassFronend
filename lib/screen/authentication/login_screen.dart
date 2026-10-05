@@ -13,7 +13,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/forgot_password_phone_screen.dart';
 import 'package:dm_bhatt_tutions/screen/authentication/welcome_screen.dart';
-import 'package:dm_bhatt_tutions/screen/authentication/guest_selection_screen.dart';
 import 'package:dm_bhatt_tutions/utils/validation_utils.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
 
@@ -188,22 +187,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const GuestSelectionScreen()),
-            ),
-            child: Text(
-              l10n.skip,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.blue.shade700,
-              ),
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

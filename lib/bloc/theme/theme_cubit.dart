@@ -74,9 +74,8 @@ class ThemeCubit extends Cubit<ThemeState> {
       try {
         final Map<String, dynamic> map = Map<String, dynamic>.from(jsonDecode(data));
         ThemeState state = ThemeState.fromMap(map);
-        // Force Light Mode on every startup as requested
-        // only english language currenyly we are working on
-        return state.copyWith(themeMode: ThemeMode.light, locale: const Locale('en'));
+        // only english language currently we are working on
+        return state.copyWith(locale: const Locale('en'));
       } catch (e) {
         debugPrint("Error loading persistent theme: $e");
       }

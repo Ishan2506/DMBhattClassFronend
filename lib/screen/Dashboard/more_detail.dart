@@ -106,19 +106,19 @@ class _StudentActivitiesScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            if (!Platform.isIOS)
-              _MoreScreenItem(
-                title: l10n.myArea,
-                value: "",
-                icon: Icons.person_pin,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const _MyAreaScreen()),
-                  );
-                },
-              ),
+            // if (!Platform.isIOS)
+            //   _MoreScreenItem(
+            //     title: l10n.myArea,
+            //     value: "",
+            //     icon: Icons.person_pin,
+            //     onTap: () {
+            //       Navigator.push(
+            //         context,
+            //         MaterialPageRoute(
+            //             builder: (context) => const _MyAreaScreen()),
+            //       );
+            //     },
+            //   ),
             // _MoreScreenItem(
             //   title: l10n.events,
             //   value: "",

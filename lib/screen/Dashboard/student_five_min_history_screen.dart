@@ -32,10 +32,23 @@ class _StudentFiveMinHistoryScreenState extends State<StudentFiveMinHistoryScree
   @override
   void initState() {
     super.initState();
+    _initHistory();
+  }
+
+  // Guests have no history to fetch - check that first (a fast local read)
+  // and skip the network call entirely, instead of always firing it and
+  // making a guest wait on a full round-trip just to see the login prompt.
+  Future<void> _initHistory() async {
+    final guest = await GuestUtils.isGuest();
+    if (!mounted) return;
+    if (guest) {
+      setState(() {
+        _isGuest = true;
+        _isLoading = false;
+      });
+      return;
+    }
     _fetchHistory();
-    GuestUtils.isGuest().then((g) {
-      if (mounted && g) setState(() => _isGuest = true);
-    });
   }
 
   @override
