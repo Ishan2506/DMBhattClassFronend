@@ -678,6 +678,39 @@ class BoardCrackerInstructionScreen extends StatelessWidget {
               ),
             ),
             Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BoardCrackerLeaderboardScreen(
+                          examId: paper['_id'].toString(),
+                          title: paper['title']?.toString() ??
+                              'Objectives Test Series',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.leaderboard_rounded),
+                  label: Text(
+                    "See Leaderboard",
+                    style: GoogleFonts.poppins(
+                        fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.primary,
+                    side: BorderSide(color: colorScheme.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: SizedBox(
                 width: double.infinity,
@@ -2393,556 +2426,561 @@ class _LeaderboardEntryTile extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Home-page combined leaderboard card
+// Combined leaderboard: commented out. This now lives only in the admin web
+// app (dm-bhatt-admin-app, super admin view); the student app only shows the
+// per-paper leaderboard (BoardCrackerLeaderboardScreen below).
 // ---------------------------------------------------------------------------
 
-/// Home-page podium (2nd · 1st · 3rd) for the combined Objectives Test
-/// Series standings: total ranked marks across every currently-open paper
-/// for the student's std, not one leaderboard per paper. Hidden until the
-/// student's standard has at least one open paper.
-class BoardCrackerLeaderboardCard extends StatefulWidget {
-  const BoardCrackerLeaderboardCard({super.key});
-
-  @override
-  State<BoardCrackerLeaderboardCard> createState() =>
-      _BoardCrackerLeaderboardCardState();
-}
-
-class _BoardCrackerLeaderboardCardState
-    extends State<BoardCrackerLeaderboardCard> {
-  Map<String, dynamic>? _data;
-  bool _loaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      String? std = prefs.getString('std');
-      String? medium = prefs.getString('medium');
-      String? stream = prefs.getString('stream');
-      // Some profiles store "11 Science" as the std.
-      if (std != null && std.contains(' ')) {
-        final parts = std.split(' ');
-        std = parts[0];
-        if (stream == null || stream == '-' || stream.isEmpty) {
-          stream = parts.skip(1).join(' ');
-        }
-      }
-
-      final response = await ApiService.getCombinedBoardCrackerLeaderboard(
-        std: std,
-        medium: medium,
-        stream: stream,
-      );
-      if (response.statusCode != 200) return;
-
-      if (!mounted) return;
-      setState(() {
-        _data = jsonDecode(response.body) as Map<String, dynamic>;
-        _loaded = true;
-      });
-    } catch (e) {
-      debugPrint("Error loading home leaderboard: $e");
-      if (mounted) setState(() => _loaded = true);
-    }
-  }
-
-  void _openFullLeaderboard() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CombinedBoardCrackerLeaderboardScreen(),
-      ),
-    ).then((_) => _load());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final papers = (_data?['papers'] as List<dynamic>? ?? []);
-    // Nothing open for this student's std - stay hidden, same as before.
-    if (!_loaded || papers.isEmpty) return const SizedBox.shrink();
-
-    final entries = (_data?['entries'] as List<dynamic>? ?? []);
-    final screenWidth = MediaQuery.of(context).size.width;
-    dynamic at(int i) => i < entries.length ? entries[i] : null;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: screenWidth * 0.03),
-      child: GestureDetector(
-        onTap: _openFullLeaderboard,
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: kBoardCrackerStart(context).withOpacity(0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.leaderboard_rounded,
-                      color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Test Series Leaderboard",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          "Combined across ${papers.length} open paper${papers.length == 1 ? '' : 's'}",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(
-                            color: Colors.white70,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    "View all",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.white, size: 18),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (entries.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    "No ranked attempts yet — be the first!",
-                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _buildPodiumSpot(at(1), 2, 56, Colors.grey.shade300),
-                  _buildPodiumSpot(at(0), 1, 70, Colors.amber),
-                  _buildPodiumSpot(at(2), 3, 56, Colors.brown.shade300),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// One podium position; an empty spot shows a placeholder until someone
-  /// takes that rank.
-  Widget _buildPodiumSpot(dynamic entry, int rank, double size, Color color) {
-    final String fullName = entry?['name']?.toString() ?? '';
-    final String firstName =
-        fullName.trim().isEmpty ? '' : fullName.trim().split(' ').first;
-    final bool isMe = entry?['isMe'] == true;
-    final String photo =
-        entry == null ? '' : ApiService.getFileUrl(entry['photoPath']?.toString());
-
-    return SizedBox(
-      width: 96,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            alignment: Alignment.topCenter,
-            children: [
-              Container(
-                margin: EdgeInsets.only(top: rank == 1 ? 18 : 0, bottom: 10),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: entry == null ? Colors.white38 : color, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: size / 2,
-                  backgroundColor: entry == null
-                      ? Colors.white.withOpacity(0.15)
-                      : Colors.white,
-                  backgroundImage:
-                      photo.isNotEmpty ? NetworkImage(photo) : null,
-                  child: photo.isNotEmpty
-                      ? null
-                      : entry == null
-                          ? Icon(Icons.person_outline_rounded,
-                              color: Colors.white70, size: size * 0.45)
-                          : Text(
-                              firstName.isNotEmpty
-                                  ? firstName[0].toUpperCase()
-                                  : '?',
-                              style: GoogleFonts.poppins(
-                                fontSize: size * 0.4,
-                                fontWeight: FontWeight.bold,
-                                color: kBoardCrackerStart(context),
-                              ),
-                            ),
-                ),
-              ),
-              if (rank == 1)
-                const Positioned(
-                  top: 0,
-                  child: Icon(Icons.workspace_premium,
-                      color: Colors.amber, size: 28),
-                ),
-              Positioned(
-                bottom: 0,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: entry == null ? Colors.white38 : color,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    "$rank",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            entry == null ? "—" : (isMe ? "You" : firstName),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-          Text(
-            entry == null
-                ? " "
-                : "${entry['obtainedMarks']}/${entry['totalMarks']}",
-            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Combined leaderboard (full screen)
-// ---------------------------------------------------------------------------
-
-/// Full standings for the combined leaderboard: total ranked marks across
-/// every currently-open Objectives Test Series paper for the student's std.
-class CombinedBoardCrackerLeaderboardScreen extends StatefulWidget {
-  const CombinedBoardCrackerLeaderboardScreen({super.key});
-
-  @override
-  State<CombinedBoardCrackerLeaderboardScreen> createState() =>
-      _CombinedBoardCrackerLeaderboardScreenState();
-}
-
-class _CombinedBoardCrackerLeaderboardScreenState
-    extends State<CombinedBoardCrackerLeaderboardScreen> {
-  Map<String, dynamic>? _data;
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      String? std = prefs.getString('std');
-      String? medium = prefs.getString('medium');
-      String? stream = prefs.getString('stream');
-      if (std != null && std.contains(' ')) {
-        final parts = std.split(' ');
-        std = parts[0];
-        if (stream == null || stream == '-' || stream.isEmpty) {
-          stream = parts.skip(1).join(' ');
-        }
-      }
-
-      final response = await ApiService.getCombinedBoardCrackerLeaderboard(
-        std: std,
-        medium: medium,
-        stream: stream,
-      );
-      if (response.statusCode != 200) {
-        throw Exception("Server returned ${response.statusCode}");
-      }
-      if (!mounted) return;
-      setState(() {
-        _data = jsonDecode(response.body) as Map<String, dynamic>;
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint("Error loading combined leaderboard: $e");
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _error = "Could not load the leaderboard.";
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
-      appBar: const CustomAppBar(title: "Leaderboard", centerTitle: true),
-      body: _isLoading
-          ? const CustomLoader()
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_error!),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                          onPressed: _load, child: const Text("Retry")),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(onRefresh: _load, child: _buildBody()),
-    );
-  }
-
-  Widget _buildBody() {
-    final entries = (_data?['entries'] as List<dynamic>? ?? []);
-    final me = _data?['me'];
-    final meInTop = entries.any((e) => e['isMe'] == true);
-    // Ranks 1-3 go on the podium; the rest are listed below it.
-    final rest = entries.length > 3 ? entries.sublist(3) : <dynamic>[];
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (entries.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 48),
-            child: Column(
-              children: [
-                Icon(Icons.leaderboard_outlined,
-                    size: 64, color: Colors.grey.shade400),
-                const SizedBox(height: 12),
-                Text(
-                  "No ranked attempts yet",
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          )
-        else ...[
-          _buildPodium(entries),
-          const SizedBox(height: 20),
-          if (me != null && !meInTop) ...[
-            Text("Your position",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            _LeaderboardEntryTile(entry: me),
-            const SizedBox(height: 16),
-          ],
-          if (rest.isNotEmpty)
-            ...rest.map(
-                (e) => _LeaderboardEntryTile(entry: e, showTime: false)),
-        ],
-      ],
-    );
-  }
-
-  /// Top 3 shown as a podium (2nd · 1st · 3rd); an empty spot shows a
-  /// placeholder until someone takes that rank.
-  Widget _buildPodium(List<dynamic> entries) {
-    dynamic at(int i) => i < entries.length ? entries[i] : null;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: kBoardCrackerStart(context).withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          _buildPodiumSpot(at(1), 2, 64, Colors.grey.shade300),
-          _buildPodiumSpot(at(0), 1, 80, Colors.amber),
-          _buildPodiumSpot(at(2), 3, 64, Colors.brown.shade300),
-        ],
-      ),
-    );
-  }
-
-  /// One podium position; an empty spot shows a placeholder until someone
-  /// takes that rank. Same look as the home-page leaderboard card's podium.
-  Widget _buildPodiumSpot(dynamic entry, int rank, double size, Color color) {
-    final String fullName = entry?['name']?.toString() ?? '';
-    final String firstName =
-        fullName.trim().isEmpty ? '' : fullName.trim().split(' ').first;
-    final bool isMe = entry?['isMe'] == true;
-    final String photo =
-        entry == null ? '' : ApiService.getFileUrl(entry['photoPath']?.toString());
-
-    return SizedBox(
-      width: 100,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            alignment: Alignment.topCenter,
-            children: [
-              Container(
-                margin: EdgeInsets.only(top: rank == 1 ? 18 : 0, bottom: 10),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: entry == null ? Colors.white38 : color, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: size / 2,
-                  backgroundColor: entry == null
-                      ? Colors.white.withOpacity(0.15)
-                      : Colors.white,
-                  backgroundImage:
-                      photo.isNotEmpty ? NetworkImage(photo) : null,
-                  child: photo.isNotEmpty
-                      ? null
-                      : entry == null
-                          ? Icon(Icons.person_outline_rounded,
-                              color: Colors.white70, size: size * 0.45)
-                          : Text(
-                              firstName.isNotEmpty
-                                  ? firstName[0].toUpperCase()
-                                  : '?',
-                              style: GoogleFonts.poppins(
-                                fontSize: size * 0.4,
-                                fontWeight: FontWeight.bold,
-                                color: kBoardCrackerStart(context),
-                              ),
-                            ),
-                ),
-              ),
-              if (rank == 1)
-                const Positioned(
-                  top: 0,
-                  child: Icon(Icons.workspace_premium,
-                      color: Colors.amber, size: 30),
-                ),
-              Positioned(
-                bottom: 0,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: entry == null ? Colors.white38 : color,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    "$rank",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            entry == null ? "—" : (isMe ? "You" : firstName),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-          Text(
-            entry == null
-                ? " "
-                : "${entry['obtainedMarks']}/${entry['totalMarks']}",
-            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// // Home-page combined leaderboard card
+// // ---------------------------------------------------------------------------
+// 
+// /// Home-page podium (2nd · 1st · 3rd) for the combined Objectives Test
+// /// Series standings: total ranked marks across every currently-open paper
+// /// for the student's std, not one leaderboard per paper. Hidden until the
+// /// student's standard has at least one open paper.
+// class BoardCrackerLeaderboardCard extends StatefulWidget {
+//   const BoardCrackerLeaderboardCard({super.key});
+// 
+//   @override
+//   State<BoardCrackerLeaderboardCard> createState() =>
+//       _BoardCrackerLeaderboardCardState();
+// }
+// 
+// class _BoardCrackerLeaderboardCardState
+//     extends State<BoardCrackerLeaderboardCard> {
+//   Map<String, dynamic>? _data;
+//   bool _loaded = false;
+// 
+//   @override
+//   void initState() {
+//     super.initState();
+//     _load();
+//   }
+// 
+//   Future<void> _load() async {
+//     try {
+//       final prefs = await SharedPreferences.getInstance();
+//       String? std = prefs.getString('std');
+//       String? medium = prefs.getString('medium');
+//       String? stream = prefs.getString('stream');
+//       // Some profiles store "11 Science" as the std.
+//       if (std != null && std.contains(' ')) {
+//         final parts = std.split(' ');
+//         std = parts[0];
+//         if (stream == null || stream == '-' || stream.isEmpty) {
+//           stream = parts.skip(1).join(' ');
+//         }
+//       }
+// 
+//       final response = await ApiService.getCombinedBoardCrackerLeaderboard(
+//         std: std,
+//         medium: medium,
+//         stream: stream,
+//       );
+//       if (response.statusCode != 200) return;
+// 
+//       if (!mounted) return;
+//       setState(() {
+//         _data = jsonDecode(response.body) as Map<String, dynamic>;
+//         _loaded = true;
+//       });
+//     } catch (e) {
+//       debugPrint("Error loading home leaderboard: $e");
+//       if (mounted) setState(() => _loaded = true);
+//     }
+//   }
+// 
+//   void _openFullLeaderboard() {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => const CombinedBoardCrackerLeaderboardScreen(),
+//       ),
+//     ).then((_) => _load());
+//   }
+// 
+//   @override
+//   Widget build(BuildContext context) {
+//     final papers = (_data?['papers'] as List<dynamic>? ?? []);
+//     // Nothing open for this student's std - stay hidden, same as before.
+//     if (!_loaded || papers.isEmpty) return const SizedBox.shrink();
+// 
+//     final entries = (_data?['entries'] as List<dynamic>? ?? []);
+//     final screenWidth = MediaQuery.of(context).size.width;
+//     dynamic at(int i) => i < entries.length ? entries[i] : null;
+// 
+//     return Padding(
+//       padding: EdgeInsets.only(bottom: screenWidth * 0.03),
+//       child: GestureDetector(
+//         onTap: _openFullLeaderboard,
+//         child: Container(
+//           margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+//           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+//           decoration: BoxDecoration(
+//             gradient: LinearGradient(
+//               colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
+//               begin: Alignment.topLeft,
+//               end: Alignment.bottomRight,
+//             ),
+//             borderRadius: BorderRadius.circular(20),
+//             boxShadow: [
+//               BoxShadow(
+//                 color: kBoardCrackerStart(context).withOpacity(0.3),
+//                 blurRadius: 10,
+//                 offset: const Offset(0, 5),
+//               ),
+//             ],
+//           ),
+//           child: Column(
+//             children: [
+//               Row(
+//                 children: [
+//                   const Icon(Icons.leaderboard_rounded,
+//                       color: Colors.white, size: 20),
+//                   const SizedBox(width: 8),
+//                   Expanded(
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           "Test Series Leaderboard",
+//                           style: GoogleFonts.poppins(
+//                             color: Colors.white,
+//                             fontSize: 14,
+//                             fontWeight: FontWeight.bold,
+//                           ),
+//                         ),
+//                         Text(
+//                           "Combined across ${papers.length} open paper${papers.length == 1 ? '' : 's'}",
+//                           maxLines: 1,
+//                           overflow: TextOverflow.ellipsis,
+//                           style: GoogleFonts.poppins(
+//                             color: Colors.white70,
+//                             fontSize: 11,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                   Text(
+//                     "View all",
+//                     style: GoogleFonts.poppins(
+//                       color: Colors.white,
+//                       fontSize: 12,
+//                       fontWeight: FontWeight.w600,
+//                     ),
+//                   ),
+//                   const Icon(Icons.chevron_right, color: Colors.white, size: 18),
+//                 ],
+//               ),
+//               const SizedBox(height: 12),
+//               if (entries.isEmpty)
+//                 Padding(
+//                   padding: const EdgeInsets.only(bottom: 4),
+//                   child: Text(
+//                     "No ranked attempts yet — be the first!",
+//                     style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
+//                   ),
+//                 ),
+//               Row(
+//                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                 crossAxisAlignment: CrossAxisAlignment.end,
+//                 children: [
+//                   _buildPodiumSpot(at(1), 2, 56, Colors.grey.shade300),
+//                   _buildPodiumSpot(at(0), 1, 70, Colors.amber),
+//                   _buildPodiumSpot(at(2), 3, 56, Colors.brown.shade300),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// 
+//   /// One podium position; an empty spot shows a placeholder until someone
+//   /// takes that rank.
+//   Widget _buildPodiumSpot(dynamic entry, int rank, double size, Color color) {
+//     final String fullName = entry?['name']?.toString() ?? '';
+//     final String firstName =
+//         fullName.trim().isEmpty ? '' : fullName.trim().split(' ').first;
+//     final bool isMe = entry?['isMe'] == true;
+//     final String photo =
+//         entry == null ? '' : ApiService.getFileUrl(entry['photoPath']?.toString());
+// 
+//     return SizedBox(
+//       width: 96,
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Stack(
+//             alignment: Alignment.topCenter,
+//             children: [
+//               Container(
+//                 margin: EdgeInsets.only(top: rank == 1 ? 18 : 0, bottom: 10),
+//                 decoration: BoxDecoration(
+//                   shape: BoxShape.circle,
+//                   border: Border.all(
+//                       color: entry == null ? Colors.white38 : color, width: 3),
+//                   boxShadow: [
+//                     BoxShadow(
+//                       color: Colors.black.withOpacity(0.2),
+//                       blurRadius: 8,
+//                       offset: const Offset(0, 4),
+//                     ),
+//                   ],
+//                 ),
+//                 child: CircleAvatar(
+//                   radius: size / 2,
+//                   backgroundColor: entry == null
+//                       ? Colors.white.withOpacity(0.15)
+//                       : Colors.white,
+//                   backgroundImage:
+//                       photo.isNotEmpty ? NetworkImage(photo) : null,
+//                   child: photo.isNotEmpty
+//                       ? null
+//                       : entry == null
+//                           ? Icon(Icons.person_outline_rounded,
+//                               color: Colors.white70, size: size * 0.45)
+//                           : Text(
+//                               firstName.isNotEmpty
+//                                   ? firstName[0].toUpperCase()
+//                                   : '?',
+//                               style: GoogleFonts.poppins(
+//                                 fontSize: size * 0.4,
+//                                 fontWeight: FontWeight.bold,
+//                                 color: kBoardCrackerStart(context),
+//                               ),
+//                             ),
+//                 ),
+//               ),
+//               if (rank == 1)
+//                 const Positioned(
+//                   top: 0,
+//                   child: Icon(Icons.workspace_premium,
+//                       color: Colors.amber, size: 28),
+//                 ),
+//               Positioned(
+//                 bottom: 0,
+//                 child: Container(
+//                   padding:
+//                       const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+//                   decoration: BoxDecoration(
+//                     color: entry == null ? Colors.white38 : color,
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                   child: Text(
+//                     "$rank",
+//                     style: GoogleFonts.poppins(
+//                       color: Colors.white,
+//                       fontWeight: FontWeight.bold,
+//                       fontSize: 11,
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 4),
+//           Text(
+//             entry == null ? "—" : (isMe ? "You" : firstName),
+//             maxLines: 1,
+//             overflow: TextOverflow.ellipsis,
+//             style: GoogleFonts.poppins(
+//               color: Colors.white,
+//               fontWeight: FontWeight.w600,
+//               fontSize: 13,
+//             ),
+//           ),
+//           Text(
+//             entry == null
+//                 ? " "
+//                 : "${entry['obtainedMarks']}/${entry['totalMarks']}",
+//             style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+// 
+// // ---------------------------------------------------------------------------
+// // Combined leaderboard (full screen)
+// // ---------------------------------------------------------------------------
+// 
+// /// Full standings for the combined leaderboard: total ranked marks across
+// /// every currently-open Objectives Test Series paper for the student's std.
+// class CombinedBoardCrackerLeaderboardScreen extends StatefulWidget {
+//   const CombinedBoardCrackerLeaderboardScreen({super.key});
+// 
+//   @override
+//   State<CombinedBoardCrackerLeaderboardScreen> createState() =>
+//       _CombinedBoardCrackerLeaderboardScreenState();
+// }
+// 
+// class _CombinedBoardCrackerLeaderboardScreenState
+//     extends State<CombinedBoardCrackerLeaderboardScreen> {
+//   Map<String, dynamic>? _data;
+//   bool _isLoading = true;
+//   String? _error;
+// 
+//   @override
+//   void initState() {
+//     super.initState();
+//     _load();
+//   }
+// 
+//   Future<void> _load() async {
+//     setState(() {
+//       _isLoading = true;
+//       _error = null;
+//     });
+//     try {
+//       final prefs = await SharedPreferences.getInstance();
+//       String? std = prefs.getString('std');
+//       String? medium = prefs.getString('medium');
+//       String? stream = prefs.getString('stream');
+//       if (std != null && std.contains(' ')) {
+//         final parts = std.split(' ');
+//         std = parts[0];
+//         if (stream == null || stream == '-' || stream.isEmpty) {
+//           stream = parts.skip(1).join(' ');
+//         }
+//       }
+// 
+//       final response = await ApiService.getCombinedBoardCrackerLeaderboard(
+//         std: std,
+//         medium: medium,
+//         stream: stream,
+//       );
+//       if (response.statusCode != 200) {
+//         throw Exception("Server returned ${response.statusCode}");
+//       }
+//       if (!mounted) return;
+//       setState(() {
+//         _data = jsonDecode(response.body) as Map<String, dynamic>;
+//         _isLoading = false;
+//       });
+//     } catch (e) {
+//       debugPrint("Error loading combined leaderboard: $e");
+//       if (!mounted) return;
+//       setState(() {
+//         _isLoading = false;
+//         _error = "Could not load the leaderboard.";
+//       });
+//     }
+//   }
+// 
+//   @override
+//   Widget build(BuildContext context) {
+//     final theme = Theme.of(context);
+//     final isDark = theme.brightness == Brightness.dark;
+// 
+//     return Scaffold(
+//       backgroundColor:
+//           isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
+//       appBar: const CustomAppBar(title: "Leaderboard", centerTitle: true),
+//       body: _isLoading
+//           ? const CustomLoader()
+//           : _error != null
+//               ? Center(
+//                   child: Column(
+//                     mainAxisSize: MainAxisSize.min,
+//                     children: [
+//                       Text(_error!),
+//                       const SizedBox(height: 12),
+//                       ElevatedButton(
+//                           onPressed: _load, child: const Text("Retry")),
+//                     ],
+//                   ),
+//                 )
+//               : RefreshIndicator(onRefresh: _load, child: _buildBody()),
+//     );
+//   }
+// 
+//   Widget _buildBody() {
+//     final entries = (_data?['entries'] as List<dynamic>? ?? []);
+//     final me = _data?['me'];
+//     final meInTop = entries.any((e) => e['isMe'] == true);
+//     // Ranks 1-3 go on the podium; the rest are listed below it.
+//     final rest = entries.length > 3 ? entries.sublist(3) : <dynamic>[];
+// 
+//     return ListView(
+//       padding: const EdgeInsets.all(16),
+//       children: [
+//         if (entries.isEmpty)
+//           Padding(
+//             padding: const EdgeInsets.only(top: 48),
+//             child: Column(
+//               children: [
+//                 Icon(Icons.leaderboard_outlined,
+//                     size: 64, color: Colors.grey.shade400),
+//                 const SizedBox(height: 12),
+//                 Text(
+//                   "No ranked attempts yet",
+//                   style: GoogleFonts.poppins(
+//                     fontSize: 16,
+//                     fontWeight: FontWeight.w600,
+//                     color: Colors.grey.shade600,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           )
+//         else ...[
+//           _buildPodium(entries),
+//           const SizedBox(height: 20),
+//           if (me != null && !meInTop) ...[
+//             Text("Your position",
+//                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+//             const SizedBox(height: 8),
+//             _LeaderboardEntryTile(entry: me),
+//             const SizedBox(height: 16),
+//           ],
+//           if (rest.isNotEmpty)
+//             ...rest.map(
+//                 (e) => _LeaderboardEntryTile(entry: e, showTime: false)),
+//         ],
+//       ],
+//     );
+//   }
+// 
+//   /// Top 3 shown as a podium (2nd · 1st · 3rd); an empty spot shows a
+//   /// placeholder until someone takes that rank.
+//   Widget _buildPodium(List<dynamic> entries) {
+//     dynamic at(int i) => i < entries.length ? entries[i] : null;
+// 
+//     return Container(
+//       padding: const EdgeInsets.symmetric(vertical: 16),
+//       decoration: BoxDecoration(
+//         gradient: LinearGradient(
+//           colors: [kBoardCrackerStart(context), kBoardCrackerEnd(context)],
+//           begin: Alignment.topLeft,
+//           end: Alignment.bottomRight,
+//         ),
+//         borderRadius: BorderRadius.circular(20),
+//         boxShadow: [
+//           BoxShadow(
+//             color: kBoardCrackerStart(context).withOpacity(0.3),
+//             blurRadius: 10,
+//             offset: const Offset(0, 5),
+//           ),
+//         ],
+//       ),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//         crossAxisAlignment: CrossAxisAlignment.end,
+//         children: [
+//           _buildPodiumSpot(at(1), 2, 64, Colors.grey.shade300),
+//           _buildPodiumSpot(at(0), 1, 80, Colors.amber),
+//           _buildPodiumSpot(at(2), 3, 64, Colors.brown.shade300),
+//         ],
+//       ),
+//     );
+//   }
+// 
+//   /// One podium position; an empty spot shows a placeholder until someone
+//   /// takes that rank. Same look as the home-page leaderboard card's podium.
+//   Widget _buildPodiumSpot(dynamic entry, int rank, double size, Color color) {
+//     final String fullName = entry?['name']?.toString() ?? '';
+//     final String firstName =
+//         fullName.trim().isEmpty ? '' : fullName.trim().split(' ').first;
+//     final bool isMe = entry?['isMe'] == true;
+//     final String photo =
+//         entry == null ? '' : ApiService.getFileUrl(entry['photoPath']?.toString());
+// 
+//     return SizedBox(
+//       width: 100,
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Stack(
+//             alignment: Alignment.topCenter,
+//             children: [
+//               Container(
+//                 margin: EdgeInsets.only(top: rank == 1 ? 18 : 0, bottom: 10),
+//                 decoration: BoxDecoration(
+//                   shape: BoxShape.circle,
+//                   border: Border.all(
+//                       color: entry == null ? Colors.white38 : color, width: 3),
+//                   boxShadow: [
+//                     BoxShadow(
+//                       color: Colors.black.withOpacity(0.2),
+//                       blurRadius: 8,
+//                       offset: const Offset(0, 4),
+//                     ),
+//                   ],
+//                 ),
+//                 child: CircleAvatar(
+//                   radius: size / 2,
+//                   backgroundColor: entry == null
+//                       ? Colors.white.withOpacity(0.15)
+//                       : Colors.white,
+//                   backgroundImage:
+//                       photo.isNotEmpty ? NetworkImage(photo) : null,
+//                   child: photo.isNotEmpty
+//                       ? null
+//                       : entry == null
+//                           ? Icon(Icons.person_outline_rounded,
+//                               color: Colors.white70, size: size * 0.45)
+//                           : Text(
+//                               firstName.isNotEmpty
+//                                   ? firstName[0].toUpperCase()
+//                                   : '?',
+//                               style: GoogleFonts.poppins(
+//                                 fontSize: size * 0.4,
+//                                 fontWeight: FontWeight.bold,
+//                                 color: kBoardCrackerStart(context),
+//                               ),
+//                             ),
+//                 ),
+//               ),
+//               if (rank == 1)
+//                 const Positioned(
+//                   top: 0,
+//                   child: Icon(Icons.workspace_premium,
+//                       color: Colors.amber, size: 30),
+//                 ),
+//               Positioned(
+//                 bottom: 0,
+//                 child: Container(
+//                   padding:
+//                       const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+//                   decoration: BoxDecoration(
+//                     color: entry == null ? Colors.white38 : color,
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                   child: Text(
+//                     "$rank",
+//                     style: GoogleFonts.poppins(
+//                       color: Colors.white,
+//                       fontWeight: FontWeight.bold,
+//                       fontSize: 11,
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 6),
+//           Text(
+//             entry == null ? "—" : (isMe ? "You" : firstName),
+//             maxLines: 1,
+//             overflow: TextOverflow.ellipsis,
+//             style: GoogleFonts.poppins(
+//               color: Colors.white,
+//               fontWeight: FontWeight.w600,
+//               fontSize: 13,
+//             ),
+//           ),
+//           Text(
+//             entry == null
+//                 ? " "
+//                 : "${entry['obtainedMarks']}/${entry['totalMarks']}",
+//             style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }

@@ -7,7 +7,7 @@ import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dm_bhatt_tutions/screen/Dashboard/board_crackers_screens.dart';
+// import 'package:dm_bhatt_tutions/screen/Dashboard/board_crackers_screens.dart'; // only needed for the commented-out BoardCrackerLeaderboardCard below
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_dashboard_widgets.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/five_min_test_screens.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/one_liner_selection_screen.dart';
@@ -237,7 +237,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           const SizedBox(height: 12),
           const QuickAccessCategories(),
           const BoardCrackersBanner(),
-          const BoardCrackerLeaderboardCard(),
+          // Combined leaderboard is admin-only now (dm-bhatt-admin-app); the
+          // student app only shows the per-paper leaderboard.
+          // const BoardCrackerLeaderboardCard(),
           blankVerticalSpace24,
 
           // Auto-Playing Exam Cards Slider

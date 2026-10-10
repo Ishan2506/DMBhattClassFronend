@@ -18,6 +18,7 @@ import 'package:dm_bhatt_tutions/screen/authentication/login_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:dm_bhatt_tutions/l10n/app_localizations.dart';
 import 'package:dm_bhatt_tutions/utils/revenue_cat_service.dart';
+import 'package:dm_bhatt_tutions/screen/Dashboard/upgrade_plan_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -291,6 +292,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String profilePic = "";
   String dob = "";
   String? _photoPath;
+  bool _isPaid = false;
 
   List<dynamic> _examResults = [];
   int _totalPoints = 0;
@@ -342,6 +344,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               user['email'] ??
               (profile?['email'] ?? ""); // Check both locations
           _photoPath = user['photoPath'];
+          _isPaid = user['isPaid'] == true;
 
           final rawDob = user['dob'];
           if (rawDob != null && rawDob.toString().isNotEmpty) {
@@ -621,6 +624,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                               _photoPath = user['photoPath'];
                                               profilePic =
                                                   user['photoPath'] ?? "";
+                                              if (user['isPaid'] != null) {
+                                                _isPaid = user['isPaid'] == true;
+                                              }
 
                                               final rawDob = user['dob'];
                                               if (rawDob != null &&
@@ -719,6 +725,62 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       fontSize: 16,
                       color: Colors.grey.shade600,
                       fontWeight: FontWeight.w500,
+                    ),
+                  ),
+
+                  // 2b. Membership status — so a student can tell at a glance
+                  // whether their payment/upgrade actually unlocked paid
+                  // content, without digging through purchase history.
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: _isPaid
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const UpgradePlanScreen(),
+                              ),
+                            );
+                          },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: _isPaid
+                            ? LinearGradient(
+                                colors: [
+                                  Colors.amber.shade400,
+                                  Colors.orange.shade700,
+                                ],
+                              )
+                            : null,
+                        color: _isPaid ? null : Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isPaid
+                                ? Icons.workspace_premium_rounded
+                                : Icons.lock_outline_rounded,
+                            size: 16,
+                            color: _isPaid ? Colors.white : Colors.grey.shade700,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _isPaid ? "Premium Member" : "Free Plan · Tap to Upgrade",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: _isPaid ? Colors.white : Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
