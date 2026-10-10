@@ -347,7 +347,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
         _handleViolation("Back navigation is not allowed during the exam.");
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: theme.colorScheme.surface,
         appBar: CustomAppBar(
           title:
               '${l10n.question} ${_currentQuestionIndex + 1}/${_questions.length}',
@@ -496,7 +496,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.colorScheme.surfaceContainerLowest,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -516,7 +516,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                       child: Text(
                         l10n.skip,
                         style: textTheme.titleMedium?.copyWith(
-                          color: Colors.grey[600],
+                          color: theme.colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -580,12 +580,12 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? theme.colorScheme.primary.withOpacity(0.5)
-                : Colors.grey[200]!,
+                : theme.colorScheme.outlineVariant,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -611,7 +611,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: theme.colorScheme.surfaceContainerHighest,
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -619,7 +619,7 @@ class _ExamQuestionScreenState extends State<ExamQuestionScreen>
                     optionLabel,
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),

@@ -732,56 +732,70 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   // whether their payment/upgrade actually unlocked paid
                   // content, without digging through purchase history.
                   const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: _isPaid
-                        ? null
-                        : () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const UpgradePlanScreen(),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: _isPaid
+                            ? null
+                            : () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const UpgradePlanScreen(),
+                                  ),
+                                );
+                              },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: _isPaid
+                                ? LinearGradient(
+                                    colors: [
+                                      Colors.amber.shade400,
+                                      Colors.orange.shade700,
+                                    ],
+                                  )
+                                : null,
+                            color: _isPaid ? null : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _isPaid
+                                    ? Icons.workspace_premium_rounded
+                                    : Icons.lock_outline_rounded,
+                                size: 16,
+                                color: _isPaid ? Colors.white : Colors.grey.shade700,
                               ),
-                            );
-                          },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: _isPaid
-                            ? LinearGradient(
-                                colors: [
-                                  Colors.amber.shade400,
-                                  Colors.orange.shade700,
-                                ],
-                              )
-                            : null,
-                        color: _isPaid ? null : Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _isPaid
-                                ? Icons.workspace_premium_rounded
-                                : Icons.lock_outline_rounded,
-                            size: 16,
-                            color: _isPaid ? Colors.white : Colors.grey.shade700,
+                              const SizedBox(width: 6),
+                              Text(
+                                _isPaid ? "Premium Member" : "Free Plan · Tap to Upgrade",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _isPaid ? Colors.white : Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _isPaid ? "Premium Member" : "Free Plan · Tap to Upgrade",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: _isPaid ? Colors.white : Colors.grey.shade700,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () => _showMembershipInfoDialog(context),
+                        child: Icon(
+                          Icons.info_outline_rounded,
+                          size: 20,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
                   ),
 
                   // 3. Quick Stats (Reward Points) — hidden on iOS
@@ -1191,6 +1205,34 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  void _showMembershipInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "Membership Status",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "If you've already paid or upgraded your plan but this still shows "
+          "\"Free Plan\", please logout and login again. You will then get "
+          "your paid access.",
+          style: GoogleFonts.poppins(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              "OK",
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

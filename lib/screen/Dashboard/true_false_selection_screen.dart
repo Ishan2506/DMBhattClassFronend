@@ -332,14 +332,12 @@ class _TrueFalseSelectionScreenState extends State<TrueFalseSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
 
     final examSelected = _selectedTitle != null && _filteredExams.isNotEmpty;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
+      backgroundColor: theme.colorScheme.surface,
       appBar: CustomAppBar(
         title: "True/False Exam",
         actions: [

@@ -1333,7 +1333,7 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
         _registerViolation("Back navigation is not allowed during the exam.");
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: colorScheme.surface,
         appBar: CustomAppBar(
           title: loaded
               ? "Question ${_currentIndex + 1}/${_questions.length}"
@@ -1560,7 +1560,7 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
           Container(
             padding: const EdgeInsets.fromLTRB(16, 16, 24, 16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colorScheme.surfaceContainerLowest,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -1575,7 +1575,7 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
                   IconButton(
                     tooltip: "Previous",
                     onPressed: () => setState(() => _currentIndex--),
-                    icon: Icon(Icons.arrow_back, color: Colors.grey[600]),
+                    icon: Icon(Icons.arrow_back, color: colorScheme.onSurfaceVariant),
                   ),
                 if (!isLast)
                   TextButton(
@@ -1583,7 +1583,7 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
                     child: Text(
                       "Skip",
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.grey[600],
+                            color: colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -1637,12 +1637,12 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
               ? colorScheme.primary.withOpacity(0.5)
-              : Colors.grey[200]!,
+              : colorScheme.outlineVariant,
           width: isSelected ? 2 : 1,
         ),
         boxShadow: [
@@ -1672,14 +1672,18 @@ class _BoardCrackerExamScreenState extends State<BoardCrackerExamScreen>
                 height: 40,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected ? colorScheme.primary : Colors.grey[100],
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.surfaceContainerHighest,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
                   letter,
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : Colors.grey[600],
+                    color: isSelected
+                        ? colorScheme.onPrimary
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -2215,11 +2219,9 @@ class _BoardCrackerLeaderboardScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
+      backgroundColor: theme.colorScheme.surface,
       appBar: const CustomAppBar(title: "Leaderboard", centerTitle: true),
       body: _isLoading
           ? const CustomLoader()

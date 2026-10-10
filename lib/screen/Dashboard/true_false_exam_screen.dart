@@ -456,12 +456,12 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
               ? theme.colorScheme.primary.withOpacity(0.5)
-              : Colors.grey[200]!,
+              : theme.colorScheme.outlineVariant,
           width: isSelected ? 2 : 1,
         ),
         boxShadow: [
@@ -483,7 +483,7 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: theme.colorScheme.surfaceContainerHighest,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -491,7 +491,7 @@ class _TrueFalseExamScreenState extends State<TrueFalseExamScreen>
                   optionLabel,
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),

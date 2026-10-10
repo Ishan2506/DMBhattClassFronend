@@ -217,7 +217,7 @@ class _AppInfoScreen extends StatelessWidget {
   }
 
   void _showRateUsDialog(BuildContext context) {
-    InAppReviewService.requestReviewOrOpenStore();
+    InAppReviewService.openStoreListingForRating(context);
   }
 
   void _showFollowUsSheet(BuildContext context) {

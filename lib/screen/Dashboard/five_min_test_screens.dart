@@ -323,14 +323,12 @@ class _FiveMinTestSelectionScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
 
     final testSelected = _selectedTitle != null && _filteredTests.isNotEmpty;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1626) : const Color(0xFFF2F4F8),
+      backgroundColor: theme.colorScheme.surface,
       appBar: CustomAppBar(
         title: "5 Min Test",
         actions: [
@@ -1125,7 +1123,7 @@ class _FiveMinQuizScreenState extends State<FiveMinQuizScreen>
         _handleViolation("Back navigation is not allowed during the exam.");
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
+        backgroundColor: theme.colorScheme.surface,
         // Use CustomAppBar to match app theme
         appBar: CustomAppBar(
           title: "Rapid Quiz",
