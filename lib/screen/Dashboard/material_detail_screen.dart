@@ -1,6 +1,5 @@
 import 'dart:ui' as ui;
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:dm_bhatt_tutions/custom_widgets/custom_app_bar.dart';
 import 'package:dm_bhatt_tutions/custom_widgets/custom_loader.dart';
 import 'package:dm_bhatt_tutions/utils/razorpay_helper.dart';
@@ -56,19 +55,15 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
 
   /// Buying explore products is not available on iOS yet. Materials already
   /// purchased elsewhere (e.g. on Android) stay readable here.
-  bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
-
   @override
   void initState() {
     super.initState();
-    // Android uses Razorpay for explore products. iOS purchases are coming soon.
-    if (!_isIOS) {
-      _razorpayHelper = RazorpayHelper(
-        context: context,
-        onSuccess: _handlePaymentSuccess,
-        onFailure: _handlePaymentFailure,
-      );
-    }
+    // Android & iOS: Both use Razorpay for explore products.
+    _razorpayHelper = RazorpayHelper(
+      context: context,
+      onSuccess: _handlePaymentSuccess,
+      onFailure: _handlePaymentFailure,
+    );
     _checkPreviewStatus();
     _fetchQuote();
   }
@@ -77,7 +72,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
   /// Failure is non-fatal: the screen simply falls back to a normal full-price buy.
   Future<void> _fetchQuote() async {
     final bool alreadyPurchased = widget.product['isPurchased'] == true;
-    if (_isIOS || alreadyPurchased) return;
+    if (alreadyPurchased) return;
 
     final String productId = widget.product['id']?.toString() ?? '';
     if (productId.isEmpty) return;
@@ -186,55 +181,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
     }
   }
 
-  /// iOS cannot buy explore products yet. Explain what's available today and
-  /// how an existing purchase becomes readable here.
-  void _showIosComingSoonInfo() {
-    final theme = Theme.of(context);
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.info_outline_rounded, color: theme.colorScheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                "Purchase Coming Soon",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          "Buying materials isn't available yet — we're working on it.\n\n",
-          style: GoogleFonts.poppins(fontSize: 14, height: 1.6),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              "Got it",
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _initiatePurchase() async {
-    if (_isIOS) {
-      _showIosComingSoonInfo();
-      return;
-    }
     if (!await GuestUtils.canGuestPurchase(context)) return;
     setState(() => _isProcessing = true);
 
@@ -516,35 +463,24 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
                             },
                           ),
                         ] else ...[
-                          // 1. Buy Now (Prominent) — hidden on iOS until purchases ship there.
-                          if (_isIOS)
-                            _buildActionButton(
-                              context: context,
-                              label: "Purchase Coming Soon",
-                              icon: Icons.info_outline_rounded,
-                              color: theme.colorScheme.primary,
-                              isOutlined: true,
-                              onPressed: _showIosComingSoonInfo,
+                          // 1. Buy Now (Prominent)
+                          if (_loadingQuote)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 16),
+                              child: LinearProgressIndicator(minHeight: 2),
                             )
-                          else ...[
-                            if (_loadingQuote)
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 16),
-                                child: LinearProgressIndicator(minHeight: 2),
-                              )
-                            else if (_canUsePoints)
-                              _buildPointsCard(theme),
-                            _buildActionButton(
-                              context: context,
-                              label: _usePoints && _discount > 0
-                                  ? "Buy Now ₹${_payableAmount.toStringAsFixed(0)}"
-                                  : "Buy Now ₹${widget.product['price']}",
-                              icon: Icons.shopping_cart_outlined,
-                              color: theme.colorScheme.primary, // Use theme color
-                              isPrimary: true,
-                              onPressed: _initiatePurchase,
-                            ),
-                          ],
+                          else if (_canUsePoints)
+                            _buildPointsCard(theme),
+                          _buildActionButton(
+                            context: context,
+                            label: _usePoints && _discount > 0
+                                ? "Buy Now ₹${_payableAmount.toStringAsFixed(0)}"
+                                : "Buy Now ₹${widget.product['price']}",
+                            icon: Icons.shopping_cart_outlined,
+                            color: theme.colorScheme.primary, // Use theme color
+                            isPrimary: true,
+                            onPressed: _initiatePurchase,
+                          ),
 
                           const SizedBox(height: 16),
 
