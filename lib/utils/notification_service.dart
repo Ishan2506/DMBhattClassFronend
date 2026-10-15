@@ -137,10 +137,18 @@ class NotificationService {
 
     // 6. Tap that cold-started the app. No stream fires for this case, so the
     // message is only ever available from this one-shot call. Stash it until a
-    // navigator exists.
-    final initialMessage = await fcm.getInitialMessage();
-    if (initialMessage != null) {
-      _pendingTap = initialMessage.data;
+    // navigator exists. Bounded because this runs before runApp: on iOS the
+    // native side can wait on a launch callback that never arrives, which
+    // leaves the app on a blank white screen.
+    try {
+      final initialMessage = await fcm
+          .getInitialMessage()
+          .timeout(const Duration(seconds: 3));
+      if (initialMessage != null) {
+        _pendingTap = initialMessage.data;
+      }
+    } catch (e) {
+      if (kDebugMode) print('getInitialMessage failed: $e');
     }
   }
 
