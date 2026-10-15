@@ -28,8 +28,13 @@ void main() async {
   debugPaintBaselinesEnabled = false;
   debugPaintSizeEnabled = false;
 
-  // Load academic constants from server
-  await AcademicConstants.loadFromServer();
+  // Load academic constants from server. Bounded so a slow or unreachable
+  // server can't keep the app stuck on the launch screen.
+  await _safeInit(
+    'Academic constants',
+    AcademicConstants.loadFromServer,
+    timeout: const Duration(seconds: 8),
+  );
 
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
     // Initialize sqflite for desktop
@@ -50,14 +55,39 @@ void main() async {
   }
 
   // Request Microphone permission at start
-  await _requestPermissions();
+  await _safeInit('Microphone permission', _requestPermissions);
 
   // Initialize Payment Config & RevenueCat
-  await PurchaseConfig.instance.initialize();
-  await RevenueCatService.instance.init();
+  await _safeInit(
+    'Payment config',
+    PurchaseConfig.instance.initialize,
+    timeout: const Duration(seconds: 8),
+  );
+  await _safeInit(
+    'RevenueCat',
+    RevenueCatService.instance.init,
+    timeout: const Duration(seconds: 8),
+  );
 
   await _secureScreen();
   runApp(MyApp(prefs: prefs));
+}
+
+/// Runs a startup step so that a failure (or, with [timeout], a hang) can never
+/// stop [runApp] from being reached.
+Future<void> _safeInit(
+  String label,
+  Future<void> Function() task, {
+  Duration? timeout,
+}) async {
+  try {
+    final future = task();
+    await (timeout == null ? future : future.timeout(timeout));
+  } catch (e) {
+    if (kDebugMode) {
+      print('$label initialization failed: $e');
+    }
+  }
 }
 
 Future<void> _requestPermissions() async {
