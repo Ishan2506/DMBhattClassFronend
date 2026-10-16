@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:dm_bhatt_tutions/network/api_service.dart';
 import 'package:dm_bhatt_tutions/utils/database_helper.dart';
 import 'package:dm_bhatt_tutions/utils/notification_service.dart';
@@ -798,81 +797,79 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     ],
                   ),
 
-                  // 3. Quick Stats (Reward Points) — hidden on iOS
-                  if (!Platform.isIOS) ...[
-                    const SizedBox(height: 24),
+                  // 3. Quick Stats (Reward Points)
+                  const SizedBox(height: 24),
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.amber.shade400,
-                              Colors.orange.shade700,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.amber.shade400,
+                            Colors.orange.shade700,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.orange.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
                           ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.orange.withOpacity(0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.stars_rounded,
-                                color: Colors.white,
-                                size: 30,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.learningPoints,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  "$_totalPoints XP",
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
+                            child: const Icon(
+                              Icons.stars_rounded,
                               color: Colors.white,
-                              size: 16,
+                              size: 30,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.learningPoints,
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                "$_totalPoints XP",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ],
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 32),
-                  ],
+                  const SizedBox(height: 32),
 
                   const SizedBox(height: 32),
 

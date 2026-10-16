@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/student_product_history_screen.dart';
 import 'package:dm_bhatt_tutions/network/api_service.dart' as api;
@@ -155,19 +154,18 @@ class _StudentActivitiesScreen extends StatelessWidget {
                 );
               },
             ),
-            if (!Platform.isIOS)
-              _MoreScreenItem(
-                title: l10n.mindGames,
-                value: "",
-                icon: Icons.games_outlined,
-                onTap: () {
-                   Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const MindGamesScreen()),
-                  );
-                },
-              ),
+            _MoreScreenItem(
+              title: l10n.mindGames,
+              value: "",
+              icon: Icons.games_outlined,
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MindGamesScreen()),
+                );
+              },
+            ),
              _MoreScreenItem(
               title: "Mind Map", 
               value: "",
@@ -371,19 +369,18 @@ class _AppInfoScreen extends StatelessWidget {
                   );
                 },
               ),
-              if (!Platform.isIOS)
-                _MoreScreenItem(
-                  title: l10n.referAndEarn,
-                  value: "",
-                  icon: Icons.diversity_3,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ReferAndEarnScreen()),
-                    );
-                  },
-                ),
+              _MoreScreenItem(
+                title: l10n.referAndEarn,
+                value: "",
+                icon: Icons.diversity_3,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ReferAndEarnScreen()),
+                  );
+                },
+              ),
             ],
             _MoreScreenItem(
               title: l10n.privacyPolicy,
@@ -403,7 +400,7 @@ class _AppInfoScreen extends StatelessWidget {
               icon: Icons.share,
               onTap: _shareApp,
             ),
-            if (InAppReviewService.isAndroidSupported)
+            if (InAppReviewService.isSupported)
               _MoreScreenItem(
                 title: l10n.rateUs,
                 value: "",

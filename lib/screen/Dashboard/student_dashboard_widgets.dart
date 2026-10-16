@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 
 import 'package:dm_bhatt_tutions/screen/Dashboard/board_crackers_screens.dart';
 import 'package:dm_bhatt_tutions/screen/Dashboard/true_false_selection_screen.dart';
@@ -46,7 +45,6 @@ class QuickAccessCategories extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: _categories
-            .where((cat) => !(Platform.isIOS && cat['title'] == "Mind Games"))
             .map((cat) => _buildCategoryItem(context, cat))
             .toList(),
       ),

@@ -1041,64 +1041,62 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ],
                   ),
 
-                  if (!_isIOS) ...[
-                    const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                    Text(
-                      "Have a Redeem Code?",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
+                  Text(
+                    "Have a Redeem Code?",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCodeField(
+                    colorScheme: colorScheme,
+                    controller: _promoCodeController,
+                    hintText: "Enter Redeem Code (Optional)",
+                    showValidIcon: _isRedeemValid == true,
+                    showErrorIcon: _isRedeemValid == false,
+                    onChanged: (_) => _resetRedeemValidation(),
+                    actionLabel: "Validate",
+                    onActionPressed: _validateRedeemCode,
+                  ),
+                  if (_redeemMessage.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    _buildCodeField(
-                      colorScheme: colorScheme,
-                      controller: _promoCodeController,
-                      hintText: "Enter Redeem Code (Optional)",
-                      showValidIcon: _isRedeemValid == true,
-                      showErrorIcon: _isRedeemValid == false,
-                      onChanged: (_) => _resetRedeemValidation(),
-                      actionLabel: "Validate",
-                      onActionPressed: _validateRedeemCode,
-                    ),
-                    if (_redeemMessage.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      _buildCodeMessage(_redeemMessage, _isRedeemValid == true),
-                    ],
+                    _buildCodeMessage(_redeemMessage, _isRedeemValid == true),
+                  ],
 
-                    const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                    Text(
-                      "Have a Referral Code?",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
+                  Text(
+                    "Have a Referral Code?",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCodeField(
+                    colorScheme: colorScheme,
+                    controller: _referralCodeController,
+                    hintText: "Enter Referral Code (Optional)",
+                    showValidIcon: _isReferralValid == true,
+                    showErrorIcon: _isReferralValid == false,
+                    showLoadingIcon: _isValidatingReferral,
+                    onChanged: (_) => _resetReferralValidation(),
+                    actionLabel: "Validate",
+                    onActionPressed: _isValidatingReferral
+                        ? null
+                        : _validateReferralCode,
+                  ),
+                  if (_referralMessage.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    _buildCodeField(
-                      colorScheme: colorScheme,
-                      controller: _referralCodeController,
-                      hintText: "Enter Referral Code (Optional)",
-                      showValidIcon: _isReferralValid == true,
-                      showErrorIcon: _isReferralValid == false,
-                      showLoadingIcon: _isValidatingReferral,
-                      onChanged: (_) => _resetReferralValidation(),
-                      actionLabel: "Validate",
-                      onActionPressed: _isValidatingReferral
-                          ? null
-                          : _validateReferralCode,
+                    _buildCodeMessage(
+                      _referralMessage,
+                      _isReferralValid == true,
                     ),
-                    if (_referralMessage.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      _buildCodeMessage(
-                        _referralMessage,
-                        _isReferralValid == true,
-                      ),
-                    ],
                   ],
 
                   const SizedBox(height: 32),

@@ -308,7 +308,7 @@ class _LandingScreenState extends State<LandingScreen>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        if (InAppReviewService.isAndroidSupported) {
+        if (InAppReviewService.isSupported) {
           await InAppReviewService.requestContextualReview();
         }
         if (context.mounted) {
