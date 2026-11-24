@@ -947,7 +947,7 @@ abstract class AppLocalizations {
   /// No description provided for @phantomPapers.
   ///
   /// In en, this message translates to:
-  /// **'Phantom Papers'**
+  /// **'Padhaku Paper Solution'**
   String get phantomPapers;
 
   /// No description provided for @impNotes.

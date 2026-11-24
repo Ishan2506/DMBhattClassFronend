@@ -441,7 +441,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get boardPapers => 'बोर्ड पेपर्स';
 
   @override
-  String get phantomPapers => 'फैंटम पेपर्स';
+  String get phantomPapers => 'पढ़ाकू पेपर सॉल्यूशन';
 
   @override
   String get impNotes => 'IMP नोट्स';

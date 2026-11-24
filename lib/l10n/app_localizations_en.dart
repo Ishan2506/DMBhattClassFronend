@@ -436,7 +436,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get boardPapers => 'Board Papers';
 
   @override
-  String get phantomPapers => 'Phantom Papers';
+  String get phantomPapers => 'Padhaku Paper Solution';
 
   @override
   String get impNotes => 'IMP Notes';

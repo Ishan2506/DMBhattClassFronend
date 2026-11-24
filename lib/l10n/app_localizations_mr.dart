@@ -440,7 +440,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get boardPapers => 'बोर्डाचे पेपर';
 
   @override
-  String get phantomPapers => 'फॅन्टम पेपर';
+  String get phantomPapers => 'पढाकू पेपर सोल्यूशन';
 
   @override
   String get impNotes => 'IMP Notes';
